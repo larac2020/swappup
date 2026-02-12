@@ -1,21 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { 
-  User, 
-  Settings, 
-  CreditCard, 
-  Shield, 
-  HelpCircle, 
-  LogOut, 
-  ChevronRight,
-  MapPin,
-  Mail,
-  Phone,
-  FileText,
-  Bell,
-  Star
+  User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
+  MapPin, FileText, Bell, Star
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +30,35 @@ export default function Account() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  const email = user?.email || "user@example.com";
-  const fullName = user?.user_metadata?.full_name || "User";
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const email = profile?.email || user?.email || "user@example.com";
+  const fullName = profile?.full_name || user?.user_metadata?.full_name || "User";
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
+
+  const verificationLabel = profile?.verification_status === "verified"
+    ? "Verified"
+    : profile?.verification_status === "rejected"
+    ? "Rejected"
+    : "Pending Verification";
+
+  const verificationStyle = profile?.verification_status === "verified"
+    ? "bg-success/10 text-success border-success/30"
+    : profile?.verification_status === "rejected"
+    ? "bg-destructive/10 text-destructive border-destructive/30"
+    : "bg-warning/10 text-warning border-warning/30";
 
   const handleSignOut = async () => {
     await signOut();
@@ -55,30 +72,27 @@ export default function Account() {
         <div className="glass rounded-2xl p-4">
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16 border-2 border-primary/30">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-secondary text-lg font-semibold">
-                {initials}
-              </AvatarFallback>
+              <AvatarImage src={profile?.avatar_url ?? undefined} />
+              <AvatarFallback className="bg-secondary text-lg font-semibold">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-semibold truncate">{fullName}</h2>
               <p className="text-sm text-muted-foreground truncate">{email}</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
-                  Pending Verification
+                <Badge variant="outline" className={`text-xs ${verificationStyle}`}>
+                  {verificationLabel}
                 </Badge>
               </div>
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
             <div className="text-center">
-              <p className="text-lg font-bold text-primary">0</p>
+              <p className="text-lg font-bold text-primary">{profile?.transactions_bought ?? 0}</p>
               <p className="text-xs text-muted-foreground">Bought</p>
             </div>
             <div className="text-center border-x border-border/50">
-              <p className="text-lg font-bold text-primary">0</p>
+              <p className="text-lg font-bold text-primary">{profile?.transactions_sold ?? 0}</p>
               <p className="text-xs text-muted-foreground">Sold</p>
             </div>
             <div className="text-center">
@@ -147,7 +161,6 @@ export default function Account() {
           </div>
         </div>
 
-        {/* Sign Out */}
         <Button
           variant="outline"
           className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
@@ -157,10 +170,7 @@ export default function Account() {
           Sign Out
         </Button>
 
-        {/* App Version */}
-        <p className="text-center text-xs text-muted-foreground">
-          FlySwap v1.0.0
-        </p>
+        <p className="text-center text-xs text-muted-foreground">FlySwap v1.0.0</p>
       </div>
     </AppLayout>
   );
