@@ -36,6 +36,40 @@ const tripTags = [
   { value: "business", label: "Business" },
 ];
 
+interface TicketInclusions {
+  luggageIncluded: boolean;
+  carryOnIncluded: boolean;
+  mealIncluded: boolean;
+  speedyBoarding: boolean;
+}
+
+const defaultInclusions: TicketInclusions = {
+  luggageIncluded: false,
+  carryOnIncluded: true,
+  mealIncluded: false,
+  speedyBoarding: false,
+};
+
+const getDefaultFormData = () => ({
+  originCountry: "",
+  originCity: "",
+  originAirport: "",
+  destinationCountry: "",
+  destinationCity: "",
+  destinationAirport: "",
+  departureDate: undefined as Date | undefined,
+  returnDate: undefined as Date | undefined,
+  airline: "",
+  flightNumber: "",
+  price: "",
+  originalPrice: "",
+  ticketCount: "1",
+  stopovers: "0",
+  additionalNotes: "",
+  selectedTags: [] as string[],
+  bumpListing: false,
+});
+
 export default function SellTicket() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,34 +78,31 @@ export default function SellTicket() {
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    originCountry: "",
-    originCity: "",
-    originAirport: "",
-    destinationCountry: "",
-    destinationCity: "",
-    destinationAirport: "",
-    departureDate: undefined as Date | undefined,
-    returnDate: undefined as Date | undefined,
-    airline: "",
-    flightNumber: "",
-    price: "",
-    originalPrice: "",
-    ticketCount: "1",
-    luggageIncluded: false,
-    carryOnIncluded: true,
-    mealIncluded: false,
-    speedyBoarding: false,
-    stopovers: "0",
-    additionalNotes: "",
-    selectedTags: [] as string[],
-    bumpListing: false,
-  });
+  // Shared inclusions (used when sameInclusions is true)
+  const [sharedInclusions, setSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
+  // Per-ticket inclusions (used when sameInclusions is false)
+  const [perTicketInclusions, setPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
+  const [sameInclusions, setSameInclusions] = useState(true);
+
+  const [formData, setFormData] = useState(getDefaultFormData());
+
+  const ticketCount = parseInt(formData.ticketCount) || 1;
+
+  // Keep perTicketInclusions array in sync with ticketCount
+  const handleTicketCountChange = (newCount: string) => {
+    const count = parseInt(newCount) || 1;
+    setFormData((prev) => ({ ...prev, ticketCount: newCount }));
+    setPerTicketInclusions((prev) => {
+      if (count > prev.length) {
+        return [...prev, ...Array(count - prev.length).fill(null).map(() => ({ ...defaultInclusions }))];
+      }
+      return prev.slice(0, count);
+    });
+  };
 
   const countries = useMemo(() => getCountries(), []);
   const originCities = useMemo(() => formData.originCountry ? getCitiesByCountry(formData.originCountry) : [], [formData.originCountry]);
   const destinationCities = useMemo(() => formData.destinationCountry ? getCitiesByCountry(formData.destinationCountry) : [], [formData.destinationCountry]);
-
   const originAirports = useMemo(() => formData.originCity ? getAirportCodesForCity(formData.originCity) : [], [formData.originCity]);
   const destinationAirports = useMemo(() => formData.destinationCity ? getAirportCodesForCity(formData.destinationCity) : [], [formData.destinationCity]);
 
@@ -89,10 +120,21 @@ export default function SellTicket() {
     enabled: !!user?.id,
   });
 
-  // Handle ticket upload for OCR
+  // Full reset helper
+  const resetForm = () => {
+    setFormData(getDefaultFormData());
+    setIsReturn(false);
+    setSharedInclusions({ ...defaultInclusions });
+    setPerTicketInclusions([{ ...defaultInclusions }]);
+    setSameInclusions(true);
+  };
+
   const handleTicketUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset everything before populating with new data
+    resetForm();
 
     setIsUploading(true);
     try {
@@ -110,26 +152,38 @@ export default function SellTicket() {
 
       if (data?.parsed) {
         const p = data.parsed;
+        const hasReturn = !!p.returnDate;
+        setIsReturn(hasReturn);
+
+        const parsedCount = p.ticketCount ? String(p.ticketCount) : "1";
+
         setFormData((prev) => ({
           ...prev,
-          originCountry: p.originCountry || prev.originCountry,
-          originCity: p.originCity || prev.originCity,
-          destinationCountry: p.destinationCountry || prev.destinationCountry,
-          destinationCity: p.destinationCity || prev.destinationCity,
-          airline: p.airline || prev.airline,
-          flightNumber: p.flightNumber || prev.flightNumber,
-          originalPrice: p.originalPrice?.toString() || prev.originalPrice,
-          departureDate: p.departureDate ? new Date(p.departureDate) : prev.departureDate,
-          returnDate: p.returnDate ? new Date(p.returnDate) : prev.returnDate,
+          originCountry: p.originCountry || "",
+          originCity: p.originCity || "",
+          destinationCountry: p.destinationCountry || "",
+          destinationCity: p.destinationCity || "",
+          airline: p.airline || "",
+          flightNumber: p.flightNumber || "",
+          originalPrice: p.originalPrice?.toString() || "",
+          departureDate: p.departureDate ? new Date(p.departureDate) : undefined,
+          returnDate: hasReturn ? new Date(p.returnDate) : undefined,
+          ticketCount: parsedCount,
         }));
-        if (p.returnDate) setIsReturn(true);
-        toast({ title: "Ticket parsed!", description: "Please review the auto-filled details below." });
+
+        // Sync per-ticket array
+        const count = parseInt(parsedCount) || 1;
+        setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
+
+        toast({ title: "Ticket parsed!", description: `Detected ${count} ticket${count > 1 ? "s" : ""}. Please review the details below.` });
       }
     } catch (err: any) {
       console.error("Ticket parse error:", err);
       toast({ title: "Could not read ticket", description: "Please fill in the details manually.", variant: "destructive" });
     } finally {
       setIsUploading(false);
+      // Reset file input so re-uploading the same file triggers onChange
+      e.target.value = "";
     }
   };
 
@@ -138,6 +192,10 @@ export default function SellTicket() {
       const bumpedUntil = formData.bumpListing
         ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         : null;
+
+      const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
+      const perTicketData = sameInclusions ? null : perTicketInclusions;
+
       const { error } = await supabase.from("listings").insert({
         seller_id: profile!.id,
         title: `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`,
@@ -151,15 +209,16 @@ export default function SellTicket() {
         flight_number: formData.flightNumber || null,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        ticket_count: parseInt(formData.ticketCount),
-        luggage_included: formData.luggageIncluded,
-        carry_on_included: formData.carryOnIncluded,
-        meal_included: formData.mealIncluded,
-        speedy_boarding: formData.speedyBoarding,
+        ticket_count: ticketCount,
+        luggage_included: sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false,
+        carry_on_included: sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true,
+        meal_included: sameInclusions ? sharedInclusions.mealIncluded : perTicketInclusions[0]?.mealIncluded ?? false,
+        speedy_boarding: sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false,
         stopovers: parseInt(formData.stopovers),
         additional_notes: formData.additionalNotes || null,
         tags: formData.selectedTags as any,
         bumped_until: bumpedUntil,
+        per_ticket_inclusions: perTicketData as any,
       });
       if (error) throw error;
     },
@@ -202,6 +261,36 @@ export default function SellTicket() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const renderInclusionToggles = (inclusions: TicketInclusions, onChange: (field: keyof TicketInclusions, value: boolean) => void, label?: string) => (
+    <div className="space-y-3">
+      {label && <p className="text-sm font-medium text-muted-foreground">{label}</p>}
+      <div className="flex items-center justify-between">
+        <div className={cn("flex items-center gap-3 transition-colors", inclusions.luggageIncluded ? "text-primary" : "text-muted-foreground")}>
+          <Luggage className="w-5 h-5" /><span>Checked Luggage</span>
+        </div>
+        <Switch checked={inclusions.luggageIncluded} onCheckedChange={(v) => onChange("luggageIncluded", v)} />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className={cn("flex items-center gap-3 transition-colors", inclusions.carryOnIncluded ? "text-primary" : "text-muted-foreground")}>
+          <Luggage className="w-5 h-5" /><span>Carry-on Bag</span>
+        </div>
+        <Switch checked={inclusions.carryOnIncluded} onCheckedChange={(v) => onChange("carryOnIncluded", v)} />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className={cn("flex items-center gap-3 transition-colors", inclusions.mealIncluded ? "text-primary" : "text-muted-foreground")}>
+          <Utensils className="w-5 h-5" /><span>In-flight Meal</span>
+        </div>
+        <Switch checked={inclusions.mealIncluded} onCheckedChange={(v) => onChange("mealIncluded", v)} />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className={cn("flex items-center gap-3 transition-colors", inclusions.speedyBoarding ? "text-primary" : "text-muted-foreground")}>
+          <Zap className="w-5 h-5" /><span>Speedy Boarding</span>
+        </div>
+        <Switch checked={inclusions.speedyBoarding} onCheckedChange={(v) => onChange("speedyBoarding", v)} />
+      </div>
+    </div>
+  );
 
   return (
     <AppLayout showNav={false}>
@@ -335,7 +424,15 @@ export default function SellTicket() {
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Return flight?</Label>
-                <Switch checked={isReturn} onCheckedChange={setIsReturn} />
+                <Switch
+                  checked={isReturn}
+                  onCheckedChange={(checked) => {
+                    setIsReturn(checked);
+                    if (!checked) {
+                      setFormData((prev) => ({ ...prev, returnDate: undefined }));
+                    }
+                  }}
+                />
               </div>
               <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
                 <div className="space-y-2">
@@ -409,7 +506,7 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Number of Tickets</Label>
-                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => setFormData({ ...formData, ticketCount: e.target.value })} className="bg-secondary/50" required />
+                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
                 <div className="space-y-2">
                   <Label>Stopovers</Label>
@@ -423,30 +520,36 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">What's Included</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className={cn("flex items-center gap-3 transition-colors", formData.luggageIncluded ? "text-primary" : "text-muted-foreground")}>
-                  <Luggage className="w-5 h-5" /><span>Checked Luggage</span>
+              {ticketCount > 1 && (
+                <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Same for all tickets?</p>
+                    <p className="text-xs text-muted-foreground">Toggle off if inclusions differ between tickets</p>
+                  </div>
+                  <Switch checked={sameInclusions} onCheckedChange={setSameInclusions} />
                 </div>
-                <Switch checked={formData.luggageIncluded} onCheckedChange={(checked) => setFormData({ ...formData, luggageIncluded: checked })} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className={cn("flex items-center gap-3 transition-colors", formData.carryOnIncluded ? "text-primary" : "text-muted-foreground")}>
-                  <Luggage className="w-5 h-5" /><span>Carry-on Bag</span>
+              )}
+
+              {sameInclusions ? (
+                renderInclusionToggles(sharedInclusions, (field, value) =>
+                  setSharedInclusions((prev) => ({ ...prev, [field]: value }))
+                )
+              ) : (
+                <div className="space-y-5">
+                  {perTicketInclusions.map((inc, i) => (
+                    <div key={i} className={cn(i > 0 && "pt-4 border-t border-border/50")}>
+                      {renderInclusionToggles(
+                        inc,
+                        (field, value) =>
+                          setPerTicketInclusions((prev) =>
+                            prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
+                          ),
+                        `Ticket ${i + 1}`
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <Switch checked={formData.carryOnIncluded} onCheckedChange={(checked) => setFormData({ ...formData, carryOnIncluded: checked })} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className={cn("flex items-center gap-3 transition-colors", formData.mealIncluded ? "text-primary" : "text-muted-foreground")}>
-                  <Utensils className="w-5 h-5" /><span>In-flight Meal</span>
-                </div>
-                <Switch checked={formData.mealIncluded} onCheckedChange={(checked) => setFormData({ ...formData, mealIncluded: checked })} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className={cn("flex items-center gap-3 transition-colors", formData.speedyBoarding ? "text-primary" : "text-muted-foreground")}>
-                  <Zap className="w-5 h-5" /><span>Speedy Boarding</span>
-                </div>
-                <Switch checked={formData.speedyBoarding} onCheckedChange={(checked) => setFormData({ ...formData, speedyBoarding: checked })} />
-              </div>
+              )}
             </div>
           </div>
 

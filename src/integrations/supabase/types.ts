@@ -102,6 +102,7 @@ export type Database = {
           origin_city: string
           origin_country: string
           original_price: number | null
+          per_ticket_inclusions: Json | null
           price: number
           return_date: string | null
           seller_id: string
@@ -131,6 +132,7 @@ export type Database = {
           origin_city: string
           origin_country: string
           original_price?: number | null
+          per_ticket_inclusions?: Json | null
           price: number
           return_date?: string | null
           seller_id: string
@@ -160,6 +162,7 @@ export type Database = {
           origin_city?: string
           origin_country?: string
           original_price?: number | null
+          per_ticket_inclusions?: Json | null
           price?: number
           return_date?: string | null
           seller_id?: string

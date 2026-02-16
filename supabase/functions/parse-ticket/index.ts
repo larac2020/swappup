@@ -20,7 +20,8 @@ Important rules:
 - For dates, use ISO format: YYYY-MM-DD
 - For prices, return just the number without currency symbol
 - If you cannot determine a field, omit it from the response
-- Look for airline name, flight number, departure/arrival cities, dates, and price`;
+- Look for airline name, flight number, departure/arrival cities, dates, price, and the number of passengers/tickets
+- If the confirmation shows multiple passengers or tickets, return the total count in ticketCount`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -58,6 +59,7 @@ Important rules:
                   departureDate: { type: "string", description: "Departure date in YYYY-MM-DD format" },
                   returnDate: { type: "string", description: "Return date in YYYY-MM-DD format if applicable" },
                   originalPrice: { type: "number", description: "Ticket price as a number" },
+                  ticketCount: { type: "number", description: "Number of passengers or tickets in the booking" },
                 },
                 required: [],
                 additionalProperties: false,
