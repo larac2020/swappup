@@ -15,14 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowLeft, Plane, Calendar as CalendarIcon, Plus,
-  Luggage, Utensils, Zap, AlertCircle, Loader2, Info
+  ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
+  Luggage, Utensils, Zap, AlertCircle, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  getCountries, getCitiesByCountry, getCountryForCity, getAirportCodesForCity,
-  airlines, getAirlineData
+  getCountries, getCitiesByCountry, getAirportCodesForCity,
+  airlines, CityData
 } from "@/data/flightData";
 
 const tripTags = [
@@ -41,18 +41,22 @@ export default function SellTicket() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const [isReturn, setIsReturn] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const [formData, setFormData] = useState({
     originCountry: "",
     originCity: "",
+    originAirport: "",
     destinationCountry: "",
     destinationCity: "",
+    destinationAirport: "",
     departureDate: undefined as Date | undefined,
     returnDate: undefined as Date | undefined,
     airline: "",
     flightNumber: "",
     price: "",
     originalPrice: "",
-    nameChangeFee: "",
     ticketCount: "1",
     luggageIncluded: false,
     carryOnIncluded: true,
@@ -70,18 +74,6 @@ export default function SellTicket() {
   const originAirports = useMemo(() => formData.originCity ? getAirportCodesForCity(formData.originCity) : [], [formData.originCity]);
   const destinationAirports = useMemo(() => formData.destinationCity ? getAirportCodesForCity(formData.destinationCity) : [], [formData.destinationCity]);
 
-  const selectedAirlineData = useMemo(() => formData.airline ? getAirlineData(formData.airline) : undefined, [formData.airline]);
-
-  // Auto-fill name change fee when airline is selected
-  const handleAirlineChange = (airlineName: string) => {
-    const airlineInfo = getAirlineData(airlineName);
-    setFormData((prev) => ({
-      ...prev,
-      airline: airlineName,
-      nameChangeFee: airlineInfo?.nameChangeFee?.toString() ?? "",
-    }));
-  };
-
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -96,6 +88,50 @@ export default function SellTicket() {
     enabled: !!user?.id,
   });
 
+  // Handle ticket upload for OCR
+  const handleTicketUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      const { data, error } = await supabase.functions.invoke("parse-ticket", {
+        body: { image: base64, fileName: file.name },
+      });
+
+      if (error) throw error;
+
+      if (data?.parsed) {
+        const p = data.parsed;
+        setFormData((prev) => ({
+          ...prev,
+          originCountry: p.originCountry || prev.originCountry,
+          originCity: p.originCity || prev.originCity,
+          destinationCountry: p.destinationCountry || prev.destinationCountry,
+          destinationCity: p.destinationCity || prev.destinationCity,
+          airline: p.airline || prev.airline,
+          flightNumber: p.flightNumber || prev.flightNumber,
+          originalPrice: p.originalPrice?.toString() || prev.originalPrice,
+          departureDate: p.departureDate ? new Date(p.departureDate) : prev.departureDate,
+          returnDate: p.returnDate ? new Date(p.returnDate) : prev.returnDate,
+        }));
+        if (p.returnDate) setIsReturn(true);
+        toast({ title: "Ticket parsed!", description: "Please review the auto-filled details below." });
+      }
+    } catch (err: any) {
+      console.error("Ticket parse error:", err);
+      toast({ title: "Could not read ticket", description: "Please fill in the details manually.", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const createListingMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("listings").insert({
@@ -106,12 +142,11 @@ export default function SellTicket() {
         destination_city: formData.destinationCity,
         destination_country: formData.destinationCountry,
         departure_date: formData.departureDate!.toISOString().split("T")[0],
-        return_date: formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null,
+        return_date: isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null,
         airline: formData.airline,
         flight_number: formData.flightNumber || null,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        name_change_fee: formData.nameChangeFee ? parseFloat(formData.nameChangeFee) : null,
         ticket_count: parseInt(formData.ticketCount),
         luggage_included: formData.luggageIncluded,
         carry_on_included: formData.carryOnIncluded,
@@ -141,6 +176,8 @@ export default function SellTicket() {
     }));
   };
 
+  const priceError = formData.price && formData.originalPrice && parseFloat(formData.price) >= parseFloat(formData.originalPrice);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) {
@@ -151,8 +188,15 @@ export default function SellTicket() {
       toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
+    if (priceError) {
+      toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
+      return;
+    }
     createListingMutation.mutate();
   };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return (
     <AppLayout showNav={false}>
@@ -167,6 +211,31 @@ export default function SellTicket() {
         </div>
 
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+          {/* Upload Ticket */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Upload className="w-5 h-5 text-primary" />
+              Upload Ticket Confirmation
+            </h2>
+            <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
+              <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <p className="text-sm text-muted-foreground">Reading your ticket...</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground text-center">
+                    Upload a photo or screenshot of your ticket confirmation to auto-fill details
+                  </p>
+                  <p className="text-xs text-muted-foreground">or fill in manually below</p>
+                </>
+              )}
+            </label>
+          </div>
+
           {/* Route */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -178,7 +247,7 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>From Country</Label>
-                  <Select value={formData.originCountry} onValueChange={(v) => setFormData({ ...formData, originCountry: v, originCity: "" })}>
+                  <Select value={formData.originCountry} onValueChange={(v) => setFormData({ ...formData, originCountry: v, originCity: "", originAirport: "" })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -187,7 +256,7 @@ export default function SellTicket() {
                 </div>
                 <div className="space-y-2">
                   <Label>From City</Label>
-                  <Select value={formData.originCity} onValueChange={(v) => setFormData({ ...formData, originCity: v })} disabled={!formData.originCountry}>
+                  <Select value={formData.originCity} onValueChange={(v) => setFormData({ ...formData, originCity: v, originAirport: "" })} disabled={!formData.originCountry}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {originCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -196,18 +265,22 @@ export default function SellTicket() {
                 </div>
               </div>
               {originAirports.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {originAirports.map((a) => (
-                    <Badge key={a.airportCode} variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                      {a.airportCode} — {a.airportName}
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  <Label>From Airport</Label>
+                  <Select value={formData.originAirport} onValueChange={(v) => setFormData({ ...formData, originAirport: v })}>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {originAirports.map((a) => (
+                        <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
               <div className="flex justify-center">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Plane className="w-5 h-5 text-primary rotate-90" />
+                  <Plane className="w-5 h-5 text-primary -rotate-45" />
                 </div>
               </div>
 
@@ -215,7 +288,7 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>To Country</Label>
-                  <Select value={formData.destinationCountry} onValueChange={(v) => setFormData({ ...formData, destinationCountry: v, destinationCity: "" })}>
+                  <Select value={formData.destinationCountry} onValueChange={(v) => setFormData({ ...formData, destinationCountry: v, destinationCity: "", destinationAirport: "" })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -224,7 +297,7 @@ export default function SellTicket() {
                 </div>
                 <div className="space-y-2">
                   <Label>To City</Label>
-                  <Select value={formData.destinationCity} onValueChange={(v) => setFormData({ ...formData, destinationCity: v })} disabled={!formData.destinationCountry}>
+                  <Select value={formData.destinationCity} onValueChange={(v) => setFormData({ ...formData, destinationCity: v, destinationAirport: "" })} disabled={!formData.destinationCountry}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {destinationCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -233,25 +306,33 @@ export default function SellTicket() {
                 </div>
               </div>
               {destinationAirports.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {destinationAirports.map((a) => (
-                    <Badge key={a.airportCode} variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                      {a.airportCode} — {a.airportName}
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  <Label>To Airport</Label>
+                  <Select value={formData.destinationAirport} onValueChange={(v) => setFormData({ ...formData, destinationAirport: v })}>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {destinationAirports.map((a) => (
+                        <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Dates */}
+          {/* One-way / Return toggle + Dates */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-primary" />
               Flight Dates
             </h2>
             <div className="glass rounded-2xl p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
+                <Label>Return flight?</Label>
+                <Switch checked={isReturn} onCheckedChange={setIsReturn} />
+              </div>
+              <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
                 <div className="space-y-2">
                   <Label>Departure Date</Label>
                   <Popover>
@@ -261,33 +342,53 @@ export default function SellTicket() {
                         {formData.departureDate ? format(formData.departureDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formData.departureDate} onSelect={(date) => setFormData({ ...formData, departureDate: date })} initialFocus /></PopoverContent>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.departureDate}
+                        onSelect={(date) => setFormData({ ...formData, departureDate: date })}
+                        initialFocus
+                        modifiers={{ today: today }}
+                        modifiersClassNames={{ today: "text-muted-foreground" }}
+                      />
+                    </PopoverContent>
                   </Popover>
                 </div>
-                <div className="space-y-2">
-                  <Label>Return Date (optional)</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.returnDate ? format(formData.returnDate, "PPP") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formData.returnDate} onSelect={(date) => setFormData({ ...formData, returnDate: date })} initialFocus /></PopoverContent>
-                  </Popover>
-                </div>
+                {isReturn && (
+                  <div className="space-y-2">
+                    <Label>Return Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.returnDate ? format(formData.returnDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.returnDate}
+                          onSelect={(date) => setFormData({ ...formData, returnDate: date })}
+                          initialFocus
+                          modifiers={{ today: today }}
+                          modifiersClassNames={{ today: "text-muted-foreground" }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Flight Details with Airline dropdown */}
+          {/* Flight Details */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Flight Details</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Airline</Label>
-                  <Select value={formData.airline} onValueChange={handleAirlineChange}>
+                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
@@ -299,17 +400,6 @@ export default function SellTicket() {
                   <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
                 </div>
               </div>
-
-              {/* Airline name change fee info */}
-              {selectedAirlineData && (
-                <div className="flex gap-2 items-start rounded-xl bg-accent/50 p-3 border border-accent">
-                  <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">{selectedAirlineData.name}:</span>{" "}
-                    {selectedAirlineData.nameChangeFeeNote}
-                  </p>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -329,19 +419,27 @@ export default function SellTicket() {
             <h2 className="text-lg font-semibold">What's Included</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3"><Luggage className="w-5 h-5 text-primary" /><span>Checked Luggage</span></div>
+                <div className={cn("flex items-center gap-3 transition-colors", formData.luggageIncluded ? "text-primary" : "text-muted-foreground")}>
+                  <Luggage className="w-5 h-5" /><span>Checked Luggage</span>
+                </div>
                 <Switch checked={formData.luggageIncluded} onCheckedChange={(checked) => setFormData({ ...formData, luggageIncluded: checked })} />
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3"><Luggage className="w-5 h-5 text-muted-foreground" /><span>Carry-on Bag</span></div>
+                <div className={cn("flex items-center gap-3 transition-colors", formData.carryOnIncluded ? "text-primary" : "text-muted-foreground")}>
+                  <Luggage className="w-5 h-5" /><span>Carry-on Bag</span>
+                </div>
                 <Switch checked={formData.carryOnIncluded} onCheckedChange={(checked) => setFormData({ ...formData, carryOnIncluded: checked })} />
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3"><Utensils className="w-5 h-5 text-muted-foreground" /><span>In-flight Meal</span></div>
+                <div className={cn("flex items-center gap-3 transition-colors", formData.mealIncluded ? "text-primary" : "text-muted-foreground")}>
+                  <Utensils className="w-5 h-5" /><span>In-flight Meal</span>
+                </div>
                 <Switch checked={formData.mealIncluded} onCheckedChange={(checked) => setFormData({ ...formData, mealIncluded: checked })} />
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3"><Zap className="w-5 h-5 text-muted-foreground" /><span>Speedy Boarding</span></div>
+                <div className={cn("flex items-center gap-3 transition-colors", formData.speedyBoarding ? "text-primary" : "text-muted-foreground")}>
+                  <Zap className="w-5 h-5" /><span>Speedy Boarding</span>
+                </div>
                 <Switch checked={formData.speedyBoarding} onCheckedChange={(checked) => setFormData({ ...formData, speedyBoarding: checked })} />
               </div>
             </div>
@@ -353,19 +451,20 @@ export default function SellTicket() {
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Your Price (€)</Label>
-                  <Input type="number" min="1" step="0.01" placeholder="89.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="bg-secondary/50" required />
-                </div>
-                <div className="space-y-2">
                   <Label>Original Price (€)</Label>
                   <Input type="number" min="0" step="0.01" placeholder="145.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
                 </div>
+                <div className="space-y-2">
+                  <Label>Your Selling Price (€)</Label>
+                  <Input type="number" min="1" step="0.01" placeholder="89.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Airline Name Change Fee (€)</Label>
-                <Input type="number" min="0" step="0.01" placeholder="50.00" value={formData.nameChangeFee} onChange={(e) => setFormData({ ...formData, nameChangeFee: e.target.value })} className="bg-secondary/50" />
-                <p className="text-xs text-muted-foreground">This fee is charged by the airline to change the passenger name</p>
-              </div>
+              {priceError && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Selling price must be lower than the original price
+                </p>
+              )}
             </div>
           </div>
 
@@ -395,15 +494,6 @@ export default function SellTicket() {
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
               className="bg-secondary/50 min-h-24"
             />
-          </div>
-
-          {/* Disclaimer */}
-          <div className="glass rounded-xl p-4 flex gap-3 border-l-4 border-primary">
-            <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium mb-1">Important</p>
-              <p className="text-muted-foreground">The name change fee is set by the airline and may vary. Additional charges may apply. We recommend buyers check carrier websites before purchasing.</p>
-            </div>
           </div>
 
           <Button type="submit" variant="gold" size="xl" className="w-full" disabled={createListingMutation.isPending}>
