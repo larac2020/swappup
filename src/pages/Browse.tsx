@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState } from "@/components/listings/ListingFilters";
@@ -7,9 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 export default function Browse() {
+  const [searchParams] = useSearchParams();
+  const initialDestination = searchParams.get("destination") || "";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
-    destination: "",
+    destination: initialDestination,
     origin: "",
     minPrice: 0,
     maxPrice: 2000,
@@ -84,7 +88,11 @@ export default function Browse() {
           <p className="text-muted-foreground">Discover amazing deals from other travelers</p>
         </div>
 
-        <ListingFilters onSearch={setSearchQuery} onFilterChange={setFilters} />
+        <ListingFilters
+          onSearch={setSearchQuery}
+          onFilterChange={setFilters}
+          initialDestination={initialDestination}
+        />
 
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
