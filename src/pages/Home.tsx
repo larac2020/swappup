@@ -5,7 +5,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, TrendingUp, Star, Loader2 } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, TrendingUp, Star, Loader2, History } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -58,6 +58,29 @@ export default function Home() {
     },
   });
 
+  // Fetch recent search history
+  const { data: recentSearches = [] } = useQuery({
+    queryKey: ["recentSearches", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("search_history")
+        .select("*")
+        .eq("user_id", profile!.id)
+        .order("searched_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      // deduplicate by city
+      const seen = new Set<string>();
+      return data.filter((s) => {
+        const key = `${s.destination_city}-${s.destination_country}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 4);
+    },
+    enabled: !!profile?.id,
+  });
+
   return (
     <AppLayout>
       <div className="space-y-8">
@@ -99,6 +122,28 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Recent Searches */}
+        {recentSearches.length > 0 && (
+          <div className="px-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Recently Searched</h2>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {recentSearches.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => navigate(`/browse?destination=${encodeURIComponent(s.destination_city || "")}`)}
+                  className="flex-shrink-0 glass rounded-xl px-4 py-3 text-left hover:bg-secondary/50 transition-colors"
+                >
+                  <p className="font-medium text-sm">{s.destination_city}</p>
+                  <p className="text-xs text-muted-foreground">{s.destination_country}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recommended For You */}
         <div className="px-4 space-y-4">

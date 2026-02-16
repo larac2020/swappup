@@ -11,6 +11,7 @@ import Cart from "./pages/Cart";
 import Account from "./pages/Account";
 import ListingDetail from "./pages/ListingDetail";
 import SellTicket from "./pages/SellTicket";
+import Favorites from "./pages/Favorites";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/account/:section" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
           <Route path="/sell" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -69,6 +69,49 @@ export default function ListingDetail() {
     enabled: !!user?.id,
   });
 
+  // Check if listing is favorited
+  const { data: isFavorited = false } = useQuery({
+    queryKey: ["isFavorited", myProfile?.id, id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", myProfile!.id)
+        .eq("listing_id", id!)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!myProfile?.id && !!id,
+  });
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (isFavorited) {
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", myProfile!.id)
+          .eq("listing_id", listing!.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("favorites").insert({
+          user_id: myProfile!.id,
+          listing_id: listing!.id,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["isFavorited", myProfile?.id, id] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      toast({ title: isFavorited ? "Removed from favorites" : "Added to favorites" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const addToCartMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("cart_items").insert({
@@ -138,7 +181,15 @@ export default function ListingDetail() {
             </Button>
             <div className="flex gap-2">
               <Button variant="glass" size="icon" className="rounded-full"><Share2 className="w-5 h-5" /></Button>
-              <Button variant="glass" size="icon" className="rounded-full"><Heart className="w-5 h-5" /></Button>
+              <Button
+                variant="glass"
+                size="icon"
+                className="rounded-full"
+                onClick={() => toggleFavoriteMutation.mutate()}
+                disabled={toggleFavoriteMutation.isPending}
+              >
+                <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
+              </Button>
             </div>
           </div>
 
