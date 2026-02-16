@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
-  MapPin, FileText, Bell, Star
+  MapPin, FileText, Bell, Star, Heart, ShoppingBag
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ const menuItems = [
   { icon: CreditCard, label: "Payment Methods", path: "/account/payment", description: "Cards and bank accounts" },
   { icon: Shield, label: "ID Verification", path: "/account/verification", description: "Upload your ID documents", badge: "Required" },
   { icon: Bell, label: "Notifications", path: "/account/notifications", description: "Email and push settings" },
+  { icon: ShoppingBag, label: "Purchases", path: "/account/purchases", description: "Your orders and trips" },
+  { icon: Heart, label: "Favorites", path: "/account/favorites", description: "Saved listings" },
   { icon: FileText, label: "Transaction History", path: "/account/transactions", description: "Past purchases and sales" },
 ];
 
