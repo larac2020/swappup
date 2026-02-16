@@ -5,7 +5,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -54,20 +54,6 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
-  const { data: recommendations = [], isLoading: loadingRecs } = useQuery({
-    queryKey: ["recommendations"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(4);
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: recentSearches = [] } = useQuery({
     queryKey: ["recentSearches", profile?.id],
     queryFn: async () => {
@@ -88,6 +74,143 @@ export default function Home() {
     },
     enabled: !!profile?.id,
   });
+
+  // Under €100 deals
+  const { data: budgetDeals = [], isLoading: loadingBudget } = useQuery({
+    queryKey: ["budgetDeals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .lte("price", 100)
+        .order("price", { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Last minute deals (this weekend: next 7 days)
+  const { data: lastMinuteDeals = [], isLoading: loadingLastMinute } = useQuery({
+    queryKey: ["lastMinuteDeals"],
+    queryFn: async () => {
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .gte("departure_date", today.toISOString().split("T")[0])
+        .lte("departure_date", nextWeek.toISOString().split("T")[0])
+        .order("departure_date", { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Most popular (most favorited) - we count favorites per listing
+  const { data: popularListings = [], isLoading: loadingPopular } = useQuery({
+    queryKey: ["popularListings"],
+    queryFn: async () => {
+      // Get favorites counts
+      const { data: favs, error: favErr } = await supabase
+        .from("favorites")
+        .select("listing_id");
+      if (favErr) throw favErr;
+
+      // Count per listing
+      const counts: Record<string, number> = {};
+      favs.forEach((f) => {
+        counts[f.listing_id] = (counts[f.listing_id] || 0) + 1;
+      });
+
+      const topIds = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([id]) => id);
+
+      if (topIds.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .in("id", topIds)
+        .eq("is_active", true);
+      if (error) throw error;
+      // Sort by favorites count
+      return (data || []).sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    },
+  });
+
+  // Latest deals (fallback section)
+  const { data: latestDeals = [], isLoading: loadingLatest } = useQuery({
+    queryKey: ["recommendations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const renderListingSection = (
+    title: string,
+    icon: React.ReactNode,
+    listings: any[],
+    isLoading: boolean,
+    browseLink?: string
+  ) => {
+    if (!isLoading && listings.length === 0) return null;
+    return (
+      <div className="px-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <h2 className="text-lg font-semibold">{title}</h2>
+          </div>
+          {browseLink && (
+            <Button variant="ghost" size="sm" onClick={() => navigate(browseLink)}>
+              See all
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          )}
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                id={listing.id}
+                title={listing.title}
+                originCity={listing.origin_city}
+                destinationCity={listing.destination_city}
+                destinationCountry={listing.destination_country}
+                departureDate={listing.departure_date}
+                returnDate={listing.return_date ?? undefined}
+                price={Number(listing.price)}
+                originalPrice={listing.original_price ? Number(listing.original_price) : undefined}
+                airline={listing.airline}
+                ticketCount={listing.ticket_count}
+                imageUrl={listing.destination_image_url ?? undefined}
+                tags={listing.tags as string[] ?? []}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <AppLayout>
@@ -112,7 +235,7 @@ export default function Home() {
 
             {/* Quick Stats - clickable */}
             <div className="grid grid-cols-3 gap-3">
-              <button onClick={() => navigate("/account/listings")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
+              <button onClick={() => navigate("/listings")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
                 <Ticket className="w-5 h-5 text-primary mx-auto mb-1" />
                 <p className="text-lg font-bold">{myListingsCount}</p>
                 <p className="text-xs text-muted-foreground">Active Listings</p>
@@ -122,7 +245,7 @@ export default function Home() {
                 <p className="text-lg font-bold">{profile?.transactions_bought ?? 0}</p>
                 <p className="text-xs text-muted-foreground">Purchases</p>
               </button>
-              <button onClick={() => navigate("/favorites")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
+              <button onClick={() => navigate("/account/favorites")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
                 <Heart className="w-5 h-5 text-primary mx-auto mb-1" />
                 <p className="text-lg font-bold">{favoritesCount}</p>
                 <p className="text-xs text-muted-foreground">Favorites</p>
@@ -153,47 +276,41 @@ export default function Home() {
           </div>
         )}
 
-        {/* Latest Deals */}
-        <div className="px-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Latest Deals</h2>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/browse")}>
-              See all
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
+        {/* Under €100 */}
+        {renderListingSection(
+          "Under €100",
+          <Zap className="w-5 h-5 text-primary" />,
+          budgetDeals,
+          loadingBudget,
+          "/browse"
+        )}
 
-          {loadingRecs ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : recommendations.length > 0 ? (
-            <div className="space-y-4">
-              {recommendations.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  id={listing.id}
-                  title={listing.title}
-                  originCity={listing.origin_city}
-                  destinationCity={listing.destination_city}
-                  destinationCountry={listing.destination_country}
-                  departureDate={listing.departure_date}
-                  returnDate={listing.return_date ?? undefined}
-                  price={Number(listing.price)}
-                  originalPrice={listing.original_price ? Number(listing.original_price) : undefined}
-                  airline={listing.airline}
-                  ticketCount={listing.ticket_count}
-                  imageUrl={listing.destination_image_url ?? undefined}
-                  tags={listing.tags as string[] ?? []}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 glass rounded-2xl">
-              <p className="text-muted-foreground">No listings available yet. Be the first to sell!</p>
-            </div>
-          )}
-        </div>
+        {/* Last Minute Deals */}
+        {renderListingSection(
+          "Last Minute Deals",
+          <Flame className="w-5 h-5 text-primary" />,
+          lastMinuteDeals,
+          loadingLastMinute,
+          "/browse"
+        )}
+
+        {/* Most Popular */}
+        {renderListingSection(
+          "Most Popular",
+          <Star className="w-5 h-5 text-primary" />,
+          popularListings,
+          loadingPopular,
+          "/browse"
+        )}
+
+        {/* Latest Deals (fallback) */}
+        {renderListingSection(
+          "Latest Deals",
+          <ArrowRight className="w-5 h-5 text-primary" />,
+          latestDeals,
+          loadingLatest,
+          "/browse"
+        )}
 
         {/* CTA Section */}
         <div className="px-4 pb-6">

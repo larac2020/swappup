@@ -1,7 +1,8 @@
-import { Calendar, MapPin, Plane, Users, Tag } from "lucide-react";
+import { Calendar, Plane, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 
 interface ListingCardProps {
   id: string;
@@ -51,6 +52,11 @@ export function ListingCard({
 }: ListingCardProps) {
   const navigate = useNavigate();
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
+
+  const originCode = getPrimaryAirportCode(originCity);
+  const destCode = getPrimaryAirportCode(destinationCity);
+  const originAirportName = getPrimaryAirportName(originCity);
+  const destAirportName = getPrimaryAirportName(destinationCity);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en-GB", {
@@ -113,11 +119,27 @@ export function ListingCard({
 
         {/* Content */}
         <div className="p-4 space-y-3">
-          {/* Route */}
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">{originCity}</span>
-            <Plane className="w-4 h-4 text-primary -rotate-45" />
-            <span className="font-semibold text-foreground">{destinationCity}</span>
+          {/* Route with airport codes */}
+          <div className="flex items-center gap-3">
+            <div className="text-center min-w-0">
+              {originCode && (
+                <span className="text-xs font-bold text-primary">{originCode}</span>
+              )}
+              <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
+              {originAirportName && originAirportName !== originCity && (
+                <p className="text-xs text-muted-foreground truncate">{originAirportName}</p>
+              )}
+            </div>
+            <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
+            <div className="text-center min-w-0">
+              {destCode && (
+                <span className="text-xs font-bold text-primary">{destCode}</span>
+              )}
+              <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
+              {destAirportName && destAirportName !== destinationCity && (
+                <p className="text-xs text-muted-foreground truncate">{destAirportName}</p>
+              )}
+            </div>
           </div>
 
           {/* Details */}
@@ -136,9 +158,8 @@ export function ListingCard({
           </div>
 
           {/* Airline */}
-          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <div className="pt-2 border-t border-border/50">
             <span className="text-sm text-muted-foreground">{airline}</span>
-            <MapPin className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
       </div>
