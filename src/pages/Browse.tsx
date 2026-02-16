@@ -19,6 +19,13 @@ export default function Browse() {
     maxPrice: 2000,
     ticketCount: 0,
     tags: [],
+    departureDateFrom: undefined,
+    departureDateTo: undefined,
+    airline: "",
+    luggageIncluded: undefined,
+    mealIncluded: undefined,
+    carryOnIncluded: undefined,
+    directOnly: undefined,
   });
 
   const { data: listings = [], isLoading } = useQuery({
@@ -52,29 +59,37 @@ export default function Browse() {
         if (
           !listing.destination_city.toLowerCase().includes(dest) &&
           !listing.destination_country.toLowerCase().includes(dest)
-        ) {
-          return false;
-        }
+        ) return false;
       }
 
       if (filters.origin) {
-        if (!listing.origin_city.toLowerCase().includes(filters.origin.toLowerCase())) {
-          return false;
-        }
+        if (!listing.origin_city.toLowerCase().includes(filters.origin.toLowerCase())) return false;
       }
 
-      if (listing.price < filters.minPrice || listing.price > filters.maxPrice) {
-        return false;
-      }
+      if (listing.price < filters.minPrice || listing.price > filters.maxPrice) return false;
 
-      if (filters.ticketCount > 0 && listing.ticket_count < filters.ticketCount) {
-        return false;
-      }
+      if (filters.ticketCount > 0 && listing.ticket_count < filters.ticketCount) return false;
 
       if (filters.tags.length > 0) {
         const hasMatchingTag = filters.tags.some((tag) => listing.tags?.includes(tag as any));
         if (!hasMatchingTag) return false;
       }
+
+      if (filters.departureDateFrom) {
+        if (listing.departure_date < filters.departureDateFrom) return false;
+      }
+      if (filters.departureDateTo) {
+        if (listing.departure_date > filters.departureDateTo) return false;
+      }
+
+      if (filters.airline) {
+        if (!listing.airline.toLowerCase().includes(filters.airline.toLowerCase())) return false;
+      }
+
+      if (filters.luggageIncluded && !listing.luggage_included) return false;
+      if (filters.carryOnIncluded && !listing.carry_on_included) return false;
+      if (filters.mealIncluded && !listing.meal_included) return false;
+      if (filters.directOnly && (listing.stopovers ?? 0) > 0) return false;
 
       return true;
     });
@@ -91,14 +106,9 @@ export default function Browse() {
         <ListingFilters
           onSearch={setSearchQuery}
           onFilterChange={setFilters}
+          resultCount={filteredListings.length}
           initialDestination={initialDestination}
         />
-
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {filteredListings.length} {filteredListings.length === 1 ? "ticket" : "tickets"} found
-          </p>
-        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
