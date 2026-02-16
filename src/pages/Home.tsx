@@ -5,7 +5,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, TrendingUp, Star, Loader2, History } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -13,7 +13,6 @@ export default function Home() {
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
-  // Fetch user profile for stats
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -28,7 +27,6 @@ export default function Home() {
     enabled: !!user?.id,
   });
 
-  // Fetch active listings for user (as seller)
   const { data: myListingsCount = 0 } = useQuery({
     queryKey: ["myListingsCount", profile?.id],
     queryFn: async () => {
@@ -43,7 +41,19 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
-  // Fetch recommended listings (latest active listings)
+  const { data: favoritesCount = 0 } = useQuery({
+    queryKey: ["favoritesCount", profile?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profile!.id);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!profile?.id,
+  });
+
   const { data: recommendations = [], isLoading: loadingRecs } = useQuery({
     queryKey: ["recommendations"],
     queryFn: async () => {
@@ -58,7 +68,6 @@ export default function Home() {
     },
   });
 
-  // Fetch recent search history
   const { data: recentSearches = [] } = useQuery({
     queryKey: ["recentSearches", profile?.id],
     queryFn: async () => {
@@ -69,7 +78,6 @@ export default function Home() {
         .order("searched_at", { ascending: false })
         .limit(5);
       if (error) throw error;
-      // deduplicate by city
       const seen = new Set<string>();
       return data.filter((s) => {
         const key = `${s.destination_city}-${s.destination_country}`;
@@ -102,23 +110,23 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* Quick Stats */}
+            {/* Quick Stats - clickable */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="glass rounded-xl p-3 text-center">
+              <button onClick={() => navigate("/account/listings")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
                 <Ticket className="w-5 h-5 text-primary mx-auto mb-1" />
                 <p className="text-lg font-bold">{myListingsCount}</p>
                 <p className="text-xs text-muted-foreground">Active Listings</p>
-              </div>
-              <div className="glass rounded-xl p-3 text-center">
-                <TrendingUp className="w-5 h-5 text-success mx-auto mb-1" />
+              </button>
+              <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
+                <ShoppingBag className="w-5 h-5 text-primary mx-auto mb-1" />
                 <p className="text-lg font-bold">{profile?.transactions_bought ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Bought</p>
-              </div>
-              <div className="glass rounded-xl p-3 text-center">
-                <Star className="w-5 h-5 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold">{profile?.transactions_sold ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Sold</p>
-              </div>
+                <p className="text-xs text-muted-foreground">Purchases</p>
+              </button>
+              <button onClick={() => navigate("/favorites")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
+                <Heart className="w-5 h-5 text-primary mx-auto mb-1" />
+                <p className="text-lg font-bold">{favoritesCount}</p>
+                <p className="text-xs text-muted-foreground">Favorites</p>
+              </button>
             </div>
           </div>
         </div>
@@ -145,7 +153,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Recommended For You */}
+        {/* Latest Deals */}
         <div className="px-4 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Latest Deals</h2>
@@ -191,7 +199,7 @@ export default function Home() {
         <div className="px-4 pb-6">
           <div className="glass rounded-2xl p-6 text-center space-y-4">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-gold shadow-glow">
-              <Plane className="w-7 h-7 text-primary-foreground" />
+              <Plane className="w-7 h-7 text-primary-foreground -rotate-45" />
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Got tickets to sell?</h3>

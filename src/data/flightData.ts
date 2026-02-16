@@ -143,6 +143,11 @@ export function getPrimaryAirportCode(city: string): string {
   return cities.find((c) => c.city === city)?.airportCode ?? "";
 }
 
+// Get primary airport name for a city
+export function getPrimaryAirportName(city: string): string {
+  return cities.find((c) => c.city === city)?.airportName ?? "";
+}
+
 // Airlines with typical name change fees
 export interface AirlineData {
   name: string;

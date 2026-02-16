@@ -8,10 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
-  Clock, AlertCircle, ShoppingCart, Share2, Heart, Loader2, Info
+  Clock, ShoppingCart, Share2, Heart, Loader2
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getPrimaryAirportCode, getAirlineData } from "@/data/flightData";
+import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
@@ -152,7 +152,8 @@ export default function ListingDetail() {
 
   const originCode = getPrimaryAirportCode(listing.origin_city);
   const destCode = getPrimaryAirportCode(listing.destination_city);
-  const airlineData = getAirlineData(listing.airline);
+  const originAirportName = getPrimaryAirportName(listing.origin_city);
+  const destAirportName = getPrimaryAirportName(listing.destination_city);
 
   return (
     <AppLayout showNav={false}>
@@ -167,7 +168,7 @@ export default function ListingDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
           <div className="absolute top-4 left-4 right-4 flex justify-between">
-            <Button variant="glass" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <Button variant="glass" size="icon" onClick={() => navigate("/home")} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex gap-2">
@@ -209,21 +210,31 @@ export default function ListingDetail() {
             <div className="flex items-center gap-3 text-xl">
               <div className="text-center">
                 <span className="font-display font-bold">{listing.origin_city}</span>
-                {originCode && <p className="text-xs text-primary font-mono font-semibold">{originCode}</p>}
+                {originCode && (
+                  <p className="text-sm font-mono font-bold text-primary">{originCode}</p>
+                )}
+                {originAirportName && (
+                  <p className="text-xs text-muted-foreground">{originAirportName}</p>
+                )}
               </div>
               <div className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary" />
                 <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-primary/30" />
-                <Plane className="w-5 h-5" />
+                <Plane className="w-5 h-5 -rotate-45" />
                 <div className="w-12 h-0.5 bg-gradient-to-l from-primary to-primary/30" />
                 <div className="w-2 h-2 rounded-full bg-primary" />
               </div>
               <div className="text-center">
                 <span className="font-display font-bold">{listing.destination_city}</span>
-                {destCode && <p className="text-xs text-primary font-mono font-semibold">{destCode}</p>}
+                {destCode && (
+                  <p className="text-sm font-mono font-bold text-primary">{destCode}</p>
+                )}
+                {destAirportName && (
+                  <p className="text-xs text-muted-foreground">{destAirportName}</p>
+                )}
               </div>
             </div>
-            <p className="text-muted-foreground">{listing.destination_country} • {listing.airline}</p>
+            <p className="text-muted-foreground">{listing.airline}</p>
           </div>
 
           {/* Flight Details */}
@@ -240,10 +251,6 @@ export default function ListingDetail() {
                   <div><p className="text-sm text-muted-foreground">Return</p><p className="font-medium">{formatDate(listing.return_date)}</p></div>
                 </div>
               )}
-              <div className="flex items-start gap-3">
-                <Plane className="w-5 h-5 text-primary mt-0.5" />
-                <div><p className="text-sm text-muted-foreground">Carrier</p><p className="font-medium">{listing.airline}</p></div>
-              </div>
               <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-primary mt-0.5" />
                 <div><p className="text-sm text-muted-foreground">Tickets</p><p className="font-medium">{listing.ticket_count} available</p></div>
@@ -265,38 +272,18 @@ export default function ListingDetail() {
           <div className="glass rounded-2xl p-4 space-y-4">
             <h3 className="font-semibold">What's Included</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className={`flex items-center gap-2 ${listing.luggage_included ? "text-success" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-2 ${listing.luggage_included ? "text-primary" : "text-muted-foreground"}`}>
                 <Luggage className="w-5 h-5" /><span className="text-sm">Checked Luggage</span>
               </div>
-              <div className={`flex items-center gap-2 ${listing.carry_on_included ? "text-success" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-2 ${listing.carry_on_included ? "text-primary" : "text-muted-foreground"}`}>
                 <Luggage className="w-5 h-5" /><span className="text-sm">Carry-on Bag</span>
               </div>
-              <div className={`flex items-center gap-2 ${listing.meal_included ? "text-success" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-2 ${listing.meal_included ? "text-primary" : "text-muted-foreground"}`}>
                 <Utensils className="w-5 h-5" /><span className="text-sm">In-flight Meal</span>
               </div>
-              <div className={`flex items-center gap-2 ${listing.speedy_boarding ? "text-success" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-2 ${listing.speedy_boarding ? "text-primary" : "text-muted-foreground"}`}>
                 <Zap className="w-5 h-5" /><span className="text-sm">Speedy Boarding</span>
               </div>
-            </div>
-          </div>
-
-          {/* Name Change Fee Info Box — always shown */}
-          <div className="glass rounded-xl p-4 flex gap-3 border-l-4 border-amber-500">
-            <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium mb-1">Ticket Name Change Fee</p>
-              {listing.name_change_fee !== null && Number(listing.name_change_fee) > 0 ? (
-                <p className="text-muted-foreground">
-                  <span className="font-semibold text-foreground">€{Number(listing.name_change_fee)}</span> — {listing.airline} charges this fee to transfer the ticket to a different passenger name.
-                </p>
-              ) : airlineData ? (
-                <p className="text-muted-foreground">{airlineData.nameChangeFeeNote}</p>
-              ) : (
-                <p className="text-muted-foreground">
-                  The airline may charge a fee to change the passenger name. Please check {listing.airline}'s website for current fees.
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">Fees may vary — always verify on the carrier's website before purchasing.</p>
             </div>
           </div>
 

@@ -1,1 +1,4 @@
 project_id = "oiarehtqhgwkiunsarmz"
+
+[functions.parse-ticket]
+verify_jwt = false

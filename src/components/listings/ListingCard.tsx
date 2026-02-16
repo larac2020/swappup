@@ -116,7 +116,7 @@ export function ListingCard({
           {/* Route */}
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">{originCity}</span>
-            <Plane className="w-4 h-4 text-primary rotate-90" />
+            <Plane className="w-4 h-4 text-primary -rotate-45" />
             <span className="font-semibold text-foreground">{destinationCity}</span>
           </div>
 
