@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ListingCard } from "@/components/listings/ListingCard";
+import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -75,7 +75,24 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
-  // Under €100 deals
+  // Hot Deals (bumped listings)
+  const { data: hotDeals = [], isLoading: loadingHot } = useQuery({
+    queryKey: ["hotDeals"],
+    queryFn: async () => {
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .gte("bumped_until", now)
+        .order("bumped_until", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Under €100
   const { data: budgetDeals = [], isLoading: loadingBudget } = useQuery({
     queryKey: ["budgetDeals"],
     queryFn: async () => {
@@ -85,13 +102,13 @@ export default function Home() {
         .eq("is_active", true)
         .lte("price", 100)
         .order("price", { ascending: true })
-        .limit(6);
+        .limit(10);
       if (error) throw error;
       return data;
     },
   });
 
-  // Last minute deals (this weekend: next 7 days)
+  // Last minute deals (next 7 days)
   const { data: lastMinuteDeals = [], isLoading: loadingLastMinute } = useQuery({
     queryKey: ["lastMinuteDeals"],
     queryFn: async () => {
@@ -105,23 +122,21 @@ export default function Home() {
         .gte("departure_date", today.toISOString().split("T")[0])
         .lte("departure_date", nextWeek.toISOString().split("T")[0])
         .order("departure_date", { ascending: true })
-        .limit(6);
+        .limit(10);
       if (error) throw error;
       return data;
     },
   });
 
-  // Most popular (most favorited) - we count favorites per listing
+  // Most popular (most favorited)
   const { data: popularListings = [], isLoading: loadingPopular } = useQuery({
     queryKey: ["popularListings"],
     queryFn: async () => {
-      // Get favorites counts
       const { data: favs, error: favErr } = await supabase
         .from("favorites")
         .select("listing_id");
       if (favErr) throw favErr;
 
-      // Count per listing
       const counts: Record<string, number> = {};
       favs.forEach((f) => {
         counts[f.listing_id] = (counts[f.listing_id] || 0) + 1;
@@ -129,7 +144,7 @@ export default function Home() {
 
       const topIds = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
+        .slice(0, 10)
         .map(([id]) => id);
 
       if (topIds.length === 0) return [];
@@ -140,12 +155,11 @@ export default function Home() {
         .in("id", topIds)
         .eq("is_active", true);
       if (error) throw error;
-      // Sort by favorites count
       return (data || []).sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
     },
   });
 
-  // Latest deals (fallback section)
+  // Latest deals
   const { data: latestDeals = [], isLoading: loadingLatest } = useQuery({
     queryKey: ["recommendations"],
     queryFn: async () => {
@@ -154,13 +168,13 @@ export default function Home() {
         .select("*")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(4);
+        .limit(10);
       if (error) throw error;
       return data;
     },
   });
 
-  const renderListingSection = (
+  const renderSection = (
     title: string,
     icon: React.ReactNode,
     listings: any[],
@@ -169,41 +183,36 @@ export default function Home() {
   ) => {
     if (!isLoading && listings.length === 0) return null;
     return (
-      <div className="px-4 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
             {icon}
-            <h2 className="text-lg font-semibold">{title}</h2>
+            <h2 className="text-base font-semibold">{title}</h2>
           </div>
           {browseLink && (
-            <Button variant="ghost" size="sm" onClick={() => navigate(browseLink)}>
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => navigate(browseLink)}>
               See all
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           )}
         </div>
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <div className="flex justify-center py-6">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 px-4 scrollbar-hide">
             {listings.map((listing) => (
-              <ListingCard
+              <MiniListingCard
                 key={listing.id}
                 id={listing.id}
-                title={listing.title}
                 originCity={listing.origin_city}
                 destinationCity={listing.destination_city}
-                destinationCountry={listing.destination_country}
                 departureDate={listing.departure_date}
-                returnDate={listing.return_date ?? undefined}
                 price={Number(listing.price)}
                 originalPrice={listing.original_price ? Number(listing.original_price) : undefined}
                 airline={listing.airline}
-                ticketCount={listing.ticket_count}
                 imageUrl={listing.destination_image_url ?? undefined}
-                tags={listing.tags as string[] ?? []}
               />
             ))}
           </div>
@@ -214,9 +223,9 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Hero Section */}
-        <div className="relative px-4 pt-6 pb-8">
+        <div className="relative px-4 pt-6 pb-4">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           </div>
@@ -224,31 +233,31 @@ export default function Home() {
           <div className="relative space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Welcome back,</p>
-                <h1 className="text-2xl font-display font-bold">{firstName} ✈️</h1>
+                <p className="text-muted-foreground text-sm">Welcome back,</p>
+                <h1 className="text-xl font-display font-bold">{firstName} ✈️</h1>
               </div>
               <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
                 <Plus className="w-4 h-4" />
-                Sell Ticket
+                Sell
               </Button>
             </div>
 
-            {/* Quick Stats - clickable */}
-            <div className="grid grid-cols-3 gap-3">
-              <button onClick={() => navigate("/listings")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
-                <Ticket className="w-5 h-5 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold">{myListingsCount}</p>
-                <p className="text-xs text-muted-foreground">Active Listings</p>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-2">
+              <button onClick={() => navigate("/listings")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
+                <Ticket className="w-4 h-4 text-primary mx-auto mb-0.5" />
+                <p className="text-base font-bold">{myListingsCount}</p>
+                <p className="text-[10px] text-muted-foreground">Listings</p>
               </button>
-              <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
-                <ShoppingBag className="w-5 h-5 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold">{profile?.transactions_bought ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Purchases</p>
+              <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
+                <ShoppingBag className="w-4 h-4 text-primary mx-auto mb-0.5" />
+                <p className="text-base font-bold">{profile?.transactions_bought ?? 0}</p>
+                <p className="text-[10px] text-muted-foreground">Purchases</p>
               </button>
-              <button onClick={() => navigate("/account/favorites")} className="glass rounded-xl p-3 text-center hover:border-primary/30 transition-colors">
-                <Heart className="w-5 h-5 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold">{favoritesCount}</p>
-                <p className="text-xs text-muted-foreground">Favorites</p>
+              <button onClick={() => navigate("/account/favorites")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
+                <Heart className="w-4 h-4 text-primary mx-auto mb-0.5" />
+                <p className="text-base font-bold">{favoritesCount}</p>
+                <p className="text-[10px] text-muted-foreground">Favorites</p>
               </button>
             </div>
           </div>
@@ -256,57 +265,66 @@ export default function Home() {
 
         {/* Recent Searches */}
         {recentSearches.length > 0 && (
-          <div className="px-4 space-y-3">
-            <div className="flex items-center gap-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-4">
               <History className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Recently Searched</h2>
+              <h2 className="text-base font-semibold">Recently Searched</h2>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-1 px-4 scrollbar-hide">
               {recentSearches.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => navigate(`/browse?destination=${encodeURIComponent(s.destination_city || "")}`)}
-                  className="flex-shrink-0 glass rounded-xl px-4 py-3 text-left hover:bg-secondary/50 transition-colors"
+                  className="flex-shrink-0 glass rounded-lg px-3 py-2 text-left hover:bg-secondary/50 transition-colors"
                 >
-                  <p className="font-medium text-sm">{s.destination_city}</p>
-                  <p className="text-xs text-muted-foreground">{s.destination_country}</p>
+                  <p className="font-medium text-xs">{s.destination_city}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.destination_country}</p>
                 </button>
               ))}
             </div>
           </div>
         )}
 
+        {/* Hot Deals (bumped) */}
+        {renderSection(
+          "🔥 Hot Deals",
+          <Sparkles className="w-4 h-4 text-primary" />,
+          hotDeals,
+          loadingHot,
+          "/browse"
+        )}
+
         {/* Under €100 */}
-        {renderListingSection(
+        {renderSection(
           "Under €100",
-          <Zap className="w-5 h-5 text-primary" />,
+          <Zap className="w-4 h-4 text-primary" />,
           budgetDeals,
           loadingBudget,
           "/browse"
         )}
 
-        {/* Last Minute Deals */}
-        {renderListingSection(
-          "Last Minute Deals",
-          <Flame className="w-5 h-5 text-primary" />,
+        {/* Last Minute */}
+        {renderSection(
+          "Last Minute",
+          <Flame className="w-4 h-4 text-primary" />,
           lastMinuteDeals,
           loadingLastMinute,
           "/browse"
         )}
 
         {/* Most Popular */}
-        {renderListingSection(
+        {renderSection(
           "Most Popular",
-          <Star className="w-5 h-5 text-primary" />,
+          <Star className="w-4 h-4 text-primary" />,
           popularListings,
           loadingPopular,
           "/browse"
         )}
 
-        {/* Latest Deals (fallback) */}
-        {renderListingSection(
-          "Latest Deals",
-          <ArrowRight className="w-5 h-5 text-primary" />,
+        {/* Latest */}
+        {renderSection(
+          "Just Added",
+          <ArrowRight className="w-4 h-4 text-primary" />,
           latestDeals,
           loadingLatest,
           "/browse"
@@ -314,17 +332,17 @@ export default function Home() {
 
         {/* CTA Section */}
         <div className="px-4 pb-6">
-          <div className="glass rounded-2xl p-6 text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-gold shadow-glow">
-              <Plane className="w-7 h-7 text-primary-foreground -rotate-45" />
+          <div className="glass rounded-xl p-4 text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl gradient-gold shadow-glow">
+              <Plane className="w-5 h-5 text-primary-foreground -rotate-45" />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Got tickets to sell?</h3>
-              <p className="text-sm text-muted-foreground">
-                List your unused flight tickets and help other travelers save money.
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold">Got tickets to sell?</h3>
+              <p className="text-xs text-muted-foreground">
+                List your unused flight tickets and help other travelers save.
               </p>
             </div>
-            <Button variant="gold" className="w-full" onClick={() => navigate("/sell")}>
+            <Button variant="gold" className="w-full" size="sm" onClick={() => navigate("/sell")}>
               Start Selling
             </Button>
           </div>

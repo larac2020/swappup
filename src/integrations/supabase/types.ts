@@ -86,6 +86,7 @@ export type Database = {
         Row: {
           additional_notes: string | null
           airline: string
+          bumped_until: string | null
           carry_on_included: boolean | null
           created_at: string
           departure_date: string
@@ -114,6 +115,7 @@ export type Database = {
         Insert: {
           additional_notes?: string | null
           airline: string
+          bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
           departure_date: string
@@ -142,6 +144,7 @@ export type Database = {
         Update: {
           additional_notes?: string | null
           airline?: string
+          bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
           departure_date?: string

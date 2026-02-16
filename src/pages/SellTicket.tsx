@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
-  Luggage, Utensils, Zap, AlertCircle, Loader2
+  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -65,6 +65,7 @@ export default function SellTicket() {
     stopovers: "0",
     additionalNotes: "",
     selectedTags: [] as string[],
+    bumpListing: false,
   });
 
   const countries = useMemo(() => getCountries(), []);
@@ -134,6 +135,9 @@ export default function SellTicket() {
 
   const createListingMutation = useMutation({
     mutationFn: async () => {
+      const bumpedUntil = formData.bumpListing
+        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
       const { error } = await supabase.from("listings").insert({
         seller_id: profile!.id,
         title: `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`,
@@ -155,6 +159,7 @@ export default function SellTicket() {
         stopovers: parseInt(formData.stopovers),
         additional_notes: formData.additionalNotes || null,
         tags: formData.selectedTags as any,
+        bumped_until: bumpedUntil,
       });
       if (error) throw error;
     },
@@ -494,6 +499,28 @@ export default function SellTicket() {
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
               className="bg-secondary/50 min-h-24"
             />
+          </div>
+
+          {/* Bump Listing */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Boost Visibility
+            </h2>
+            <div className="glass rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-medium">🔥 Bump to Hot Deals</p>
+                  <p className="text-xs text-muted-foreground">
+                    Feature your listing in the Hot Deals section on the Home page for 7 days
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.bumpListing}
+                  onCheckedChange={(checked) => setFormData({ ...formData, bumpListing: checked })}
+                />
+              </div>
+            </div>
           </div>
 
           <Button type="submit" variant="gold" size="xl" className="w-full" disabled={createListingMutation.isPending}>

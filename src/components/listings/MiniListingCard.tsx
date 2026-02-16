@@ -1,0 +1,72 @@
+import { Plane } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getPrimaryAirportCode } from "@/data/flightData";
+
+interface MiniListingCardProps {
+  id: string;
+  originCity: string;
+  destinationCity: string;
+  departureDate: string;
+  price: number;
+  originalPrice?: number;
+  imageUrl?: string;
+  airline: string;
+}
+
+export function MiniListingCard({
+  id,
+  originCity,
+  destinationCity,
+  departureDate,
+  price,
+  originalPrice,
+  imageUrl,
+  airline,
+}: MiniListingCardProps) {
+  const navigate = useNavigate();
+  const originCode = getPrimaryAirportCode(originCity);
+  const destCode = getPrimaryAirportCode(destinationCity);
+  const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+  return (
+    <button
+      onClick={() => navigate(`/listing/${id}`)}
+      className="flex-shrink-0 w-40 text-left animate-fade-in group"
+    >
+      <div className="glass rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-glow-sm h-full">
+        {/* Image */}
+        <div className="relative h-24 overflow-hidden">
+          <img
+            src={imageUrl || "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400&auto=format&fit=crop"}
+            alt={destinationCity}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+          {/* Price */}
+          <div className="absolute bottom-1.5 right-1.5">
+            <span className="text-sm font-bold text-primary">€{price}</span>
+          </div>
+          {discount > 0 && (
+            <div className="absolute top-1.5 left-1.5">
+              <span className="text-[10px] font-semibold gradient-gold text-primary-foreground px-1.5 py-0.5 rounded-md">
+                -{discount}%
+              </span>
+            </div>
+          )}
+        </div>
+        {/* Info */}
+        <div className="p-2.5 space-y-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-primary">{originCode || originCity.slice(0, 3).toUpperCase()}</span>
+            <Plane className="w-3 h-3 text-primary -rotate-45 flex-shrink-0" />
+            <span className="text-xs font-bold text-primary">{destCode || destinationCity.slice(0, 3).toUpperCase()}</span>
+          </div>
+          <p className="text-xs text-muted-foreground truncate">{formatDate(departureDate)} · {airline}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
