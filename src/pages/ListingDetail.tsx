@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap, 
-  Clock, AlertCircle, ShoppingCart, Share2, Heart, Loader2
+import {
+  ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
+  Clock, AlertCircle, ShoppingCart, Share2, Heart, Loader2, Info
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getPrimaryAirportCode, getAirlineData } from "@/data/flightData";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
@@ -39,7 +40,6 @@ export default function ListingDetail() {
     enabled: !!id,
   });
 
-  // Fetch seller profile
   const { data: seller } = useQuery({
     queryKey: ["seller", listing?.seller_id],
     queryFn: async () => {
@@ -54,7 +54,6 @@ export default function ListingDetail() {
     enabled: !!listing?.seller_id,
   });
 
-  // Fetch user's profile for cart operations
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -69,7 +68,6 @@ export default function ListingDetail() {
     enabled: !!user?.id,
   });
 
-  // Check if listing is favorited
   const { data: isFavorited = false } = useQuery({
     queryKey: ["isFavorited", myProfile?.id, id],
     queryFn: async () => {
@@ -88,17 +86,10 @@ export default function ListingDetail() {
   const toggleFavoriteMutation = useMutation({
     mutationFn: async () => {
       if (isFavorited) {
-        const { error } = await supabase
-          .from("favorites")
-          .delete()
-          .eq("user_id", myProfile!.id)
-          .eq("listing_id", listing!.id);
+        const { error } = await supabase.from("favorites").delete().eq("user_id", myProfile!.id).eq("listing_id", listing!.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("favorites").insert({
-          user_id: myProfile!.id,
-          listing_id: listing!.id,
-        });
+        const { error } = await supabase.from("favorites").insert({ user_id: myProfile!.id, listing_id: listing!.id });
         if (error) throw error;
       }
     },
@@ -114,11 +105,7 @@ export default function ListingDetail() {
 
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("cart_items").insert({
-        user_id: myProfile!.id,
-        listing_id: listing!.id,
-        quantity: 1,
-      });
+      const { error } = await supabase.from("cart_items").insert({ user_id: myProfile!.id, listing_id: listing!.id, quantity: 1 });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -163,6 +150,10 @@ export default function ListingDetail() {
   const sellerName = seller?.full_name || "Seller";
   const sellerInitials = sellerName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
+  const originCode = getPrimaryAirportCode(listing.origin_city);
+  const destCode = getPrimaryAirportCode(listing.destination_city);
+  const airlineData = getAirlineData(listing.airline);
+
   return (
     <AppLayout showNav={false}>
       <div className="min-h-screen">
@@ -174,20 +165,14 @@ export default function ListingDetail() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-          
+
           <div className="absolute top-4 left-4 right-4 flex justify-between">
             <Button variant="glass" size="icon" onClick={() => navigate(-1)} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex gap-2">
               <Button variant="glass" size="icon" className="rounded-full"><Share2 className="w-5 h-5" /></Button>
-              <Button
-                variant="glass"
-                size="icon"
-                className="rounded-full"
-                onClick={() => toggleFavoriteMutation.mutate()}
-                disabled={toggleFavoriteMutation.isPending}
-              >
+              <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
                 <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
               </Button>
             </div>
@@ -209,7 +194,7 @@ export default function ListingDetail() {
         </div>
 
         <div className="px-4 py-6 space-y-6 -mt-4 relative z-10">
-          {/* Route Header */}
+          {/* Route Header with airport codes */}
           <div className="space-y-3">
             {listing.tags && listing.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -222,15 +207,21 @@ export default function ListingDetail() {
             )}
 
             <div className="flex items-center gap-3 text-xl">
-              <span className="font-display font-bold">{listing.origin_city}</span>
+              <div className="text-center">
+                <span className="font-display font-bold">{listing.origin_city}</span>
+                {originCode && <p className="text-xs text-primary font-mono font-semibold">{originCode}</p>}
+              </div>
               <div className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <div className="w-16 h-0.5 bg-gradient-to-r from-primary to-primary/30" />
+                <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-primary/30" />
                 <Plane className="w-5 h-5" />
-                <div className="w-16 h-0.5 bg-gradient-to-l from-primary to-primary/30" />
+                <div className="w-12 h-0.5 bg-gradient-to-l from-primary to-primary/30" />
                 <div className="w-2 h-2 rounded-full bg-primary" />
               </div>
-              <span className="font-display font-bold">{listing.destination_city}</span>
+              <div className="text-center">
+                <span className="font-display font-bold">{listing.destination_city}</span>
+                {destCode && <p className="text-xs text-primary font-mono font-semibold">{destCode}</p>}
+              </div>
             </div>
             <p className="text-muted-foreground">{listing.destination_country} • {listing.airline}</p>
           </div>
@@ -250,6 +241,10 @@ export default function ListingDetail() {
                 </div>
               )}
               <div className="flex items-start gap-3">
+                <Plane className="w-5 h-5 text-primary mt-0.5" />
+                <div><p className="text-sm text-muted-foreground">Carrier</p><p className="font-medium">{listing.airline}</p></div>
+              </div>
+              <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-primary mt-0.5" />
                 <div><p className="text-sm text-muted-foreground">Tickets</p><p className="font-medium">{listing.ticket_count} available</p></div>
               </div>
@@ -266,7 +261,7 @@ export default function ListingDetail() {
             </div>
           </div>
 
-          {/* Includes */}
+          {/* What's Included */}
           <div className="glass rounded-2xl p-4 space-y-4">
             <h3 className="font-semibold">What's Included</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -285,16 +280,25 @@ export default function ListingDetail() {
             </div>
           </div>
 
-          {/* Name Change Fee */}
-          {listing.name_change_fee && (
-            <div className="glass rounded-xl p-4 flex gap-3 border-l-4 border-primary">
-              <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium mb-1">Name Change Fee: €{Number(listing.name_change_fee)}</p>
-                <p className="text-muted-foreground">{listing.airline} charges this fee to change the passenger name. Please verify on the airline's website as fees may vary.</p>
-              </div>
+          {/* Name Change Fee Info Box — always shown */}
+          <div className="glass rounded-xl p-4 flex gap-3 border-l-4 border-amber-500">
+            <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium mb-1">Ticket Name Change Fee</p>
+              {listing.name_change_fee !== null && Number(listing.name_change_fee) > 0 ? (
+                <p className="text-muted-foreground">
+                  <span className="font-semibold text-foreground">€{Number(listing.name_change_fee)}</span> — {listing.airline} charges this fee to transfer the ticket to a different passenger name.
+                </p>
+              ) : airlineData ? (
+                <p className="text-muted-foreground">{airlineData.nameChangeFeeNote}</p>
+              ) : (
+                <p className="text-muted-foreground">
+                  The airline may charge a fee to change the passenger name. Please check {listing.airline}'s website for current fees.
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Fees may vary — always verify on the carrier's website before purchasing.</p>
             </div>
-          )}
+          </div>
 
           {/* Seller Notes */}
           {listing.additional_notes && (
@@ -328,13 +332,7 @@ export default function ListingDetail() {
 
           {/* Bottom CTA */}
           <div className="sticky bottom-4 flex gap-3">
-            <Button
-              variant="gold"
-              size="xl"
-              className="flex-1"
-              onClick={() => addToCartMutation.mutate()}
-              disabled={addToCartMutation.isPending}
-            >
+            <Button variant="gold" size="xl" className="flex-1" onClick={() => addToCartMutation.mutate()} disabled={addToCartMutation.isPending}>
               {addToCartMutation.isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
