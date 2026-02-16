@@ -1,8 +1,12 @@
-import { Calendar, Plane, Users } from "lucide-react";
+import { Calendar, Plane, Users, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface ListingCardProps {
   id: string;
@@ -51,12 +55,75 @@ export function ListingCard({
   tags = [],
 }: ListingCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
 
   const originCode = getPrimaryAirportCode(originCity);
   const destCode = getPrimaryAirportCode(destinationCity);
   const originAirportName = getPrimaryAirportName(originCity);
   const destAirportName = getPrimaryAirportName(destinationCity);
+
+  // Get profile
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Check if favorited
+  const { data: isFavorited = false } = useQuery({
+    queryKey: ["isFavorited", profile?.id, id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profile!.id)
+        .eq("listing_id", id);
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+    enabled: !!profile?.id,
+  });
+
+  const toggleFavorite = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) return;
+      if (isFavorited) {
+        await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", profile.id)
+          .eq("listing_id", id);
+      } else {
+        await supabase
+          .from("favorites")
+          .insert({ user_id: profile.id, listing_id: id });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["isFavorited", profile?.id, id] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["favoritesCount"] });
+      toast({
+        title: isFavorited ? "Removed from favorites" : "Added to favorites",
+      });
+    },
+  });
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorite.mutate();
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en-GB", {
@@ -157,9 +224,22 @@ export function ListingCard({
             </div>
           </div>
 
-          {/* Airline */}
-          <div className="pt-2 border-t border-border/50">
+          {/* Airline + Favorite */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
             <span className="text-sm text-muted-foreground">{airline}</span>
+            <button
+              onClick={handleFavoriteClick}
+              className="p-1 rounded-lg hover:bg-secondary/50 transition-colors"
+            >
+              <Heart
+                className={cn(
+                  "w-4 h-4 transition-colors",
+                  isFavorited
+                    ? "text-primary fill-primary"
+                    : "text-muted-foreground hover:text-primary"
+                )}
+              />
+            </button>
           </div>
         </div>
       </div>
