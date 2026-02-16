@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
-  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles
+  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -72,11 +72,14 @@ const getDefaultFormData = () => ({
 
 export default function SellTicket() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const { toast } = useToast();
   const { user } = useAuth();
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [editLoaded, setEditLoaded] = useState(false);
 
   // Shared inclusions (used when sameInclusions is true)
   const [sharedInclusions, setSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
@@ -87,6 +90,75 @@ export default function SellTicket() {
   const [formData, setFormData] = useState(getDefaultFormData());
 
   const ticketCount = parseInt(formData.ticketCount) || 1;
+
+  // Load existing listing for edit mode
+  const { data: editListing } = useQuery({
+    queryKey: ["editListing", editId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", editId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!editId,
+  });
+
+  // Populate form when edit listing loads
+  useEffect(() => {
+    if (editListing && !editLoaded) {
+      setEditLoaded(true);
+      const hasReturn = !!editListing.return_date;
+      setIsReturn(hasReturn);
+
+      setFormData({
+        originCountry: editListing.origin_country,
+        originCity: editListing.origin_city,
+        originAirport: "",
+        destinationCountry: editListing.destination_country,
+        destinationCity: editListing.destination_city,
+        destinationAirport: "",
+        departureDate: new Date(editListing.departure_date),
+        returnDate: hasReturn ? new Date(editListing.return_date!) : undefined,
+        airline: editListing.airline,
+        flightNumber: editListing.flight_number || "",
+        price: String(Number(editListing.price)),
+        originalPrice: editListing.original_price ? String(Number(editListing.original_price)) : "",
+        ticketCount: String(editListing.ticket_count),
+        stopovers: String(editListing.stopovers ?? 0),
+        additionalNotes: editListing.additional_notes || "",
+        selectedTags: (editListing.tags as string[]) || [],
+        bumpListing: false,
+      });
+
+      const shared: TicketInclusions = {
+        luggageIncluded: editListing.luggage_included ?? false,
+        carryOnIncluded: editListing.carry_on_included ?? true,
+        mealIncluded: editListing.meal_included ?? false,
+        speedyBoarding: editListing.speedy_boarding ?? false,
+      };
+      setSharedInclusions(shared);
+
+      if (editListing.per_ticket_inclusions && Array.isArray(editListing.per_ticket_inclusions)) {
+        setSameInclusions(false);
+        setPerTicketInclusions(
+          (editListing.per_ticket_inclusions as any[]).map((t: any) => ({
+            luggageIncluded: t.luggageIncluded ?? false,
+            carryOnIncluded: t.carryOnIncluded ?? true,
+            mealIncluded: t.mealIncluded ?? false,
+            speedyBoarding: t.speedyBoarding ?? false,
+          }))
+        );
+      } else {
+        setSameInclusions(true);
+        setPerTicketInclusions(
+          Array(editListing.ticket_count).fill(null).map(() => ({ ...shared }))
+        );
+      }
+    }
+  }, [editListing, editLoaded]);
 
   // Keep perTicketInclusions array in sync with ticketCount
   const handleTicketCountChange = (newCount: string) => {
@@ -196,8 +268,7 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const { error } = await supabase.from("listings").insert({
-        seller_id: profile!.id,
+      const listingData = {
         title: `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`,
         origin_city: formData.originCity,
         origin_country: formData.originCountry,
@@ -217,14 +288,30 @@ export default function SellTicket() {
         stopovers: parseInt(formData.stopovers),
         additional_notes: formData.additionalNotes || null,
         tags: formData.selectedTags as any,
-        bumped_until: bumpedUntil,
         per_ticket_inclusions: perTicketData as any,
-      });
-      if (error) throw error;
+      };
+
+      if (editId) {
+        const { error } = await supabase
+          .from("listings")
+          .update(listingData)
+          .eq("id", editId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("listings").insert({
+          ...listingData,
+          seller_id: profile!.id,
+          bumped_until: bumpedUntil,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast({ title: "Listing created!", description: "Your ticket is now live on the marketplace." });
-      navigate("/home");
+      toast({
+        title: editId ? "Listing updated!" : "Listing created!",
+        description: editId ? "Your changes have been saved." : "Your ticket is now live on the marketplace.",
+      });
+      navigate(editId ? "/listings" : "/home");
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -300,7 +387,7 @@ export default function SellTicket() {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold">Sell Your Ticket</h1>
+            <h1 className="font-semibold">{editId ? "Edit Listing" : "Sell Your Ticket"}</h1>
           </div>
         </div>
 
@@ -628,9 +715,9 @@ export default function SellTicket() {
 
           <Button type="submit" variant="gold" size="xl" className="w-full" disabled={createListingMutation.isPending}>
             {createListingMutation.isPending ? (
-              <><Loader2 className="w-5 h-5 animate-spin" />Creating Listing...</>
+              <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
             ) : (
-              <><Plus className="w-5 h-5" />Create Listing</>
+              <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
             )}
           </Button>
         </form>

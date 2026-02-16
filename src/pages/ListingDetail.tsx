@@ -186,15 +186,17 @@ export default function ListingDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
           <div className="absolute top-4 left-4 right-4 flex justify-between">
-            <Button variant="glass" size="icon" onClick={() => navigate("/home")} className="rounded-full">
+            <Button variant="glass" size="icon" onClick={() => navigate(-1)} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex gap-2">
-              <Button variant="glass" size="icon" className="rounded-full"><Share2 className="w-5 h-5" /></Button>
-              <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
-                <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
-              </Button>
-            </div>
+            {myProfile?.id !== listing.seller_id && (
+              <div className="flex gap-2">
+                <Button variant="glass" size="icon" className="rounded-full"><Share2 className="w-5 h-5" /></Button>
+                <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
+                  <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="absolute bottom-4 right-4">
@@ -335,17 +337,19 @@ export default function ListingDetail() {
             </div>
           )}
 
-          {/* Bottom CTA */}
-          <div className="sticky bottom-4 flex gap-3">
-            <Button variant="gold" size="xl" className="flex-1" onClick={() => addToCartMutation.mutate()} disabled={addToCartMutation.isPending}>
-              {addToCartMutation.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <ShoppingCart className="w-5 h-5 mr-2" />
-              )}
-              Add to Cart
-            </Button>
-          </div>
+          {/* Bottom CTA - only for non-owners */}
+          {myProfile?.id !== listing.seller_id && (
+            <div className="sticky bottom-4 flex gap-3">
+              <Button variant="gold" size="xl" className="flex-1" onClick={() => addToCartMutation.mutate()} disabled={addToCartMutation.isPending}>
+                {addToCartMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                )}
+                Add to Cart
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
