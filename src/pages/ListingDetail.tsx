@@ -26,6 +26,36 @@ export default function ListingDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const { data: myProfile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Record view
+  useQuery({
+    queryKey: ["recordView", id, myProfile?.id],
+    queryFn: async () => {
+      await supabase
+        .from("listing_views")
+        .upsert(
+          { listing_id: id!, viewer_id: myProfile!.id },
+          { onConflict: "listing_id,viewer_id" }
+        );
+      return true;
+    },
+    enabled: !!id && !!myProfile?.id,
+    staleTime: Infinity,
+  });
+
   const { data: listing, isLoading } = useQuery({
     queryKey: ["listing", id],
     queryFn: async () => {
@@ -54,19 +84,7 @@ export default function ListingDetail() {
     enabled: !!listing?.seller_id,
   });
 
-  const { data: myProfile } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user!.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  // myProfile already defined above
 
   const { data: isFavorited = false } = useQuery({
     queryKey: ["isFavorited", myProfile?.id, id],
