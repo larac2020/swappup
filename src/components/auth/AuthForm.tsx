@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plane, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 
-type AuthMode = "login" | "signup";
+type AuthMode = "login" | "signup" | "forgot";
 
 export function AuthForm() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -23,8 +23,20 @@ export function AuthForm() {
     setLoading(true);
 
     try {
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast({
+          title: "Reset link sent",
+          description: "Check your email for a password reset link.",
+        });
+        return;
+      }
+
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -35,11 +47,22 @@ export function AuthForm() {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          if (error.message?.includes("already registered") || (error as any).code === "user_already_exists") {
+            toast({
+              title: "Account already exists",
+              description: "This email is already registered. Please sign in or reset your password.",
+              variant: "destructive",
+            });
+            setMode("login");
+            return;
+          }
+          throw error;
+        }
 
         toast({
-          title: "Check your email",
-          description: "We've sent you a verification link to complete your signup.",
+          title: "Account created!",
+          description: "Welcome to FlySwap. You're now signed in.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -85,6 +108,8 @@ export function AuthForm() {
           <p className="text-muted-foreground">
             {mode === "login" 
               ? "Welcome back. Sign in to continue." 
+              : mode === "forgot"
+              ? "Enter your email to receive a reset link."
               : "Create an account to start trading tickets."}
           </p>
         </div>
@@ -129,40 +154,53 @@ export function AuthForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
-                required
-                minLength={6}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+          {mode !== "forgot" && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot")}
+                    className="text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <Button type="submit" variant="gold" size="lg" className="w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {mode === "login" ? "Signing in..." : "Creating account..."}
+                {mode === "forgot" ? "Sending..." : mode === "login" ? "Signing in..." : "Creating account..."}
               </>
             ) : (
-              mode === "login" ? "Sign In" : "Create Account"
+              mode === "forgot" ? "Send Reset Link" : mode === "login" ? "Sign In" : "Create Account"
             )}
           </Button>
         </form>
@@ -200,14 +238,28 @@ export function AuthForm() {
         {/* Toggle Auth Mode */}
         <div className="text-center">
           <p className="text-muted-foreground">
-            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              {mode === "login" ? "Sign up" : "Sign in"}
-            </button>
+            {mode === "forgot" ? (
+              <>
+                Remember your password?{" "}
+                <button type="button" onClick={() => setMode("login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
+                  Sign in
+                </button>
+              </>
+            ) : mode === "login" ? (
+              <>
+                Don't have an account?{" "}
+                <button type="button" onClick={() => setMode("signup")} className="text-primary hover:text-primary/80 font-medium transition-colors">
+                  Sign up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button type="button" onClick={() => setMode("login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
+                  Sign in
+                </button>
+              </>
+            )}
           </p>
         </div>
 

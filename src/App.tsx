@@ -12,6 +12,7 @@ import Account from "./pages/Account";
 import ListingDetail from "./pages/ListingDetail";
 import SellTicket from "./pages/SellTicket";
 import Favorites from "./pages/Favorites";
+import ResetPassword from "./pages/ResetPassword";
 import MyListings from "./pages/MyListings";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
           <Route path="/favorites" element={<Navigate to="/account/favorites" replace />} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
