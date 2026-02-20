@@ -17,18 +17,25 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check hash params for recovery token
+    // Listen for PASSWORD_RECOVERY event first (must be before any async calls)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event on reset page:", event);
+      if (event === "PASSWORD_RECOVERY") {
+        setStatus("ready");
+      }
+    });
+
+    // Check hash params for recovery token (still present before Supabase processes it)
     const hash = window.location.hash.substring(1);
     const hashParams = new URLSearchParams(hash);
     if (hashParams.get("type") === "recovery" && hashParams.get("access_token")) {
       setStatus("ready");
-      return;
+      return () => subscription.unsubscribe();
     }
 
     // Check query params for code-based flow (PKCE)
     const queryParams = new URLSearchParams(window.location.search);
     if (queryParams.get("code")) {
-      // Exchange the code - Supabase client handles this automatically
       supabase.auth.exchangeCodeForSession(queryParams.get("code")!).then(({ error }) => {
         if (error) {
           console.error("Code exchange error:", error);
@@ -37,20 +44,22 @@ export default function ResetPassword() {
           setStatus("ready");
         }
       });
-      return;
+      return () => subscription.unsubscribe();
     }
 
-    // Listen for PASSWORD_RECOVERY event (fires after Supabase processes the hash)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    // Supabase may have already processed the hash and created a session
+    // Check if there's an existing session (recovery was already processed)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // There's a session — likely the recovery token was already exchanged
         setStatus("ready");
       }
     });
 
-    // Give Supabase a moment to process the hash automatically
+    // Give extra time for Supabase to process, then show invalid
     const timeout = setTimeout(() => {
       setStatus((prev) => (prev === "loading" ? "invalid" : prev));
-    }, 3000);
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();
