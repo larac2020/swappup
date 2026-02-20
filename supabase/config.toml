@@ -2,3 +2,6 @@ project_id = "oiarehtqhgwkiunsarmz"
 
 [functions.parse-ticket]
 verify_jwt = false
+
+[functions.create-setup-intent]
+verify_jwt = false

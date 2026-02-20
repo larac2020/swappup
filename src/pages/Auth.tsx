@@ -5,11 +5,17 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate("/home");
+      // Check if user just signed up (no onboarding complete flag)
+      const onboardingDone = localStorage.getItem("flyswap_onboarding_complete");
+      if (!onboardingDone) {
+        navigate("/onboarding");
+      } else {
+        navigate("/home");
+      }
     }
   }, [isAuthenticated, loading, navigate]);
 
