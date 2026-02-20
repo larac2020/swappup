@@ -15,6 +15,7 @@ import Favorites from "./pages/Favorites";
 import ResetPassword from "./pages/ResetPassword";
 import MyListings from "./pages/MyListings";
 import Support from "./pages/Support";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
           <Route path="/listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
           <Route path="/favorites" element={<Navigate to="/account/favorites" replace />} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
