@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,25 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
+// Sub-page components
+import PersonalInfo from "@/components/account/PersonalInfo";
+import AddressInfo from "@/components/account/AddressInfo";
+import PaymentMethods from "@/components/account/PaymentMethods";
+import IDVerification from "@/components/account/IDVerification";
+import NotificationSettings from "@/components/account/NotificationSettings";
+import Purchases from "@/components/account/Purchases";
+import FavoritesList from "@/components/account/FavoritesList";
+import TransactionHistory from "@/components/account/TransactionHistory";
+
 const menuItems = [
-  { icon: User, label: "Personal Information", path: "/account/profile", description: "Name, email, phone" },
-  { icon: MapPin, label: "Address", path: "/account/address", description: "Shipping and billing" },
-  { icon: CreditCard, label: "Payment Methods", path: "/account/payment", description: "Cards and bank accounts" },
-  { icon: Shield, label: "ID Verification", path: "/account/verification", description: "Upload your ID documents", badge: "Required" },
-  { icon: Bell, label: "Notifications", path: "/account/notifications", description: "Email and push settings" },
-  { icon: ShoppingBag, label: "Purchases", path: "/account/purchases", description: "Your orders and trips" },
-  { icon: Heart, label: "Favorites", path: "/account/favorites", description: "Saved listings" },
-  { icon: FileText, label: "Transaction History", path: "/account/transactions", description: "Past purchases and sales" },
+  { icon: User, label: "Personal Information", path: "profile", description: "Name, email, phone" },
+  { icon: MapPin, label: "Address", path: "address", description: "Billing address" },
+  { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts" },
+  { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", badge: "Required" },
+  { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings" },
+  { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips" },
+  { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings" },
+  { icon: FileText, label: "Transaction History", path: "transactions", description: "Past purchases and sales" },
 ];
 
 const supportItems = [
@@ -28,8 +38,20 @@ const supportItems = [
   { icon: Shield, label: "Privacy Policy", path: "/privacy" },
 ];
 
+const sectionComponents: Record<string, React.ComponentType> = {
+  profile: PersonalInfo,
+  address: AddressInfo,
+  payment: PaymentMethods,
+  verification: IDVerification,
+  notifications: NotificationSettings,
+  purchases: Purchases,
+  favorites: FavoritesList,
+  transactions: TransactionHistory,
+};
+
 export default function Account() {
   const navigate = useNavigate();
+  const { section } = useParams<{ section?: string }>();
   const { user, signOut } = useAuth();
 
   const { data: profile } = useQuery({
@@ -45,6 +67,18 @@ export default function Account() {
     },
     enabled: !!user?.id,
   });
+
+  // If a section is selected, render that sub-page
+  if (section && sectionComponents[section]) {
+    const SectionComponent = sectionComponents[section];
+    return (
+      <AppLayout>
+        <div className="px-4 py-6">
+          <SectionComponent />
+        </div>
+      </AppLayout>
+    );
+  }
 
   const email = profile?.email || user?.email || "user@example.com";
   const fullName = profile?.full_name || user?.user_metadata?.full_name || "User";
@@ -116,7 +150,7 @@ export default function Account() {
               return (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => navigate(`/account/${item.path}`)}
                   className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                 >
                   <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
