@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function IDVerification() {
@@ -55,7 +56,7 @@ export default function IDVerification() {
 
       // AI verification
       const { data: aiResult, error: aiError } = await supabase.functions.invoke("verify-id", {
-        body: { image: base64 },
+        body: { image: base64, profileName: profile?.full_name || "" },
       });
       if (aiError) throw aiError;
 
@@ -66,6 +67,15 @@ export default function IDVerification() {
         toast({
           title: "Document not accepted",
           description: verification?.reason || "Please upload a valid identity document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (verification?.name_matches_profile === false) {
+        toast({
+          title: "Name mismatch",
+          description: `The name on the document ("${verification.extracted_name || "unknown"}") does not match your profile name ("${profile?.full_name || "not set"}"). Please update your Personal Information first.`,
           variant: "destructive",
         });
         return;
@@ -141,6 +151,13 @@ export default function IDVerification() {
 
       {/* Upload section */}
       <div className="glass rounded-2xl p-6 space-y-4">
+        <Alert className="bg-accent/50 border-accent">
+          <Info className="w-4 h-4" />
+          <AlertDescription className="text-sm">
+            The name on your ID must match the name in your <strong>Personal Information</strong>. Make sure your profile name is correct before uploading.
+          </AlertDescription>
+        </Alert>
+
         <p className="text-sm text-muted-foreground text-center">
           Upload a clear photo of your passport, national ID card, or driving license. Our AI will verify it instantly.
         </p>
@@ -175,6 +192,15 @@ export default function IDVerification() {
           <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <p className="text-sm">{verifyResult.reason || "This doesn't appear to be a valid ID document."}</p>
+          </div>
+        )}
+
+        {verifyResult && verifyResult.is_valid_id && verifyResult.name_matches_profile === false && (
+          <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-sm">
+              Name mismatch: the document shows "<strong>{verifyResult.extracted_name}</strong>" but your profile name is "<strong>{profile?.full_name || "not set"}</strong>". Please update your Personal Information first.
+            </p>
           </div>
         )}
 
