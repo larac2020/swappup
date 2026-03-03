@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { image } = await req.json();
+    const { image, profileName } = await req.json();
     if (!image) {
       return new Response(JSON.stringify({ error: "No image provided" }), {
         status: 400,
@@ -23,6 +23,10 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    const nameInstruction = profileName
+      ? `\n4. Extract the full name from the document and compare it to the profile name: "${profileName}". The name on the ID must match the profile name (allow minor variations like middle names, accents, or abbreviation differences, but the core first and last name must match).`
+      : "";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -38,7 +42,7 @@ serve(async (req) => {
             content: `You are an ID document verification assistant. Analyze uploaded images and determine:
 1. Is this a valid identity document (passport, national ID card, or driving license)?
 2. Does it appear to be a genuine document (not a screenshot of a screen, not a photocopy of poor quality, not a drawing)?
-3. Can you identify the document type?
+3. Can you identify the document type?${nameInstruction}
 
 You must respond ONLY with a JSON object using this exact tool call format.`
           },
@@ -47,7 +51,7 @@ You must respond ONLY with a JSON object using this exact tool call format.`
             content: [
               {
                 type: "text",
-                text: "Please analyze this image and determine if it is a valid, genuine identity document (passport, national ID card, or driving license). Check if it has typical security features visible, proper formatting, and appears to be a real document rather than a fake or screenshot."
+                text: `Please analyze this image and determine if it is a valid, genuine identity document (passport, national ID card, or driving license). Check if it has typical security features visible, proper formatting, and appears to be a real document rather than a fake or screenshot.${profileName ? ` Also extract the name on the document and verify it matches the profile name: "${profileName}".` : ""}`
               },
               {
                 type: "image_url",
@@ -78,6 +82,14 @@ You must respond ONLY with a JSON object using this exact tool call format.`
                     enum: ["passport", "national_id", "driving_license", "unknown"],
                     description: "The type of document detected"
                   },
+                  extracted_name: {
+                    type: "string",
+                    description: "The full name extracted from the document"
+                  },
+                  name_matches_profile: {
+                    type: "boolean",
+                    description: "Whether the name on the document matches the provided profile name. True if no profile name was provided."
+                  },
                   confidence: {
                     type: "string",
                     enum: ["high", "medium", "low"],
@@ -88,7 +100,7 @@ You must respond ONLY with a JSON object using this exact tool call format.`
                     description: "Brief explanation of the assessment"
                   }
                 },
-                required: ["is_valid_id", "appears_genuine", "document_type", "confidence", "reason"],
+                required: ["is_valid_id", "appears_genuine", "document_type", "extracted_name", "name_matches_profile", "confidence", "reason"],
                 additionalProperties: false
               }
             }
