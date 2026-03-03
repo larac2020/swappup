@@ -47,7 +47,10 @@ serve(async (req) => {
       payment_method_types: ["card"],
     });
 
-    return new Response(JSON.stringify({ clientSecret: setupIntent.client_secret }), {
+    // Return publishable key alongside client secret so frontend doesn't need env var
+    const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY") || "";
+
+    return new Response(JSON.stringify({ clientSecret: setupIntent.client_secret, publishableKey }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
