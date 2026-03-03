@@ -41,16 +41,13 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create a Checkout session in setup mode to collect payment method
-    const session = await stripe.checkout.sessions.create({
+    // Create a SetupIntent to collect card details via Elements
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      mode: "setup",
       payment_method_types: ["card"],
-      success_url: `${req.headers.get("origin")}/onboarding?step=3&payment=success`,
-      cancel_url: `${req.headers.get("origin")}/onboarding?step=2&payment=cancelled`,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ clientSecret: setupIntent.client_secret }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
