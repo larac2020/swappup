@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Select,
@@ -60,6 +60,14 @@ export default function PersonalInfo() {
   const [phonePrefix, setPhonePrefix] = useState("+44");
   const [phoneNumber, setPhoneNumber] = useState("");
 
+  // Password change state
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -105,6 +113,31 @@ export default function PersonalInfo() {
     },
   });
 
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", description: "New password and confirmation must match.", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: "Password updated successfully" });
+      setShowPasswordSection(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -128,24 +161,11 @@ export default function PersonalInfo() {
       <div className="glass rounded-2xl p-6 space-y-5">
         <div className="space-y-2">
           <Label htmlFor="fullName">Full Name</Label>
-          <Input
-            id="fullName"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="John Doe"
-            className="h-12 bg-secondary/50 border-border/50"
-          />
+          <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="h-12 bg-secondary/50 border-border/50" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="h-12 bg-secondary/50 border-border/50"
-          />
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="h-12 bg-secondary/50 border-border/50" />
         </div>
         <div className="space-y-2">
           <Label>Phone Number</Label>
@@ -156,31 +176,59 @@ export default function PersonalInfo() {
               </SelectTrigger>
               <SelectContent>
                 {phonePrefixes.map((p) => (
-                  <SelectItem key={p.code} value={p.code}>
-                    {p.code} {p.country}
-                  </SelectItem>
+                  <SelectItem key={p.code} value={p.code}>{p.code} {p.country}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
-              placeholder="7700900000"
-              className="h-12 bg-secondary/50 border-border/50 flex-1"
-            />
+            <Input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))} placeholder="7700900000" className="h-12 bg-secondary/50 border-border/50 flex-1" />
           </div>
         </div>
 
-        <Button
-          variant="gold"
-          size="lg"
-          className="w-full"
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
-        >
+        <Button variant="gold" size="lg" className="w-full" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
           {mutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Changes"}
         </Button>
+      </div>
+
+      {/* Password Section */}
+      <div className="glass rounded-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-display font-semibold">Password</h2>
+            <p className="text-sm text-muted-foreground">••••••••</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowPasswordSection(!showPasswordSection)}>
+            {showPasswordSection ? "Cancel" : "Change Password"}
+          </Button>
+        </div>
+
+        {showPasswordSection && (
+          <div className="space-y-4 pt-2 border-t border-border/50">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="relative">
+                <Input id="newPassword" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" className="h-12 bg-secondary/50 border-border/50 pr-12" />
+                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <div className="relative">
+                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="h-12 bg-secondary/50 border-border/50 pr-12" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-sm text-destructive">Passwords don't match</p>
+              )}
+            </div>
+            <Button variant="gold" size="lg" className="w-full" onClick={handleChangePassword} disabled={passwordLoading || !newPassword || newPassword !== confirmPassword}>
+              {passwordLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</> : "Update Password"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
