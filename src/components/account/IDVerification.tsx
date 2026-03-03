@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle } from "lucide-react";
+import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function IDVerification() {
@@ -17,17 +17,14 @@ export default function IDVerification() {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user!.id)
-        .single();
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
       if (error) throw error;
       return data;
     },
@@ -43,38 +40,58 @@ export default function IDVerification() {
     }
     setIdFile(file);
     setIdPreview(URL.createObjectURL(file));
+    setVerifyResult(null);
   };
 
-  const uploadId = async () => {
+  const uploadAndVerifyId = async () => {
     if (!idFile || !user) return;
     setUploading(true);
     try {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(idFile);
+      });
+
+      // AI verification
+      const { data: aiResult, error: aiError } = await supabase.functions.invoke("verify-id", {
+        body: { image: base64 },
+      });
+      if (aiError) throw aiError;
+
+      const verification = aiResult?.verification;
+      setVerifyResult(verification);
+
+      if (!verification?.is_valid_id || !verification?.appears_genuine) {
+        toast({
+          title: "Document not accepted",
+          description: verification?.reason || "Please upload a valid identity document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Upload to storage
       const ext = idFile.name.split(".").pop();
       const filePath = `${user.id}/id-document.${ext}`;
-
       const { error: uploadError } = await supabase.storage
-        .from("id-documents")
-        .upload(filePath, idFile, { upsert: true });
+        .from("id-documents").upload(filePath, idFile, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("id-documents")
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from("id-documents").getPublicUrl(filePath);
 
-      await supabase
-        .from("profiles")
-        .update({
-          id_document_url: urlData.publicUrl,
-          verification_status: "pending",
-        })
-        .eq("user_id", user.id);
+      await supabase.from("profiles").update({
+        id_document_url: urlData.publicUrl,
+        verification_status: "verified",
+      }).eq("user_id", user.id);
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setIdFile(null);
       setIdPreview(null);
-      toast({ title: "ID uploaded", description: "Your verification is pending review." });
+      toast({ title: "ID verified!", description: `${verification.document_type} accepted.` });
+      navigate("/account");
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -105,7 +122,7 @@ export default function IDVerification() {
         </button>
         <div>
           <h1 className="text-xl font-display font-bold">ID Verification</h1>
-          <p className="text-sm text-muted-foreground">Verify your identity</p>
+          <p className="text-sm text-muted-foreground">Verify your identity with AI</p>
         </div>
       </div>
 
@@ -125,14 +142,14 @@ export default function IDVerification() {
       {/* Upload section */}
       <div className="glass rounded-2xl p-6 space-y-4">
         <p className="text-sm text-muted-foreground text-center">
-          Upload a clear photo of your passport or driving license.
+          Upload a clear photo of your passport, national ID card, or driving license. Our AI will verify it instantly.
         </p>
 
         {idPreview ? (
           <div className="relative">
             <img src={idPreview} alt="ID Preview" className="w-full rounded-xl object-cover max-h-48" />
             <button
-              onClick={() => { setIdFile(null); setIdPreview(null); }}
+              onClick={() => { setIdFile(null); setIdPreview(null); setVerifyResult(null); }}
               className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
             >
               <X className="w-4 h-4" />
@@ -140,19 +157,13 @@ export default function IDVerification() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors"
-            >
-              <Camera className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Take Photo</span>
+            <button onClick={() => cameraInputRef.current?.click()}
+              className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
+              <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Take Photo</span>
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors"
-            >
-              <Upload className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Upload File</span>
+            <button onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
+              <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Upload File</span>
             </button>
           </div>
         )}
@@ -160,9 +171,16 @@ export default function IDVerification() {
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleFileSelect} />
 
+        {verifyResult && !verifyResult.is_valid_id && (
+          <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-sm">{verifyResult.reason || "This doesn't appear to be a valid ID document."}</p>
+          </div>
+        )}
+
         {idFile && (
-          <Button variant="gold" size="lg" className="w-full" onClick={uploadId} disabled={uploading}>
-            {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</> : "Submit Document"}
+          <Button variant="gold" size="lg" className="w-full" onClick={uploadAndVerifyId} disabled={uploading}>
+            {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : "Verify & Submit"}
           </Button>
         )}
       </div>

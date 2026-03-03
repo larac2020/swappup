@@ -227,7 +227,10 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          default_pax: number | null
           email: string
+          favorite_categories: string[] | null
+          favorite_departure_city: string | null
           full_name: string | null
           id: string
           id_document_url: string | null
@@ -248,7 +251,10 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_pax?: number | null
           email: string
+          favorite_categories?: string[] | null
+          favorite_departure_city?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null
@@ -269,7 +275,10 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_pax?: number | null
           email?: string
+          favorite_categories?: string[] | null
+          favorite_departure_city?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null

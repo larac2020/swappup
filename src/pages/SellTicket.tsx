@@ -77,6 +77,24 @@ export default function SellTicket() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Check profile completion for sell gating
+  const { data: gateProfile } = useQuery({
+    queryKey: ["profile-gate", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isProfileComplete = !!(gateProfile?.full_name && gateProfile?.phone);
+  const isAddressComplete = !!(gateProfile?.address_line1 && gateProfile?.city && gateProfile?.postal_code && gateProfile?.country);
+  const isVerified = gateProfile?.verification_status === "verified";
+  const isPaymentComplete = typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true";
+  const allSectionsComplete = isProfileComplete && isAddressComplete && isVerified && isPaymentComplete;
+  const isEditMode = !!editId;
+
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [editLoaded, setEditLoaded] = useState(false);
@@ -391,6 +409,55 @@ export default function SellTicket() {
           </div>
         </div>
 
+        {/* Sell gating - incomplete sections */}
+        {!isEditMode && gateProfile && !allSectionsComplete && (
+          <div className="px-4 py-6">
+            <div className="glass rounded-2xl p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-lg">Complete your account setup</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You need to complete all required sections before you can sell tickets.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {!isProfileComplete && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
+                    Personal Information incomplete
+                  </div>
+                )}
+                {!isVerified && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
+                    ID Verification incomplete
+                  </div>
+                )}
+                {!isAddressComplete && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
+                    Address incomplete
+                  </div>
+                )}
+                {!isPaymentComplete && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
+                    Payment method not added
+                  </div>
+                )}
+              </div>
+              <Button variant="gold" size="lg" className="w-full" onClick={() => navigate("/account")}>
+                Go to Account Settings
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {(isEditMode || allSectionsComplete || !gateProfile) && (
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
           {/* Upload Ticket */}
           <div className="space-y-4">
@@ -721,6 +788,7 @@ export default function SellTicket() {
             )}
           </Button>
         </form>
+        )}
       </div>
     </AppLayout>
   );

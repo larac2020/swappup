@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -7,107 +7,205 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
-  Bell, User, CreditCard, Shield, ChevronRight, ChevronLeft,
-  Plane, Loader2, Camera, Upload, Check, X
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  User, CreditCard, Shield, MapPin, Sparkles, CheckCircle,
+  Loader2, Camera, Upload, X, Eye, EyeOff, Lock, ChevronRight,
+  Search, Plane, AlertCircle
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCountries, getCitiesByCountry } from "@/data/flightData";
 
-type Step = "notifications" | "profile" | "payment" | "verification";
+type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
-const STEPS: Step[] = ["notifications", "profile", "payment", "verification"];
+const STEPS: Step[] = ["personal", "verification", "address", "payment", "preferences", "success"];
 
-const stepMeta: Record<Step, { icon: typeof Bell; title: string; description: string }> = {
-  notifications: { icon: Bell, title: "Stay in the loop", description: "Get notified about price drops, new listings, and important updates." },
-  profile: { icon: User, title: "Your details", description: "Help us personalize your experience." },
-  payment: { icon: CreditCard, title: "Payment method", description: "Add a card to buy tickets instantly." },
-  verification: { icon: Shield, title: "Verify your identity", description: "Upload your ID to start buying and selling." },
+const stepProgress: Record<Step, number> = {
+  personal: 20,
+  verification: 40,
+  address: 60,
+  payment: 80,
+  preferences: 100,
+  success: 100,
 };
 
+const phonePrefixes = [
+  { code: "+44", country: "UK" }, { code: "+39", country: "IT" }, { code: "+49", country: "DE" },
+  { code: "+33", country: "FR" }, { code: "+34", country: "ES" }, { code: "+31", country: "NL" },
+  { code: "+32", country: "BE" }, { code: "+41", country: "CH" }, { code: "+43", country: "AT" },
+  { code: "+351", country: "PT" }, { code: "+353", country: "IE" }, { code: "+46", country: "SE" },
+  { code: "+47", country: "NO" }, { code: "+45", country: "DK" }, { code: "+358", country: "FI" },
+  { code: "+48", country: "PL" }, { code: "+30", country: "GR" }, { code: "+1", country: "US" },
+];
+
+const addressCountries = [
+  "United Kingdom", "Italy", "Germany", "France", "Spain", "Netherlands", "Belgium",
+  "Switzerland", "Austria", "Portugal", "Ireland", "Sweden", "Norway", "Denmark",
+  "Finland", "Poland", "Greece", "Czech Republic", "Hungary", "Romania", "United States",
+];
+
+const postalCodePatterns: Record<string, { regex: RegExp; hint: string }> = {
+  "United Kingdom": { regex: /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, hint: "e.g. SW1A 1AA" },
+  "Italy": { regex: /^\d{5}$/, hint: "e.g. 00100" },
+  "Germany": { regex: /^\d{5}$/, hint: "e.g. 10115" },
+  "France": { regex: /^\d{5}$/, hint: "e.g. 75001" },
+  "Spain": { regex: /^\d{5}$/, hint: "e.g. 28001" },
+  "Netherlands": { regex: /^\d{4}\s?[A-Z]{2}$/i, hint: "e.g. 1012 AB" },
+  "Belgium": { regex: /^\d{4}$/, hint: "e.g. 1000" },
+  "Switzerland": { regex: /^\d{4}$/, hint: "e.g. 8001" },
+  "Austria": { regex: /^\d{4}$/, hint: "e.g. 1010" },
+  "Portugal": { regex: /^\d{4}-?\d{3}$/, hint: "e.g. 1000-001" },
+  "Ireland": { regex: /^[A-Z\d]{3}\s?[A-Z\d]{4}$/i, hint: "e.g. D02 AF30" },
+  "United States": { regex: /^\d{5}(-\d{4})?$/, hint: "e.g. 10001" },
+};
+
+const tripCategories = [
+  { value: "city_trip", label: "City Trip" }, { value: "beach", label: "Beach" },
+  { value: "winter_holiday", label: "Winter Holiday" }, { value: "ski_trip", label: "Ski Trip" },
+  { value: "adventure", label: "Adventure" }, { value: "romantic", label: "Romantic" },
+  { value: "family", label: "Family" }, { value: "business", label: "Business" },
+];
+
 export default function Onboarding() {
-  const [searchParams] = useSearchParams();
-  const initialStep = parseInt(searchParams.get("step") || "0", 10);
-  const [currentStep, setCurrentStep] = useState(Math.min(Math.max(initialStep, 0), STEPS.length - 1));
-  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [skippedSteps, setSkippedSteps] = useState<Set<Step>>(new Set());
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Profile fields
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
+  // Personal info
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [phonePrefix, setPhonePrefix] = useState("+44");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  // Notification state
-  const [notifStatus, setNotifStatus] = useState<"default" | "granted" | "denied" | "unsupported">("default");
-
-  // ID upload
+  // ID verification
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Payment status from redirect
-  const paymentSuccess = searchParams.get("payment") === "success";
+  // Address
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [sameAsBilling, setSameAsBilling] = useState(true);
+  const [postalError, setPostalError] = useState("");
+
+  // Payment
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  // Preferences
+  const [favCity, setFavCity] = useState("");
+  const [favCountry, setFavCountry] = useState("");
+  const [defaultPax, setDefaultPax] = useState("1");
+  const [favCategories, setFavCategories] = useState<string[]>([]);
+
+  const [saving, setSaving] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   useEffect(() => {
     if (user?.email) setProfileEmail(user.email);
-    if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
-  }, [user]);
-
-  useEffect(() => {
-    if (!("Notification" in window)) {
-      setNotifStatus("unsupported");
-    } else {
-      setNotifStatus(Notification.permission as "default" | "granted" | "denied");
+    if (profile) {
+      if (profile.full_name) {
+        const parts = profile.full_name.split(" ");
+        setFirstName(parts[0] || "");
+        setLastName(parts.slice(1).join(" ") || "");
+      }
+      if (profile.phone) {
+        for (const p of phonePrefixes.sort((a, b) => b.code.length - a.code.length)) {
+          if (profile.phone.startsWith(p.code)) {
+            setPhonePrefix(p.code);
+            setPhoneNumber(profile.phone.slice(p.code.length));
+            break;
+          }
+        }
+      }
+      if (profile.address_line1) setAddressLine1(profile.address_line1);
+      if (profile.address_line2) setAddressLine2(profile.address_line2);
+      if (profile.city) setCity(profile.city);
+      if (profile.postal_code) setPostalCode(profile.postal_code);
+      if (profile.country) setCountry(profile.country);
     }
-  }, []);
+  }, [user, profile]);
 
   const step = STEPS[currentStep];
-  const progress = ((currentStep + 1) / STEPS.length) * 100;
-  const StepIcon = stepMeta[step].icon;
+  const baseProgress = currentStep === 0 ? 10 : stepProgress[STEPS[currentStep - 1]] || 10;
+  const targetProgress = stepProgress[step];
+  const progress = step === "success" ? 100 : baseProgress;
 
-  const requestNotifications = async () => {
-    if (!("Notification" in window)) return;
-    const permission = await Notification.requestPermission();
-    setNotifStatus(permission as "granted" | "denied" | "default");
-    if (permission === "granted") {
-      toast({ title: "Notifications enabled!", description: "You'll receive alerts for new deals." });
+  const countries = useMemo(() => getCountries(), []);
+  const favCities = useMemo(() => favCountry ? getCitiesByCountry(favCountry) : [], [favCountry]);
+
+  const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
+
+  const handleSkip = () => {
+    if (step !== "success") {
+      setSkippedSteps((prev) => new Set(prev).add(step));
+    }
+    goNext();
+  };
+
+  const handleClose = () => {
+    if (step === "success") {
+      navigate("/account");
+    } else {
+      // Mark remaining steps as skipped
+      localStorage.setItem("flyswap_onboarding_complete", "true");
+      navigate("/home");
     }
   };
 
-  const saveProfile = async () => {
+  // Save personal info
+  const savePersonal = async () => {
     if (!user) return;
-    setLoading(true);
+    setSaving(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
+      const fullName = `${firstName} ${lastName}`.trim();
+      const phone = phoneNumber ? `${phonePrefix}${phoneNumber}` : "";
+      const { error } = await supabase.from("profiles")
         .update({ full_name: fullName, phone, email: profileEmail })
         .eq("user_id", user.id);
       if (error) throw error;
-      toast({ title: "Profile saved" });
+
+      if (newPassword) {
+        const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword });
+        if (pwErr) throw pwErr;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Personal info saved" });
       goNext();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const setupPayment = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-setup-intent");
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-      setLoading(false);
-    }
-  };
-
+  // Upload + verify ID
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -117,60 +215,152 @@ export default function Onboarding() {
     }
     setIdFile(file);
     setIdPreview(URL.createObjectURL(file));
+    setVerifyResult(null);
   };
 
-  const uploadId = async () => {
+  const uploadAndVerifyId = async () => {
     if (!idFile || !user) return;
     setUploading(true);
     try {
+      // Convert to base64 for AI verification
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(idFile);
+      });
+
+      // AI verification
+      const { data: aiResult, error: aiError } = await supabase.functions.invoke("verify-id", {
+        body: { image: base64 },
+      });
+
+      if (aiError) throw aiError;
+
+      const verification = aiResult?.verification;
+      setVerifyResult(verification);
+
+      if (!verification?.is_valid_id || !verification?.appears_genuine) {
+        toast({
+          title: "Document not accepted",
+          description: verification?.reason || "Please upload a valid identity document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Upload to storage
       const ext = idFile.name.split(".").pop();
       const filePath = `${user.id}/id-document.${ext}`;
-
       const { error: uploadError } = await supabase.storage
         .from("id-documents")
         .upload(filePath, idFile, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("id-documents")
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from("id-documents").getPublicUrl(filePath);
 
-      await supabase
-        .from("profiles")
-        .update({
-          id_document_url: urlData.publicUrl,
-          verification_status: "pending",
-        })
-        .eq("user_id", user.id);
+      await supabase.from("profiles").update({
+        id_document_url: urlData.publicUrl,
+        verification_status: "verified",
+      }).eq("user_id", user.id);
 
-      toast({ title: "ID uploaded", description: "Your identity verification is pending review." });
-      finishOnboarding();
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "ID verified!", description: `${verification.document_type} accepted.` });
+      goNext();
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
   };
 
-  const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
-  const skip = () => {
-    if (currentStep === STEPS.length - 1) {
-      finishOnboarding();
-    } else {
+  // Save address
+  const saveAddress = async () => {
+    if (!user) return;
+    if (postalCode && country && postalCodePatterns[country]) {
+      if (!postalCodePatterns[country].regex.test(postalCode.trim())) {
+        setPostalError(`Invalid format. ${postalCodePatterns[country].hint}`);
+        return;
+      }
+    }
+    setPostalError("");
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").update({
+        address_line1: addressLine1, address_line2: addressLine2,
+        city, postal_code: postalCode.trim(), country,
+      }).eq("user_id", user.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Address saved" });
       goNext();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const finishOnboarding = () => {
+  // Setup payment
+  const setupPayment = async () => {
+    setPaymentLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-setup-intent");
+      if (error) throw error;
+      if (data?.url) {
+        localStorage.setItem("flyswap_payment_added", "true");
+        window.open(data.url, "_blank");
+        toast({ title: "Complete payment setup in the new tab", description: "Then click Next to continue." });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // Save preferences
+  const savePreferences = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").update({
+        favorite_departure_city: favCity || null,
+        default_pax: parseInt(defaultPax) || 1,
+        favorite_categories: favCategories.length > 0 ? favCategories : null,
+      } as any).eq("user_id", user.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      goNext();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const finishSetup = () => {
     localStorage.setItem("flyswap_onboarding_complete", "true");
-    navigate("/home");
+  };
+
+  const stepIcons: Record<Step, typeof User> = {
+    personal: User, verification: Shield, address: MapPin,
+    payment: CreditCard, preferences: Sparkles, success: CheckCircle,
+  };
+  const StepIcon = stepIcons[step];
+
+  const stepTitles: Record<Step, { title: string; desc: string }> = {
+    personal: { title: "Personal Information", desc: "Let's get to know you" },
+    verification: { title: "ID Verification", desc: "Upload a valid passport, national ID or driving license" },
+    address: { title: "Address", desc: "Your billing and residential address" },
+    payment: { title: "Payment Details", desc: "Add your card for buying and receiving payments" },
+    preferences: { title: "Personalization", desc: "Optional — help us tailor your experience" },
+    success: { title: "All Set!", desc: "Your account setup is complete" },
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4 space-y-4">
+      <div className="px-6 pt-6 pb-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-gold flex items-center justify-center">
@@ -180,243 +370,316 @@ export default function Onboarding() {
               <span className="gradient-text">Fly</span>Swap
             </span>
           </div>
-          <button onClick={skip} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Skip
+          <button onClick={handleClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <Progress value={progress} className="h-1.5" />
-        <div className="flex items-center gap-2">
-          {STEPS.map((s, i) => (
-            <div
-              key={s}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                i <= currentStep ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
+
+        {step !== "success" && (
+          <>
+            <Progress value={progress} className="h-1.5" />
+            <div className="flex items-center gap-1">
+              {STEPS.slice(0, 5).map((s, i) => (
+                <div
+                  key={s}
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    i < currentStep ? "bg-primary" : i === currentStep ? "bg-primary/60" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-right">{Math.round(progress)}% complete</p>
+          </>
+        )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-6 pb-6 flex flex-col">
+      <div className="flex-1 px-6 pb-6 flex flex-col overflow-y-auto">
         <div className="animate-fade-in flex-1 flex flex-col" key={step}>
           {/* Step header */}
-          <div className="text-center space-y-3 mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20">
-              <StepIcon className="w-8 h-8 text-primary" />
+          <div className="text-center space-y-3 mb-6">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20">
+              <StepIcon className="w-7 h-7 text-primary" />
             </div>
-            <h1 className="text-2xl font-display font-bold">{stepMeta[step].title}</h1>
-            <p className="text-muted-foreground text-sm">{stepMeta[step].description}</p>
+            <h1 className="text-xl font-display font-bold">{stepTitles[step].title}</h1>
+            <p className="text-muted-foreground text-sm">{stepTitles[step].desc}</p>
           </div>
 
           {/* Step content */}
           <div className="flex-1">
-            {step === "notifications" && (
-              <div className="space-y-6">
-                <div className="glass rounded-2xl p-6 space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shrink-0">
-                      <Bell className="w-6 h-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Price drop alerts</h3>
-                      <p className="text-sm text-muted-foreground">Know instantly when a ticket you want drops in price.</p>
-                    </div>
+            {step === "personal" && (
+              <div className="glass rounded-2xl p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>First Name</Label>
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="h-11 bg-secondary/50 border-border/50" />
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                      <CreditCard className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Sale updates</h3>
-                      <p className="text-sm text-muted-foreground">Get notified when someone buys your tickets.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                      <Shield className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Security alerts</h3>
-                      <p className="text-sm text-muted-foreground">Stay informed about account activity.</p>
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label>Last Name</Label>
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 bg-secondary/50 border-border/50" />
                   </div>
                 </div>
-
-                {notifStatus === "granted" ? (
-                  <div className="flex items-center gap-2 justify-center text-success">
-                    <Check className="w-5 h-5" />
-                    <span className="font-medium">Notifications enabled</span>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input type="email" value={profileEmail} readOnly className="h-11 bg-secondary/30 border-border/50 text-muted-foreground" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Phone Number</Label>
+                  <div className="flex gap-2">
+                    <Select value={phonePrefix} onValueChange={setPhonePrefix}>
+                      <SelectTrigger className="w-[100px] h-11 bg-secondary/50 border-border/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {phonePrefixes.map((p) => (
+                          <SelectItem key={p.code} value={p.code}>{p.code} {p.country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
+                      placeholder="7700900000" className="h-11 bg-secondary/50 border-border/50 flex-1" />
                   </div>
-                ) : notifStatus === "denied" ? (
-                  <p className="text-center text-sm text-muted-foreground">
-                    Notifications were blocked. You can enable them in your browser settings.
-                  </p>
-                ) : notifStatus === "unsupported" ? (
-                  <p className="text-center text-sm text-muted-foreground">
-                    Your browser doesn't support notifications.
-                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label>Password</Label>
+                    <button type="button" onClick={() => setChangingPassword(!changingPassword)} className="text-xs text-primary">
+                      {changingPassword ? "Cancel" : "Change password"}
+                    </button>
+                  </div>
+                  {changingPassword ? (
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type={showPassword ? "text" : "password"} value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="New password" className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50" minLength={6}
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  ) : (
+                    <Input type="password" value="••••••••" readOnly className="h-11 bg-secondary/30 border-border/50 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === "verification" && (
+              <div className="glass rounded-2xl p-5 space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Upload a clear photo of your passport, national ID card, or driving license.
+                </p>
+                {idPreview ? (
+                  <div className="relative">
+                    <img src={idPreview} alt="ID Preview" className="w-full rounded-xl object-cover max-h-48" />
+                    <button onClick={() => { setIdFile(null); setIdPreview(null); setVerifyResult(null); }}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 ) : (
-                  <Button variant="gold" size="lg" className="w-full" onClick={requestNotifications}>
-                    Enable Notifications
-                  </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => cameraInputRef.current?.click()}
+                      className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
+                      <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Take Photo</span>
+                    </button>
+                    <button onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
+                      <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Upload File</span>
+                    </button>
+                  </div>
+                )}
+                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
+                <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleFileSelect} />
+
+                {verifyResult && !verifyResult.is_valid_id && (
+                  <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-sm">{verifyResult.reason || "This doesn't appear to be a valid ID document."}</p>
+                  </div>
+                )}
+                {verifyResult?.is_valid_id && verifyResult?.appears_genuine && (
+                  <div className="rounded-xl bg-success/10 border border-success/30 p-3 flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                    <p className="text-sm text-success">Document verified: {verifyResult.document_type}</p>
+                  </div>
                 )}
               </div>
             )}
 
-            {step === "profile" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="John Doe"
-                    className="h-12 bg-secondary/50 border-border/50"
-                  />
+            {step === "address" && (
+              <div className="glass rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Billing address same as residential</Label>
+                  <Switch checked={sameAsBilling} onCheckedChange={setSameAsBilling} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileEmail}
-                    onChange={(e) => setProfileEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="h-12 bg-secondary/50 border-border/50"
-                  />
+                <div className="space-y-1.5">
+                  <Label>Country</Label>
+                  <Select value={country} onValueChange={(v) => { setCountry(v); setPostalError(""); }}>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectContent>
+                      {addressCountries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                    className="h-12 bg-secondary/50 border-border/50"
-                  />
+                <div className="space-y-1.5">
+                  <Label>Address Line 1</Label>
+                  <Input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="123 Main Street" className="h-11 bg-secondary/50 border-border/50" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Address Line 2 (optional)</Label>
+                  <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Apt 4B" className="h-11 bg-secondary/50 border-border/50" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>City</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="London" className="h-11 bg-secondary/50 border-border/50" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Postal Code</Label>
+                    <Input value={postalCode} onChange={(e) => { setPostalCode(e.target.value); setPostalError(""); }}
+                      placeholder={postalCodePatterns[country]?.hint || "Postal code"}
+                      className={`h-11 bg-secondary/50 border-border/50 ${postalError ? "border-destructive" : ""}`} />
+                    {postalError && <p className="text-xs text-destructive">{postalError}</p>}
+                  </div>
                 </div>
               </div>
             )}
 
             {step === "payment" && (
-              <div className="space-y-6">
-                {paymentSuccess ? (
-                  <div className="glass rounded-2xl p-8 text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto">
-                      <Check className="w-8 h-8 text-success" />
-                    </div>
-                    <h3 className="text-xl font-semibold">Payment method added!</h3>
-                    <p className="text-muted-foreground text-sm">You're all set to buy tickets instantly.</p>
-                  </div>
-                ) : (
-                  <div className="glass rounded-2xl p-6 space-y-6">
-                    <div className="text-center space-y-2">
-                      <CreditCard className="w-12 h-12 text-primary mx-auto" />
-                      <p className="text-sm text-muted-foreground">
-                        You'll be redirected to a secure page to add your card. No charges will be made.
-                      </p>
-                    </div>
-                    <Button variant="gold" size="lg" className="w-full" onClick={setupPayment} disabled={loading}>
-                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : "Add Payment Method"}
-                    </Button>
-                  </div>
-                )}
+              <div className="glass rounded-2xl p-5 space-y-5">
+                <div className="text-center space-y-2">
+                  <CreditCard className="w-12 h-12 text-primary mx-auto" />
+                  <p className="text-sm text-muted-foreground">
+                    Add your card details. This card will be used for both buying tickets and receiving payments when you sell.
+                  </p>
+                </div>
+                <Button variant="gold" size="lg" className="w-full" onClick={setupPayment} disabled={paymentLoading}>
+                  {paymentLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : "Add Payment Method"}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  You'll be redirected to a secure page. No charges will be made.
+                </p>
               </div>
             )}
 
-            {step === "verification" && (
-              <div className="space-y-6">
-                <div className="glass rounded-2xl p-6 space-y-4">
-                  <p className="text-sm text-muted-foreground text-center">
-                    Upload a clear photo of your passport or driving license. This helps keep our marketplace safe.
-                  </p>
+            {step === "preferences" && (
+              <div className="glass rounded-2xl p-5 space-y-4">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Optional</Badge>
+                <div className="space-y-1.5">
+                  <Label>Favorite Departure Country</Label>
+                  <Select value={favCountry} onValueChange={(v) => { setFavCountry(v); setFavCity(""); }}>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectContent>
+                      {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {favCountry && (
+                  <div className="space-y-1.5">
+                    <Label>Favorite Departure City</Label>
+                    <Select value={favCity} onValueChange={setFavCity}>
+                      <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                      <SelectContent>
+                        {favCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <Label>Default Number of Passengers</Label>
+                  <Select value={defaultPax} onValueChange={setDefaultPax}>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "passenger" : "passengers"}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Favorite Categories</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {tripCategories.map((cat) => (
+                      <button key={cat.value} type="button"
+                        onClick={() => setFavCategories((prev) => prev.includes(cat.value) ? prev.filter((c) => c !== cat.value) : [...prev, cat.value])}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                          favCategories.includes(cat.value) ? "bg-primary text-primary-foreground border-primary" : "bg-secondary border-border/50 text-muted-foreground hover:border-primary/50"
+                        }`}>
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
-                  {idPreview ? (
-                    <div className="relative">
-                      <img src={idPreview} alt="ID Preview" className="w-full rounded-xl object-cover max-h-48" />
-                      <button
-                        onClick={() => { setIdFile(null); setIdPreview(null); }}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => cameraInputRef.current?.click()}
-                        className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors"
-                      >
-                        <Camera className="w-8 h-8 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Take Photo</span>
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors"
-                      >
-                        <Upload className="w-8 h-8 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Upload File</span>
-                      </button>
-                    </div>
-                  )}
-
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,.pdf"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
+            {step === "success" && (
+              <div className="space-y-6 text-center">
+                <div className="w-20 h-20 rounded-full gradient-gold flex items-center justify-center mx-auto shadow-glow">
+                  <CheckCircle className="w-10 h-10 text-primary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-display font-bold mb-2">🎉 Congratulations!</h2>
+                  <p className="text-muted-foreground">Your account is all set up. What would you like to do next?</p>
+                </div>
+                {skippedSteps.size > 0 && (
+                  <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 text-sm text-left">
+                    <p className="font-medium text-warning mb-1">Some sections were skipped</p>
+                    <p className="text-muted-foreground">Complete them in your Account settings to unlock buying and selling.</p>
+                  </div>
+                )}
+                <div className="space-y-3">
+                  <Button variant="gold" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/sell"); }}>
+                    <Plane className="w-4 h-4 mr-2" /> Start Selling
+                  </Button>
+                  <Button variant="outline" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/browse"); }}>
+                    <Search className="w-4 h-4 mr-2" /> Explore Destinations
+                  </Button>
                 </div>
               </div>
             )}
           </div>
 
           {/* Bottom actions */}
-          <div className="space-y-3 mt-6">
-            {step === "profile" && (
-              <Button variant="gold" size="lg" className="w-full" onClick={saveProfile} disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save & Continue"}
+          {step !== "success" && (
+            <div className="flex gap-3 mt-6">
+              <Button variant="ghost" className="flex-1" onClick={handleSkip}>
+                Skip
               </Button>
-            )}
-            {step === "notifications" && notifStatus !== "default" && (
-              <Button variant="gold" size="lg" className="w-full" onClick={goNext}>
-                Continue <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-            {step === "payment" && paymentSuccess && (
-              <Button variant="gold" size="lg" className="w-full" onClick={goNext}>
-                Continue <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-            {step === "verification" && idFile && (
-              <Button variant="gold" size="lg" className="w-full" onClick={uploadId} disabled={uploading}>
-                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</> : "Submit & Finish"}
-              </Button>
-            )}
-            {step === "verification" && !idFile && (
-              <Button variant="gold" size="lg" className="w-full" onClick={finishOnboarding}>
-                Finish Setup
-              </Button>
-            )}
-
-            {currentStep > 0 && (
-              <Button variant="ghost" size="lg" className="w-full text-muted-foreground" onClick={goBack}>
-                <ChevronLeft className="w-4 h-4 mr-1" /> Back
-              </Button>
-            )}
-          </div>
+              {step === "personal" && (
+                <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              )}
+              {step === "verification" && idFile && (
+                <Button variant="gold" className="flex-1" onClick={uploadAndVerifyId} disabled={uploading}>
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify & Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              )}
+              {step === "verification" && !idFile && (
+                <Button variant="gold" className="flex-1" onClick={goNext} disabled>
+                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
+              {step === "address" && (
+                <Button variant="gold" className="flex-1" onClick={saveAddress} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              )}
+              {step === "payment" && (
+                <Button variant="gold" className="flex-1" onClick={goNext}>
+                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
+              {step === "preferences" && (
+                <Button variant="gold" className="flex-1" onClick={savePreferences} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Finish <ChevronRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
