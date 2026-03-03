@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Plane, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 
 type AuthMode = "login" | "signup" | "forgot";
@@ -13,10 +13,45 @@ export function AuthForm() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailExists, setEmailExists] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const { toast } = useToast();
+
+  // Check if email exists on blur (signup mode only)
+  const checkEmailExists = useCallback(async (emailToCheck: string) => {
+    if (!emailToCheck || mode !== "signup") return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToCheck)) return;
+
+    setCheckingEmail(true);
+    try {
+      // Attempt signup with a dummy password to check if user exists
+      // Supabase returns a specific error for existing users
+      const { data, error } = await supabase.auth.signUp({
+        email: emailToCheck,
+        password: "check_only_dummy_pw_123!",
+        options: { emailRedirectTo: "https://dummy.test" },
+      });
+      
+      // If user already exists, Supabase returns the user with identities = []
+      if (data?.user && data.user.identities && data.user.identities.length === 0) {
+        setEmailExists(true);
+      } else if (error && (error.message?.includes("already registered") || (error as any).code === "user_already_exists")) {
+        setEmailExists(true);
+      } else {
+        setEmailExists(false);
+        // Clean up the dummy signup - it won't be verified so it's harmless
+      }
+    } catch {
+      setEmailExists(false);
+    } finally {
+      setCheckingEmail(false);
+    }
+  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,42 +71,49 @@ export function AuthForm() {
       }
 
       if (mode === "signup") {
+        if (password !== confirmPassword) {
+          toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
+          return;
+        }
+        if (password.length < 6) {
+          toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: {
-              full_name: fullName,
-            },
           },
         });
 
         if (error) {
           if (error.message?.includes("already registered") || (error as any).code === "user_already_exists") {
-            toast({
-              title: "Account already exists",
-              description: "This email is already registered. Please sign in or reset your password.",
-              variant: "destructive",
-            });
-            setMode("login");
+            setEmailExists(true);
             return;
           }
           throw error;
         }
 
-        toast({
-          title: "Account created!",
-          description: "Welcome to FlySwap. You're now signed in.",
-        });
+        // Check if email confirmation is needed
+        if (data?.user && !data.session) {
+          toast({
+            title: "Verify your email",
+            description: "We've sent a verification link to your email. Please check your inbox.",
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "Welcome to FlySwap.",
+          });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-
         if (error) throw error;
-
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in.",
@@ -106,8 +148,8 @@ export function AuthForm() {
             <span className="gradient-text">Fly</span>Swap
           </h1>
           <p className="text-muted-foreground">
-            {mode === "login" 
-              ? "Welcome back. Sign in to continue." 
+            {mode === "login"
+              ? "Welcome back. Sign in to continue."
               : mode === "forgot"
               ? "Enter your email to receive a reset link."
               : "Create an account to start trading tickets."}
@@ -116,30 +158,8 @@ export function AuthForm() {
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-5">
-          {mode === "signup" && (
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-sm font-medium">
-                Full Name
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
-                  required
-                />
-              </div>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">
-              Email
-            </Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -147,19 +167,51 @@ export function AuthForm() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setEmailExists(null); }}
+                onBlur={() => mode === "signup" && checkEmailExists(email)}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 required
               />
+              {checkingEmail && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+              )}
             </div>
+
+            {/* Email exists prompt */}
+            {mode === "signup" && emailExists && (
+              <div className="rounded-xl bg-warning/10 border border-warning/30 p-4 space-y-3 animate-fade-in">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground">This email is already registered.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="gold"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setMode("login")}
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setMode("forgot")}
+                  >
+                    Forgot Password
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {mode !== "forgot" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 {mode === "login" && (
                   <button
                     type="button"
@@ -193,7 +245,44 @@ export function AuthForm() {
             </div>
           )}
 
-          <Button type="submit" variant="gold" size="lg" className="w-full" disabled={loading}>
+          {mode === "signup" && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary ${
+                    confirmPassword && password !== confirmPassword ? "border-destructive" : ""
+                  }`}
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-xs text-destructive">Passwords don't match</p>
+              )}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            variant="gold"
+            size="lg"
+            className="w-full"
+            disabled={loading || (mode === "signup" && emailExists === true)}
+          >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -248,7 +337,7 @@ export function AuthForm() {
             ) : mode === "login" ? (
               <>
                 Don't have an account?{" "}
-                <button type="button" onClick={() => setMode("signup")} className="text-primary hover:text-primary/80 font-medium transition-colors">
+                <button type="button" onClick={() => { setMode("signup"); setEmailExists(null); }} className="text-primary hover:text-primary/80 font-medium transition-colors">
                   Sign up
                 </button>
               </>

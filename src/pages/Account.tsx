@@ -4,9 +4,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { 
+import {
   User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
-  MapPin, FileText, Bell, Star, Heart, ShoppingBag
+  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,23 +21,6 @@ import Purchases from "@/components/account/Purchases";
 import FavoritesList from "@/components/account/FavoritesList";
 import TransactionHistory from "@/components/account/TransactionHistory";
 
-const menuItems = [
-  { icon: User, label: "Personal Information", path: "profile", description: "Name, email, phone" },
-  { icon: MapPin, label: "Address", path: "address", description: "Billing address" },
-  { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts" },
-  { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", badge: "Required" },
-  { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings" },
-  { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips" },
-  { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings" },
-  { icon: FileText, label: "Transaction History", path: "transactions", description: "Past purchases and sales" },
-];
-
-const supportItems = [
-  { icon: HelpCircle, label: "Help Center", path: "/support" },
-  { icon: FileText, label: "Terms & Conditions", path: "/terms" },
-  { icon: Shield, label: "Privacy Policy", path: "/privacy" },
-];
-
 const sectionComponents: Record<string, React.ComponentType> = {
   profile: PersonalInfo,
   address: AddressInfo,
@@ -48,6 +31,12 @@ const sectionComponents: Record<string, React.ComponentType> = {
   favorites: FavoritesList,
   transactions: TransactionHistory,
 };
+
+const supportItems = [
+  { icon: HelpCircle, label: "Help Center", path: "/support" },
+  { icon: FileText, label: "Terms & Conditions", path: "/terms" },
+  { icon: Shield, label: "Privacy Policy", path: "/privacy" },
+];
 
 export default function Account() {
   const navigate = useNavigate();
@@ -67,6 +56,25 @@ export default function Account() {
     },
     enabled: !!user?.id,
   });
+
+  // Compute completion status for each section
+  const sectionComplete = {
+    profile: !!(profile?.full_name && profile?.phone),
+    address: !!(profile?.address_line1 && profile?.city && profile?.postal_code && profile?.country),
+    payment: typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true",
+    verification: profile?.verification_status === "verified",
+  };
+
+  const menuItems = [
+    { icon: User, label: "Personal Information", path: "profile", description: "Name, email, phone", required: true, complete: sectionComplete.profile },
+    { icon: MapPin, label: "Address", path: "address", description: "Billing address", required: true, complete: sectionComplete.address },
+    { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts", required: true, complete: sectionComplete.payment },
+    { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", required: true, complete: sectionComplete.verification },
+    { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings", required: false, complete: true },
+    { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips", required: false, complete: true },
+    { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings", required: false, complete: true },
+    { icon: FileText, label: "Transaction History", path: "transactions", description: "Past purchases and sales", required: false, complete: true },
+  ];
 
   // If a section is selected, render that sub-page
   if (section && sectionComponents[section]) {
@@ -147,21 +155,27 @@ export default function Account() {
           <div className="glass rounded-2xl divide-y divide-border/50">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const showWarning = item.required && !item.complete;
               return (
                 <button
                   key={item.path}
                   onClick={() => navigate(`/account/${item.path}`)}
                   className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center relative">
                     <Icon className="w-5 h-5 text-primary" />
+                    {showWarning && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center">
+                        <span className="text-destructive-foreground text-xs font-bold">!</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{item.label}</span>
-                      {item.badge && (
+                      {showWarning && (
                         <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/30">
-                          {item.badge}
+                          Incomplete
                         </Badge>
                       )}
                     </div>
