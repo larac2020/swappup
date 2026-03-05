@@ -517,7 +517,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       fromCountryItems,
                       (val) => {
                         if (val === "__current__") { requestCurrentLocation(); return; }
-                        localUpdate({ originCountry: val === "any" ? "any" : val, origin: "" });
+                        localUpdate({ originCountry: val === "any" ? "any" : val, origin: val === "any" ? "" : "" });
                         setShowFromCountry(false);
                         setFromCountrySearch("");
                       },
@@ -528,10 +528,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={fromCityRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.origin && "text-muted-foreground")}
-                      onClick={() => { setShowFromCity(!showFromCity); setShowFromCountry(false); }}
+                      disabled={currentFilters.originCountry === "any"}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.origin && "text-muted-foreground", currentFilters.originCountry === "any" && "opacity-50 cursor-not-allowed")}
+                      onClick={() => { if (currentFilters.originCountry !== "any") { setShowFromCity(!showFromCity); setShowFromCountry(false); } }}
                     >
-                      {currentFilters.origin === "any" ? "Any" : currentFilters.origin || "City"}
+                      {currentFilters.originCountry === "any" ? "Any" : currentFilters.origin === "any" ? "Any" : currentFilters.origin || "City"}
                     </Button>
                     {renderDropdown(
                       fromCityRef, showFromCity, fromCitySearch, setFromCitySearch, "Search city...",
@@ -568,7 +569,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
                       toCountryItems,
                       (val) => {
-                        localUpdate({ destinationCountry: val === "any" ? "any" : val, destination: "" });
+                        localUpdate({ destinationCountry: val === "any" ? "any" : val, destination: val === "any" ? "" : "" });
                         setShowToCountry(false);
                         setToCountrySearch("");
                       },
@@ -579,10 +580,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCityRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destination && "text-muted-foreground")}
-                      onClick={() => { setShowToCity(!showToCity); setShowToCountry(false); }}
+                      disabled={currentFilters.destinationCountry === "any"}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destination && "text-muted-foreground", currentFilters.destinationCountry === "any" && "opacity-50 cursor-not-allowed")}
+                      onClick={() => { if (currentFilters.destinationCountry !== "any") { setShowToCity(!showToCity); setShowToCountry(false); } }}
                     >
-                      {currentFilters.destination === "any" ? "Any" : currentFilters.destination || "City"}
+                      {currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destination === "any" ? "Any" : currentFilters.destination || "City"}
                     </Button>
                     {renderDropdown(
                       toCityRef, showToCity, toCitySearch, setToCitySearch, "Search city...",
