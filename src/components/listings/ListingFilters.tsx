@@ -510,10 +510,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={fromCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.originCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 overflow-hidden", !currentFilters.originCountry && "text-muted-foreground")}
                       onClick={() => { setShowFromCountry(!showFromCountry); setShowFromCity(false); }}
                     >
-                      {currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}
+                      <span className="truncate block">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       fromCountryRef, showFromCountry, fromCountrySearch, setFromCountrySearch, "Search country...",
@@ -563,10 +563,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destinationCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
                       onClick={() => { setShowToCountry(!showToCountry); setShowToCity(false); }}
                     >
-                      {currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}
+                      <span className="truncate block">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
@@ -646,15 +646,19 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     <div className="grid grid-cols-3 gap-2">
                       {Array.from({ length: 12 }).map((_, i) => {
                         const month = addMonths(startOfMonth(new Date()), i);
-                        const key = format(month, "yyyy-MM");
-                        const price = datePriceMap[key];
+                        const monthKey = format(month, "yyyy-MM");
+                        const price = datePriceMap[monthKey];
                         const allPrices = Object.values(datePriceMap).filter(p => p > 0);
                         const minP = allPrices.length ? Math.min(...allPrices) : 0;
                         const maxP = allPrices.length ? Math.max(...allPrices) : 1;
-                        const isSelected = currentFilters.departureDateFrom && isSameMonth(new Date(currentFilters.departureDateFrom), month);
                         
-                        // Color intensity: green for cheap, amber for mid, red for expensive
-                        let bgClass = "bg-muted/50 text-muted-foreground"; // no flights
+                        // Check selection by comparing YYYY-MM strings (avoids timezone issues)
+                        const selectedKey = currentFilters.departureDateFrom 
+                          ? currentFilters.departureDateFrom.substring(0, 7) 
+                          : null;
+                        const isSelected = selectedKey === monthKey;
+                        
+                        let bgClass = "bg-muted/50 text-muted-foreground";
                         if (price !== undefined) {
                           const ratio = maxP === minP ? 0 : (price - minP) / (maxP - minP);
                           if (ratio <= 0.33) bgClass = "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
@@ -663,20 +667,21 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                         }
 
                         return (
-                          <button
-                            type="button"
-                            key={key}
+                          <div
+                            key={monthKey}
+                            role="button"
+                            tabIndex={0}
                             className={cn(
-                              "rounded-lg border p-2.5 text-center transition-all",
+                              "rounded-lg border p-2.5 text-center transition-all cursor-pointer select-none",
                               bgClass,
                               isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
                               price === undefined && "opacity-50"
                             )}
-                            onClick={(e) => {
+                            onPointerDown={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              const from = startOfMonth(month).toISOString().split("T")[0];
-                              localUpdate({ departureDateFrom: from, departureDateTo: undefined });
+                              const fromDate = `${monthKey}-01`;
+                              localUpdate({ departureDateFrom: fromDate, departureDateTo: undefined });
                             }}
                           >
                             <div className="text-xs font-medium">{format(month, "MMM yyyy")}</div>
@@ -685,7 +690,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                             ) : (
                               <div className="text-[10px] mt-0.5">No flights</div>
                             )}
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
