@@ -569,7 +569,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
                       toCountryItems,
                       (val) => {
-                        localUpdate({ destinationCountry: val === "any" ? "any" : val, destination: "" });
+                        localUpdate({ destinationCountry: val === "any" ? "any" : val, destination: val === "any" ? "" : "" });
                         setShowToCountry(false);
                         setToCountrySearch("");
                       },
