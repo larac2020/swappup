@@ -290,7 +290,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   const activeFilterCount =
     (filters.destination ? 1 : 0) +
     (filters.origin ? 1 : 0) +
-    (filters.maxPrice < 2000 ? 1 : 0) +
+    (filters.minPrice > 0 || filters.maxPrice < 2000 ? 1 : 0) +
     (filters.ticketCount > 0 ? 1 : 0) +
     (filters.departureDateFrom ? 1 : 0) +
     (filters.departureDateTo ? 1 : 0) +
