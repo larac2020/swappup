@@ -123,10 +123,11 @@ export default function Browse() {
         if (!filters.airlines.some(a => listing.airline.toLowerCase() === a.toLowerCase())) return false;
       }
 
-      if (filters.luggageIncluded && !listing.luggage_included) return false;
-      if (filters.carryOnIncluded && !listing.carry_on_included) return false;
-      if (filters.mealIncluded && !listing.meal_included) return false;
-      if (filters.directOnly && (listing.stopovers ?? 0) > 0) return false;
+      // Toggle filters are optional: only EXCLUDE if toggled ON and listing lacks it
+      if (filters.luggageIncluded === true && !listing.luggage_included) return false;
+      if (filters.carryOnIncluded === true && !listing.carry_on_included) return false;
+      if (filters.mealIncluded === true && !listing.meal_included) return false;
+      if (filters.directOnly === true && (listing.stopovers ?? 0) > 0) return false;
 
       return true;
     });
