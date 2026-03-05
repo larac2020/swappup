@@ -474,7 +474,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
             </div>
           )}
         </div>
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="h-12 w-12 relative">
               <SlidersHorizontal className="w-5 h-5" />
