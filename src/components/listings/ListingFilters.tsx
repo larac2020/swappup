@@ -527,10 +527,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={fromCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden", !currentFilters.originCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden [&>*]:min-w-0", !currentFilters.originCountry && "text-muted-foreground")}
                       onClick={() => { setShowFromCountry(!showFromCountry); setShowFromCity(false); }}
                     >
-                      <span className="truncate">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
+                      <span className="block truncate max-w-full">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       fromCountryRef, showFromCountry, fromCountrySearch, setFromCountrySearch, "Search country...",
@@ -580,10 +580,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden [&>*]:min-w-0", !currentFilters.destinationCountry && "text-muted-foreground")}
                       onClick={() => { setShowToCountry(!showToCountry); setShowToCity(false); }}
                     >
-                      <span className="truncate">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
+                      <span className="block truncate max-w-full">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
