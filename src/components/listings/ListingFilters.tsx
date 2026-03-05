@@ -532,20 +532,20 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                 </div>
               </div>
 
-              {/* Max Price (single thumb, starts at max) */}
+              {/* Price Range (dual thumb) */}
               <div className="space-y-4">
                 <Label className="flex items-center justify-between">
-                  <span>Max Price</span>
-                  <span className="text-primary font-semibold">€{maxPrice}</span>
+                  <span>Price Range</span>
+                  <span className="text-primary font-semibold">€{priceRange[0]} – €{priceRange[1]}</span>
                 </Label>
                 <Slider
-                  value={[maxPrice]}
+                  value={priceRange}
                   min={0}
                   max={2000}
                   step={25}
                   onValueChange={(value) => {
-                    setMaxPrice(value[0]);
-                    updateFilters({ minPrice: 0, maxPrice: value[0] });
+                    setPriceRange([value[0], value[1]]);
+                    updateFilters({ minPrice: value[0], maxPrice: value[1] });
                   }}
                   className="py-4"
                 />
