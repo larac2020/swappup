@@ -192,10 +192,12 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   }, [searchQuery, locations]);
 
   const filteredFrom = useMemo(() => {
-    if (!filters.origin) return originLocations;
     const q = filters.origin.toLowerCase();
-    return originLocations.filter((l) => l.city.toLowerCase().includes(q) || l.country.toLowerCase().includes(q));
-  }, [filters.origin, originLocations]);
+    const filtered = q
+      ? allCities.filter((c) => c.city.toLowerCase().includes(q) || c.country.toLowerCase().includes(q))
+      : allCities;
+    return filtered.map((c) => ({ city: c.city, country: c.country, type: "origin" as const }));
+  }, [filters.origin, allCities]);
 
   const filteredTo = useMemo(() => {
     if (!filters.destination) return destLocations;
