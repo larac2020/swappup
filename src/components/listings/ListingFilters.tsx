@@ -915,7 +915,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               {/* Search Button */}
               <Button className="w-full h-12 text-base font-semibold" onClick={handleSearchClick}>
                 <Search className="w-4 h-4 mr-2" />
-                {resultCount > 0 ? `Search (${resultCount} results)` : "Search & see alternatives"}
+                Search
               </Button>
             </div>
           </SheetContent>
