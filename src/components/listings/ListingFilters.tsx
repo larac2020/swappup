@@ -561,10 +561,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
                       onClick={() => { setShowToCountry(!showToCountry); setShowToCity(false); }}
                     >
-                      <span className="truncate block">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
+                      <span className="truncate">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",

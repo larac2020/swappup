@@ -36,18 +36,25 @@ export default function Browse() {
     return [...new Set(listings.map(l => l.departure_date))];
   }, [listings]);
 
-  // Compute cheapest price per month for heatmap
+  // Compute cheapest price per month for heatmap — filtered by current origin/destination
   const datePriceMap = useMemo(() => {
     const map: Record<string, number> = {};
     listings.forEach(l => {
-      const monthKey = l.departure_date.substring(0, 7); // YYYY-MM
+      // Filter by origin
+      if (filters.originCountry && filters.originCountry !== "any" && !l.origin_country.toLowerCase().includes(filters.originCountry.toLowerCase())) return;
+      if (filters.origin && filters.origin !== "any" && !l.origin_city.toLowerCase().includes(filters.origin.toLowerCase())) return;
+      // Filter by destination
+      if (filters.destinationCountry && filters.destinationCountry !== "any" && !l.destination_country.toLowerCase().includes(filters.destinationCountry.toLowerCase())) return;
+      if (filters.destination && filters.destination !== "any" && !l.destination_city.toLowerCase().includes(filters.destination.toLowerCase())) return;
+
+      const monthKey = l.departure_date.substring(0, 7);
       const price = Number(l.price);
       if (map[monthKey] === undefined || price < map[monthKey]) {
         map[monthKey] = price;
       }
     });
     return map;
-  }, [listings]);
+  }, [listings, filters.origin, filters.originCountry, filters.destination, filters.destinationCountry]);
 
   // Compute effective date range based on flex option
   const getDateRange = (f: FilterState) => {
