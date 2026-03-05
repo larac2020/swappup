@@ -72,6 +72,7 @@ export default function Account() {
     { icon: MapPin, label: "Address", path: "address", description: "Billing address", required: true, complete: sectionComplete.address },
     { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts", required: true, complete: sectionComplete.payment },
     { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", required: true, complete: sectionComplete.verification },
+    { icon: Sparkles, label: "Personalization", path: "preferences", description: "Departure city, categories & more", required: false, complete: true },
     { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings", required: false, complete: true },
     { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips", required: false, complete: true },
     { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings", required: false, complete: true },
