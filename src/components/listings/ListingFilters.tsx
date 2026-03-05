@@ -36,7 +36,7 @@ interface ListingFiltersProps {
   resultCount: number;
   initialDestination?: string;
   availableDates?: string[];
-  datePriceMap?: Record<string, number>; // ISO month (YYYY-MM) -> cheapest price
+  allListings?: { departure_date: string; price: number; origin_city: string; origin_country: string; destination_city: string; destination_country: string }[];
 }
 
 export interface FilterState {
