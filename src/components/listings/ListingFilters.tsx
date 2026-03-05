@@ -79,11 +79,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     ...defaultFilters,
     destination: initialDestination || "",
   });
-  const [maxPrice, setMaxPrice] = useState(2000);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFromDropdown, setShowFromDropdown] = useState(false);
   const [showToDropdown, setShowToDropdown] = useState(false);
   const [showAirlineDropdown, setShowAirlineDropdown] = useState(false);
+  const [currentLocationCity, setCurrentLocationCity] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const fromRef = useRef<HTMLDivElement>(null);
   const toRef = useRef<HTMLDivElement>(null);
@@ -95,7 +97,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, favorite_departure_city")
         .eq("user_id", user!.id)
         .single();
       if (error) throw error;
@@ -103,6 +105,36 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     },
     enabled: !!user?.id,
   });
+
+  const allCities = useMemo(() => {
+    return getUniqueCities().sort((a, b) => a.city.localeCompare(b.city));
+  }, []);
+
+  const requestCurrentLocation = useCallback(() => {
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+          );
+          const data = await res.json();
+          const city = data.city || data.locality || data.principalSubdivision || "";
+          if (city) {
+            setCurrentLocationCity(city);
+            updateFilters({ origin: city });
+            setShowFromDropdown(false);
+          }
+        } catch {
+          // silently fail
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => setGeoLoading(false),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, []);
 
   const { data: locations = [] } = useQuery({
     queryKey: ["listing-locations"],
