@@ -580,10 +580,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCityRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destination && "text-muted-foreground")}
-                      onClick={() => { setShowToCity(!showToCity); setShowToCountry(false); }}
+                      disabled={currentFilters.destinationCountry === "any"}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destination && "text-muted-foreground", currentFilters.destinationCountry === "any" && "opacity-50 cursor-not-allowed")}
+                      onClick={() => { if (currentFilters.destinationCountry !== "any") { setShowToCity(!showToCity); setShowToCountry(false); } }}
                     >
-                      {currentFilters.destination === "any" ? "Any" : currentFilters.destination || "City"}
+                      {currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destination === "any" ? "Any" : currentFilters.destination || "City"}
                     </Button>
                     {renderDropdown(
                       toCityRef, showToCity, toCitySearch, setToCitySearch, "Search city...",
