@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
-  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle
+  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle, Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +20,14 @@ import NotificationSettings from "@/components/account/NotificationSettings";
 import Purchases from "@/components/account/Purchases";
 import FavoritesList from "@/components/account/FavoritesList";
 import TransactionHistory from "@/components/account/TransactionHistory";
+import Preferences from "@/components/account/Preferences";
 
 const sectionComponents: Record<string, React.ComponentType> = {
   profile: PersonalInfo,
   address: AddressInfo,
   payment: PaymentMethods,
   verification: IDVerification,
+  preferences: Preferences,
   notifications: NotificationSettings,
   purchases: Purchases,
   favorites: FavoritesList,
@@ -70,6 +72,7 @@ export default function Account() {
     { icon: MapPin, label: "Address", path: "address", description: "Billing address", required: true, complete: sectionComplete.address },
     { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts", required: true, complete: sectionComplete.payment },
     { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", required: true, complete: sectionComplete.verification },
+    { icon: Sparkles, label: "Personalization", path: "preferences", description: "Departure city, categories & more", required: false, complete: true },
     { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings", required: false, complete: true },
     { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips", required: false, complete: true },
     { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings", required: false, complete: true },
