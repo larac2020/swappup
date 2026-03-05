@@ -123,69 +123,95 @@ export default function Browse() {
         if (!filters.airlines.some(a => listing.airline.toLowerCase() === a.toLowerCase())) return false;
       }
 
-      if (filters.luggageIncluded && !listing.luggage_included) return false;
-      if (filters.carryOnIncluded && !listing.carry_on_included) return false;
-      if (filters.mealIncluded && !listing.meal_included) return false;
-      if (filters.directOnly && (listing.stopovers ?? 0) > 0) return false;
+      // Toggle filters are optional: only EXCLUDE if toggled ON and listing lacks it
+      if (filters.luggageIncluded === true && !listing.luggage_included) return false;
+      if (filters.carryOnIncluded === true && !listing.carry_on_included) return false;
+      if (filters.mealIncluded === true && !listing.meal_included) return false;
+      if (filters.directOnly === true && (listing.stopovers ?? 0) > 0) return false;
 
       return true;
     });
   }, [listings, searchQuery, filters]);
 
-  // Smart "no results" suggestions
+  // Helper matchers for suggestions
+  const matchOrigin = (l: typeof listings[0]) => {
+    if (filters.originCountry && filters.originCountry !== "any" && !l.origin_country.toLowerCase().includes(filters.originCountry.toLowerCase())) return false;
+    if (filters.origin && filters.origin !== "any" && !l.origin_city.toLowerCase().includes(filters.origin.toLowerCase())) return false;
+    return true;
+  };
+  const matchDest = (l: typeof listings[0]) => {
+    if (filters.destinationCountry && filters.destinationCountry !== "any" && !l.destination_country.toLowerCase().includes(filters.destinationCountry.toLowerCase())) return false;
+    if (filters.destination && filters.destination !== "any" && !l.destination_city.toLowerCase().includes(filters.destination.toLowerCase())) return false;
+    return true;
+  };
+  const matchDates = (l: typeof listings[0]) => {
+    const dateRange = getDateRange(filters);
+    if (dateRange.from && l.departure_date < dateRange.from) return false;
+    if (dateRange.to && l.departure_date > dateRange.to) return false;
+    return true;
+  };
+
+  // Smart "no results" suggestions — clearly separated sections
   const noResultSuggestions = useMemo(() => {
     if (filteredListings.length > 0 || listings.length === 0) return null;
 
     const suggestions: { title: string; icon: React.ReactNode; items: typeof listings }[] = [];
+    const usedIds = new Set<string>();
 
-    // 1. Other dates for the same route
-    if ((filters.departureDateFrom || filters.departureDateTo) && (filters.origin || filters.destination)) {
-      const otherDates = listings.filter(l => {
-        const matchOrigin = !filters.origin || filters.origin === "any" || l.origin_city.toLowerCase().includes(filters.origin.toLowerCase());
-        const matchDest = !filters.destination || filters.destination === "any" || l.destination_city.toLowerCase().includes(filters.destination.toLowerCase());
-        return matchOrigin && matchDest;
-      }).slice(0, 6);
-      if (otherDates.length > 0) {
-        suggestions.push({ title: "Same route, different dates", icon: <CalendarIcon className="w-4 h-4" />, items: otherDates });
+    const addUnique = (items: typeof listings, max = 6) => {
+      return items.filter(l => !usedIds.has(l.id)).slice(0, max);
+    };
+    const markUsed = (items: typeof listings) => {
+      items.forEach(l => usedIds.add(l.id));
+    };
+
+    // 1. Same route, different dates
+    if (filters.origin || filters.destination) {
+      const items = addUnique(listings.filter(l => matchOrigin(l) && matchDest(l) && !matchDates(l)));
+      if (items.length > 0) {
+        markUsed(items);
+        suggestions.push({ title: "Same route, different dates", icon: <CalendarIcon className="w-4 h-4" />, items });
       }
     }
 
-    // 2. Other destinations from the same origin city
+    // 2. Same origin & dates, different destination
     if (filters.origin && filters.origin !== "any") {
-      const otherDest = listings.filter(l =>
-        l.origin_city.toLowerCase().includes(filters.origin.toLowerCase()) &&
-        (filters.destination && filters.destination !== "any" ? !l.destination_city.toLowerCase().includes(filters.destination.toLowerCase()) : true)
-      ).slice(0, 6);
-      if (otherDest.length > 0) {
-        suggestions.push({ title: `Other destinations from ${filters.origin}`, icon: <MapPin className="w-4 h-4" />, items: otherDest });
+      const items = addUnique(listings.filter(l => matchOrigin(l) && matchDates(l) && !matchDest(l)));
+      if (items.length > 0) {
+        markUsed(items);
+        const city = filters.origin;
+        suggestions.push({ title: `From ${city}, same dates, other destinations`, icon: <MapPin className="w-4 h-4" />, items });
       }
     }
 
-    // 3. Other airlines on the same route
-    if (filters.airlines.length > 0 && (filters.origin || filters.destination)) {
-      const otherAirlines = listings.filter(l => {
-        const matchOrigin = !filters.origin || filters.origin === "any" || l.origin_city.toLowerCase().includes(filters.origin.toLowerCase());
-        const matchDest = !filters.destination || filters.destination === "any" || l.destination_city.toLowerCase().includes(filters.destination.toLowerCase());
-        return matchOrigin && matchDest && !filters.airlines.some(a => l.airline.toLowerCase() === a.toLowerCase());
-      }).slice(0, 6);
-      if (otherAirlines.length > 0) {
-        suggestions.push({ title: "Other airlines on this route", icon: <Plane className="w-4 h-4" />, items: otherAirlines });
+    // 3. Same route & dates, different airline/amenities
+    if (filters.airlines.length > 0 || filters.luggageIncluded || filters.mealIncluded || filters.directOnly) {
+      const items = addUnique(listings.filter(l => {
+        if (!matchOrigin(l) || !matchDest(l) || !matchDates(l)) return false;
+        // Must differ in airline or amenities from what was filtered
+        if (filters.airlines.length > 0 && filters.airlines.some(a => l.airline.toLowerCase() === a.toLowerCase())) return false;
+        return true;
+      }));
+      // Also include same route/dates but different amenities
+      const amenityItems = addUnique(listings.filter(l => {
+        if (!matchOrigin(l) || !matchDest(l) || !matchDates(l)) return false;
+        // Matches airline but lacks required amenities
+        const airlineOk = filters.airlines.length === 0 || filters.airlines.some(a => l.airline.toLowerCase() === a.toLowerCase());
+        if (!airlineOk) return false;
+        const amenityMismatch = 
+          (filters.luggageIncluded && !l.luggage_included) ||
+          (filters.mealIncluded && !l.meal_included) ||
+          (filters.directOnly && (l.stopovers ?? 0) > 0);
+        return amenityMismatch;
+      }));
+      const combined = addUnique([...items, ...amenityItems]);
+      if (combined.length > 0) {
+        markUsed(combined);
+        suggestions.push({ title: "Same route & dates, other airlines or options", icon: <Plane className="w-4 h-4" />, items: combined });
       }
     }
 
-    // 4. Same route without add-on filters
-    if (filters.luggageIncluded || filters.mealIncluded || filters.carryOnIncluded) {
-      const withoutAddons = listings.filter(l => {
-        const matchOrigin = !filters.origin || filters.origin === "any" || l.origin_city.toLowerCase().includes(filters.origin.toLowerCase());
-        const matchDest = !filters.destination || filters.destination === "any" || l.destination_city.toLowerCase().includes(filters.destination.toLowerCase());
-        return matchOrigin && matchDest;
-      }).slice(0, 6);
-      if (withoutAddons.length > 0) {
-        suggestions.push({ title: "Same route without add-on filters", icon: <Package className="w-4 h-4" />, items: withoutAddons });
-      }
-    }
-
-    // 5. Fallback: show cheapest available listings if no other suggestions generated
+    // 4. Fallback: cheapest available
     if (suggestions.length === 0) {
       const cheapest = [...listings]
         .sort((a, b) => Number(a.price) - Number(b.price))
