@@ -638,7 +638,61 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   ))}
                 </div>
 
-                {currentFilters.flexOption !== "any" && (
+                {currentFilters.flexOption === "month" && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Tap a month to search. Colors show cheapest prices.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {Array.from({ length: 12 }).map((_, i) => {
+                        const month = addMonths(startOfMonth(new Date()), i);
+                        const key = format(month, "yyyy-MM");
+                        const price = datePriceMap[key];
+                        const allPrices = Object.values(datePriceMap).filter(p => p > 0);
+                        const minP = allPrices.length ? Math.min(...allPrices) : 0;
+                        const maxP = allPrices.length ? Math.max(...allPrices) : 1;
+                        const isSelected = currentFilters.departureDateFrom && isSameMonth(new Date(currentFilters.departureDateFrom), month);
+                        
+                        // Color intensity: green for cheap, amber for mid, red for expensive
+                        let bgClass = "bg-muted/50 text-muted-foreground"; // no flights
+                        if (price !== undefined) {
+                          const ratio = maxP === minP ? 0 : (price - minP) / (maxP - minP);
+                          if (ratio <= 0.33) bgClass = "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
+                          else if (ratio <= 0.66) bgClass = "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30";
+                          else bgClass = "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
+                        }
+
+                        return (
+                          <button
+                            key={key}
+                            className={cn(
+                              "rounded-lg border p-2.5 text-center transition-all",
+                              bgClass,
+                              isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                              price === undefined && "opacity-50"
+                            )}
+                            onClick={() => {
+                              const from = startOfMonth(month).toISOString().split("T")[0];
+                              localUpdate({ departureDateFrom: from, departureDateTo: undefined });
+                            }}
+                          >
+                            <div className="text-xs font-medium">{format(month, "MMM yyyy")}</div>
+                            {price !== undefined ? (
+                              <div className="text-sm font-bold mt-0.5">€{price}</div>
+                            ) : (
+                              <div className="text-[10px] mt-0.5">No flights</div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {currentFilters.departureDateFrom && (
+                      <p className="text-xs text-muted-foreground">
+                        Searching all of {format(new Date(currentFilters.departureDateFrom), "MMMM yyyy")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {currentFilters.flexOption !== "any" && currentFilters.flexOption !== "month" && (
                   <div className="grid grid-cols-2 gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
@@ -677,11 +731,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   </div>
                 )}
 
-                {currentFilters.flexOption !== "exact" && currentFilters.flexOption !== "any" && currentFilters.departureDateFrom && (
+                {currentFilters.flexOption !== "exact" && currentFilters.flexOption !== "any" && currentFilters.flexOption !== "month" && currentFilters.departureDateFrom && (
                   <p className="text-xs text-muted-foreground">
                     {currentFilters.flexOption === "+-1" && `Searching ${format(subDays(new Date(currentFilters.departureDateFrom), 1), "dd MMM")} – ${format(addDays(new Date(currentFilters.departureDateFrom), 1), "dd MMM")}`}
                     {currentFilters.flexOption === "+-3" && `Searching ${format(subDays(new Date(currentFilters.departureDateFrom), 3), "dd MMM")} – ${format(addDays(new Date(currentFilters.departureDateFrom), 3), "dd MMM")}`}
-                    {currentFilters.flexOption === "month" && `Searching all of ${format(new Date(currentFilters.departureDateFrom), "MMMM yyyy")}`}
                   </p>
                 )}
               </div>
