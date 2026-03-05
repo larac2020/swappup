@@ -390,16 +390,14 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
       value: "__current__",
       icon: <Navigation className="w-3.5 h-3.5 text-primary" />,
     });
-    // Favorite
-    if (profile?.favorite_departure_city) {
-      const favCountry = allCities.find(c => c.city === profile.favorite_departure_city)?.country;
-      if (favCountry) {
-        items.push({
-          label: `${favCountry} (Favorite)`,
-          value: favCountry,
-          icon: <Star className="w-3.5 h-3.5 text-primary" />,
-        });
-      }
+    // Favorite country
+    const favCountry = (profile as any)?.favorite_departure_country;
+    if (favCountry) {
+      items.push({
+        label: `${favCountry} (Favorite)`,
+        value: favCountry,
+        icon: <Star className="w-3.5 h-3.5 text-primary" />,
+      });
     }
     // Any
     items.push({ label: "Any Country", value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
