@@ -687,11 +687,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ airline: "" })} />
             </Badge>
           )}
-          {filters.maxPrice < 2000 && (
+          {(filters.minPrice > 0 || filters.maxPrice < 2000) && (
             <Badge variant="secondary" className="gap-1">
-              Max €{filters.maxPrice}
+              €{filters.minPrice} – €{filters.maxPrice}
               <X className="w-3 h-3 cursor-pointer" onClick={() => {
-                setMaxPrice(2000);
+                setPriceRange([0, 2000]);
                 updateFilters({ minPrice: 0, maxPrice: 2000 });
               }} />
             </Badge>
