@@ -400,7 +400,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                             setShowFromDropdown(false);
                           }}
                         >
-                          <Star className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                          <Star className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                           <span className="text-sm font-medium">{profile.favorite_departure_city}</span>
                         </button>
                       )}
