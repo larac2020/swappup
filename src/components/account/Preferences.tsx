@@ -84,6 +84,7 @@ export default function Preferences() {
         .from("profiles")
         .update({
           favorite_departure_city: favCity || null,
+          favorite_departure_country: favCountry || null,
           default_pax: parseInt(defaultPax) || 1,
           favorite_categories: favCategories.length > 0 ? favCategories : null,
         } as any)
