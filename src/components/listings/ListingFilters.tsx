@@ -331,6 +331,24 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     return q ? airlines.filter(a => a.name.toLowerCase().includes(q)) : airlines;
   }, [airlineSearch]);
 
+  // Compute cheapest price per month filtered by pending origin/destination
+  const datePriceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    const f = pendingFilters || filters;
+    allListings.forEach(l => {
+      if (f.originCountry && f.originCountry !== "any" && !l.origin_country.toLowerCase().includes(f.originCountry.toLowerCase())) return;
+      if (f.origin && f.origin !== "any" && !l.origin_city.toLowerCase().includes(f.origin.toLowerCase())) return;
+      if (f.destinationCountry && f.destinationCountry !== "any" && !l.destination_country.toLowerCase().includes(f.destinationCountry.toLowerCase())) return;
+      if (f.destination && f.destination !== "any" && !l.destination_city.toLowerCase().includes(f.destination.toLowerCase())) return;
+      const monthKey = l.departure_date.substring(0, 7);
+      const price = Number(l.price);
+      if (map[monthKey] === undefined || price < map[monthKey]) {
+        map[monthKey] = price;
+      }
+    });
+    return map;
+  }, [allListings, pendingFilters, filters]);
+
   // Calendar modifiers for available dates
   const availableDateObjects = useMemo(() => {
     return availableDates.map(d => new Date(d));
