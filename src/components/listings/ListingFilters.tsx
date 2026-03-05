@@ -94,6 +94,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   const [currentLocationCountry, setCurrentLocationCountry] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [pendingFilters, setPendingFilters] = useState<FilterState | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const fromCountryRef = useRef<HTMLDivElement>(null);
   const fromCityRef = useRef<HTMLDivElement>(null);
