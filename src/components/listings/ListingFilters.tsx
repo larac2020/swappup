@@ -254,6 +254,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     setFilters(toApply);
     onFilterChange(toApply);
     setPendingFilters(null);
+    setSheetOpen(false);
   };
 
   const toggleAirline = (name: string) => {
