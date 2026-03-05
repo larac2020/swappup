@@ -104,7 +104,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   const { user } = useAuth();
 
   const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
+    queryKey: ["profile-filters", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
