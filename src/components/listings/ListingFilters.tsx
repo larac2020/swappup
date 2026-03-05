@@ -517,7 +517,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       fromCountryItems,
                       (val) => {
                         if (val === "__current__") { requestCurrentLocation(); return; }
-                        localUpdate({ originCountry: val === "any" ? "any" : val, origin: "" });
+                        localUpdate({ originCountry: val === "any" ? "any" : val, origin: val === "any" ? "" : "" });
                         setShowFromCountry(false);
                         setFromCountrySearch("");
                       },
