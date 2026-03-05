@@ -283,7 +283,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
   const clearFilters = () => {
     setFilters(defaultFilters);
-    setMaxPrice(2000);
+    setPriceRange([0, 2000]);
     onFilterChange(defaultFilters);
   };
 
