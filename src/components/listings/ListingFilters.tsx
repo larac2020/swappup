@@ -664,6 +664,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
                         return (
                           <button
+                            type="button"
                             key={key}
                             className={cn(
                               "rounded-lg border p-2.5 text-center transition-all",
@@ -671,7 +672,9 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                               isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
                               price === undefined && "opacity-50"
                             )}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               const from = startOfMonth(month).toISOString().split("T")[0];
                               localUpdate({ departureDateFrom: from, departureDateTo: undefined });
                             }}
