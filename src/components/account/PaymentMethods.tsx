@@ -122,7 +122,10 @@ export default function PaymentMethods() {
           </div>
         ) : stripePromise && clientSecret ? (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <CardForm clientSecret={clientSecret} onSuccess={() => setSaved(true)} />
+            <CardForm clientSecret={clientSecret} onSuccess={() => {
+              localStorage.setItem("flyswap_payment_added", "true");
+              setSaved(true);
+            }} />
           </Elements>
         ) : (
           <p className="text-center text-sm text-destructive">Failed to initialize payment form. Please try again.</p>
