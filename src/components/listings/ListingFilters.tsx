@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase, Navigation, Star } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,12 @@ import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { airlines } from "@/data/flightData";
+import { airlines, getUniqueCities } from "@/data/flightData";
 
 const tags = [
   { value: "city_trip", label: "City Trip" },
@@ -78,11 +79,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     ...defaultFilters,
     destination: initialDestination || "",
   });
-  const [maxPrice, setMaxPrice] = useState(2000);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFromDropdown, setShowFromDropdown] = useState(false);
   const [showToDropdown, setShowToDropdown] = useState(false);
   const [showAirlineDropdown, setShowAirlineDropdown] = useState(false);
+  const [currentLocationCity, setCurrentLocationCity] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const fromRef = useRef<HTMLDivElement>(null);
   const toRef = useRef<HTMLDivElement>(null);
@@ -94,7 +97,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, favorite_departure_city")
         .eq("user_id", user!.id)
         .single();
       if (error) throw error;
@@ -102,6 +105,36 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     },
     enabled: !!user?.id,
   });
+
+  const allCities = useMemo(() => {
+    return getUniqueCities().sort((a, b) => a.city.localeCompare(b.city));
+  }, []);
+
+  const requestCurrentLocation = useCallback(() => {
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+          );
+          const data = await res.json();
+          const city = data.city || data.locality || data.principalSubdivision || "";
+          if (city) {
+            setCurrentLocationCity(city);
+            updateFilters({ origin: city });
+            setShowFromDropdown(false);
+          }
+        } catch {
+          // silently fail
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => setGeoLoading(false),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, []);
 
   const { data: locations = [] } = useQuery({
     queryKey: ["listing-locations"],
@@ -159,10 +192,12 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   }, [searchQuery, locations]);
 
   const filteredFrom = useMemo(() => {
-    if (!filters.origin) return originLocations;
     const q = filters.origin.toLowerCase();
-    return originLocations.filter((l) => l.city.toLowerCase().includes(q) || l.country.toLowerCase().includes(q));
-  }, [filters.origin, originLocations]);
+    const filtered = q
+      ? allCities.filter((c) => c.city.toLowerCase().includes(q) || c.country.toLowerCase().includes(q))
+      : allCities;
+    return filtered.map((c) => ({ city: c.city, country: c.country, type: "origin" as const }));
+  }, [filters.origin, allCities]);
 
   const filteredTo = useMemo(() => {
     if (!filters.destination) return destLocations;
@@ -248,14 +283,14 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
   const clearFilters = () => {
     setFilters(defaultFilters);
-    setMaxPrice(2000);
+    setPriceRange([0, 2000]);
     onFilterChange(defaultFilters);
   };
 
   const activeFilterCount =
     (filters.destination ? 1 : 0) +
     (filters.origin ? 1 : 0) +
-    (filters.maxPrice < 2000 ? 1 : 0) +
+    (filters.minPrice > 0 || filters.maxPrice < 2000 ? 1 : 0) +
     (filters.ticketCount > 0 ? 1 : 0) +
     (filters.departureDateFrom ? 1 : 0) +
     (filters.departureDateTo ? 1 : 0) +
@@ -342,15 +377,46 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     onFocus={() => setShowFromDropdown(true)}
                     className="bg-secondary/50 border-border/50"
                   />
-                  {showFromDropdown && filteredFrom.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {showFromDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                      {/* Current Location */}
+                      <button
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+                        onClick={requestCurrentLocation}
+                        disabled={geoLoading}
+                      >
+                        <Navigation className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium">
+                          {geoLoading ? "Locating..." : currentLocationCity ? `Current Location (${currentLocationCity})` : "Use Current Location"}
+                        </span>
+                      </button>
+
+                      {/* Favorite City */}
+                      {profile?.favorite_departure_city && (
+                        <button
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+                          onClick={() => {
+                            updateFilters({ origin: profile.favorite_departure_city! });
+                            setShowFromDropdown(false);
+                          }}
+                        >
+                          <Star className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span className="text-sm font-medium">{profile.favorite_departure_city}</span>
+                        </button>
+                      )}
+
+                      <div className="px-4 py-1">
+                        <Separator />
+                      </div>
+
+                      {/* All cities alphabetically */}
                       {filteredFrom.map((loc, i) => (
                         <button
                           key={i}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
                           onClick={() => selectFrom(loc)}
                         >
-                          <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm">{loc.city}, {loc.country}</span>
                         </button>
                       ))}
@@ -466,20 +532,20 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                 </div>
               </div>
 
-              {/* Max Price (single thumb, starts at max) */}
+              {/* Price Range (dual thumb) */}
               <div className="space-y-4">
                 <Label className="flex items-center justify-between">
-                  <span>Max Price</span>
-                  <span className="text-primary font-semibold">€{maxPrice}</span>
+                  <span>Price Range</span>
+                  <span className="text-primary font-semibold">€{priceRange[0]} – €{priceRange[1]}</span>
                 </Label>
                 <Slider
-                  value={[maxPrice]}
+                  value={priceRange}
                   min={0}
                   max={2000}
                   step={25}
                   onValueChange={(value) => {
-                    setMaxPrice(value[0]);
-                    updateFilters({ minPrice: 0, maxPrice: value[0] });
+                    setPriceRange([value[0], value[1]]);
+                    updateFilters({ minPrice: value[0], maxPrice: value[1] });
                   }}
                   className="py-4"
                 />
@@ -621,11 +687,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ airline: "" })} />
             </Badge>
           )}
-          {filters.maxPrice < 2000 && (
+          {(filters.minPrice > 0 || filters.maxPrice < 2000) && (
             <Badge variant="secondary" className="gap-1">
-              Max €{filters.maxPrice}
+              €{filters.minPrice} – €{filters.maxPrice}
               <X className="w-3 h-3 cursor-pointer" onClick={() => {
-                setMaxPrice(2000);
+                setPriceRange([0, 2000]);
                 updateFilters({ minPrice: 0, maxPrice: 2000 });
               }} />
             </Badge>
