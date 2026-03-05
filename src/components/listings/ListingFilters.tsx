@@ -36,7 +36,7 @@ interface ListingFiltersProps {
   resultCount: number;
   initialDestination?: string;
   availableDates?: string[];
-  datePriceMap?: Record<string, number>; // ISO month (YYYY-MM) -> cheapest price
+  allListings?: { departure_date: string; price: number; origin_city: string; origin_country: string; destination_city: string; destination_country: string }[];
 }
 
 export interface FilterState {
@@ -77,7 +77,7 @@ export const defaultFilters: FilterState = {
   directOnly: undefined,
 };
 
-export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], datePriceMap = {} }: ListingFiltersProps) {
+export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [] }: ListingFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
@@ -331,6 +331,24 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     return q ? airlines.filter(a => a.name.toLowerCase().includes(q)) : airlines;
   }, [airlineSearch]);
 
+  // Compute cheapest price per month filtered by pending origin/destination
+  const datePriceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    const f = pendingFilters || filters;
+    allListings.forEach(l => {
+      if (f.originCountry && f.originCountry !== "any" && !l.origin_country.toLowerCase().includes(f.originCountry.toLowerCase())) return;
+      if (f.origin && f.origin !== "any" && !l.origin_city.toLowerCase().includes(f.origin.toLowerCase())) return;
+      if (f.destinationCountry && f.destinationCountry !== "any" && !l.destination_country.toLowerCase().includes(f.destinationCountry.toLowerCase())) return;
+      if (f.destination && f.destination !== "any" && !l.destination_city.toLowerCase().includes(f.destination.toLowerCase())) return;
+      const monthKey = l.departure_date.substring(0, 7);
+      const price = Number(l.price);
+      if (map[monthKey] === undefined || price < map[monthKey]) {
+        map[monthKey] = price;
+      }
+    });
+    return map;
+  }, [allListings, pendingFilters, filters]);
+
   // Calendar modifiers for available dates
   const availableDateObjects = useMemo(() => {
     return availableDates.map(d => new Date(d));
@@ -508,10 +526,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={fromCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10 overflow-hidden", !currentFilters.originCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden", !currentFilters.originCountry && "text-muted-foreground")}
                       onClick={() => { setShowFromCountry(!showFromCountry); setShowFromCity(false); }}
                     >
-                      <span className="truncate block">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
+                      <span className="truncate">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       fromCountryRef, showFromCountry, fromCountrySearch, setFromCountrySearch, "Search country...",
@@ -561,10 +579,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   <div className="relative" ref={toCountryRef}>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal text-sm h-10 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden", !currentFilters.destinationCountry && "text-muted-foreground")}
                       onClick={() => { setShowToCountry(!showToCountry); setShowToCity(false); }}
                     >
-                      <span className="truncate block">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
+                      <span className="truncate">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
                     </Button>
                     {renderDropdown(
                       toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
