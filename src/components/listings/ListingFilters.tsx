@@ -474,7 +474,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
             </div>
           )}
         </div>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (open) { setTimeout(() => setShowFromCountry(true), 150); } }}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="h-12 w-12 relative">
               <SlidersHorizontal className="w-5 h-5" />
@@ -915,7 +915,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               {/* Search Button */}
               <Button className="w-full h-12 text-base font-semibold" onClick={handleSearchClick}>
                 <Search className="w-4 h-4 mr-2" />
-                {resultCount > 0 ? `Search (${resultCount} results)` : "Search & see alternatives"}
+                Search
               </Button>
             </div>
           </SheetContent>
