@@ -231,6 +231,7 @@ export type Database = {
           email: string
           favorite_categories: string[] | null
           favorite_departure_city: string | null
+          favorite_departure_country: string | null
           full_name: string | null
           id: string
           id_document_url: string | null
@@ -255,6 +256,7 @@ export type Database = {
           email: string
           favorite_categories?: string[] | null
           favorite_departure_city?: string | null
+          favorite_departure_country?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null
@@ -279,6 +281,7 @@ export type Database = {
           email?: string
           favorite_categories?: string[] | null
           favorite_departure_city?: string | null
+          favorite_departure_country?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null

@@ -60,8 +60,10 @@ export default function Preferences() {
   // Populate from profile
   useEffect(() => {
     if (profile) {
-      if (profile.favorite_departure_city) {
-        // Try to find the country for this city
+      if ((profile as any).favorite_departure_country) {
+        setFavCountry((profile as any).favorite_departure_country);
+      } else if (profile.favorite_departure_city) {
+        // Fallback: find country from city
         for (const country of countries) {
           const cities = getCitiesByCountry(country);
           if (cities.includes(profile.favorite_departure_city)) {
@@ -69,8 +71,8 @@ export default function Preferences() {
             break;
           }
         }
-        setFavCity(profile.favorite_departure_city);
       }
+      if (profile.favorite_departure_city) setFavCity(profile.favorite_departure_city);
       if (profile.default_pax) setDefaultPax(String(profile.default_pax));
       if (profile.favorite_categories) setFavCategories(profile.favorite_categories);
     }
@@ -84,6 +86,7 @@ export default function Preferences() {
         .from("profiles")
         .update({
           favorite_departure_city: favCity || null,
+          favorite_departure_country: favCountry || null,
           default_pax: parseInt(defaultPax) || 1,
           favorite_categories: favCategories.length > 0 ? favCategories : null,
         } as any)
