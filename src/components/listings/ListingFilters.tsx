@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase, Navigation, Star } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,12 @@ import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { airlines } from "@/data/flightData";
+import { airlines, getUniqueCities } from "@/data/flightData";
 
 const tags = [
   { value: "city_trip", label: "City Trip" },
