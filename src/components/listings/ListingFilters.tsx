@@ -77,7 +77,7 @@ export const defaultFilters: FilterState = {
   directOnly: undefined,
 };
 
-export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [] }: ListingFiltersProps) {
+export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], datePriceMap = {} }: ListingFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
