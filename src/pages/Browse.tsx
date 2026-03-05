@@ -67,6 +67,7 @@ export default function Browse() {
     const dateRange = getDateRange(filters);
 
     return listings.filter((listing) => {
+      // Text search (optional)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
@@ -77,6 +78,7 @@ export default function Browse() {
         if (!matchesSearch) return false;
       }
 
+      // === REQUIRED FILTERS: From / To ===
       // Origin country
       if (filters.originCountry && filters.originCountry !== "any") {
         if (!listing.origin_country.toLowerCase().includes(filters.originCountry.toLowerCase())) return false;
@@ -97,7 +99,11 @@ export default function Browse() {
         if (!listing.destination_city.toLowerCase().includes(filters.destination.toLowerCase())) return false;
       }
 
-      if (listing.price < filters.minPrice || listing.price > filters.maxPrice) return false;
+      // === OPTIONAL FILTERS: only apply when explicitly set ===
+      const price = Number(listing.price);
+      if (filters.minPrice > 0 && price < filters.minPrice) return false;
+      if (filters.maxPrice < 2000 && price > filters.maxPrice) return false;
+
       if (filters.ticketCount > 0 && listing.ticket_count < filters.ticketCount) return false;
 
       if (filters.tags.length > 0) {
@@ -105,10 +111,11 @@ export default function Browse() {
         if (!hasMatchingTag) return false;
       }
 
+      // Dates - only filter if explicitly set
       if (dateRange.from && listing.departure_date < dateRange.from) return false;
       if (dateRange.to && listing.departure_date > dateRange.to) return false;
 
-      // Airlines (multi-select)
+      // Airlines - only filter if explicitly selected
       if (filters.airlines.length > 0) {
         if (!filters.airlines.some(a => listing.airline.toLowerCase() === a.toLowerCase())) return false;
       }

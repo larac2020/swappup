@@ -233,12 +233,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     setShowSuggestions(false);
   };
 
-  // Local update that only updates pendingFilters (not applied until Search clicked)
+  // Local update that updates pending state AND notifies parent for live result count
   const localUpdate = (updates: Partial<FilterState>) => {
     const base = pendingFilters || filters;
     const newFilters = { ...base, ...updates };
     setPendingFilters(newFilters);
     setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
   // Immediate update for search bar / badges
