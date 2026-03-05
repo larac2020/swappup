@@ -329,6 +329,23 @@ export default function Home() {
           "/browse"
         )}
 
+        {/* From Favorite City */}
+        {profile?.favorite_departure_city && renderSection(
+          `From ${profile.favorite_departure_city}`,
+          <Plane className="w-4 h-4 text-primary" />,
+          fromFavCity,
+          loadingFavCity,
+          `/browse?origin=${encodeURIComponent(profile.favorite_departure_city)}`
+        )}
+
+        {/* Favorite Categories */}
+        {profile?.favorite_categories && profile.favorite_categories.length > 0 && renderSection(
+          "For You",
+          <Heart className="w-4 h-4 text-primary" />,
+          favTagListings,
+          loadingFavTags,
+          "/browse"
+        )}
         {/* Under €100 */}
         {renderSection(
           "Under €100",
