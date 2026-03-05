@@ -36,6 +36,19 @@ export default function Browse() {
     return [...new Set(listings.map(l => l.departure_date))];
   }, [listings]);
 
+  // Compute cheapest price per month for heatmap
+  const datePriceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    listings.forEach(l => {
+      const monthKey = l.departure_date.substring(0, 7); // YYYY-MM
+      const price = Number(l.price);
+      if (map[monthKey] === undefined || price < map[monthKey]) {
+        map[monthKey] = price;
+      }
+    });
+    return map;
+  }, [listings]);
+
   // Compute effective date range based on flex option
   const getDateRange = (f: FilterState) => {
     let from = f.departureDateFrom;
