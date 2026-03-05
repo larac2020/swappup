@@ -185,6 +185,16 @@ export default function Browse() {
       }
     }
 
+    // 5. Fallback: show cheapest available listings if no other suggestions generated
+    if (suggestions.length === 0) {
+      const cheapest = [...listings]
+        .sort((a, b) => Number(a.price) - Number(b.price))
+        .slice(0, 6);
+      if (cheapest.length > 0) {
+        suggestions.push({ title: "Cheapest available flights", icon: <Package className="w-4 h-4" />, items: cheapest });
+      }
+    }
+
     return suggestions.length > 0 ? suggestions : null;
   }, [filteredListings, listings, filters]);
 
