@@ -94,6 +94,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   const [currentLocationCountry, setCurrentLocationCountry] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [pendingFilters, setPendingFilters] = useState<FilterState | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const fromCountryRef = useRef<HTMLDivElement>(null);
   const fromCityRef = useRef<HTMLDivElement>(null);
@@ -253,6 +254,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     setFilters(toApply);
     onFilterChange(toApply);
     setPendingFilters(null);
+    setSheetOpen(false);
   };
 
   const toggleAirline = (name: string) => {
@@ -472,7 +474,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
             </div>
           )}
         </div>
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="h-12 w-12 relative">
               <SlidersHorizontal className="w-5 h-5" />
@@ -662,6 +664,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
                         return (
                           <button
+                            type="button"
                             key={key}
                             className={cn(
                               "rounded-lg border p-2.5 text-center transition-all",
@@ -669,7 +672,9 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                               isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
                               price === undefined && "opacity-50"
                             )}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               const from = startOfMonth(month).toISOString().split("T")[0];
                               localUpdate({ departureDateFrom: from, departureDateTo: undefined });
                             }}
@@ -905,7 +910,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               {/* Search Button */}
               <Button className="w-full h-12 text-base font-semibold" onClick={handleSearchClick}>
                 <Search className="w-4 h-4 mr-2" />
-                Search ({resultCount} results)
+                {resultCount > 0 ? `Search (${resultCount} results)` : "Search & see alternatives"}
               </Button>
             </div>
           </SheetContent>
