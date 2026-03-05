@@ -159,6 +159,41 @@ export default function Home() {
     },
   });
 
+  // From favorite city
+  const { data: fromFavCity = [], isLoading: loadingFavCity } = useQuery({
+    queryKey: ["fromFavCity", profile?.favorite_departure_city],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .eq("origin_city", profile!.favorite_departure_city!)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.favorite_departure_city,
+  });
+
+  // Favorite tags
+  const { data: favTagListings = [], isLoading: loadingFavTags } = useQuery({
+    queryKey: ["favTagListings", profile?.favorite_categories],
+    queryFn: async () => {
+      const tags = profile!.favorite_categories!;
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .overlaps("tags", tags)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.favorite_categories && profile.favorite_categories.length > 0,
+  });
+
   // Latest deals
   const { data: latestDeals = [], isLoading: loadingLatest } = useQuery({
     queryKey: ["recommendations"],
