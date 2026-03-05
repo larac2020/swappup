@@ -245,7 +245,7 @@ export default function Browse() {
           resultCount={filteredListings.length}
           initialDestination={initialDestination}
           availableDates={availableDates}
-          datePriceMap={datePriceMap}
+          allListings={listings}
         />
 
         {isLoading ? (
