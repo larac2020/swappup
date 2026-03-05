@@ -35,7 +35,8 @@ interface ListingFiltersProps {
   onFilterChange: (filters: FilterState) => void;
   resultCount: number;
   initialDestination?: string;
-  availableDates?: string[]; // ISO date strings of departure_date from active listings
+  availableDates?: string[];
+  datePriceMap?: Record<string, number>; // ISO month (YYYY-MM) -> cheapest price
 }
 
 export interface FilterState {
