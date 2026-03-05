@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
-  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle
+  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle, Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
