@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase, Navigation, Star, Globe } from "lucide-react";
-import { format, addDays, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
+import { format, addDays, subDays, startOfMonth, endOfMonth, addMonths, eachDayOfInterval, isSameDay, isSameMonth } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
