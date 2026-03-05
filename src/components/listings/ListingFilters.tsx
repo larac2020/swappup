@@ -377,15 +377,46 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     onFocus={() => setShowFromDropdown(true)}
                     className="bg-secondary/50 border-border/50"
                   />
-                  {showFromDropdown && filteredFrom.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {showFromDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                      {/* Current Location */}
+                      <button
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+                        onClick={requestCurrentLocation}
+                        disabled={geoLoading}
+                      >
+                        <Navigation className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium">
+                          {geoLoading ? "Locating..." : currentLocationCity ? `Current Location (${currentLocationCity})` : "Use Current Location"}
+                        </span>
+                      </button>
+
+                      {/* Favorite City */}
+                      {profile?.favorite_departure_city && (
+                        <button
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+                          onClick={() => {
+                            updateFilters({ origin: profile.favorite_departure_city! });
+                            setShowFromDropdown(false);
+                          }}
+                        >
+                          <Star className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                          <span className="text-sm font-medium">{profile.favorite_departure_city}</span>
+                        </button>
+                      )}
+
+                      <div className="px-4 py-1">
+                        <Separator />
+                      </div>
+
+                      {/* All cities alphabetically */}
                       {filteredFrom.map((loc, i) => (
                         <button
                           key={i}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
                           onClick={() => selectFrom(loc)}
                         >
-                          <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm">{loc.city}, {loc.country}</span>
                         </button>
                       ))}
