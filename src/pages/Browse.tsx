@@ -5,14 +5,18 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState, defaultFilters } from "@/components/listings/ListingFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package } from "lucide-react";
+import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown } from "lucide-react";
 import { addDays, subDays, startOfMonth, endOfMonth, format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 
 export default function Browse() {
   const [searchParams] = useSearchParams();
   const initialDestination = searchParams.get("destination") || "";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("date_soon");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination,
@@ -130,6 +134,24 @@ export default function Browse() {
     });
   }, [listings, searchQuery, filters]);
 
+  const sortedListings = useMemo(() => {
+    const sorted = [...filteredListings];
+    const now = new Date().toISOString().split("T")[0];
+    switch (sortBy) {
+      case "price_low":
+        return sorted.sort((a, b) => Number(a.price) - Number(b.price));
+      case "price_high":
+        return sorted.sort((a, b) => Number(b.price) - Number(a.price));
+      case "date_soon":
+        return sorted
+          .filter(l => l.departure_date >= now)
+          .sort((a, b) => a.departure_date.localeCompare(b.departure_date))
+          .concat(sorted.filter(l => l.departure_date < now).sort((a, b) => b.departure_date.localeCompare(a.departure_date)));
+      default:
+        return sorted;
+    }
+  }, [filteredListings, sortBy]);
+
   // Helper matchers for suggestions
   const matchOrigin = (l: typeof listings[0]) => {
     if (filters.originCountry && filters.originCountry !== "any" && !l.origin_country.toLowerCase().includes(filters.originCountry.toLowerCase())) return false;
@@ -241,8 +263,25 @@ export default function Browse() {
           </div>
         ) : (
           <>
+            {/* Sort bar */}
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">{sortedListings.length} result{sortedListings.length !== 1 ? "s" : ""}</p>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-44 h-9 text-sm glass border-border/50">
+                  <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_soon">Soonest departure</SelectItem>
+                  <SelectItem value="price_low">Price: Low → High</SelectItem>
+                  <SelectItem value="price_high">Price: High → Low</SelectItem>
+                  <SelectItem value="newest">Newest listed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredListings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   id={listing.id}
@@ -262,7 +301,7 @@ export default function Browse() {
               ))}
             </div>
 
-            {filteredListings.length === 0 && (
+            {sortedListings.length === 0 && (
               <div className="space-y-8">
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">No tickets match your filters</p>

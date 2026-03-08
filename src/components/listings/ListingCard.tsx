@@ -1,6 +1,7 @@
-import { Calendar, Plane, Users, Heart } from "lucide-react";
+import { Calendar, Plane, Users, Heart, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,9 +121,51 @@ export function ListingCard({
     },
   });
 
+  const addToCart = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) {
+        navigate("/auth");
+        throw new Error("Login required");
+      }
+      // Check if already in cart
+      const { data: existing } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("user_id", profile.id)
+        .eq("listing_id", id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("cart_items")
+          .update({ quantity: existing.quantity + 1 })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("cart_items")
+          .insert({ user_id: profile.id, listing_id: id, quantity: 1 });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cartCount"] });
+      toast({ title: "Added to cart" });
+    },
+    onError: (err) => {
+      if (err.message !== "Login required") {
+        toast({ title: "Failed to add to cart", variant: "destructive" });
+      }
+    },
+  });
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite.mutate();
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart.mutate();
   };
 
   const formatDate = (date: string) => {
@@ -147,15 +190,10 @@ export function ListingCard({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
           
-          {/* Price badge */}
+          {/* Price badge — advertised price only */}
           <div className="absolute top-3 right-3">
             <div className="glass-strong rounded-xl px-3 py-1.5">
               <span className="text-lg font-bold text-primary">€{price}</span>
-              {originalPrice && originalPrice > price && (
-                <span className="ml-2 text-xs text-muted-foreground line-through">
-                  €{originalPrice}
-                </span>
-              )}
             </div>
           </div>
 
@@ -168,10 +206,48 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Tags */}
+          {/* Favorite button */}
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute bottom-3 right-3 p-1.5 rounded-lg glass-strong transition-colors"
+          >
+            <Heart
+              className={cn(
+                "w-4 h-4 transition-colors",
+                isFavorited
+                  ? "text-primary fill-primary"
+                  : "text-muted-foreground hover:text-primary"
+              )}
+            />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          {/* Route with airline on the right */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="text-center min-w-0">
+                {originCode && (
+                  <span className="text-xs font-bold text-primary">{originCode}</span>
+                )}
+                <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
+              </div>
+              <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
+              <div className="text-center min-w-0">
+                {destCode && (
+                  <span className="text-xs font-bold text-primary">{destCode}</span>
+                )}
+                <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
+          </div>
+
+          {/* Tags row */}
           {tags.length > 0 && (
-            <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
-              {tags.slice(0, 2).map((tag) => (
+            <div className="flex gap-1.5 flex-wrap">
+              {tags.slice(0, 3).map((tag) => (
                 <Badge
                   key={tag}
                   variant="outline"
@@ -182,32 +258,6 @@ export function ListingCard({
               ))}
             </div>
           )}
-        </div>
-
-        {/* Content */}
-        <div className="p-4 space-y-3">
-          {/* Route with airport codes */}
-          <div className="flex items-center gap-3">
-            <div className="text-center min-w-0">
-              {originCode && (
-                <span className="text-xs font-bold text-primary">{originCode}</span>
-              )}
-              <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
-              {originAirportName && originAirportName !== originCity && (
-                <p className="text-xs text-muted-foreground truncate">{originAirportName}</p>
-              )}
-            </div>
-            <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
-            <div className="text-center min-w-0">
-              {destCode && (
-                <span className="text-xs font-bold text-primary">{destCode}</span>
-              )}
-              <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
-              {destAirportName && destAirportName !== destinationCity && (
-                <p className="text-xs text-muted-foreground truncate">{destAirportName}</p>
-              )}
-            </div>
-          </div>
 
           {/* Details */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -224,23 +274,16 @@ export function ListingCard({
             </div>
           </div>
 
-          {/* Airline + Favorite */}
-          <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            <span className="text-sm text-muted-foreground">{airline}</span>
-            <button
-              onClick={handleFavoriteClick}
-              className="p-1 rounded-lg hover:bg-secondary/50 transition-colors"
-            >
-              <Heart
-                className={cn(
-                  "w-4 h-4 transition-colors",
-                  isFavorited
-                    ? "text-primary fill-primary"
-                    : "text-muted-foreground hover:text-primary"
-                )}
-              />
-            </button>
-          </div>
+          {/* Add to Cart CTA */}
+          <Button
+            size="sm"
+            className="w-full gap-2"
+            onClick={handleAddToCart}
+            disabled={addToCart.isPending}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Add to Cart
+          </Button>
         </div>
       </div>
     </button>
