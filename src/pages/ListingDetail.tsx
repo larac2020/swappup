@@ -193,34 +193,9 @@ export default function ListingDetail() {
             </Button>
             {myProfile?.id !== listing.seller_id && (
               <div className="flex gap-2">
-                <Button variant="glass" size="icon" className="rounded-full" onClick={async (e) => {
-                  e.stopPropagation();
-                  const url = window.location.href;
-                  const text = `${listing.origin_city} → ${listing.destination_city} — €${Number(listing.price)}`;
-                  if (typeof navigator.share === "function") {
-                    try {
-                      await navigator.share({ title: listing.title, text, url });
-                      return;
-                    } catch {
-                      // User cancelled or share failed, fall through to clipboard
-                    }
-                  }
-                  try {
-                    await navigator.clipboard.writeText(url);
-                    toast({ title: "Link copied to clipboard" });
-                  } catch {
-                    // Clipboard API not available (e.g. in iframe), use fallback
-                    const textarea = document.createElement("textarea");
-                    textarea.value = url;
-                    textarea.style.position = "fixed";
-                    textarea.style.opacity = "0";
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(textarea);
-                    toast({ title: "Link copied to clipboard" });
-                  }
-                }}><Share2 className="w-5 h-5" /></Button>
+                <Button variant="glass" size="icon" className="rounded-full" onClick={() => setShowShareMenu(true)}>
+                  <Share2 className="w-5 h-5" />
+                </Button>
                 <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
                   <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
                 </Button>
