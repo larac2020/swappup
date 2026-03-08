@@ -16,6 +16,7 @@ export default function Browse() {
   const initialDestination = searchParams.get("destination") || "";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("date_soon");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination,
