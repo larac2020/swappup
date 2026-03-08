@@ -26,6 +26,7 @@ export default function ListingDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
