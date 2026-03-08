@@ -301,7 +301,7 @@ export default function Browse() {
               ))}
             </div>
 
-            {filteredListings.length === 0 && (
+            {sortedListings.length === 0 && (
               <div className="space-y-8">
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">No tickets match your filters</p>
