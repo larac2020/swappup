@@ -8,10 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
-  Clock, ShoppingCart, Share2, Heart, Loader2
+  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
+import { useState } from "react";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
@@ -25,6 +26,7 @@ export default function ListingDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -191,34 +193,9 @@ export default function ListingDetail() {
             </Button>
             {myProfile?.id !== listing.seller_id && (
               <div className="flex gap-2">
-                <Button variant="glass" size="icon" className="rounded-full" onClick={async (e) => {
-                  e.stopPropagation();
-                  const url = window.location.href;
-                  const text = `${listing.origin_city} → ${listing.destination_city} — €${Number(listing.price)}`;
-                  if (typeof navigator.share === "function") {
-                    try {
-                      await navigator.share({ title: listing.title, text, url });
-                      return;
-                    } catch {
-                      // User cancelled or share failed, fall through to clipboard
-                    }
-                  }
-                  try {
-                    await navigator.clipboard.writeText(url);
-                    toast({ title: "Link copied to clipboard" });
-                  } catch {
-                    // Clipboard API not available (e.g. in iframe), use fallback
-                    const textarea = document.createElement("textarea");
-                    textarea.value = url;
-                    textarea.style.position = "fixed";
-                    textarea.style.opacity = "0";
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(textarea);
-                    toast({ title: "Link copied to clipboard" });
-                  }
-                }}><Share2 className="w-5 h-5" /></Button>
+                <Button variant="glass" size="icon" className="rounded-full" onClick={() => setShowShareMenu(true)}>
+                  <Share2 className="w-5 h-5" />
+                </Button>
                 <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
                   <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
                 </Button>
@@ -240,6 +217,78 @@ export default function ListingDetail() {
             </div>
           </div>
         </div>
+
+        {/* Share Menu Overlay */}
+        {showShareMenu && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowShareMenu(false)}>
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+            <div className="relative w-full max-w-md mx-4 mb-8 glass-strong rounded-2xl p-5 space-y-4 animate-in slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Share this flight</h3>
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareMenu(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">{listing.origin_city} → {listing.destination_city} — €{Number(listing.price)}</p>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    const text = `Check out this flight: ${listing.origin_city} → ${listing.destination_city} for €${Number(listing.price)}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[hsl(142,70%,49%)]/20 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-[hsl(142,70%,49%)]" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">WhatsApp</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    const subject = `Flight deal: ${listing.origin_city} → ${listing.destination_city}`;
+                    const body = `Check out this flight from ${listing.origin_city} to ${listing.destination_city} for €${Number(listing.price)}!\n\n${url}`;
+                    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Email</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={async () => {
+                    const url = window.location.href;
+                    try {
+                      await navigator.clipboard.writeText(url);
+                    } catch {
+                      const ta = document.createElement("textarea");
+                      ta.value = url;
+                      ta.style.position = "fixed";
+                      ta.style.opacity = "0";
+                      document.body.appendChild(ta);
+                      ta.select();
+                      document.execCommand("copy");
+                      document.body.removeChild(ta);
+                    }
+                    toast({ title: "Link copied to clipboard" });
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <Copy className="w-5 h-5 text-foreground" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Copy Link</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="px-4 py-6 space-y-6 -mt-4 relative z-10">
           {/* Route Header with airport codes */}
