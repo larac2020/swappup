@@ -191,7 +191,16 @@ export default function ListingDetail() {
             </Button>
             {myProfile?.id !== listing.seller_id && (
               <div className="flex gap-2">
-                <Button variant="glass" size="icon" className="rounded-full"><Share2 className="w-5 h-5" /></Button>
+                <Button variant="glass" size="icon" className="rounded-full" onClick={async () => {
+                  const url = window.location.href;
+                  const text = `${listing.origin_city} → ${listing.destination_city} — €${Number(listing.price)}`;
+                  if (navigator.share) {
+                    try { await navigator.share({ title: listing.title, text, url }); } catch {}
+                  } else {
+                    await navigator.clipboard.writeText(url);
+                    toast({ title: "Link copied to clipboard" });
+                  }
+                }}><Share2 className="w-5 h-5" /></Button>
                 <Button variant="glass" size="icon" className="rounded-full" onClick={() => toggleFavoriteMutation.mutate()} disabled={toggleFavoriteMutation.isPending}>
                   <Heart className={`w-5 h-5 ${isFavorited ? "fill-primary text-primary" : ""}`} />
                 </Button>
