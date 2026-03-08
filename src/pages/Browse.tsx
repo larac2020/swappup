@@ -263,8 +263,25 @@ export default function Browse() {
           </div>
         ) : (
           <>
+            {/* Sort bar */}
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">{sortedListings.length} result{sortedListings.length !== 1 ? "s" : ""}</p>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-44 h-9 text-sm glass border-border/50">
+                  <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_soon">Soonest departure</SelectItem>
+                  <SelectItem value="price_low">Price: Low → High</SelectItem>
+                  <SelectItem value="price_high">Price: High → Low</SelectItem>
+                  <SelectItem value="newest">Newest listed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredListings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   id={listing.id}
