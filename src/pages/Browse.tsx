@@ -134,6 +134,24 @@ export default function Browse() {
     });
   }, [listings, searchQuery, filters]);
 
+  const sortedListings = useMemo(() => {
+    const sorted = [...filteredListings];
+    const now = new Date().toISOString().split("T")[0];
+    switch (sortBy) {
+      case "price_low":
+        return sorted.sort((a, b) => Number(a.price) - Number(b.price));
+      case "price_high":
+        return sorted.sort((a, b) => Number(b.price) - Number(a.price));
+      case "date_soon":
+        return sorted
+          .filter(l => l.departure_date >= now)
+          .sort((a, b) => a.departure_date.localeCompare(b.departure_date))
+          .concat(sorted.filter(l => l.departure_date < now).sort((a, b) => b.departure_date.localeCompare(a.departure_date)));
+      default:
+        return sorted;
+    }
+  }, [filteredListings, sortBy]);
+
   // Helper matchers for suggestions
   const matchOrigin = (l: typeof listings[0]) => {
     if (filters.originCountry && filters.originCountry !== "any" && !l.origin_country.toLowerCase().includes(filters.originCountry.toLowerCase())) return false;
