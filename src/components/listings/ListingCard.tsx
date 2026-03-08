@@ -197,14 +197,6 @@ export function ListingCard({
             </div>
           </div>
 
-          {/* Discount badge */}
-          {discount > 0 && (
-            <div className="absolute top-3 left-3">
-              <Badge className="gradient-gold text-primary-foreground border-0 font-semibold">
-                -{discount}%
-              </Badge>
-            </div>
-          )}
 
           {/* Favorite button */}
           <button
