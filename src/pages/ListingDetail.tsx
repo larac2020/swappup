@@ -8,10 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
-  Clock, ShoppingCart, Share2, Heart, Loader2
+  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
+import { useState } from "react";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
