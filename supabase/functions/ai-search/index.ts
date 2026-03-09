@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -25,27 +25,38 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a flight search assistant. Extract search parameters from natural language queries.
+    const today = new Date().toISOString().split('T')[0];
 
-Available tags: city_trip, beach, winter_holiday, ski_trip, adventure, romantic, family, business
+    const systemPrompt = `You are a flight search parameter extractor. Given a natural language query about flights, extract structured search parameters and return ONLY a valid JSON object (no markdown, no explanation).
 
-Extract and return a JSON object with these optional fields:
-- destinationCity: string (city name)
-- destinationCountry: string (country name)
-- departureDate: string (ISO date YYYY-MM-DD)
-- returnDate: string (ISO date YYYY-MM-DD)
-- minPrice: number
-- maxPrice: number
-- tags: array of strings (from available tags)
-- flexibility: number (0, 1, or 3 days)
+Today's date is: ${today}
 
-Important rules:
-- Only include fields that are clearly mentioned in the query
-- If dates are relative (e.g., "next month", "July"), calculate the actual date from today: ${new Date().toISOString().split('T')[0]}
-- If a price range is mentioned (e.g., "under 500", "cheap", "budget"), set appropriate min/max
-- "Cheap" or "budget" typically means under 300
-- For month names without year, assume current year if in the future, otherwise next year
-- Extract relevant tags based on keywords (e.g., "beach vacation" → ["beach"], "family trip" → ["family"])`;
+Return a JSON object with ONLY the fields that are relevant to the query. Available fields:
+- "destinationCity": string (city name, capitalize properly e.g. "Barcelona")
+- "destinationCountry": string (country name e.g. "Spain")  
+- "departureDate": string (ISO date YYYY-MM-DD)
+- "returnDate": string (ISO date YYYY-MM-DD)
+- "minPrice": number
+- "maxPrice": number
+- "tags": array of strings from: "city_trip", "beach", "winter_holiday", "ski_trip", "adventure", "romantic", "family", "business"
+
+Rules:
+- "cheap" or "budget" → maxPrice: 200
+- "under X" → maxPrice: X
+- "beach vacation" → tags: ["beach"]
+- "family trip" → tags: ["family"]  
+- "ski" → tags: ["ski_trip", "winter_holiday"]
+- "romantic" → tags: ["romantic"]
+- "city break" or "city trip" → tags: ["city_trip"]
+- "adventure" → tags: ["adventure"]
+- For month names (e.g. "in July"), set departureDate to first day of that month and returnDate to last day
+- If month is in the past for current year, use next year
+- Always include tags when the query mentions a trip type
+
+Examples:
+Query: "cheap beach vacation in July" → {"maxPrice": 200, "tags": ["beach"], "departureDate": "2026-07-01", "returnDate": "2026-07-31"}
+Query: "family trip to Barcelona" → {"destinationCity": "Barcelona", "destinationCountry": "Spain", "tags": ["family"]}
+Query: "romantic weekend in Rome under 300" → {"destinationCity": "Rome", "destinationCountry": "Italy", "tags": ["romantic"], "maxPrice": 300}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -54,41 +65,12 @@ Important rules:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: query }
+          { role: "user", content: `Extract search parameters from this query: "${query}"` }
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_search_params",
-              description: "Extract structured search parameters from natural language query",
-              parameters: {
-                type: "object",
-                properties: {
-                  destinationCity: { type: "string" },
-                  destinationCountry: { type: "string" },
-                  departureDate: { type: "string" },
-                  returnDate: { type: "string" },
-                  minPrice: { type: "number" },
-                  maxPrice: { type: "number" },
-                  tags: { 
-                    type: "array",
-                    items: { 
-                      type: "string",
-                      enum: ["city_trip", "beach", "winter_holiday", "ski_trip", "adventure", "romantic", "family", "business"]
-                    }
-                  },
-                  flexibility: { type: "number", enum: [0, 1, 3] }
-                },
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "extract_search_params" } }
+        temperature: 0,
       }),
     });
 
@@ -102,16 +84,26 @@ Important rules:
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const content = data.choices?.[0]?.message?.content;
     
-    if (!toolCall) {
+    if (!content) {
+      console.error("No content in AI response:", JSON.stringify(data));
       return new Response(
         JSON.stringify({ error: "Could not parse search query" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const searchParams = JSON.parse(toolCall.function.arguments);
+    // Extract JSON from the response (handle markdown code blocks)
+    let jsonStr = content.trim();
+    if (jsonStr.startsWith("```")) {
+      jsonStr = jsonStr.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    }
+    
+    console.log("AI raw response:", content);
+    console.log("Parsed JSON string:", jsonStr);
+    
+    const searchParams = JSON.parse(jsonStr);
 
     return new Response(
       JSON.stringify({ success: true, params: searchParams }),
