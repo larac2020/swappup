@@ -162,7 +162,15 @@ export default function Browse() {
       if (filters.minPrice > 0 && price < filters.minPrice) return false;
       if (filters.maxPrice < 2000 && price > filters.maxPrice) return false;
 
-      if (filters.ticketCount > 0 && listing.ticket_count < filters.ticketCount) return false;
+      if (filters.ticketCount > 0) {
+        if (filters.ticketCount <= 3) {
+          // 1, 2, 3 = exact match
+          if (listing.ticket_count !== filters.ticketCount) return false;
+        } else {
+          // 4+ = minimum
+          if (listing.ticket_count < filters.ticketCount) return false;
+        }
+      }
 
       if (filters.tags.length > 0) {
         const hasMatchingTag = filters.tags.some((tag) => listing.tags?.includes(tag as any));
