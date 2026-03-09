@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export default function Home() {
   const navigate = useNavigate();
