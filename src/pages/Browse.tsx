@@ -5,9 +5,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState, defaultFilters } from "@/components/listings/ListingFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown } from "lucide-react";
+import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search } from "lucide-react";
 import { addDays, subDays, startOfMonth, endOfMonth, format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 
@@ -16,11 +19,54 @@ export default function Browse() {
   const initialDestination = searchParams.get("destination") || "";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [aiSearchQuery, setAiSearchQuery] = useState("");
+  const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination,
   });
+
+  const handleAiSearch = async () => {
+    if (!aiSearchQuery.trim()) return;
+
+    setIsAiSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-search", {
+        body: { query: aiSearchQuery }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.params) {
+        const params = data.params;
+        
+        // Update filters based on AI response
+        setFilters(prev => ({
+          ...prev,
+          destination: params.destinationCity || prev.destination,
+          destinationCountry: params.destinationCountry || prev.destinationCountry,
+          departureDateFrom: params.departureDate || prev.departureDateFrom,
+          departureDateTo: params.returnDate || prev.departureDateTo,
+          minPrice: params.minPrice ?? prev.minPrice,
+          maxPrice: params.maxPrice ?? prev.maxPrice,
+          tags: params.tags?.length > 0 ? params.tags : prev.tags,
+          flexOption: params.flexibility !== undefined 
+            ? (params.flexibility === 0 ? "exact" : params.flexibility === 1 ? "+-1" : "+-3")
+            : prev.flexOption,
+        }));
+
+        toast.success("Search filters applied");
+      } else {
+        toast.error("Could not understand your search");
+      }
+    } catch (error) {
+      console.error("AI search error:", error);
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ["listings"],
@@ -246,6 +292,34 @@ export default function Browse() {
         <div>
           <h1 className="text-2xl font-display font-bold">Find Tickets</h1>
           <p className="text-muted-foreground">Discover amazing deals from other travelers</p>
+        </div>
+
+        {/* AI Natural Language Search */}
+        <div className="glass rounded-xl p-4 border border-border/50 space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-semibold">AI Search</h2>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Try: 'cheap beach vacation in July' or 'family trip to Paris next month'"
+              value={aiSearchQuery}
+              onChange={(e) => setAiSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAiSearch()}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleAiSearch} 
+              disabled={isAiSearching || !aiSearchQuery.trim()}
+              size="icon"
+            >
+              {isAiSearching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
         <ListingFilters
