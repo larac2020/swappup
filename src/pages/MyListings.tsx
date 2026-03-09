@@ -137,10 +137,24 @@ export default function MyListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myListings"] });
+      setConfirmDialogOpen(false);
       setBoostDialogOpen(false);
+      setSelectedBoostOption(null);
       toast({ title: "Listing boosted!", description: "Your ad is now more visible." });
     },
   });
+
+  const handleBoostSelect = (opt: BoostOption) => {
+    setSelectedBoostOption(opt);
+    setBoostDialogOpen(false);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmBoost = () => {
+    if (selectedListingId && selectedBoostOption) {
+      boostMutation.mutate({ id: selectedListingId, hours: selectedBoostOption.hours });
+    }
+  };
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
