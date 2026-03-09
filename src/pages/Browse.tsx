@@ -51,6 +51,7 @@ export default function Browse() {
           departureDateTo: params.returnDate || filters.departureDateTo,
           minPrice: params.minPrice ?? filters.minPrice,
           maxPrice: params.maxPrice ?? filters.maxPrice,
+          ticketCount: params.ticketCount ?? filters.ticketCount,
           tags: params.tags?.length > 0 ? params.tags : filters.tags,
           flexOption: params.flexibility !== undefined 
             ? (params.flexibility === 0 ? "exact" : params.flexibility === 1 ? "+-1" : "+-3")
