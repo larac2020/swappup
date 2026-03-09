@@ -43,19 +43,21 @@ export default function Browse() {
         const params = data.params;
         
         // Update filters based on AI response
-        setFilters(prev => ({
-          ...prev,
-          destination: params.destinationCity || prev.destination,
-          destinationCountry: params.destinationCountry || prev.destinationCountry,
-          departureDateFrom: params.departureDate || prev.departureDateFrom,
-          departureDateTo: params.returnDate || prev.departureDateTo,
-          minPrice: params.minPrice ?? prev.minPrice,
-          maxPrice: params.maxPrice ?? prev.maxPrice,
-          tags: params.tags?.length > 0 ? params.tags : prev.tags,
+        const newFilters: FilterState = {
+          ...filters,
+          destination: params.destinationCity || filters.destination,
+          destinationCountry: params.destinationCountry || filters.destinationCountry,
+          departureDateFrom: params.departureDate || filters.departureDateFrom,
+          departureDateTo: params.returnDate || filters.departureDateTo,
+          minPrice: params.minPrice ?? filters.minPrice,
+          maxPrice: params.maxPrice ?? filters.maxPrice,
+          tags: params.tags?.length > 0 ? params.tags : filters.tags,
           flexOption: params.flexibility !== undefined 
             ? (params.flexibility === 0 ? "exact" : params.flexibility === 1 ? "+-1" : "+-3")
-            : prev.flexOption,
-        }));
+            : filters.flexOption,
+        };
+        setFilters(newFilters);
+        setAiAppliedFilters(newFilters);
 
         toast.success("Search filters applied");
       } else {
