@@ -39,8 +39,11 @@ export default function Browse() {
 
       if (error) throw error;
 
+      console.log("AI search raw response:", JSON.stringify(data));
+      
       if (data?.success && data?.params) {
         const params = data.params;
+        console.log("AI extracted params:", JSON.stringify(params));
         
         // Update filters based on AI response
         const newFilters: FilterState = {
@@ -57,6 +60,7 @@ export default function Browse() {
             ? (params.flexibility === 0 ? "exact" : params.flexibility === 1 ? "+-1" : "+-3")
             : filters.flexOption,
         };
+        console.log("New filters being applied:", JSON.stringify(newFilters));
         setFilters(newFilters);
         setAiAppliedFilters(newFilters);
 
