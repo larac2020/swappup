@@ -78,12 +78,20 @@ export const defaultFilters: FilterState = {
   directOnly: undefined,
 };
 
-export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [] }: ListingFiltersProps) {
+export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [], externalFilters }: ListingFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination || "",
   });
+
+  // Sync external filters (e.g. from AI search) into local state
+  useEffect(() => {
+    if (externalFilters) {
+      setFilters(externalFilters);
+      setPriceRange([externalFilters.minPrice, externalFilters.maxPrice]);
+    }
+  }, [externalFilters]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFromCountry, setShowFromCountry] = useState(false);
