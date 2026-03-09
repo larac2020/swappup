@@ -21,8 +21,9 @@ import { getPrimaryAirportCode } from "@/data/flightData";
 import {
   Ticket, Plus, Loader2, Search, Eye, Heart, Rocket,
   Plane, Calendar, Users, Pencil, ToggleLeft, ToggleRight,
-  Sparkles, Clock, Flame
+  Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2
 } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface BoostOption {
   label: string;
@@ -44,7 +45,9 @@ export default function MyListings() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [selectedBoostOption, setSelectedBoostOption] = useState<BoostOption | null>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -134,10 +137,24 @@ export default function MyListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myListings"] });
+      setConfirmDialogOpen(false);
       setBoostDialogOpen(false);
+      setSelectedBoostOption(null);
       toast({ title: "Listing boosted!", description: "Your ad is now more visible." });
     },
   });
+
+  const handleBoostSelect = (opt: BoostOption) => {
+    setSelectedBoostOption(opt);
+    setBoostDialogOpen(false);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmBoost = () => {
+    if (selectedListingId && selectedBoostOption) {
+      boostMutation.mutate({ id: selectedListingId, hours: selectedBoostOption.hours });
+    }
+  };
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -285,10 +302,13 @@ export default function MyListings() {
             <Ticket className="w-6 h-6 text-primary" />
             <h1 className="text-2xl font-display font-bold">My Listings</h1>
           </div>
-          <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
-            <Plus className="w-4 h-4" />
-            Sell
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
+              <Plus className="w-4 h-4" />
+              Sell
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -388,11 +408,7 @@ export default function MyListings() {
             {boostOptions.map((opt) => (
               <button
                 key={opt.duration}
-                onClick={() =>
-                  selectedListingId &&
-                  boostMutation.mutate({ id: selectedListingId, hours: opt.hours })
-                }
-                disabled={boostMutation.isPending}
+                onClick={() => handleBoostSelect(opt)}
                 className="w-full glass rounded-xl p-4 flex items-center justify-between hover:border-primary/40 transition-all group"
               >
                 <div className="flex items-center gap-3">
@@ -410,9 +426,83 @@ export default function MyListings() {
               </button>
             ))}
           </div>
-          {boostMutation.isPending && (
-            <div className="flex justify-center py-2">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={(open) => {
+        setConfirmDialogOpen(open);
+        if (!open) setSelectedBoostOption(null);
+      }}>
+        <DialogContent className="glass-strong border-border/60 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <CreditCard className="w-5 h-5 text-primary" />
+              Confirm Payment
+            </DialogTitle>
+            <DialogDescription>
+              Please review and confirm your boost purchase.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedBoostOption && (
+            <div className="space-y-4 pt-2">
+              {/* Summary */}
+              <div className="glass rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Boost duration</span>
+                  <span className="font-medium">{selectedBoostOption.label}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Payment method</span>
+                  <span className="font-medium text-sm">
+                    {localStorage.getItem("flyswap_payment_added") === "true"
+                      ? "💳 Card on file"
+                      : "⚠️ No card saved"
+                    }
+                  </span>
+                </div>
+                <div className="border-t border-border/50 pt-3 flex items-center justify-between">
+                  <span className="font-semibold">Total</span>
+                  <span className="text-xl font-bold text-primary">€{selectedBoostOption.price}</span>
+                </div>
+              </div>
+
+              {localStorage.getItem("flyswap_payment_added") !== "true" && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <p>You need to add a payment method first. Go to Account → Payment Methods.</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setConfirmDialogOpen(false);
+                    setSelectedBoostOption(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="gold"
+                  className="flex-1 gap-2"
+                  disabled={
+                    boostMutation.isPending ||
+                    localStorage.getItem("flyswap_payment_added") !== "true"
+                  }
+                  onClick={handleConfirmBoost}
+                >
+                  {boostMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  Confirm & Pay
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

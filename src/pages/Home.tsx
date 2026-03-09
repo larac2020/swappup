@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -271,10 +272,13 @@ export default function Home() {
                 <p className="text-muted-foreground text-sm">Welcome back,</p>
                 <h1 className="text-xl font-display font-bold">{firstName} ✈️</h1>
               </div>
-              <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
-                <Plus className="w-4 h-4" />
-                Sell
-              </Button>
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
+                  <Plus className="w-4 h-4" />
+                  Sell
+                </Button>
+              </div>
             </div>
 
             {/* Quick Stats */}
