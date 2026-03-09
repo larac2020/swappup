@@ -43,7 +43,8 @@ Return a JSON object with ONLY the fields that are relevant to the query. Availa
 
 Rules:
 - "cheap" or "budget" → maxPrice: 200
-- "X person(s)", "X people", "X ticket(s)", "X passenger(s)", "for X" (where X is a number referring to people) → ticketCount: X
+- "X person(s)", "X people", "X ticket(s)", "X passenger(s)", "for X" (where X is a number referring to people), "solo", "alone" → ticketCount: X (default 1 for solo/alone)
+- IMPORTANT: When the user mentions a number of people (e.g. "1 person", "2 people", "for 3"), ALWAYS include ticketCount
 - "under X" → maxPrice: X
 - "beach vacation" → tags: ["beach"]
 - "family trip" → tags: ["family"]  
