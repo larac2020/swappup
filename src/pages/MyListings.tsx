@@ -302,10 +302,13 @@ export default function MyListings() {
             <Ticket className="w-6 h-6 text-primary" />
             <h1 className="text-2xl font-display font-bold">My Listings</h1>
           </div>
-          <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
-            <Plus className="w-4 h-4" />
-            Sell
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
+              <Plus className="w-4 h-4" />
+              Sell
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
