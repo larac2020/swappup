@@ -5,9 +5,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState, defaultFilters } from "@/components/listings/ListingFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown } from "lucide-react";
+import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search } from "lucide-react";
 import { addDays, subDays, startOfMonth, endOfMonth, format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 
