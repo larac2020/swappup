@@ -43,7 +43,8 @@ Return a JSON object with ONLY the fields that are relevant to the query. Availa
 
 Rules:
 - "cheap" or "budget" → maxPrice: 200
-- "X person(s)", "X people", "X ticket(s)", "X passenger(s)", "for X" (where X is a number referring to people) → ticketCount: X
+- "X person(s)", "X people", "X ticket(s)", "X passenger(s)", "for X" (where X is a number referring to people), "solo", "alone" → ticketCount: X (default 1 for solo/alone)
+- IMPORTANT: When the user mentions a number of people (e.g. "1 person", "2 people", "for 3"), ALWAYS include ticketCount
 - "under X" → maxPrice: X
 - "beach vacation" → tags: ["beach"]
 - "family trip" → tags: ["family"]  
@@ -58,6 +59,8 @@ Rules:
 Examples:
 Query: "cheap beach vacation in July" → {"maxPrice": 200, "tags": ["beach"], "departureDate": "2026-07-01", "returnDate": "2026-07-31"}
 Query: "family trip to Barcelona" → {"destinationCity": "Barcelona", "destinationCountry": "Spain", "tags": ["family"]}
+Query: "city trip for 1 person" → {"tags": ["city_trip"], "ticketCount": 1}
+Query: "beach for 2 people" → {"tags": ["beach"], "ticketCount": 2}
 Query: "romantic weekend in Rome under 300" → {"destinationCity": "Rome", "destinationCountry": "Italy", "tags": ["romantic"], "maxPrice": 300}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
