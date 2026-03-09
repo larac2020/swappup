@@ -38,6 +38,7 @@ Return a JSON object with ONLY the fields that are relevant to the query. Availa
 - "returnDate": string (ISO date YYYY-MM-DD)
 - "minPrice": number
 - "maxPrice": number
+- "ticketCount": number (number of tickets/persons/passengers/people needed)
 - "tags": array of strings from: "city_trip", "beach", "winter_holiday", "ski_trip", "adventure", "romantic", "family", "business"
 
 Rules:
