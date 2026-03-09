@@ -19,11 +19,54 @@ export default function Browse() {
   const initialDestination = searchParams.get("destination") || "";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [aiSearchQuery, setAiSearchQuery] = useState("");
+  const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination,
   });
+
+  const handleAiSearch = async () => {
+    if (!aiSearchQuery.trim()) return;
+
+    setIsAiSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-search", {
+        body: { query: aiSearchQuery }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.params) {
+        const params = data.params;
+        
+        // Update filters based on AI response
+        setFilters(prev => ({
+          ...prev,
+          destination: params.destinationCity || prev.destination,
+          destinationCountry: params.destinationCountry || prev.destinationCountry,
+          departureDateFrom: params.departureDate || prev.departureDateFrom,
+          departureDateTo: params.returnDate || prev.departureDateTo,
+          minPrice: params.minPrice ?? prev.minPrice,
+          maxPrice: params.maxPrice ?? prev.maxPrice,
+          tags: params.tags?.length > 0 ? params.tags : prev.tags,
+          flexOption: params.flexibility !== undefined 
+            ? (params.flexibility === 0 ? "exact" : params.flexibility === 1 ? "+-1" : "+-3")
+            : prev.flexOption,
+        }));
+
+        toast.success("Search filters applied");
+      } else {
+        toast.error("Could not understand your search");
+      }
+    } catch (error) {
+      console.error("AI search error:", error);
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ["listings"],
