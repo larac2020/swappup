@@ -59,6 +59,8 @@ Rules:
 Examples:
 Query: "cheap beach vacation in July" → {"maxPrice": 200, "tags": ["beach"], "departureDate": "2026-07-01", "returnDate": "2026-07-31"}
 Query: "family trip to Barcelona" → {"destinationCity": "Barcelona", "destinationCountry": "Spain", "tags": ["family"]}
+Query: "city trip for 1 person" → {"tags": ["city_trip"], "ticketCount": 1}
+Query: "beach for 2 people" → {"tags": ["beach"], "ticketCount": 2}
 Query: "romantic weekend in Rome under 300" → {"destinationCity": "Rome", "destinationCountry": "Italy", "tags": ["romantic"], "maxPrice": 300}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
