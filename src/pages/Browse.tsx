@@ -56,6 +56,7 @@ export default function Browse() {
           maxPrice: params.maxPrice ?? filters.maxPrice,
           ticketCount: params.ticketCount ?? filters.ticketCount,
           tags: params.tags?.length > 0 ? params.tags : filters.tags,
+          airlines: params.airlines?.length > 0 ? params.airlines : filters.airlines,
           mealIncluded: params.mealIncluded ?? filters.mealIncluded,
           luggageIncluded: params.luggageIncluded ?? filters.luggageIncluded,
           carryOnIncluded: params.carryOnIncluded ?? filters.carryOnIncluded,

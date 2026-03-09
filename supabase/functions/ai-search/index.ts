@@ -40,6 +40,7 @@ Return a JSON object with ONLY the fields that are relevant to the query. Availa
 - "maxPrice": number
 - "ticketCount": number (number of tickets/persons/passengers/people needed)
 - "tags": array of strings from: "city_trip", "beach", "winter_holiday", "ski_trip", "adventure", "romantic", "family", "business"
+- "airlines": array of airline names to filter by. Known airlines: Ryanair, EasyJet, Wizz Air, Vueling, Transavia, Norwegian, Eurowings, Volotea, Jet2, British Airways, Lufthansa, Air France, KLM, Iberia, TAP Portugal, Aer Lingus, Swiss, Turkish Airlines, Emirates, Qatar Airways, Etihad, Icelandair, Singapore Airlines, Cathay Pacific
 - "mealIncluded": boolean (true if user wants food/meal/dining/breakfast/lunch/dinner included)
 - "luggageIncluded": boolean (true if user wants luggage/baggage/suitcase/checked bag included)
 - "carryOnIncluded": boolean (true if user wants carry-on/hand luggage/cabin bag included)
@@ -56,6 +57,8 @@ Rules:
 - "romantic" → tags: ["romantic"]
 - "city break" or "city trip" → tags: ["city_trip"]
 - "adventure" → tags: ["adventure"]
+- "low cost" / "budget airline" / "cheap airline" → airlines: ["Ryanair", "EasyJet", "Wizz Air", "Vueling", "Transavia", "Norwegian", "Eurowings", "Volotea", "Jet2"]
+- When user mentions a specific airline name, include it in airlines array
 - For month names (e.g. "in July"), set departureDate to first day of that month and returnDate to last day
 - If month is in the past for current year, use next year
 - Always include tags when the query mentions a trip type
@@ -65,7 +68,7 @@ Examples:
 Query: "cheap beach vacation in July" → {"maxPrice": 200, "tags": ["beach"], "departureDate": "2026-07-01", "returnDate": "2026-07-31"}
 Query: "family trip to Barcelona" → {"destinationCity": "Barcelona", "destinationCountry": "Spain", "tags": ["family"]}
 Query: "city trip for 1 person" → {"tags": ["city_trip"], "ticketCount": 1}
-Query: "beach for 2 people" → {"tags": ["beach"], "ticketCount": 2}
+Query: "low cost company" → {"airlines": ["Ryanair", "EasyJet", "Wizz Air", "Vueling", "Transavia", "Norwegian", "Eurowings", "Volotea", "Jet2"]}
 Query: "with food included" → {"mealIncluded": true}
 Query: "direct flight with luggage" → {"directOnly": true, "luggageIncluded": true}
 Query: "romantic weekend in Rome under 300" → {"destinationCity": "Rome", "destinationCountry": "Italy", "tags": ["romantic"], "maxPrice": 300}`;
