@@ -329,6 +329,7 @@ export default function Browse() {
           initialDestination={initialDestination}
           availableDates={availableDates}
           allListings={listings}
+          externalFilters={filters}
         />
 
         {isLoading ? (
