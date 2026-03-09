@@ -294,6 +294,34 @@ export default function Browse() {
           <p className="text-muted-foreground">Discover amazing deals from other travelers</p>
         </div>
 
+        {/* AI Natural Language Search */}
+        <div className="glass rounded-xl p-4 border border-border/50 space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-semibold">AI Search</h2>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Try: 'cheap beach vacation in July' or 'family trip to Paris next month'"
+              value={aiSearchQuery}
+              onChange={(e) => setAiSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAiSearch()}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleAiSearch} 
+              disabled={isAiSearching || !aiSearchQuery.trim()}
+              size="icon"
+            >
+              {isAiSearching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
         <ListingFilters
           onSearch={setSearchQuery}
           onFilterChange={setFilters}
