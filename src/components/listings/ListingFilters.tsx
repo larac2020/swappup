@@ -908,7 +908,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       onClick={() => localUpdate({ ticketCount: currentFilters.ticketCount === count ? 0 : count })}
                       className="flex-1"
                     >
-                      {count}+
+                      {count >= 4 ? `${count}+` : count}
                     </Button>
                   ))}
                 </div>
