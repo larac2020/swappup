@@ -37,6 +37,7 @@ interface ListingFiltersProps {
   initialDestination?: string;
   availableDates?: string[];
   allListings?: { departure_date: string; price: number; origin_city: string; origin_country: string; destination_city: string; destination_country: string }[];
+  externalFilters?: FilterState | null;
 }
 
 export interface FilterState {
