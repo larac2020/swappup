@@ -45,7 +45,9 @@ export default function MyListings() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [selectedBoostOption, setSelectedBoostOption] = useState<BoostOption | null>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
