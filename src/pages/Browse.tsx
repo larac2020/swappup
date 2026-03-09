@@ -22,6 +22,7 @@ export default function Browse() {
   const [aiSearchQuery, setAiSearchQuery] = useState("");
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
+  const [aiAppliedFilters, setAiAppliedFilters] = useState<FilterState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     destination: initialDestination,
