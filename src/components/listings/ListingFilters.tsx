@@ -90,6 +90,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     if (externalFilters) {
       setFilters(externalFilters);
       setPriceRange([externalFilters.minPrice, externalFilters.maxPrice]);
+      onFilterChange(externalFilters);
     }
   }, [externalFilters]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
