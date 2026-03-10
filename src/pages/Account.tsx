@@ -33,6 +33,7 @@ const sectionComponents: Record<string, React.ComponentType> = {
   purchases: Purchases,
   favorites: FavoritesList,
   transactions: TransactionHistory,
+  privacy: PrivacyData,
 };
 
 const supportItems = [
