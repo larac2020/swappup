@@ -53,6 +53,33 @@ export type Database = {
           },
         ]
       }
+      data_consent: {
+        Row: {
+          consent_analytics: boolean
+          consent_marketing: boolean
+          consent_personalisation: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_analytics?: boolean
+          consent_marketing?: boolean
+          consent_personalisation?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_analytics?: boolean
+          consent_marketing?: boolean
+          consent_personalisation?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string

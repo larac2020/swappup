@@ -21,6 +21,7 @@ import Purchases from "@/components/account/Purchases";
 import FavoritesList from "@/components/account/FavoritesList";
 import TransactionHistory from "@/components/account/TransactionHistory";
 import Preferences from "@/components/account/Preferences";
+import PrivacyData from "@/components/account/PrivacyData";
 
 const sectionComponents: Record<string, React.ComponentType> = {
   profile: PersonalInfo,
@@ -32,6 +33,7 @@ const sectionComponents: Record<string, React.ComponentType> = {
   purchases: Purchases,
   favorites: FavoritesList,
   transactions: TransactionHistory,
+  privacy: PrivacyData,
 };
 
 const supportItems = [
@@ -77,6 +79,7 @@ export default function Account() {
     { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips", required: false, complete: true },
     { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings", required: false, complete: true },
     { icon: FileText, label: "Transaction History", path: "transactions", description: "Past purchases and sales", required: false, complete: true },
+    { icon: Shield, label: "Privacy & Data", path: "privacy", description: "Data usage, consent & deletion", required: false, complete: true },
   ];
 
   // If a section is selected, render that sub-page
