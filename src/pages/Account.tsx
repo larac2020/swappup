@@ -21,6 +21,7 @@ import Purchases from "@/components/account/Purchases";
 import FavoritesList from "@/components/account/FavoritesList";
 import TransactionHistory from "@/components/account/TransactionHistory";
 import Preferences from "@/components/account/Preferences";
+import PrivacyData from "@/components/account/PrivacyData";
 
 const sectionComponents: Record<string, React.ComponentType> = {
   profile: PersonalInfo,
