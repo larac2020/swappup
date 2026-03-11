@@ -609,6 +609,78 @@ export default function SellTicket() {
           {/* VOUCHER FORM */}
           {formData.listingType === "travel_credit" && (
             <>
+              {/* Voucher Verification Upload */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  Verify Your Credit / Voucher
+                </h2>
+                <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
+                  <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleVoucherUpload} disabled={isVerifyingVoucher} />
+                  {isVerifyingVoucher ? (
+                    <>
+                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Verifying your voucher...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Upload a screenshot of your travel credit, voucher, or confirmation email
+                      </p>
+                      <p className="text-xs text-muted-foreground">We'll verify authenticity and auto-fill details</p>
+                    </>
+                  )}
+                </label>
+
+                {/* Verification Result */}
+                {voucherVerification && (
+                  <div className={cn(
+                    "rounded-xl border-2 p-4 space-y-3 animate-in fade-in slide-in-from-top-2",
+                    voucherVerification.isValid && voucherVerification.confidenceScore >= 70
+                      ? "border-green-500/30 bg-green-500/10"
+                      : voucherVerification.isValid && voucherVerification.confidenceScore >= 50
+                        ? "border-yellow-500/30 bg-yellow-500/10"
+                        : "border-destructive/30 bg-destructive/10"
+                  )}>
+                    <div className="flex items-start gap-3">
+                      {voucherVerification.isValid && voucherVerification.confidenceScore >= 70 ? (
+                        <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                      )}
+                      <div className="space-y-1 flex-1">
+                        <p className={cn("font-semibold text-sm",
+                          voucherVerification.confidenceScore >= 70 ? "text-green-600 dark:text-green-400" :
+                          voucherVerification.confidenceScore >= 50 ? "text-yellow-600 dark:text-yellow-400" :
+                          "text-destructive"
+                        )}>
+                          {voucherVerification.confidenceScore >= 70 ? "✅ Verified" :
+                           voucherVerification.confidenceScore >= 50 ? "⚠️ Partially Verified" :
+                           "❌ Verification Failed"}
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            Confidence: {voucherVerification.confidenceScore}%
+                          </span>
+                        </p>
+                        {voucherVerification.referenceCode && (
+                          <p className="text-xs text-muted-foreground">Ref: {voucherVerification.referenceCode}</p>
+                        )}
+                        {voucherVerification.notes && (
+                          <p className="text-xs text-muted-foreground">{voucherVerification.notes}</p>
+                        )}
+                        {voucherVerification.flags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {voucherVerification.flags.map((flag: string, i: number) => (
+                              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">{flag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Voucher Details */}
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
