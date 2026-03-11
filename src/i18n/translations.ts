@@ -1111,6 +1111,19 @@ const translations = {
     tagRomantic: "Romantico",
     tagFamily: "Famiglia",
     tagBusiness: "Business",
+
+    // Buyer Protection
+    buyerProtection: "Protezione Acquirente",
+    buyerProtectionSub: "Il tuo acquisto è protetto",
+    protectionVerifiedSeller: "Venditore Verificato",
+    protectionVerifiedSellerYes: "Identità verificata tramite documento ufficiale",
+    protectionVerifiedSellerNo: "Venditore non ancora verificato",
+    protectionEscrow: "Escrow Sicuro",
+    protectionEscrowDesc: "Pagamento trattenuto fino alla conferma del trasferimento",
+    protectionRefund: "Garanzia di Rimborso",
+    protectionRefundDesc: "Rimborso completo se il biglietto non viene trasferito",
+    protectionPriceCap: "Prezzo Equo",
+    protectionPriceCapDesc: "Il prezzo non può superare il prezzo originale del biglietto",
   },
 } as const;
 
