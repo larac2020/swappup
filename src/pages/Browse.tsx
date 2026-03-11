@@ -134,6 +134,11 @@ export default function Browse() {
     const dateRange = getDateRange(filters);
 
     return listings.filter((listing) => {
+      // Listing type filter
+      const lt = (listing as any).listing_type || "flight_ticket";
+      if (listingTypeFilter === "flights" && lt !== "flight_ticket") return false;
+      if (listingTypeFilter === "credits" && lt !== "travel_credit") return false;
+
       // Text search (optional)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -141,7 +146,8 @@ export default function Browse() {
           listing.destination_city.toLowerCase().includes(query) ||
           listing.destination_country.toLowerCase().includes(query) ||
           listing.origin_city.toLowerCase().includes(query) ||
-          listing.airline.toLowerCase().includes(query);
+          listing.airline.toLowerCase().includes(query) ||
+          listing.title.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
