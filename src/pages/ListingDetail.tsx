@@ -392,6 +392,9 @@ export default function ListingDetail() {
             </div>
           )}
 
+          {/* Buyer Protection */}
+          <BuyerProtectionBadge sellerVerified={seller?.verification_status === "verified"} />
+
           {/* Seller Info */}
           {seller && (
             <div className="glass rounded-2xl p-4">

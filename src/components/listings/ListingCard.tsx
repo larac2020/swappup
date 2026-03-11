@@ -252,19 +252,22 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Details */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>
-                {formatDate(departureDate)}
-                {returnDate && ` - ${formatDate(returnDate)}`}
-              </span>
+          {/* Details + Buyer Protection */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>
+                  {formatDate(departureDate)}
+                  {returnDate && ` - ${formatDate(returnDate)}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
-            </div>
+            <BuyerProtectionBadge compact sellerVerified />
           </div>
 
           {/* Add to Cart CTA */}
