@@ -549,6 +549,19 @@ const translations = {
     tagRomantic: "Romantic",
     tagFamily: "Family",
     tagBusiness: "Business",
+
+    // Buyer Protection
+    buyerProtection: "Buyer Protection",
+    buyerProtectionSub: "Your purchase is protected",
+    protectionVerifiedSeller: "Verified Seller",
+    protectionVerifiedSellerYes: "Identity verified via official document",
+    protectionVerifiedSellerNo: "Seller not yet verified",
+    protectionEscrow: "Secure Escrow",
+    protectionEscrowDesc: "Payment held until ticket transfer is confirmed",
+    protectionRefund: "Refund Guarantee",
+    protectionRefundDesc: "Full refund if the ticket isn't transferred",
+    protectionPriceCap: "Fair Pricing",
+    protectionPriceCapDesc: "Price cannot exceed the original ticket price",
   },
   it: {
     // Common
@@ -1098,6 +1111,19 @@ const translations = {
     tagRomantic: "Romantico",
     tagFamily: "Famiglia",
     tagBusiness: "Business",
+
+    // Buyer Protection
+    buyerProtection: "Protezione Acquirente",
+    buyerProtectionSub: "Il tuo acquisto è protetto",
+    protectionVerifiedSeller: "Venditore Verificato",
+    protectionVerifiedSellerYes: "Identità verificata tramite documento ufficiale",
+    protectionVerifiedSellerNo: "Venditore non ancora verificato",
+    protectionEscrow: "Escrow Sicuro",
+    protectionEscrowDesc: "Pagamento trattenuto fino alla conferma del trasferimento",
+    protectionRefund: "Garanzia di Rimborso",
+    protectionRefundDesc: "Rimborso completo se il biglietto non viene trasferito",
+    protectionPriceCap: "Prezzo Equo",
+    protectionPriceCapDesc: "Il prezzo non può superare il prezzo originale del biglietto",
   },
 } as const;
 

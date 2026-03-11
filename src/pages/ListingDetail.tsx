@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 import { useState } from "react";
+import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
@@ -390,6 +391,9 @@ export default function ListingDetail() {
               <p className="text-sm text-muted-foreground">{listing.additional_notes}</p>
             </div>
           )}
+
+          {/* Buyer Protection */}
+          <BuyerProtectionBadge sellerVerified={seller?.verification_status === "verified"} />
 
           {/* Seller Info */}
           {seller && (

@@ -109,6 +109,36 @@ export type Database = {
           },
         ]
       }
+      fraud_scores: {
+        Row: {
+          flags: Json
+          id: string
+          is_flagged: boolean
+          listing_limit: number
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          flags?: Json
+          id?: string
+          is_flagged?: boolean
+          listing_limit?: number
+          score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          flags?: Json
+          id?: string
+          is_flagged?: boolean
+          listing_limit?: number
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listing_views: {
         Row: {
           id: string
@@ -367,34 +397,46 @@ export type Database = {
       }
       purchases: {
         Row: {
+          buyer_confirmed: boolean
           buyer_id: string | null
           created_at: string
+          escrow_deadline: string | null
+          escrow_status: string
           id: string
           listing_id: string | null
           quantity: number
           seller_id: string | null
+          seller_transferred: boolean
           status: string
           stripe_payment_id: string | null
           total_price: number
         }
         Insert: {
+          buyer_confirmed?: boolean
           buyer_id?: string | null
           created_at?: string
+          escrow_deadline?: string | null
+          escrow_status?: string
           id?: string
           listing_id?: string | null
           quantity: number
           seller_id?: string | null
+          seller_transferred?: boolean
           status?: string
           stripe_payment_id?: string | null
           total_price: number
         }
         Update: {
+          buyer_confirmed?: boolean
           buyer_id?: string | null
           created_at?: string
+          escrow_deadline?: string | null
+          escrow_status?: string
           id?: string
           listing_id?: string | null
           quantity?: number
           seller_id?: string | null
+          seller_transferred?: boolean
           status?: string
           stripe_payment_id?: string | null
           total_price?: number
