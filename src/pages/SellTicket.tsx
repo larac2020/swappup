@@ -974,6 +974,8 @@ export default function SellTicket() {
               className="bg-secondary/50 min-h-24"
             />
           </div>
+            </>
+          )}
 
           {/* Bump Listing */}
           <div className="space-y-4">
