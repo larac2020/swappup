@@ -321,8 +321,28 @@ export default function Browse() {
     <AppLayout>
       <div className="px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold">Find Tickets</h1>
+          <h1 className="text-2xl font-display font-bold">Find Deals</h1>
           <p className="text-muted-foreground">Discover amazing deals from other travelers</p>
+        </div>
+
+        {/* Listing Type Tabs */}
+        <div className="flex gap-2">
+          {[
+            { value: "all" as const, label: "All", icon: <Search className="w-3.5 h-3.5" /> },
+            { value: "flights" as const, label: "Flights", icon: <Ticket className="w-3.5 h-3.5" /> },
+            { value: "credits" as const, label: "Credits & Vouchers", icon: <CreditCard className="w-3.5 h-3.5" /> },
+          ].map((tab) => (
+            <Button
+              key={tab.value}
+              variant={listingTypeFilter === tab.value ? "default" : "outline"}
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setListingTypeFilter(tab.value)}
+            >
+              {tab.icon}
+              {tab.label}
+            </Button>
+          ))}
         </div>
 
         {/* AI Natural Language Search */}
