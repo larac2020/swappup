@@ -61,6 +61,7 @@ const getDefaultFormData = () => ({
   departureDate: undefined as Date | undefined,
   returnDate: undefined as Date | undefined,
   airline: "",
+  fareType: "",
   flightNumber: "",
   price: "",
   originalPrice: "",
