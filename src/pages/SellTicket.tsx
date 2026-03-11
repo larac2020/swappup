@@ -402,9 +402,17 @@ export default function SellTicket() {
       toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
       return;
     }
-    if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
-      toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
-      return;
+    const isVoucher = formData.listingType === "travel_credit";
+    if (isVoucher) {
+      if (!formData.airline || !formData.creditType || !formData.price) {
+        toast({ title: "Missing fields", description: "Please fill in airline, credit type, and selling price.", variant: "destructive" });
+        return;
+      }
+    } else {
+      if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
+        toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+        return;
+      }
     }
     if (priceError) {
       toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
