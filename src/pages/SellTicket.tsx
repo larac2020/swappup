@@ -112,6 +112,8 @@ export default function SellTicket() {
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVerifyingVoucher, setIsVerifyingVoucher] = useState(false);
+  const [voucherVerification, setVoucherVerification] = useState<any>(null);
   const [editLoaded, setEditLoaded] = useState(false);
 
   // Shared inclusions (used when sameInclusions is true)
