@@ -462,7 +462,7 @@ export default function SellTicket() {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold">{editId ? "Edit Listing" : "Sell Your Ticket"}</h1>
+            <h1 className="font-semibold">{editId ? "Edit Listing" : "Create Listing"}</h1>
           </div>
         </div>
 
