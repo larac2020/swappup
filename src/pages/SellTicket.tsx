@@ -655,7 +655,7 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Airline</Label>
-                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v })}>
+                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v, fareType: "" })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
@@ -663,8 +663,29 @@ export default function SellTicket() {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Fare Type</Label>
+                  <Select value={formData.fareType} onValueChange={(v) => setFormData({ ...formData, fareType: v })} disabled={!formData.airline}>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select fare" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {fareTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Transferability Check */}
+              {formData.airline && (
+                <TransferabilityCheck airline={formData.airline} fareType={formData.fareType || "standard"} />
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Flight Number</Label>
                   <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Number of Tickets</Label>
+                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
               </div>
 
