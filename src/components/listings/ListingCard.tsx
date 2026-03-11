@@ -228,58 +228,92 @@ export function ListingCard({
 
         {/* Content */}
         <div className="p-4 space-y-3">
-          {/* Route with airline on the right */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="text-center min-w-0">
-                {originCode && (
-                  <span className="text-xs font-bold text-primary">{originCode}</span>
-                )}
-                <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
+          {isVoucher ? (
+            <>
+              {/* Voucher info */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CreditCard className="w-4 h-4 text-primary flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground text-sm truncate">{title}</p>
+                    <p className="text-xs text-muted-foreground">{creditType?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
               </div>
-              <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
-              <div className="text-center min-w-0">
-                {destCode && (
-                  <span className="text-xs font-bold text-primary">{destCode}</span>
-                )}
-                <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
+              {creditValue && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
+                    {creditCurrency === "GBP" ? "£" : creditCurrency === "USD" ? "$" : "€"}{creditValue} credit
+                  </Badge>
+                  {creditExpiryDate && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Exp: {formatDate(creditExpiryDate)}
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center justify-end">
+                <BuyerProtectionBadge compact sellerVerified />
               </div>
-            </div>
-            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
-          </div>
+            </>
+          ) : (
+            <>
+              {/* Route with airline on the right */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="text-center min-w-0">
+                    {originCode && (
+                      <span className="text-xs font-bold text-primary">{originCode}</span>
+                    )}
+                    <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
+                  </div>
+                  <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
+                  <div className="text-center min-w-0">
+                    {destCode && (
+                      <span className="text-xs font-bold text-primary">{destCode}</span>
+                    )}
+                    <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
+              </div>
 
-          {/* Tags row */}
-          {tags.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap">
-              {tags.slice(0, 3).map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className={cn("text-xs border", tagColors[tag] || "bg-secondary")}
-                >
-                  {formatTag(tag)}
-                </Badge>
-              ))}
-            </div>
+              {/* Tags row */}
+              {tags.length > 0 && (
+                <div className="flex gap-1.5 flex-wrap">
+                  {tags.slice(0, 3).map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className={cn("text-xs border", tagColors[tag] || "bg-secondary")}
+                    >
+                      {formatTag(tag)}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Details + Buyer Protection */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>
+                      {formatDate(departureDate)}
+                      {returnDate && ` - ${formatDate(returnDate)}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
+                  </div>
+                </div>
+                <BuyerProtectionBadge compact sellerVerified />
+              </div>
+            </>
           )}
-
-          {/* Details + Buyer Protection */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>
-                  {formatDate(departureDate)}
-                  {returnDate && ` - ${formatDate(returnDate)}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" />
-                <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
-              </div>
-            </div>
-            <BuyerProtectionBadge compact sellerVerified />
-          </div>
 
           {/* Add to Cart CTA */}
           <Button
