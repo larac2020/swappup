@@ -201,15 +201,15 @@ export default function Home() {
   const { data: travelCredits = [], isLoading: loadingCredits } = useQuery({
     queryKey: ["travelCredits"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from("listings")
         .select("*")
-        .eq("is_active", true)
-        .eq("listing_type" as any, "travel_credit")
+        .eq("is_active", true) as any)
+        .eq("listing_type", "travel_credit")
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
