@@ -71,11 +71,12 @@ export function ListingCard({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
+  const isVoucher = listingType === "travel_credit";
 
-  const originCode = getPrimaryAirportCode(originCity);
-  const destCode = getPrimaryAirportCode(destinationCity);
-  const originAirportName = getPrimaryAirportName(originCity);
-  const destAirportName = getPrimaryAirportName(destinationCity);
+  const originCode = !isVoucher ? getPrimaryAirportCode(originCity) : "";
+  const destCode = !isVoucher ? getPrimaryAirportCode(destinationCity) : "";
+  const originAirportName = !isVoucher ? getPrimaryAirportName(originCity) : "";
+  const destAirportName = !isVoucher ? getPrimaryAirportName(destinationCity) : "";
 
   // Get profile
   const { data: profile } = useQuery({
