@@ -140,6 +140,7 @@ export default function SellTicket() {
       setIsReturn(hasReturn);
 
       setFormData({
+        listingType: (editListing as any).listing_type || "flight_ticket",
         originCountry: editListing.origin_country,
         originCity: editListing.origin_city,
         originAirport: "",
@@ -158,6 +159,10 @@ export default function SellTicket() {
         additionalNotes: editListing.additional_notes || "",
         selectedTags: (editListing.tags as string[]) || [],
         bumpListing: false,
+        creditType: (editListing as any).credit_type || "",
+        creditValue: (editListing as any).credit_value ? String(Number((editListing as any).credit_value)) : "",
+        creditCurrency: (editListing as any).credit_currency || "EUR",
+        creditExpiryDate: (editListing as any).credit_expiry_date ? new Date((editListing as any).credit_expiry_date) : undefined,
       });
 
       const shared: TicketInclusions = {
