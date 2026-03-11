@@ -307,28 +307,47 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const listingData = {
-        title: `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`,
-        origin_city: formData.originCity,
-        origin_country: formData.originCountry,
-        destination_city: formData.destinationCity,
-        destination_country: formData.destinationCountry,
-        departure_date: formData.departureDate!.toISOString().split("T")[0],
-        return_date: isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null,
+      const isVoucher = formData.listingType === "travel_credit";
+
+      const listingData: Record<string, any> = {
+        listing_type: formData.listingType,
         airline: formData.airline,
-        flight_number: formData.flightNumber || null,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        ticket_count: ticketCount,
-        luggage_included: sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false,
-        carry_on_included: sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true,
-        meal_included: sameInclusions ? sharedInclusions.mealIncluded : perTicketInclusions[0]?.mealIncluded ?? false,
-        speedy_boarding: sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false,
-        stopovers: parseInt(formData.stopovers),
         additional_notes: formData.additionalNotes || null,
         tags: formData.selectedTags as any,
-        per_ticket_inclusions: perTicketData as any,
       };
+
+      if (isVoucher) {
+        listingData.title = `${formData.airline} ${creditTypes.find(c => c.value === formData.creditType)?.label || "Credit"}`;
+        listingData.credit_type = formData.creditType;
+        listingData.credit_value = formData.creditValue ? parseFloat(formData.creditValue) : null;
+        listingData.credit_currency = formData.creditCurrency;
+        listingData.credit_expiry_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : null;
+        // Set required flight fields to placeholder values for vouchers
+        listingData.origin_city = "N/A";
+        listingData.origin_country = "N/A";
+        listingData.destination_city = "N/A";
+        listingData.destination_country = "N/A";
+        listingData.departure_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+        listingData.ticket_count = 1;
+      } else {
+        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
+        listingData.origin_city = formData.originCity;
+        listingData.origin_country = formData.originCountry;
+        listingData.destination_city = formData.destinationCity;
+        listingData.destination_country = formData.destinationCountry;
+        listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
+        listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
+        listingData.flight_number = formData.flightNumber || null;
+        listingData.ticket_count = ticketCount;
+        listingData.luggage_included = sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false;
+        listingData.carry_on_included = sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true;
+        listingData.meal_included = sameInclusions ? sharedInclusions.mealIncluded : perTicketInclusions[0]?.mealIncluded ?? false;
+        listingData.speedy_boarding = sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false;
+        listingData.stopovers = parseInt(formData.stopovers);
+        listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
+      }
 
       if (editId) {
         const { error } = await supabase
