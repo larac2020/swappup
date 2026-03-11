@@ -24,6 +24,11 @@ interface ListingCardProps {
   ticketCount: number;
   imageUrl?: string;
   tags?: string[];
+  listingType?: string;
+  creditType?: string;
+  creditValue?: number;
+  creditCurrency?: string;
+  creditExpiryDate?: string;
 }
 
 const tagColors: Record<string, string> = {
