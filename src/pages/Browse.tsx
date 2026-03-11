@@ -17,11 +17,15 @@ type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 export default function Browse() {
   const [searchParams] = useSearchParams();
   const initialDestination = searchParams.get("destination") || "";
+  const initialType = searchParams.get("type") || "all";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [aiSearchQuery, setAiSearchQuery] = useState("");
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
+  const [listingTypeFilter, setListingTypeFilter] = useState<"all" | "flights" | "credits">(
+    initialType === "credits" ? "credits" : "all"
+  );
   const [aiAppliedFilters, setAiAppliedFilters] = useState<FilterState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
