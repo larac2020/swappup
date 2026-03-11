@@ -60,6 +60,11 @@ export function ListingCard({
   ticketCount,
   imageUrl,
   tags = [],
+  listingType = "flight_ticket",
+  creditType,
+  creditValue,
+  creditCurrency = "EUR",
+  creditExpiryDate,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
