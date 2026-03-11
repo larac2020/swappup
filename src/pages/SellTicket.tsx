@@ -332,7 +332,16 @@ export default function SellTicket() {
       navigate(editId ? "/listings" : "/home");
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      const msg = error.message || "";
+      if (msg.includes("DUPLICATE_LISTING")) {
+        toast({ title: "Duplicate listing", description: "You already have an active listing with the same flight number and departure date.", variant: "destructive" });
+      } else if (msg.includes("RATE_LIMIT")) {
+        toast({ title: "Listing limit reached", description: "You've reached your maximum number of active listings. Deactivate some before creating new ones.", variant: "destructive" });
+      } else if (msg.includes("PRICE_CAP")) {
+        toast({ title: "Price too high", description: "Selling price cannot exceed the original ticket price.", variant: "destructive" });
+      } else {
+        toast({ title: "Error", description: msg, variant: "destructive" });
+      }
     },
   });
 
