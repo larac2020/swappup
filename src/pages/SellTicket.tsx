@@ -16,8 +16,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
-  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil
+  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil, ShieldCheck
 } from "lucide-react";
+import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -60,6 +61,7 @@ const getDefaultFormData = () => ({
   departureDate: undefined as Date | undefined,
   returnDate: undefined as Date | undefined,
   airline: "",
+  fareType: "",
   flightNumber: "",
   price: "",
   originalPrice: "",
@@ -141,6 +143,7 @@ export default function SellTicket() {
         departureDate: new Date(editListing.departure_date),
         returnDate: hasReturn ? new Date(editListing.return_date!) : undefined,
         airline: editListing.airline,
+        fareType: "",
         flightNumber: editListing.flight_number || "",
         price: String(Number(editListing.price)),
         originalPrice: editListing.original_price ? String(Number(editListing.original_price)) : "",
@@ -653,7 +656,7 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Airline</Label>
-                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v })}>
+                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v, fareType: "" })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
@@ -661,8 +664,29 @@ export default function SellTicket() {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Fare Type</Label>
+                  <Select value={formData.fareType} onValueChange={(v) => setFormData({ ...formData, fareType: v })} disabled={!formData.airline}>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select fare" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {fareTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Transferability Check */}
+              {formData.airline && (
+                <TransferabilityCheck airline={formData.airline} fareType={formData.fareType || "standard"} />
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Flight Number</Label>
                   <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Number of Tickets</Label>
+                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
               </div>
 
