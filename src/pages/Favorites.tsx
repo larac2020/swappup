@@ -4,19 +4,17 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, Loader2 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function Favorites() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user!.id)
-        .single();
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
       if (error) throw error;
       return data;
     },
@@ -26,11 +24,7 @@ export default function Favorites() {
   const { data: favorites = [], isLoading } = useQuery({
     queryKey: ["favorites", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("favorites")
-        .select("*, listings(*)")
-        .eq("user_id", profile!.id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("favorites").select("*, listings(*)").eq("user_id", profile!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -42,7 +36,7 @@ export default function Favorites() {
       <div className="px-4 pt-6 pb-4 space-y-6">
         <div className="flex items-center gap-3">
           <Heart className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-display font-bold">Favorites</h1>
+          <h1 className="text-2xl font-display font-bold">{t("favoritesTitle")}</h1>
         </div>
 
         {isLoading ? (
@@ -77,8 +71,8 @@ export default function Favorites() {
         ) : (
           <div className="text-center py-12 glass rounded-2xl">
             <Heart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">No favorites yet</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Save listings you love from the detail page</p>
+            <p className="text-muted-foreground">{t("favoritesEmpty")}</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">{t("favoritesEmptyDesc")}</p>
           </div>
         )}
       </div>

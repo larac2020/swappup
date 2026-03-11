@@ -6,36 +6,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, Trash2, Plane, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function Cart() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
-  // Fetch user profile
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user!.id)
-        .single();
+      const { data, error } = await supabase.from("profiles").select("id").eq("user_id", user!.id).single();
       if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
   });
 
-  // Fetch cart items with listing details
   const { data: cartItems = [], isLoading } = useQuery({
     queryKey: ["cartItems", myProfile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cart_items")
-        .select("*, listings(*)")
-        .eq("user_id", myProfile!.id);
+      const { data, error } = await supabase.from("cart_items").select("*, listings(*)").eq("user_id", myProfile!.id);
       if (error) throw error;
       return data;
     },
@@ -49,7 +42,7 @@ export default function Cart() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cartItems"] });
-      toast({ title: "Removed from cart" });
+      toast({ title: t("cartRemoved") });
     },
   });
 
@@ -77,12 +70,10 @@ export default function Cart() {
           <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mb-6">
             <ShoppingCart className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
-          <p className="text-muted-foreground mb-6 max-w-xs">
-            Browse our listings to find amazing deals on flight tickets.
-          </p>
+          <h2 className="text-xl font-semibold mb-2">{t("cartEmpty")}</h2>
+          <p className="text-muted-foreground mb-6 max-w-xs">{t("cartEmptyDesc")}</p>
           <Button variant="gold" onClick={() => navigate("/browse")}>
-            Browse Tickets
+            {t("cartBrowseTickets")}
           </Button>
         </div>
       </AppLayout>
@@ -93,8 +84,8 @@ export default function Cart() {
     <AppLayout>
       <div className="px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold">Your Cart</h1>
-          <p className="text-muted-foreground">{cartItems.length} {cartItems.length === 1 ? "item" : "items"}</p>
+          <h1 className="text-2xl font-display font-bold">{t("cartTitle")}</h1>
+          <p className="text-muted-foreground">{cartItems.length} {cartItems.length === 1 ? t("cartItem") : t("cartItems_plural")}</p>
         </div>
 
         <div className="space-y-4">
@@ -119,13 +110,7 @@ export default function Cart() {
                         </div>
                         <p className="text-sm text-muted-foreground">{listing.airline}</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        onClick={() => removeFromCartMutation.mutate(item.id)}
-                        disabled={removeFromCartMutation.isPending}
-                      >
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeFromCartMutation.mutate(item.id)} disabled={removeFromCartMutation.isPending}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -137,7 +122,7 @@ export default function Cart() {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <span className="text-sm text-muted-foreground">Qty: {item.quantity}</span>
+                  <span className="text-sm text-muted-foreground">{t("cartQty")}: {item.quantity}</span>
                   <span className="text-lg font-bold text-primary">€{Number(listing.price)}</span>
                 </div>
               </div>
@@ -149,27 +134,25 @@ export default function Cart() {
         <div className="glass rounded-xl p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium mb-1">Name Change Fees Apply</p>
-            <p className="text-muted-foreground">
-              Airlines may charge additional fees to change the passenger name on tickets. Please check carrier websites before purchasing.
-            </p>
+            <p className="font-medium mb-1">{t("cartNameChangeFees")}</p>
+            <p className="text-muted-foreground">{t("cartNameChangeDesc")}</p>
           </div>
         </div>
 
         {/* Order Summary */}
         <div className="glass rounded-2xl p-4 space-y-3">
-          <h3 className="font-semibold">Order Summary</h3>
+          <h3 className="font-semibold">{t("cartOrderSummary")}</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">{t("cartSubtotal")}</span>
               <span>€{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Service Fee</span>
+              <span className="text-muted-foreground">{t("cartServiceFee")}</span>
               <span>€{serviceFee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-border/50 text-base font-semibold">
-              <span>Total</span>
+              <span>{t("cartTotal")}</span>
               <span className="text-primary">€{total.toFixed(2)}</span>
             </div>
           </div>
@@ -177,7 +160,7 @@ export default function Cart() {
 
         <Button variant="gold" size="xl" className="w-full">
           <CreditCard className="w-5 h-5 mr-2" />
-          Proceed to Checkout
+          {t("cartCheckout")}
         </Button>
       </div>
     </AppLayout>
