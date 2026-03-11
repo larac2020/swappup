@@ -210,6 +210,11 @@ export type Database = {
           ticket_count: number
           title: string
           updated_at: string
+          voucher_confidence_score: number | null
+          voucher_reference_code: string | null
+          voucher_restrictions: string | null
+          voucher_verification_flags: Json | null
+          voucher_verified: boolean | null
         }
         Insert: {
           additional_notes?: string | null
@@ -245,6 +250,11 @@ export type Database = {
           ticket_count?: number
           title: string
           updated_at?: string
+          voucher_confidence_score?: number | null
+          voucher_reference_code?: string | null
+          voucher_restrictions?: string | null
+          voucher_verification_flags?: Json | null
+          voucher_verified?: boolean | null
         }
         Update: {
           additional_notes?: string | null
@@ -280,6 +290,11 @@ export type Database = {
           ticket_count?: number
           title?: string
           updated_at?: string
+          voucher_confidence_score?: number | null
+          voucher_reference_code?: string | null
+          voucher_restrictions?: string | null
+          voucher_verification_flags?: Json | null
+          voucher_verified?: boolean | null
         }
         Relationships: [
           {

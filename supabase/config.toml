@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.check-fraud]
 verify_jwt = false
+
+[functions.verify-voucher]
+verify_jwt = false
