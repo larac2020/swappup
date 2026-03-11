@@ -240,6 +240,53 @@ export default function SellTicket() {
     setSharedInclusions({ ...defaultInclusions });
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
+    setVoucherVerification(null);
+  };
+
+  const handleVoucherUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsVerifyingVoucher(true);
+    setVoucherVerification(null);
+    try {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      const { data, error } = await supabase.functions.invoke("verify-voucher", {
+        body: { image: base64, fileName: file.name },
+      });
+
+      if (error) throw error;
+
+      if (data?.verification) {
+        const v = data.verification;
+        setVoucherVerification(v);
+
+        // Auto-fill form fields from verified data
+        if (v.isValid && v.confidenceScore >= 50) {
+          setFormData((prev) => ({
+            ...prev,
+            airline: v.airline || prev.airline,
+            creditType: v.creditType || prev.creditType,
+            creditValue: v.creditValue ? String(v.creditValue) : prev.creditValue,
+            creditCurrency: v.currency || prev.creditCurrency,
+            creditExpiryDate: v.expiryDate ? new Date(v.expiryDate) : prev.creditExpiryDate,
+          }));
+          toast({ title: "Voucher verified! ✅", description: `Confidence: ${v.confidenceScore}%. Details auto-filled.` });
+        } else {
+          toast({ title: "Verification failed", description: v.flags?.join(", ") || "This document could not be verified.", variant: "destructive" });
+        }
+      }
+    } catch (err: any) {
+      console.error("Voucher verify error:", err);
+      toast({ title: "Verification failed", description: "Could not verify the voucher. Please try again.", variant: "destructive" });
+    } finally {
+      setIsVerifyingVoucher(false);
+      e.target.value = "";
+    }
   };
 
   const handleTicketUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
