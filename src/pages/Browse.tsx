@@ -209,7 +209,7 @@ export default function Browse() {
 
       return true;
     });
-  }, [listings, searchQuery, filters]);
+  }, [listings, searchQuery, filters, listingTypeFilter]);
 
   const sortedListings = useMemo(() => {
     const sorted = [...filteredListings];
