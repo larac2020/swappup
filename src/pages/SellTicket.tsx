@@ -52,6 +52,7 @@ const defaultInclusions: TicketInclusions = {
 };
 
 const getDefaultFormData = () => ({
+  listingType: "flight_ticket" as "flight_ticket" | "travel_credit",
   originCountry: "",
   originCity: "",
   originAirport: "",
@@ -70,6 +71,11 @@ const getDefaultFormData = () => ({
   additionalNotes: "",
   selectedTags: [] as string[],
   bumpListing: false,
+  // Voucher fields
+  creditType: "",
+  creditValue: "",
+  creditCurrency: "EUR",
+  creditExpiryDate: undefined as Date | undefined,
 });
 
 export default function SellTicket() {
