@@ -549,6 +549,19 @@ const translations = {
     tagRomantic: "Romantic",
     tagFamily: "Family",
     tagBusiness: "Business",
+
+    // Buyer Protection
+    buyerProtection: "Buyer Protection",
+    buyerProtectionSub: "Your purchase is protected",
+    protectionVerifiedSeller: "Verified Seller",
+    protectionVerifiedSellerYes: "Identity verified via official document",
+    protectionVerifiedSellerNo: "Seller not yet verified",
+    protectionEscrow: "Secure Escrow",
+    protectionEscrowDesc: "Payment held until ticket transfer is confirmed",
+    protectionRefund: "Refund Guarantee",
+    protectionRefundDesc: "Full refund if the ticket isn't transferred",
+    protectionPriceCap: "Fair Pricing",
+    protectionPriceCapDesc: "Price cannot exceed the original ticket price",
   },
   it: {
     // Common
