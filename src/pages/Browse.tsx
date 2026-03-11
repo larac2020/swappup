@@ -393,6 +393,11 @@ export default function Browse() {
                   ticketCount={listing.ticket_count}
                   imageUrl={listing.destination_image_url ?? undefined}
                   tags={listing.tags as string[] ?? []}
+                  listingType={(listing as any).listing_type ?? "flight_ticket"}
+                  creditType={(listing as any).credit_type}
+                  creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
+                  creditCurrency={(listing as any).credit_currency}
+                  creditExpiryDate={(listing as any).credit_expiry_date}
                 />
               ))}
             </div>
@@ -426,6 +431,11 @@ export default function Browse() {
                           ticketCount={listing.ticket_count}
                           imageUrl={listing.destination_image_url ?? undefined}
                           tags={listing.tags as string[] ?? []}
+                          listingType={(listing as any).listing_type ?? "flight_ticket"}
+                          creditType={(listing as any).credit_type}
+                          creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
+                          creditCurrency={(listing as any).credit_currency}
+                          creditExpiryDate={(listing as any).credit_expiry_date}
                         />
                       ))}
                     </div>

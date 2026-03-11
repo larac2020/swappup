@@ -251,6 +251,9 @@ export default function Home() {
                 originalPrice={listing.original_price ? Number(listing.original_price) : undefined}
                 airline={listing.airline}
                 imageUrl={listing.destination_image_url ?? undefined}
+                listingType={(listing as any).listing_type ?? "flight_ticket"}
+                creditType={(listing as any).credit_type}
+                title={listing.title}
               />
             ))}
           </div>

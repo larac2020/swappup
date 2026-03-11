@@ -182,6 +182,10 @@ export type Database = {
           bumped_until: string | null
           carry_on_included: boolean | null
           created_at: string
+          credit_currency: string | null
+          credit_expiry_date: string | null
+          credit_type: string | null
+          credit_value: number | null
           departure_date: string
           destination_city: string
           destination_country: string
@@ -189,6 +193,7 @@ export type Database = {
           flight_number: string | null
           id: string
           is_active: boolean | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
           luggage_included: boolean | null
           meal_included: boolean | null
           name_change_fee: number | null
@@ -212,6 +217,10 @@ export type Database = {
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
+          credit_currency?: string | null
+          credit_expiry_date?: string | null
+          credit_type?: string | null
+          credit_value?: number | null
           departure_date: string
           destination_city: string
           destination_country: string
@@ -219,6 +228,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
@@ -242,6 +252,10 @@ export type Database = {
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
+          credit_currency?: string | null
+          credit_expiry_date?: string | null
+          credit_type?: string | null
+          credit_value?: number | null
           departure_date?: string
           destination_city?: string
           destination_country?: string
@@ -249,6 +263,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
@@ -514,6 +529,7 @@ export type Database = {
         | "romantic"
         | "family"
         | "business"
+      listing_type: "flight_ticket" | "travel_credit"
       verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
@@ -652,6 +668,7 @@ export const Constants = {
         "family",
         "business",
       ],
+      listing_type: ["flight_ticket", "travel_credit"],
       verification_status: ["pending", "verified", "rejected"],
     },
   },
