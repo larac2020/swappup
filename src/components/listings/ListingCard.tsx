@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 
 interface ListingCardProps {
   id: string;
