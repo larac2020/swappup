@@ -380,6 +380,14 @@ export default function SellTicket() {
         listingData.destination_country = "N/A";
         listingData.departure_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
         listingData.ticket_count = 1;
+        // Add voucher verification data
+        if (voucherVerification) {
+          listingData.voucher_verified = voucherVerification.isValid && voucherVerification.confidenceScore >= 70;
+          listingData.voucher_confidence_score = voucherVerification.confidenceScore;
+          listingData.voucher_reference_code = voucherVerification.referenceCode || null;
+          listingData.voucher_verification_flags = voucherVerification.flags || [];
+          listingData.voucher_restrictions = voucherVerification.restrictions || null;
+        }
       } else {
         listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
         listingData.origin_city = formData.originCity;
