@@ -197,6 +197,22 @@ export default function Home() {
     enabled: !!profile?.favorite_categories && profile.favorite_categories.length > 0,
   });
 
+  // Travel Credits / Vouchers
+  const { data: travelCredits = [], isLoading: loadingCredits } = useQuery({
+    queryKey: ["travelCredits"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_active", true)
+        .eq("listing_type" as any, "travel_credit")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Latest deals
   const { data: latestDeals = [], isLoading: loadingLatest } = useQuery({
     queryKey: ["recommendations"],
