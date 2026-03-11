@@ -352,7 +352,7 @@ export default function SellTicket() {
       if (editId) {
         const { error } = await supabase
           .from("listings")
-          .update(listingData)
+          .update(listingData as any)
           .eq("id", editId);
         if (error) throw error;
       } else {
@@ -360,7 +360,7 @@ export default function SellTicket() {
           ...listingData,
           seller_id: profile!.id,
           bumped_until: bumpedUntil,
-        });
+        } as any);
         if (error) throw error;
       }
     },
