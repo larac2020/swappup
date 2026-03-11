@@ -3,9 +3,11 @@ import { ChevronLeft, Bell } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function NotificationSettings() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [pushEnabled, setPushEnabled] = useState(false);
   const [priceAlerts, setPriceAlerts] = useState(true);
   const [saleUpdates, setSaleUpdates] = useState(true);
@@ -30,42 +32,28 @@ export default function NotificationSettings() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/account")} className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+        <button onClick={() => navigate("/account")} className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"><ChevronLeft className="w-5 h-5" /></button>
         <div>
-          <h1 className="text-xl font-display font-bold">Notifications</h1>
-          <p className="text-sm text-muted-foreground">Manage your alerts</p>
+          <h1 className="text-xl font-display font-bold">{t("notificationsTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("notificationsDesc")}</p>
         </div>
       </div>
 
       <div className="glass rounded-2xl divide-y divide-border/50">
         <div className="flex items-center justify-between p-4">
-          <div>
-            <Label className="font-medium">Push Notifications</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">Browser push notifications</p>
-          </div>
+          <div><Label className="font-medium">{t("notificationsPush")}</Label><p className="text-xs text-muted-foreground mt-0.5">{t("notificationsPushDesc")}</p></div>
           <Switch checked={pushEnabled} onCheckedChange={togglePush} />
         </div>
         <div className="flex items-center justify-between p-4">
-          <div>
-            <Label className="font-medium">Price Drop Alerts</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">When a ticket you watch drops in price</p>
-          </div>
+          <div><Label className="font-medium">{t("notificationsPriceAlerts")}</Label><p className="text-xs text-muted-foreground mt-0.5">{t("notificationsPriceAlertsDesc")}</p></div>
           <Switch checked={priceAlerts} onCheckedChange={setPriceAlerts} />
         </div>
         <div className="flex items-center justify-between p-4">
-          <div>
-            <Label className="font-medium">Sale Updates</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">When someone buys your tickets</p>
-          </div>
+          <div><Label className="font-medium">{t("notificationsSaleUpdates")}</Label><p className="text-xs text-muted-foreground mt-0.5">{t("notificationsSaleUpdatesDesc")}</p></div>
           <Switch checked={saleUpdates} onCheckedChange={setSaleUpdates} />
         </div>
         <div className="flex items-center justify-between p-4">
-          <div>
-            <Label className="font-medium">Security Alerts</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">Login activity and account changes</p>
-          </div>
+          <div><Label className="font-medium">{t("notificationsSecurityAlerts")}</Label><p className="text-xs text-muted-foreground mt-0.5">{t("notificationsSecurityAlertsDesc")}</p></div>
           <Switch checked={securityAlerts} onCheckedChange={setSecurityAlerts} />
         </div>
       </div>
