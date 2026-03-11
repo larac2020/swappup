@@ -371,6 +371,16 @@ export default function Home() {
           loadingFavTags,
           "/browse"
         )}
+
+        {/* Travel Credits / Vouchers */}
+        {renderSection(
+          "Travel Credits",
+          <CreditCard className="w-4 h-4 text-primary" />,
+          travelCredits,
+          loadingCredits,
+          "/browse?type=credits"
+        )}
+
         {/* Under €100 */}
         {renderSection(
           t("homeUnder100"),
