@@ -143,6 +143,7 @@ export default function SellTicket() {
         departureDate: new Date(editListing.departure_date),
         returnDate: hasReturn ? new Date(editListing.return_date!) : undefined,
         airline: editListing.airline,
+        fareType: "",
         flightNumber: editListing.flight_number || "",
         price: String(Number(editListing.price)),
         originalPrice: editListing.original_price ? String(Number(editListing.original_price)) : "",
