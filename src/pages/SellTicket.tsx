@@ -16,7 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
-  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil, ShieldCheck
+  Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
+  ShieldCheck, Ticket, CreditCard
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,12 @@ import {
   getCountries, getCitiesByCountry, getAirportCodesForCity,
   airlines, CityData
 } from "@/data/flightData";
+
+const creditTypes = [
+  { value: "flight_credit", label: "Flight Credit" },
+  { value: "airline_voucher", label: "Airline Voucher" },
+  { value: "travel_funds", label: "Travel Funds" },
+];
 
 const tripTags = [
   { value: "city_trip", label: "City Trip" },
