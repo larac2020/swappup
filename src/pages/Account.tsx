@@ -6,10 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   User, CreditCard, Shield, HelpCircle, LogOut, ChevronRight,
-  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle, Sparkles
+  MapPin, FileText, Bell, Star, Heart, ShoppingBag, AlertCircle, Sparkles, Globe
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { Locale } from "@/i18n/translations";
 
 // Sub-page components
 import PersonalInfo from "@/components/account/PersonalInfo";
@@ -36,16 +38,11 @@ const sectionComponents: Record<string, React.ComponentType> = {
   privacy: PrivacyData,
 };
 
-const supportItems = [
-  { icon: HelpCircle, label: "Help Center", path: "/support" },
-  { icon: FileText, label: "Terms & Conditions", path: "/terms" },
-  { icon: Shield, label: "Privacy Policy", path: "/privacy" },
-];
-
 export default function Account() {
   const navigate = useNavigate();
   const { section } = useParams<{ section?: string }>();
   const { user, signOut } = useAuth();
+  const { t, locale, setLocale } = useLanguage();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -70,16 +67,22 @@ export default function Account() {
   };
 
   const menuItems = [
-    { icon: User, label: "Personal Information", path: "profile", description: "Name, email, phone", required: true, complete: sectionComplete.profile },
-    { icon: MapPin, label: "Address", path: "address", description: "Billing address", required: true, complete: sectionComplete.address },
-    { icon: CreditCard, label: "Payment Methods", path: "payment", description: "Cards and bank accounts", required: true, complete: sectionComplete.payment },
-    { icon: Shield, label: "ID Verification", path: "verification", description: "Upload your ID documents", required: true, complete: sectionComplete.verification },
-    { icon: Sparkles, label: "Personalization", path: "preferences", description: "Departure city, categories & more", required: false, complete: true },
-    { icon: Bell, label: "Notifications", path: "notifications", description: "Email and push settings", required: false, complete: true },
-    { icon: ShoppingBag, label: "Purchases", path: "purchases", description: "Your orders and trips", required: false, complete: true },
-    { icon: Heart, label: "Favorites", path: "favorites", description: "Saved listings", required: false, complete: true },
-    { icon: FileText, label: "Transaction History", path: "transactions", description: "Past purchases and sales", required: false, complete: true },
-    { icon: Shield, label: "Privacy & Data", path: "privacy", description: "Data usage, consent & deletion", required: false, complete: true },
+    { icon: User, label: t("accountPersonalInfo"), path: "profile", description: t("accountPersonalInfoDesc"), required: true, complete: sectionComplete.profile },
+    { icon: MapPin, label: t("accountAddress"), path: "address", description: t("accountAddressDesc"), required: true, complete: sectionComplete.address },
+    { icon: CreditCard, label: t("accountPayment"), path: "payment", description: t("accountPaymentDesc"), required: true, complete: sectionComplete.payment },
+    { icon: Shield, label: t("accountIdVerification"), path: "verification", description: t("accountIdVerificationDesc"), required: true, complete: sectionComplete.verification },
+    { icon: Sparkles, label: t("accountPersonalization"), path: "preferences", description: t("accountPersonalizationDesc"), required: false, complete: true },
+    { icon: Bell, label: t("accountNotifications"), path: "notifications", description: t("accountNotificationsDesc"), required: false, complete: true },
+    { icon: ShoppingBag, label: t("accountPurchases"), path: "purchases", description: t("accountPurchasesDesc"), required: false, complete: true },
+    { icon: Heart, label: t("accountFavorites"), path: "favorites", description: t("accountFavoritesDesc"), required: false, complete: true },
+    { icon: FileText, label: t("accountTransactions"), path: "transactions", description: t("accountTransactionsDesc"), required: false, complete: true },
+    { icon: Shield, label: t("accountPrivacy"), path: "privacy", description: t("accountPrivacyDesc"), required: false, complete: true },
+  ];
+
+  const supportItems = [
+    { icon: HelpCircle, label: t("accountHelpCenter"), path: "/support" },
+    { icon: FileText, label: t("accountTerms"), path: "/terms" },
+    { icon: Shield, label: t("accountPrivacyPolicy"), path: "/privacy" },
   ];
 
   // If a section is selected, render that sub-page
@@ -99,10 +102,10 @@ export default function Account() {
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
   const verificationLabel = profile?.verification_status === "verified"
-    ? "Verified"
+    ? t("accountVerified")
     : profile?.verification_status === "rejected"
-    ? "Rejected"
-    : "Pending Verification";
+    ? t("accountRejected")
+    : t("accountPending");
 
   const verificationStyle = profile?.verification_status === "verified"
     ? "bg-success/10 text-success border-success/30"
@@ -114,6 +117,11 @@ export default function Account() {
     await signOut();
     navigate("/");
   };
+
+  const languageOptions: { value: Locale; label: string; flag: string }[] = [
+    { value: "en", label: "English", flag: "🇬🇧" },
+    { value: "it", label: "Italiano", flag: "🇮🇹" },
+  ];
 
   return (
     <AppLayout>
@@ -139,25 +147,25 @@ export default function Account() {
           <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
             <div className="text-center">
               <p className="text-lg font-bold text-primary">{profile?.transactions_bought ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Bought</p>
+              <p className="text-xs text-muted-foreground">{t("accountBought")}</p>
             </div>
             <div className="text-center border-x border-border/50">
               <p className="text-lg font-bold text-primary">{profile?.transactions_sold ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Sold</p>
+              <p className="text-xs text-muted-foreground">{t("accountSold")}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Star className="w-4 h-4 text-primary fill-primary" />
                 <span className="text-lg font-bold">-</span>
               </div>
-              <p className="text-xs text-muted-foreground">Rating</p>
+              <p className="text-xs text-muted-foreground">{t("accountRating")}</p>
             </div>
           </div>
         </div>
 
         {/* Account Settings */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-1">Account Settings</h3>
+          <h3 className="text-sm font-medium text-muted-foreground px-1">{t("accountSettings")}</h3>
           <div className="glass rounded-2xl divide-y divide-border/50">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -181,7 +189,7 @@ export default function Account() {
                       <span className="font-medium">{item.label}</span>
                       {showWarning && (
                         <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/30">
-                          Incomplete
+                          {t("incomplete")}
                         </Badge>
                       )}
                     </div>
@@ -196,7 +204,7 @@ export default function Account() {
 
         {/* Support */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-1">Support</h3>
+          <h3 className="text-sm font-medium text-muted-foreground px-1">{t("accountSupport")}</h3>
           <div className="glass rounded-2xl divide-y divide-border/50">
             {supportItems.map((item) => {
               const Icon = item.icon;
@@ -217,13 +225,37 @@ export default function Account() {
           </div>
         </div>
 
+        {/* Language Switcher */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground px-1">{t("accountLanguage")}</h3>
+          <div className="glass rounded-2xl divide-y divide-border/50">
+            {languageOptions.map((lang) => (
+              <button
+                key={lang.value}
+                onClick={() => setLocale(lang.value)}
+                className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+              >
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <span className="text-lg">{lang.flag}</span>
+                </div>
+                <span className="flex-1 text-left font-medium">{lang.label}</span>
+                {locale === lang.value && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-primary-foreground text-xs font-bold">✓</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <Button
           variant="outline"
           className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
           onClick={handleSignOut}
         >
           <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
+          {t("accountSignOut")}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">FlySwap v1.0.0</p>

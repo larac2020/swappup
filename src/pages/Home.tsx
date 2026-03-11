@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
@@ -227,7 +229,7 @@ export default function Home() {
           </div>
           {browseLink && (
             <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => navigate(browseLink)}>
-              See all
+              {t("seeAll")}
               <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           )}
@@ -269,14 +271,14 @@ export default function Home() {
           <div className="relative space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Welcome back,</p>
+                <p className="text-muted-foreground text-sm">{t("homeWelcomeBack")}</p>
                 <h1 className="text-xl font-display font-bold">{firstName} ✈️</h1>
               </div>
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
                   <Plus className="w-4 h-4" />
-                  Sell
+                  {t("sell")}
                 </Button>
               </div>
             </div>
@@ -286,17 +288,17 @@ export default function Home() {
               <button onClick={() => navigate("/listings")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <Ticket className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{myListingsCount}</p>
-                <p className="text-[10px] text-muted-foreground">Listings</p>
+                <p className="text-[10px] text-muted-foreground">{t("homeListings")}</p>
               </button>
               <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <ShoppingBag className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{profile?.transactions_bought ?? 0}</p>
-                <p className="text-[10px] text-muted-foreground">Purchases</p>
+                <p className="text-[10px] text-muted-foreground">{t("homePurchases")}</p>
               </button>
               <button onClick={() => navigate("/account/favorites")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <Heart className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{favoritesCount}</p>
-                <p className="text-[10px] text-muted-foreground">Favorites</p>
+                <p className="text-[10px] text-muted-foreground">{t("homeFavorites")}</p>
               </button>
             </div>
           </div>
@@ -307,7 +309,7 @@ export default function Home() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-4">
               <History className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-base font-semibold">Recently Searched</h2>
+              <h2 className="text-base font-semibold">{t("homeRecentlySearched")}</h2>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1 px-4 scrollbar-hide">
               {recentSearches.map((s) => (
@@ -326,7 +328,7 @@ export default function Home() {
 
         {/* Hot Deals (bumped) */}
         {renderSection(
-          "🔥 Hot Deals",
+          t("homeHotDeals"),
           <Sparkles className="w-4 h-4 text-primary" />,
           hotDeals,
           loadingHot,
@@ -335,7 +337,7 @@ export default function Home() {
 
         {/* From Favorite City */}
         {profile?.favorite_departure_city && renderSection(
-          `From ${profile.favorite_departure_city}`,
+          t("homeFromCity", { city: profile.favorite_departure_city }),
           <Plane className="w-4 h-4 text-primary" />,
           fromFavCity,
           loadingFavCity,
@@ -344,7 +346,7 @@ export default function Home() {
 
         {/* Favorite Categories */}
         {profile?.favorite_categories && profile.favorite_categories.length > 0 && renderSection(
-          "For You",
+          t("homeForYou"),
           <Heart className="w-4 h-4 text-primary" />,
           favTagListings,
           loadingFavTags,
@@ -352,7 +354,7 @@ export default function Home() {
         )}
         {/* Under €100 */}
         {renderSection(
-          "Under €100",
+          t("homeUnder100"),
           <Zap className="w-4 h-4 text-primary" />,
           budgetDeals,
           loadingBudget,
@@ -361,7 +363,7 @@ export default function Home() {
 
         {/* Last Minute */}
         {renderSection(
-          "Last Minute",
+          t("homeLastMinute"),
           <Flame className="w-4 h-4 text-primary" />,
           lastMinuteDeals,
           loadingLastMinute,
@@ -370,7 +372,7 @@ export default function Home() {
 
         {/* Most Popular */}
         {renderSection(
-          "Most Popular",
+          t("homeMostPopular"),
           <Star className="w-4 h-4 text-primary" />,
           popularListings,
           loadingPopular,
@@ -379,7 +381,7 @@ export default function Home() {
 
         {/* Latest */}
         {renderSection(
-          "Just Added",
+          t("homeJustAdded"),
           <ArrowRight className="w-4 h-4 text-primary" />,
           latestDeals,
           loadingLatest,
@@ -393,13 +395,13 @@ export default function Home() {
               <Plane className="w-5 h-5 text-primary-foreground -rotate-45" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-semibold">Got tickets to sell?</h3>
+              <h3 className="text-base font-semibold">{t("homeGotTickets")}</h3>
               <p className="text-xs text-muted-foreground">
-                List your unused flight tickets and help other travelers save.
+                {t("homeGotTicketsDesc")}
               </p>
             </div>
             <Button variant="gold" className="w-full" size="sm" onClick={() => navigate("/sell")}>
-              Start Selling
+              {t("homeStartSelling")}
             </Button>
           </div>
         </div>

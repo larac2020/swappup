@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Browse from "./pages/Browse";
@@ -58,28 +59,30 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<PublicRoute><Auth /></PublicRoute>} />
-          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-          <Route path="/account/:section" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-          <Route path="/listing/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
-          <Route path="/sell" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
-          <Route path="/listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
-          <Route path="/favorites" element={<Navigate to="/account/favorites" replace />} />
-          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<PublicRoute><Auth /></PublicRoute>} />
+            <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+            <Route path="/account/:section" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+            <Route path="/listing/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
+            <Route path="/sell" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
+            <Route path="/listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
+            <Route path="/favorites" element={<Navigate to="/account/favorites" replace />} />
+            <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
