@@ -117,7 +117,22 @@ export default function MyListings() {
     enabled: listingIds.length > 0,
   });
 
-  const toggleActiveMutation = useMutation({
+  // Fetch pending sales (purchases where this user is the seller)
+  const { data: pendingSales = [] } = useQuery({
+    queryKey: ["mySales", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*, listings(*)")
+        .eq("seller_id", profile!.id)
+        .in("status", ["pending_transfer", "transfer_confirmed"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.id,
+  });
+
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
       const { error } = await supabase
         .from("listings")
