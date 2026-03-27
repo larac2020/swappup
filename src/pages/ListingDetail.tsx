@@ -179,6 +179,10 @@ export default function ListingDetail() {
   const originAirportName = getPrimaryAirportName(listing.origin_city);
   const destAirportName = getPrimaryAirportName(listing.destination_city);
 
+  // Calculate name change fee from airline data
+  const airlineData = getAirlineData(listing.airline);
+  const nameChangeFee = listing.name_change_fee ? Number(listing.name_change_fee) : (airlineData?.nameChangeFee || 0);
+
   return (
     <AppLayout showNav={false}>
       <div className="min-h-screen">
