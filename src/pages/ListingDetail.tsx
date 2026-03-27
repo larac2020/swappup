@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 import { useState } from "react";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
+import PurchaseDialog from "@/components/listings/PurchaseDialog";
+import { getAirlineData } from "@/data/flightData";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
@@ -28,6 +30,7 @@ export default function ListingDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -175,6 +178,10 @@ export default function ListingDetail() {
   const destCode = getPrimaryAirportCode(listing.destination_city);
   const originAirportName = getPrimaryAirportName(listing.origin_city);
   const destAirportName = getPrimaryAirportName(listing.destination_city);
+
+  // Calculate name change fee from airline data
+  const airlineData = getAirlineData(listing.airline);
+  const nameChangeFee = listing.name_change_fee ? Number(listing.name_change_fee) : (airlineData?.nameChangeFee || 0);
 
   return (
     <AppLayout showNav={false}>
@@ -417,20 +424,37 @@ export default function ListingDetail() {
             </div>
           )}
 
+          {/* Name Change Fee Info */}
+          {listing.listing_type === "flight_ticket" && nameChangeFee > 0 && (
+            <div className="glass rounded-2xl p-4 space-y-2">
+              <h3 className="font-semibold">Name Change Fee</h3>
+              <p className="text-sm text-muted-foreground">
+                {listing.airline} charges an estimated <span className="font-bold text-primary">€{nameChangeFee}</span> per person for name changes. This fee is included in the total purchase price and held in escrow.
+              </p>
+            </div>
+          )}
+
           {/* Bottom CTA - only for non-owners */}
           {myProfile?.id !== listing.seller_id && (
             <div className="sticky bottom-4 flex gap-3">
-              <Button variant="gold" size="xl" className="flex-1" onClick={() => addToCartMutation.mutate()} disabled={addToCartMutation.isPending}>
-                {addToCartMutation.isPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                )}
-                Add to Cart
+              <Button variant="gold" size="xl" className="flex-1" onClick={() => setShowPurchaseDialog(true)}>
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Buy Now — €{(Number(listing.price) + nameChangeFee).toFixed(2)}
               </Button>
             </div>
           )}
         </div>
+
+        {/* Purchase Dialog */}
+        {myProfile && (
+          <PurchaseDialog
+            open={showPurchaseDialog}
+            onOpenChange={setShowPurchaseDialog}
+            listing={listing}
+            buyerProfileId={myProfile.id}
+            nameChangeFee={nameChangeFee}
+          />
+        )}
       </div>
     </AppLayout>
   );

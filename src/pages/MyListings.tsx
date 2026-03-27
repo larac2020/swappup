@@ -21,9 +21,12 @@ import { getPrimaryAirportCode } from "@/data/flightData";
 import {
   Ticket, Plus, Loader2, Search, Eye, Heart, Rocket,
   Plane, Calendar, Users, Pencil, ToggleLeft, ToggleRight,
-  Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2
+  Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2,
+  ArrowRightLeft
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import TransferConfirmation from "@/components/listings/TransferConfirmation";
+import { format } from "date-fns";
 
 interface BoostOption {
   label: string;
@@ -48,6 +51,8 @@ export default function MyListings() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [selectedBoostOption, setSelectedBoostOption] = useState<BoostOption | null>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -110,6 +115,22 @@ export default function MyListings() {
       return counts;
     },
     enabled: listingIds.length > 0,
+  });
+
+  // Fetch pending sales (purchases where this user is the seller)
+  const { data: pendingSales = [] } = useQuery({
+    queryKey: ["mySales", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*, listings(*)")
+        .eq("seller_id", profile!.id)
+        .in("status", ["pending_transfer", "transfer_confirmed"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.id,
   });
 
   const toggleActiveMutation = useMutation({
@@ -346,6 +367,70 @@ export default function MyListings() {
           </div>
         )}
 
+        {/* Pending Sales / Transfer Confirmations */}
+        {pendingSales.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <ArrowRightLeft className="w-4 h-4" />
+              Pending Transfers ({pendingSales.length})
+            </h2>
+            {pendingSales.map((sale: any) => {
+              const listing = sale.listings as any;
+              const deadline = sale.transfer_deadline ? new Date(sale.transfer_deadline) : null;
+              const isExpired = deadline && deadline < new Date();
+              const hoursLeft = deadline ? Math.max(0, Math.round((deadline.getTime() - Date.now()) / (1000 * 60 * 60))) : 0;
+              const isConfirmed = sale.status === "transfer_confirmed";
+
+              return (
+                <div key={sale.id} className={cn(
+                  "glass rounded-2xl p-4 space-y-3",
+                  isExpired && "border-destructive/30",
+                  isConfirmed && "border-success/30"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{listing?.title || "Ticket"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Buyer: {sale.buyer_full_name} • €{Number(sale.total_price).toFixed(2)}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className={cn("text-xs", 
+                      isConfirmed ? "bg-success/10 text-success border-success/30" : 
+                      isExpired ? "bg-destructive/10 text-destructive border-destructive/30" :
+                      "bg-warning/10 text-warning border-warning/30"
+                    )}>
+                      {isConfirmed ? "Confirmed" : isExpired ? "Expired" : `${hoursLeft}h left`}
+                    </Badge>
+                  </div>
+
+                  {!isConfirmed && !isExpired && (
+                    <Button
+                      variant="gold"
+                      size="sm"
+                      className="w-full gap-2"
+                      onClick={() => {
+                        setSelectedSale(sale);
+                        setTransferDialogOpen(true);
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Confirm Name Change
+                    </Button>
+                  )}
+
+                  {isConfirmed && (
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>Booking Ref: <span className="font-mono font-bold">{sale.transfer_booking_ref}</span></p>
+                      <p>Confirmed: {sale.transfer_confirmed_at ? format(new Date(sale.transfer_confirmed_at), "MMM d, HH:mm") : "N/A"}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -507,6 +592,13 @@ export default function MyListings() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Transfer Confirmation Dialog */}
+      <TransferConfirmation
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        purchase={selectedSale}
+      />
     </AppLayout>
   );
 }
