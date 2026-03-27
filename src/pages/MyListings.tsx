@@ -592,6 +592,13 @@ export default function MyListings() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Transfer Confirmation Dialog */}
+      <TransferConfirmation
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        purchase={selectedSale}
+      />
     </AppLayout>
   );
 }
