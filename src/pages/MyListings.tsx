@@ -21,9 +21,12 @@ import { getPrimaryAirportCode } from "@/data/flightData";
 import {
   Ticket, Plus, Loader2, Search, Eye, Heart, Rocket,
   Plane, Calendar, Users, Pencil, ToggleLeft, ToggleRight,
-  Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2
+  Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2,
+  ArrowRightLeft
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import TransferConfirmation from "@/components/listings/TransferConfirmation";
+import { format } from "date-fns";
 
 interface BoostOption {
   label: string;
