@@ -133,6 +133,7 @@ export default function MyListings() {
     enabled: !!profile?.id,
   });
 
+  const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
       const { error } = await supabase
         .from("listings")
