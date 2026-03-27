@@ -30,6 +30,7 @@ export default function ListingDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
