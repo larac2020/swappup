@@ -428,48 +428,72 @@ export type Database = {
       purchases: {
         Row: {
           buyer_confirmed: boolean
+          buyer_email: string | null
+          buyer_full_name: string | null
           buyer_id: string | null
           created_at: string
           escrow_deadline: string | null
           escrow_status: string
           id: string
           listing_id: string | null
+          name_change_fee: number | null
+          original_booking_ref: string | null
           quantity: number
           seller_id: string | null
           seller_transferred: boolean
           status: string
           stripe_payment_id: string | null
           total_price: number
+          transfer_booking_ref: string | null
+          transfer_confirmed_at: string | null
+          transfer_deadline: string | null
+          transfer_surname: string | null
         }
         Insert: {
           buyer_confirmed?: boolean
+          buyer_email?: string | null
+          buyer_full_name?: string | null
           buyer_id?: string | null
           created_at?: string
           escrow_deadline?: string | null
           escrow_status?: string
           id?: string
           listing_id?: string | null
+          name_change_fee?: number | null
+          original_booking_ref?: string | null
           quantity: number
           seller_id?: string | null
           seller_transferred?: boolean
           status?: string
           stripe_payment_id?: string | null
           total_price: number
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
         }
         Update: {
           buyer_confirmed?: boolean
+          buyer_email?: string | null
+          buyer_full_name?: string | null
           buyer_id?: string | null
           created_at?: string
           escrow_deadline?: string | null
           escrow_status?: string
           id?: string
           listing_id?: string | null
+          name_change_fee?: number | null
+          original_booking_ref?: string | null
           quantity?: number
           seller_id?: string | null
           seller_transferred?: boolean
           status?: string
           stripe_payment_id?: string | null
           total_price?: number
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
         }
         Relationships: [
           {
