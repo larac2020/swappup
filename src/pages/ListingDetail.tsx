@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 import { useState } from "react";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
+import PurchaseDialog from "@/components/listings/PurchaseDialog";
+import { getAirlineData } from "@/data/flightData";
 
 const tagLabels: Record<string, string> = {
   city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
