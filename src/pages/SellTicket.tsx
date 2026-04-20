@@ -58,7 +58,7 @@ const defaultInclusions: TicketInclusions = {
 };
 
 const getDefaultFormData = () => ({
-  listingType: "flight_ticket" as "flight_ticket" | "travel_credit",
+  listingType: "flight_ticket" as "flight_ticket" | "train_ticket",
   originCountry: "",
   originCity: "",
   originAirport: "",
@@ -77,11 +77,13 @@ const getDefaultFormData = () => ({
   additionalNotes: "",
   selectedTags: [] as string[],
   bumpListing: false,
-  // Voucher fields
-  creditType: "",
-  creditValue: "",
-  creditCurrency: "EUR",
-  creditExpiryDate: undefined as Date | undefined,
+  // Train-only fields
+  operator: "",
+  trainNumber: "",
+  trainClass: "",
+  trainOriginStation: "",
+  trainDestinationStation: "",
+  departureTime: "",
 });
 
 export default function SellTicket() {
