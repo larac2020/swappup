@@ -550,8 +550,14 @@ export default function SellTicket() {
     createListingMutation.mutate();
   };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Tickets must depart at least 24 hours from now.
+  // We compute the earliest *day* the user is allowed to pick (start of that day).
+  const minDepartureDate = useMemo(() => {
+    const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const today = minDepartureDate; // backward-compat for existing references below
 
   const renderInclusionToggles = (inclusions: TicketInclusions, onChange: (field: keyof TicketInclusions, value: boolean) => void, label?: string) => (
     <div className="space-y-3">
