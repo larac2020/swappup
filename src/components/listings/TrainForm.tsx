@@ -84,25 +84,25 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>To Country</Label>
+              <Label>{t("sellToCountry")}</Label>
               <Select value={formData.destinationCountry} onValueChange={(v) => update({ destinationCountry: v, destinationCity: "", trainDestinationStation: "" })}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>To City</Label>
+              <Label>{t("sellToCity")}</Label>
               <Select value={formData.destinationCity} onValueChange={(v) => update({ destinationCity: v, trainDestinationStation: "" })} disabled={!formData.destinationCountry}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">{destinationCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
           {destinationStations.length > 0 && (
             <div className="space-y-2">
-              <Label>To Station</Label>
+              <Label>{t("sellToStation")}</Label>
               <Select value={formData.trainDestinationStation} onValueChange={(v) => update({ trainDestinationStation: v })}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select station" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectStation")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   {destinationStations.map((s) => <SelectItem key={s.stationCode} value={s.stationCode}>{s.stationCode} — {s.stationName}</SelectItem>)}
                 </SelectContent>
@@ -116,21 +116,21 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
       <div className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-primary" />
-          Travel Dates
+          {t("sellTrainDates")}
         </h2>
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <Label>Return trip?</Label>
+            <Label>{t("sellReturnTrip")}</Label>
             <Switch checked={isReturn} onCheckedChange={(c) => { setIsReturn(c); if (!c) update({ returnDate: undefined }); }} />
           </div>
           <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
             <div className="space-y-2">
-              <Label>Departure Date</Label>
+              <Label>{t("sellDepartureDate")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.departureDate && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.departureDate ? format(formData.departureDate, "PPP") : "Select date"}
+                    {formData.departureDate ? format(formData.departureDate, "PPP") : t("sellSelectDate")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -147,12 +147,12 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
             </div>
             {isReturn && (
               <div className="space-y-2">
-                <Label>Return Date</Label>
+                <Label>{t("sellReturnDate")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.returnDate ? format(formData.returnDate, "PPP") : "Select date"}
+                      {formData.returnDate ? format(formData.returnDate, "PPP") : t("sellSelectDate")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -170,7 +170,7 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
             )}
           </div>
           <div className="space-y-2">
-            <Label className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />Departure Time (optional)</Label>
+            <Label className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{t("sellDepartureTimeLabel")}</Label>
             <Input type="time" value={formData.departureTime} onChange={(e) => update({ departureTime: e.target.value })} className="bg-secondary/50" />
           </div>
         </div>
@@ -178,22 +178,22 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
 
       {/* Operator + Fare */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Train Details</h2>
+        <h2 className="text-lg font-semibold">{t("sellTrainDetails")}</h2>
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Operator</Label>
+              <Label>{t("sellTrainOperatorLabel")}</Label>
               <Select value={formData.operator} onValueChange={(v) => update({ operator: v, trainClass: "" })}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select operator" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("trainSelectOperator")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50 max-h-60">
                   {trainOperators.map((o) => <SelectItem key={o.name} value={o.name}>{o.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Fare Class</Label>
+              <Label>{t("sellTrainFareClassLabel")}</Label>
               <Select value={formData.trainClass} onValueChange={(v) => update({ trainClass: v })} disabled={!formData.operator}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select fare" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("trainSelectFare")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   {operatorFares.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
@@ -207,11 +207,11 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Train Number</Label>
+              <Label>{t("sellTrainNumberLabel")}</Label>
               <Input placeholder="e.g. FR 9612" value={formData.trainNumber} onChange={(e) => update({ trainNumber: e.target.value })} className="bg-secondary/50" />
             </div>
             <div className="space-y-2">
-              <Label>Number of Tickets</Label>
+              <Label>{t("sellNumberOfTicketsLabel")}</Label>
               <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => update({ ticketCount: e.target.value })} className="bg-secondary/50" required />
             </div>
           </div>
@@ -220,35 +220,35 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
 
       {/* Pricing */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Pricing</h2>
+        <h2 className="text-lg font-semibold">{t("sellPricingHeader")}</h2>
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Original Price (€)</Label>
+              <Label>{t("sellOriginalPrice")}</Label>
               <Input type="number" min="0" step="0.01" placeholder="80.00" value={formData.originalPrice} onChange={(e) => update({ originalPrice: e.target.value })} className="bg-secondary/50" />
             </div>
             <div className="space-y-2">
-              <Label>Your Selling Price (€)</Label>
+              <Label>{t("sellYourPrice")}</Label>
               <Input type="number" min="1" step="0.01" placeholder="55.00" value={formData.price} onChange={(e) => update({ price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
             </div>
           </div>
           {priceError && (
             <p className="text-sm text-destructive flex items-center gap-1">
               <AlertCircle className="w-4 h-4" />
-              Selling price must be lower than the original price
+              {t("sellPriceLowerError")}
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            The buyer will additionally pay the operator's name-change fee on top of your selling price (held in escrow).
+            {t("sellAdditiveFeeHint")}
           </p>
         </div>
       </div>
 
       {/* Notes */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Additional Notes</h2>
+        <h2 className="text-lg font-semibold">{t("sellAdditionalNotesHeader")}</h2>
         <Textarea
-          placeholder="Add any extra information about your train tickets..."
+          placeholder={t("sellNotesPlaceholderTrain")}
           value={formData.additionalNotes}
           onChange={(e) => update({ additionalNotes: e.target.value })}
           className="bg-secondary/50 min-h-24"
