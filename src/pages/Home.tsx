@@ -1,18 +1,23 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, CreditCard } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+type ListingTypeFilter = "all" | "flight_ticket" | "train_ticket";
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const [typeFilter, setTypeFilter] = useState<ListingTypeFilter>("all");
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
@@ -195,22 +200,6 @@ export default function Home() {
       return data;
     },
     enabled: !!profile?.favorite_categories && profile.favorite_categories.length > 0,
-  });
-
-  // Travel Credits / Vouchers
-  const { data: travelCredits = [], isLoading: loadingCredits } = useQuery({
-    queryKey: ["travelCredits"],
-    queryFn: async () => {
-      const { data, error } = await (supabase
-        .from("listings")
-        .select("*")
-        .eq("is_active", true) as any)
-        .eq("listing_type", "travel_credit")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data || [];
-    },
   });
 
   // Latest deals
