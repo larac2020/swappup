@@ -947,7 +947,14 @@ export default function SellTicket() {
 
               {/* Transferability Check */}
               {formData.airline && (
-                <TransferabilityCheck airline={formData.airline} fareType={formData.fareType || "standard"} />
+                <TransferabilityCheck
+                  airline={formData.airline}
+                  fareType={formData.fareType || "standard"}
+                  onResult={(r) => {
+                    setFlightTransferBlocked(r.blocking);
+                    setFlightTransferFee(r.fee);
+                  }}
+                />
               )}
 
               <div className="grid grid-cols-2 gap-4">
