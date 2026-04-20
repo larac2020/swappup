@@ -862,24 +862,24 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Plane className="w-5 h-5 text-primary" />
-              Flight Route
+              {t("sellFlightRoute")}
             </h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               {/* Origin */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>From Country</Label>
+                  <Label>{t("sellFromCountry")}</Label>
                   <Select value={formData.originCountry} onValueChange={(v) => setFormData({ ...formData, originCountry: v, originCity: "", originAirport: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>From City</Label>
+                  <Label>{t("sellFromCity")}</Label>
                   <Select value={formData.originCity} onValueChange={(v) => setFormData({ ...formData, originCity: v, originAirport: "" })} disabled={!formData.originCountry}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {originCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
@@ -888,9 +888,9 @@ export default function SellTicket() {
               </div>
               {originAirports.length > 0 && (
                 <div className="space-y-2">
-                  <Label>From Airport</Label>
+                  <Label>{t("sellFromAirport")}</Label>
                   <Select value={formData.originAirport} onValueChange={(v) => setFormData({ ...formData, originAirport: v })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirport")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {originAirports.map((a) => (
                         <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
@@ -909,18 +909,18 @@ export default function SellTicket() {
               {/* Destination */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>To Country</Label>
+                  <Label>{t("sellToCountry")}</Label>
                   <Select value={formData.destinationCountry} onValueChange={(v) => setFormData({ ...formData, destinationCountry: v, destinationCity: "", destinationAirport: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>To City</Label>
+                  <Label>{t("sellToCity")}</Label>
                   <Select value={formData.destinationCity} onValueChange={(v) => setFormData({ ...formData, destinationCity: v, destinationAirport: "" })} disabled={!formData.destinationCountry}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {destinationCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
@@ -929,9 +929,9 @@ export default function SellTicket() {
               </div>
               {destinationAirports.length > 0 && (
                 <div className="space-y-2">
-                  <Label>To Airport</Label>
+                  <Label>{t("sellToAirport")}</Label>
                   <Select value={formData.destinationAirport} onValueChange={(v) => setFormData({ ...formData, destinationAirport: v })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirport")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {destinationAirports.map((a) => (
                         <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
@@ -947,11 +947,11 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-primary" />
-              Flight Dates
+              {t("sellFlightDates")}
             </h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Return flight?</Label>
+                <Label>{t("sellReturnFlight")}</Label>
                 <Switch
                   checked={isReturn}
                   onCheckedChange={(checked) => {
@@ -964,12 +964,12 @@ export default function SellTicket() {
               </div>
               <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
                 <div className="space-y-2">
-                  <Label>Departure Date</Label>
+                  <Label>{t("sellDepartureDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.departureDate && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.departureDate ? format(formData.departureDate, "PPP") : "Select date"}
+                        {formData.departureDate ? format(formData.departureDate, "PPP") : t("sellSelectDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -987,12 +987,12 @@ export default function SellTicket() {
                 </div>
                 {isReturn && (
                   <div className="space-y-2">
-                    <Label>Return Date</Label>
+                    <Label>{t("sellReturnDate")}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.returnDate ? format(formData.returnDate, "PPP") : "Select date"}
+                          {formData.returnDate ? format(formData.returnDate, "PPP") : t("sellSelectDate")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -1015,22 +1015,22 @@ export default function SellTicket() {
 
           {/* Flight Details */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Flight Details</h2>
+            <h2 className="text-lg font-semibold">{t("sellFlightDetails")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Airline</Label>
+                  <Label>{t("sellAirline")}</Label>
                   <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v, fareType: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirline")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Fare Type</Label>
+                  <Label>{t("sellFareType")}</Label>
                   <Select value={formData.fareType} onValueChange={(v) => setFormData({ ...formData, fareType: v })} disabled={!formData.airline}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select fare" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectFare")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {fareTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                     </SelectContent>
@@ -1052,22 +1052,22 @@ export default function SellTicket() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Flight Number</Label>
+                  <Label>{t("sellFlightNumber")}</Label>
                   <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Number of Tickets</Label>
+                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
                   <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Number of Tickets</Label>
+                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
                   <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Stopovers</Label>
+                  <Label>{t("sellStopovers")}</Label>
                   <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
                 </div>
               </div>
@@ -1076,13 +1076,13 @@ export default function SellTicket() {
 
           {/* What's Included */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">What's Included</h2>
+            <h2 className="text-lg font-semibold">{t("sellWhatsIncluded")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               {ticketCount > 1 && (
                 <div className="flex items-center justify-between pb-2 border-b border-border/50">
                   <div className="space-y-0.5">
-                    <p className="text-sm font-medium">Same for all tickets?</p>
-                    <p className="text-xs text-muted-foreground">Toggle off if inclusions differ between tickets</p>
+                    <p className="text-sm font-medium">{t("sellSameForAllQ")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellSameForAllHint")}</p>
                   </div>
                   <Switch checked={sameInclusions} onCheckedChange={setSameInclusions} />
                 </div>
@@ -1102,7 +1102,7 @@ export default function SellTicket() {
                           setPerTicketInclusions((prev) =>
                             prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
                           ),
-                        `Ticket ${i + 1}`
+                        t("sellTicketLabelN", { n: i + 1 })
                       )}
                     </div>
                   ))}
@@ -1113,22 +1113,22 @@ export default function SellTicket() {
 
           {/* Pricing */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Pricing</h2>
+            <h2 className="text-lg font-semibold">{t("sellPricingHeader")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Original Price (€)</Label>
+                  <Label>{t("sellOriginalPrice")}</Label>
                   <Input type="number" min="0" step="0.01" placeholder="145.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Your Selling Price (€)</Label>
+                  <Label>{t("sellYourPrice")}</Label>
                   <Input type="number" min="1" step="0.01" placeholder="89.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
                 </div>
               </div>
               {priceError && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
-                  Selling price must be lower than the original price
+                  {t("sellPriceLowerError")}
                 </p>
               )}
             </div>
@@ -1136,7 +1136,7 @@ export default function SellTicket() {
 
           {/* Tags */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Trip Type</h2>
+            <h2 className="text-lg font-semibold">{t("sellTripTypeHeader")}</h2>
             <div className="flex flex-wrap gap-2">
               {tripTags.map((tag) => (
                 <Badge
@@ -1145,7 +1145,7 @@ export default function SellTicket() {
                   className={cn("cursor-pointer transition-all py-2 px-3", formData.selectedTags.includes(tag.value) ? "bg-primary/20 border-primary text-primary" : "hover:border-primary/50")}
                   onClick={() => toggleTag(tag.value)}
                 >
-                  {tag.label}
+                  {t(tag.labelKey)}
                 </Badge>
               ))}
             </div>
@@ -1153,9 +1153,9 @@ export default function SellTicket() {
 
           {/* Additional Notes */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Additional Notes</h2>
+            <h2 className="text-lg font-semibold">{t("sellAdditionalNotesHeader")}</h2>
             <Textarea
-              placeholder="Add any extra information about your tickets..."
+              placeholder={t("sellNotesPlaceholderFlight")}
               value={formData.additionalNotes}
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
               className="bg-secondary/50 min-h-24"
@@ -1168,15 +1168,13 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Boost Visibility
+              {t("sellBoostHeader")}
             </h2>
             <div className="glass rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="font-medium">🔥 Bump to Hot Deals</p>
-                  <p className="text-xs text-muted-foreground">
-                    Feature your listing in the Hot Deals section on the Home page for 7 days
-                  </p>
+                  <p className="font-medium">{t("sellBoostBumpTitle")}</p>
+                  <p className="text-xs text-muted-foreground">{t("sellBoostBumpDesc")}</p>
                 </div>
                 <Switch
                   checked={formData.bumpListing}
@@ -1200,11 +1198,11 @@ export default function SellTicket() {
                 disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification}
               >
                 {createListingMutation.isPending ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
                 ) : isVerifyingFlight ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Verifying flight...</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />{t("sellSubmitVerifying")}</>
                 ) : blockedByVerification ? (
-                  <><AlertCircle className="w-5 h-5" />Listing blocked — verification failed</>
+                  <><AlertCircle className="w-5 h-5" />{t("sellSubmitBlocked")}</>
                 ) : (
                   <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
                 )}
