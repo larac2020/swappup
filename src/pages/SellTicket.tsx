@@ -32,16 +32,18 @@ import {
   trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
   getStationsForCity, currencySymbol
 } from "@/data/trainData";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { TranslationKey } from "@/i18n/translations";
 
-const tripTags = [
-  { value: "city_trip", label: "City Trip" },
-  { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" },
-  { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" },
-  { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" },
-  { value: "business", label: "Business" },
+const tripTags: { value: string; labelKey: TranslationKey }[] = [
+  { value: "city_trip", labelKey: "tagCityTrip" },
+  { value: "beach", labelKey: "tagBeach" },
+  { value: "winter_holiday", labelKey: "tagWinterHoliday" },
+  { value: "ski_trip", labelKey: "tagSkiTrip" },
+  { value: "adventure", labelKey: "tagAdventure" },
+  { value: "romantic", labelKey: "tagRomantic" },
+  { value: "family", labelKey: "tagFamily" },
+  { value: "business", labelKey: "tagBusiness" },
 ];
 
 interface TicketInclusions {
@@ -93,6 +95,7 @@ export default function SellTicket() {
   const editId = searchParams.get("edit");
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Check profile completion for sell gating
   const { data: gateProfile } = useQuery({
