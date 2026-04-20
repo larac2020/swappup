@@ -36,10 +36,10 @@ interface BoostOption {
   price: string;
 }
 
-const boostOptions: BoostOption[] = [
-  { label: "24 hours", duration: "24h", hours: 24, price: "1.99" },
-  { label: "3 days", duration: "3d", hours: 72, price: "3.99" },
-  { label: "1 week", duration: "7d", hours: 168, price: "4.99" },
+const boostOptions: (BoostOption & { labelKey: "boost24h" | "boost3d" | "boost7d" })[] = [
+  { label: "24 hours", labelKey: "boost24h", duration: "24h", hours: 24, price: "1.99" },
+  { label: "3 days", labelKey: "boost3d", duration: "3d", hours: 72, price: "3.99" },
+  { label: "1 week", labelKey: "boost7d", duration: "7d", hours: 168, price: "4.99" },
 ];
 
 export default function MyListings() {
@@ -145,7 +145,7 @@ export default function MyListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myListings"] });
-      toast({ title: "Listing updated" });
+      toast({ title: t("boostUpdated") });
     },
   });
 
@@ -163,7 +163,7 @@ export default function MyListings() {
       setConfirmDialogOpen(false);
       setBoostDialogOpen(false);
       setSelectedBoostOption(null);
-      toast({ title: "Listing boosted!", description: "Your ad is now more visible." });
+      toast({ title: t("boostSuccess"), description: t("boostSuccessDesc") });
     },
   });
 
