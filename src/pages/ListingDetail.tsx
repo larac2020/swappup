@@ -8,13 +8,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
-  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X
+  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X, Flag
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
 import { useState } from "react";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 import PurchaseDialog from "@/components/listings/PurchaseDialog";
+import { ReportSellerDialog } from "@/components/listings/ReportSellerDialog";
 import { getAirlineData } from "@/data/flightData";
 
 const tagLabels: Record<string, string> = {
@@ -31,6 +32,7 @@ export default function ListingDetail() {
   const queryClient = useQueryClient();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -167,10 +169,6 @@ export default function ListingDetail() {
     );
   }
 
-  const discount = listing.original_price
-    ? Math.round((1 - Number(listing.price) / Number(listing.original_price)) * 100)
-    : 0;
-
   const sellerName = seller?.full_name || "Seller";
   const sellerInitials = sellerName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
@@ -213,15 +211,7 @@ export default function ListingDetail() {
 
           <div className="absolute bottom-4 right-4">
             <div className="glass-strong rounded-2xl px-4 py-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-primary">€{Number(listing.price)}</span>
-                {listing.original_price && Number(listing.original_price) > Number(listing.price) && (
-                  <span className="text-sm text-muted-foreground line-through">€{Number(listing.original_price)}</span>
-                )}
-              </div>
-              {discount > 0 && (
-                <Badge className="gradient-gold text-primary-foreground border-0 mt-1">Save {discount}%</Badge>
-              )}
+              <span className="text-2xl font-bold text-primary">€{Number(listing.price)}</span>
             </div>
           </div>
         </div>
@@ -421,6 +411,17 @@ export default function ListingDetail() {
                   </p>
                 </div>
               </div>
+              {myProfile?.id !== listing.seller_id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-3 text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
+                  onClick={() => setShowReportDialog(true)}
+                >
+                  <Flag className="w-4 h-4" />
+                  Report seller
+                </Button>
+              )}
             </div>
           )}
 
@@ -453,6 +454,18 @@ export default function ListingDetail() {
             listing={listing}
             buyerProfileId={myProfile.id}
             nameChangeFee={nameChangeFee}
+          />
+        )}
+
+        {/* Report Seller Dialog */}
+        {myProfile && seller && (
+          <ReportSellerDialog
+            open={showReportDialog}
+            onOpenChange={setShowReportDialog}
+            reporterProfileId={myProfile.id}
+            sellerProfileId={listing.seller_id}
+            sellerName={sellerName}
+            listingId={listing.id}
           />
         )}
       </div>

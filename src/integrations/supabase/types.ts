@@ -602,6 +602,39 @@ export type Database = {
           },
         ]
       }
+      seller_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          listing_id: string | null
+          reason: string
+          reporter_id: string
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id?: string | null
+          reason: string
+          reporter_id: string
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id?: string | null
+          reason?: string
+          reporter_id?: string
+          seller_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

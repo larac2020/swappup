@@ -33,7 +33,6 @@ export function MiniListingCard({
   const isVoucher = listingType === "travel_credit";
   const originCode = !isVoucher ? getPrimaryAirportCode(originCity) : "";
   const destCode = !isVoucher ? getPrimaryAirportCode(destinationCity) : "";
-  const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -56,13 +55,6 @@ export function MiniListingCard({
           <div className="absolute bottom-1.5 right-1.5">
             <span className="text-sm font-bold text-primary">€{price}</span>
           </div>
-          {discount > 0 && (
-            <div className="absolute top-1.5 left-1.5">
-              <span className="text-[10px] font-semibold gradient-gold text-primary-foreground px-1.5 py-0.5 rounded-md">
-                -{discount}%
-              </span>
-            </div>
-          )}
         </div>
         {/* Info */}
         <div className="p-2.5 space-y-1">
