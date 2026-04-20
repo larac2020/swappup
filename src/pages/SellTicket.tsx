@@ -113,9 +113,12 @@ export default function SellTicket() {
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isVerifyingVoucher, setIsVerifyingVoucher] = useState(false);
-  const [voucherVerification, setVoucherVerification] = useState<any>(null);
   const [editLoaded, setEditLoaded] = useState(false);
+
+  // Transferability blocking flags from the in-form check cards
+  const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
+  const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
+  const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
 
   // Flight schedule verification (Aviationstack via edge function)
   const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
