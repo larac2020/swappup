@@ -2,6 +2,7 @@ import { useMemo, useEffect } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, Info, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getOperator, getOperatorFare, currencySymbol } from "@/data/trainData";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export interface TrainTransferabilityResult {
   status: "allowed" | "denied" | "unknown";
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function TrainTransferabilityCheck({ operator, fareClass, onResult }: Props) {
+  const { t } = useLanguage();
   const op = useMemo(() => getOperator(operator), [operator]);
   const fare = useMemo(() => getOperatorFare(operator, fareClass), [operator, fareClass]);
 
@@ -46,7 +48,7 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
       bgColor: "bg-green-500/10",
       iconColor: "text-green-500",
       titleColor: "text-green-600 dark:text-green-400",
-      title: "Name change allowed",
+      title: t("trainTransferAllowed"),
     },
     denied: {
       icon: XCircle,
@@ -54,7 +56,7 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
       bgColor: "bg-destructive/10",
       iconColor: "text-destructive",
       titleColor: "text-destructive",
-      title: "Not transferable — listing blocked",
+      title: t("trainTransferDenied"),
     },
     unknown: {
       icon: AlertTriangle,
@@ -62,7 +64,7 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
       bgColor: "bg-yellow-500/10",
       iconColor: "text-yellow-500",
       titleColor: "text-yellow-600 dark:text-yellow-400",
-      title: "Transferability unknown",
+      title: t("trainTransferUnknown"),
     },
   } as const;
 
@@ -78,13 +80,13 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
           <p className={cn("font-semibold text-sm", cfg.titleColor)}>{cfg.title}</p>
           {result.status === "allowed" && result.fee !== null && (
             <p className="text-base font-bold text-foreground">
-              Estimated name-change fee: <span className="text-primary">{sym}{result.fee}</span>
-              <span className="text-xs font-normal text-muted-foreground ml-1">per person</span>
+              {t("trainTransferEstimatedFee")} <span className="text-primary">{sym}{result.fee}</span>
+              <span className="text-xs font-normal text-muted-foreground ml-1">{t("trainTransferPerPerson")}</span>
             </p>
           )}
           {result.status === "denied" && (
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {op.name} {fare?.label ? `(${fare.label})` : ""} does not allow name changes. You cannot resell this ticket on SwappUp.
+              {t("trainTransferDeniedDesc", { operator: op.name, fare: fare?.label ? `(${fare.label})` : "" })}
             </p>
           )}
           {result.status === "allowed" && fare?.note && (
@@ -97,11 +99,11 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
       <div className="flex items-start gap-2 p-2 rounded-lg bg-background/60">
         <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Name-change fees change frequently. Always confirm the current fee on{" "}
+          {t("trainTransferAlwaysCheck")}{" "}
           <a href={op.policyUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline inline-flex items-center gap-0.5">
-            {op.name}'s website <ExternalLink className="w-3 h-3" />
+            {t("trainTransferOperatorWebsite", { operator: op.name })} <ExternalLink className="w-3 h-3" />
           </a>{" "}
-          before listing.
+          {t("trainTransferBeforeListing")}
         </p>
       </div>
     </div>

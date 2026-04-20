@@ -32,16 +32,18 @@ import {
   trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
   getStationsForCity, currencySymbol
 } from "@/data/trainData";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { TranslationKey } from "@/i18n/translations";
 
-const tripTags = [
-  { value: "city_trip", label: "City Trip" },
-  { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" },
-  { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" },
-  { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" },
-  { value: "business", label: "Business" },
+const tripTags: { value: string; labelKey: TranslationKey }[] = [
+  { value: "city_trip", labelKey: "tagCityTrip" },
+  { value: "beach", labelKey: "tagBeach" },
+  { value: "winter_holiday", labelKey: "tagWinterHoliday" },
+  { value: "ski_trip", labelKey: "tagSkiTrip" },
+  { value: "adventure", labelKey: "tagAdventure" },
+  { value: "romantic", labelKey: "tagRomantic" },
+  { value: "family", labelKey: "tagFamily" },
+  { value: "business", labelKey: "tagBusiness" },
 ];
 
 interface TicketInclusions {
@@ -93,6 +95,7 @@ export default function SellTicket() {
   const editId = searchParams.get("edit");
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Check profile completion for sell gating
   const { data: gateProfile } = useQuery({
@@ -290,17 +293,17 @@ export default function SellTicket() {
       if (error) throw error;
       setFlightVerification(data);
       if (data?.status === "verified") {
-        toast({ title: "Flight verified ✅", description: "Schedule data matches the airline's records." });
+          toast({ title: t("sellToastFlightVerified"), description: t("sellToastFlightVerifiedDesc") });
       } else if (data?.status === "mismatch") {
         toast({
-          title: "Mismatch detected",
-          description: "The ticket data doesn't match the airline's published schedule. Listing is blocked.",
+            title: t("sellToastMismatch"),
+            description: t("sellToastMismatchDesc"),
           variant: "destructive",
         });
       } else if (data?.status === "not_found") {
         toast({
-          title: "Flight not found",
-          description: "We couldn't find this flight in the airline's schedule. Listing is blocked.",
+            title: t("sellToastNotFound"),
+            description: t("sellToastNotFoundDesc"),
           variant: "destructive",
         });
       }
@@ -308,8 +311,8 @@ export default function SellTicket() {
       console.error("Flight verify error:", err);
       setFlightVerification({ status: "error", message: err?.message || "Verification failed" });
       toast({
-        title: "Verification unavailable",
-        description: "Could not reach the verification service. Please try again.",
+          title: t("sellToastVerifyUnavailable"),
+          description: t("sellToastVerifyUnavailableDesc"),
         variant: "destructive",
       });
     } finally {
@@ -350,8 +353,8 @@ export default function SellTicket() {
           // Treat as a hard failure — do NOT mark upload as satisfied
           setTicketUploaded(false);
           toast({
-            title: "Ticket expired or too soon",
-            description: `This ticket departs ${parsedDeparture.toLocaleDateString()}. We only accept tickets at least 24 hours in the future.`,
+            title: t("sellToastExpiredTitle"),
+            description: t("sellToastExpiredDesc", { date: parsedDeparture.toLocaleDateString() }),
             variant: "destructive",
           });
           return;
@@ -391,8 +394,8 @@ export default function SellTicket() {
         setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
 
         toast({
-          title: "Ticket parsed!",
-          description: `Detected ${isTrain ? "train" : "flight"} ticket${count > 1 ? `s (${count})` : ""}. Please review the details below.`,
+          title: t("sellToastTicketParsed"),
+          description: t(isTrain ? "sellToastTicketParsedTrain" : "sellToastTicketParsedFlight", { plural: count > 1 ? `s (${count})` : "" }),
         });
 
         // Auto-verify against airline schedule (flights only) when we have the minimum required fields
@@ -412,7 +415,7 @@ export default function SellTicket() {
       console.error("Ticket parse error:", err);
       // The file was still uploaded successfully, parsing just failed — count as satisfied
       setTicketUploaded(true);
-      toast({ title: "Could not read ticket", description: "We couldn't auto-fill the details. Please fill them in manually.", variant: "destructive" });
+      toast({ title: t("sellToastCouldNotRead"), description: t("sellToastCouldNotReadDesc"), variant: "destructive" });
     } finally {
       setIsUploading(false);
       // Reset file input so re-uploading the same file triggers onChange
@@ -462,7 +465,7 @@ export default function SellTicket() {
         // Store name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = fare?.fee ?? 0;
       } else {
-        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
+        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? t((tripTags.find((tg) => tg.value === formData.selectedTags[0])?.labelKey) || "tagCityTrip") : "Trip"}`;
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
         listingData.destination_city = formData.destinationCity;
@@ -498,21 +501,21 @@ export default function SellTicket() {
     },
     onSuccess: () => {
       toast({
-        title: editId ? "Listing updated!" : "Listing created!",
-        description: editId ? "Your changes have been saved." : "Your ticket is now live on the marketplace.",
+        title: editId ? t("sellToastListingUpdated") : t("sellToastListingCreated"),
+        description: editId ? t("sellToastListingUpdatedDesc") : t("sellToastListingCreatedDesc"),
       });
       navigate(editId ? "/listings" : "/home");
     },
     onError: (error: any) => {
       const msg = error.message || "";
       if (msg.includes("DUPLICATE_LISTING")) {
-        toast({ title: "Duplicate listing", description: "You already have an active listing with the same flight number and departure date.", variant: "destructive" });
+        toast({ title: t("sellToastDuplicate"), description: t("sellToastDuplicateDesc"), variant: "destructive" });
       } else if (msg.includes("RATE_LIMIT")) {
-        toast({ title: "Listing limit reached", description: "You've reached your maximum number of active listings. Deactivate some before creating new ones.", variant: "destructive" });
+        toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
-        toast({ title: "Price too high", description: "Selling price cannot exceed the original ticket price.", variant: "destructive" });
+        toast({ title: t("sellToastPriceCap"), description: t("sellToastPriceCapDesc"), variant: "destructive" });
       } else {
-        toast({ title: "Error", description: msg, variant: "destructive" });
+        toast({ title: t("error"), description: msg, variant: "destructive" });
       }
     },
   });
@@ -531,14 +534,14 @@ export default function SellTicket() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) {
-      toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
+      toast({ title: t("error"), description: t("sellToastProfileNotLoaded"), variant: "destructive" });
       return;
     }
     // Mandatory ticket upload (skipped only in edit mode)
     if (!isEditMode && !ticketUploaded) {
       toast({
-        title: "Ticket upload required",
-        description: "Please upload a photo or PDF of your ticket confirmation before publishing.",
+        title: t("sellToastUploadRequiredTitle"),
+        description: t("sellToastUploadRequiredDesc"),
         variant: "destructive",
       });
       return;
@@ -547,16 +550,16 @@ export default function SellTicket() {
     const minTs = Date.now() + 24 * 60 * 60 * 1000;
     if (formData.departureDate && formData.departureDate.getTime() < minTs) {
       toast({
-        title: "Departure too soon",
-        description: "Tickets must depart at least 24 hours from now. Expired or same-day tickets cannot be listed.",
+        title: t("sellToastDepartureTooSoonTitle"),
+        description: t("sellToastDepartureTooSoonDesc"),
         variant: "destructive",
       });
       return;
     }
     if (isReturn && formData.returnDate && formData.departureDate && formData.returnDate.getTime() < formData.departureDate.getTime()) {
       toast({
-        title: "Invalid return date",
-        description: "Return date must be on or after the departure date.",
+        title: t("sellToastInvalidReturnTitle"),
+        description: t("sellToastInvalidReturnDesc"),
         variant: "destructive",
       });
       return;
@@ -564,40 +567,40 @@ export default function SellTicket() {
     const isTrain = formData.listingType === "train_ticket";
     if (isTrain) {
       if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
-        toast({ title: "Missing fields", description: "Please fill in route, operator, fare class, date and selling price.", variant: "destructive" });
+        toast({ title: t("sellMissingFields"), description: t("sellToastMissingTrain"), variant: "destructive" });
         return;
       }
       if (trainTransferResult?.blocking) {
         toast({
-          title: "Listing blocked",
-          description: "This operator/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastBlockedTrain"),
           variant: "destructive",
         });
         return;
       }
     } else {
       if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
-        toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+        toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
         return;
       }
       if (flightTransferBlocked) {
         toast({
-          title: "Listing blocked",
-          description: "This airline/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastBlockedFlight"),
           variant: "destructive",
         });
         return;
       }
     }
     if (priceError) {
-      toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
+      toast({ title: t("sellToastPriceCap"), description: t("sellPriceTooHighDesc"), variant: "destructive" });
       return;
     }
     // Block flight listings that failed external schedule verification
     if (!isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
       toast({
-        title: "Listing blocked",
-        description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
+        title: t("sellToastListingBlocked"),
+        description: t("sellToastBlockedVerify"),
         variant: "destructive",
       });
       return;
@@ -619,25 +622,25 @@ export default function SellTicket() {
       {label && <p className="text-sm font-medium text-muted-foreground">{label}</p>}
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.luggageIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Luggage className="w-5 h-5" /><span>Checked Luggage</span>
+          <Luggage className="w-5 h-5" /><span>{t("sellInclLuggage")}</span>
         </div>
         <Switch checked={inclusions.luggageIncluded} onCheckedChange={(v) => onChange("luggageIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.carryOnIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Luggage className="w-5 h-5" /><span>Carry-on Bag</span>
+          <Luggage className="w-5 h-5" /><span>{t("sellInclCarryOn")}</span>
         </div>
         <Switch checked={inclusions.carryOnIncluded} onCheckedChange={(v) => onChange("carryOnIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.mealIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Utensils className="w-5 h-5" /><span>In-flight Meal</span>
+          <Utensils className="w-5 h-5" /><span>{t("sellInclMeal")}</span>
         </div>
         <Switch checked={inclusions.mealIncluded} onCheckedChange={(v) => onChange("mealIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.speedyBoarding ? "text-primary" : "text-muted-foreground")}>
-          <Zap className="w-5 h-5" /><span>Speedy Boarding</span>
+          <Zap className="w-5 h-5" /><span>{t("sellInclSpeedy")}</span>
         </div>
         <Switch checked={inclusions.speedyBoarding} onCheckedChange={(v) => onChange("speedyBoarding", v)} />
       </div>
@@ -652,7 +655,7 @@ export default function SellTicket() {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold">{editId ? "Edit Listing" : "Create Listing"}</h1>
+            <h1 className="font-semibold">{editId ? t("sellHeaderEdit") : t("sellHeaderCreate")}</h1>
           </div>
         </div>
 
@@ -665,9 +668,9 @@ export default function SellTicket() {
                   <AlertCircle className="w-5 h-5 text-destructive" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-lg">Complete your account setup</h2>
+                  <h2 className="font-semibold text-lg">{t("sellGateTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    You need to complete all required sections before you can sell tickets.
+                    {t("sellGateDesc")}
                   </p>
                 </div>
               </div>
@@ -675,30 +678,30 @@ export default function SellTicket() {
                 {!isProfileComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Personal Information incomplete
+                    {t("sellGatePersonalIncomplete")}
                   </div>
                 )}
                 {!isVerified && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    ID Verification incomplete
+                    {t("sellGateIdIncomplete")}
                   </div>
                 )}
                 {!isAddressComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Address incomplete
+                    {t("sellGateAddressIncomplete")}
                   </div>
                 )}
                 {!isPaymentComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Payment method not added
+                    {t("sellGatePaymentIncomplete")}
                   </div>
                 )}
               </div>
               <Button variant="gold" size="lg" className="w-full" onClick={() => navigate("/account")}>
-                Go to Account Settings
+                {t("sellGateGoToAccount")}
               </Button>
             </div>
           </div>
@@ -708,7 +711,7 @@ export default function SellTicket() {
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
           {/* Listing Type Selector */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">What are you selling?</h2>
+            <h2 className="text-lg font-semibold">{t("sellWhatSelling")}</h2>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -721,7 +724,7 @@ export default function SellTicket() {
                 )}
               >
                 <Ticket className={cn("w-6 h-6", formData.listingType === "flight_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>Flight Ticket</span>
+                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("flightTicket")}</span>
               </button>
               <button
                 type="button"
@@ -734,7 +737,7 @@ export default function SellTicket() {
                 )}
               >
                 <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>Train Ticket</span>
+                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("trainTicket")}</span>
               </button>
             </div>
           </div>
@@ -744,8 +747,8 @@ export default function SellTicket() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Upload className="w-5 h-5 text-primary" />
-                Upload Ticket Confirmation
-                <span className="text-xs font-normal text-destructive">* Required</span>
+                {t("sellUploadHeader")}
+                <span className="text-xs font-normal text-destructive">{t("sellUploadRequired")}</span>
               </h2>
               <label
                 className={cn(
@@ -757,21 +760,21 @@ export default function SellTicket() {
                 {isUploading ? (
                   <>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">Reading your ticket...</p>
+                    <p className="text-sm text-muted-foreground">{t("sellUploadReading")}</p>
                   </>
                 ) : ticketUploaded ? (
                   <>
                     <CheckCircle2 className="w-8 h-8 text-primary" />
-                    <p className="text-sm font-medium">Ticket uploaded</p>
-                    <p className="text-xs text-muted-foreground">Click to replace</p>
+                    <p className="text-sm font-medium">{t("sellUploadDone")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellUploadReplace")}</p>
                   </>
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground text-center">
-                      Upload a photo, screenshot or PDF of your ticket confirmation
+                      {t("sellUploadHint")}
                     </p>
-                    <p className="text-xs text-muted-foreground">We'll auto-fill the details where possible</p>
+                    <p className="text-xs text-muted-foreground">{t("sellUploadAutofillHint")}</p>
                   </>
                 )}
               </label>
@@ -811,13 +814,13 @@ export default function SellTicket() {
                 {isVerifyingFlight ? (
                   <div className="flex items-center gap-3">
                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                    <p className="text-sm">Verifying flight against the airline's schedule…</p>
+                    <p className="text-sm">{t("sellVerifyingTitle")}</p>
                   </div>
                 ) : flightVerification?.status === "verified" ? (
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">Flight verified</p>
+                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">{t("sellVerifiedTitle")}</p>
                       <p className="text-xs text-muted-foreground">
                         {flightVerification.verified?.airline} · {flightVerification.verified?.originIata} → {flightVerification.verified?.destinationIata}
                       </p>
@@ -827,27 +830,27 @@ export default function SellTicket() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="space-y-2 flex-1">
-                      <p className="font-semibold text-sm text-destructive">Ticket data doesn't match airline records</p>
+                      <p className="font-semibold text-sm text-destructive">{t("sellMismatchTitle")}</p>
                       <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                         {flightVerification.flags?.map((f, i) => <li key={i}>{f}</li>)}
                       </ul>
-                      <p className="text-xs text-destructive font-medium">This listing cannot be published until the data matches.</p>
+                      <p className="text-xs text-destructive font-medium">{t("sellMismatchBlock")}</p>
                     </div>
                   </div>
                 ) : flightVerification?.status === "not_found" ? (
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-destructive">Flight not found in airline schedule</p>
-                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? "Please check the flight number and date."}</p>
+                      <p className="font-semibold text-sm text-destructive">{t("sellNotFoundTitle")}</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? t("sellNotFoundDesc")}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">Verification unavailable</p>
-                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? "We couldn't verify this flight right now."}</p>
+                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">{t("sellVerifyUnavailableTitle")}</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? t("sellVerifyUnavailableDesc")}</p>
                     </div>
                   </div>
                 )}
@@ -859,24 +862,24 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Plane className="w-5 h-5 text-primary" />
-              Flight Route
+              {t("sellFlightRoute")}
             </h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               {/* Origin */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>From Country</Label>
+                  <Label>{t("sellFromCountry")}</Label>
                   <Select value={formData.originCountry} onValueChange={(v) => setFormData({ ...formData, originCountry: v, originCity: "", originAirport: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>From City</Label>
+                  <Label>{t("sellFromCity")}</Label>
                   <Select value={formData.originCity} onValueChange={(v) => setFormData({ ...formData, originCity: v, originAirport: "" })} disabled={!formData.originCountry}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {originCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
@@ -885,9 +888,9 @@ export default function SellTicket() {
               </div>
               {originAirports.length > 0 && (
                 <div className="space-y-2">
-                  <Label>From Airport</Label>
+                  <Label>{t("sellFromAirport")}</Label>
                   <Select value={formData.originAirport} onValueChange={(v) => setFormData({ ...formData, originAirport: v })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirport")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {originAirports.map((a) => (
                         <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
@@ -906,18 +909,18 @@ export default function SellTicket() {
               {/* Destination */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>To Country</Label>
+                  <Label>{t("sellToCountry")}</Label>
                   <Select value={formData.destinationCountry} onValueChange={(v) => setFormData({ ...formData, destinationCountry: v, destinationCity: "", destinationAirport: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>To City</Label>
+                  <Label>{t("sellToCity")}</Label>
                   <Select value={formData.destinationCity} onValueChange={(v) => setFormData({ ...formData, destinationCity: v, destinationAirport: "" })} disabled={!formData.destinationCountry}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {destinationCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
@@ -926,9 +929,9 @@ export default function SellTicket() {
               </div>
               {destinationAirports.length > 0 && (
                 <div className="space-y-2">
-                  <Label>To Airport</Label>
+                  <Label>{t("sellToAirport")}</Label>
                   <Select value={formData.destinationAirport} onValueChange={(v) => setFormData({ ...formData, destinationAirport: v })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airport" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirport")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {destinationAirports.map((a) => (
                         <SelectItem key={a.airportCode} value={a.airportCode}>{a.airportCode} — {a.airportName}</SelectItem>
@@ -944,11 +947,11 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-primary" />
-              Flight Dates
+              {t("sellFlightDates")}
             </h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Return flight?</Label>
+                <Label>{t("sellReturnFlight")}</Label>
                 <Switch
                   checked={isReturn}
                   onCheckedChange={(checked) => {
@@ -961,12 +964,12 @@ export default function SellTicket() {
               </div>
               <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
                 <div className="space-y-2">
-                  <Label>Departure Date</Label>
+                  <Label>{t("sellDepartureDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.departureDate && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.departureDate ? format(formData.departureDate, "PPP") : "Select date"}
+                        {formData.departureDate ? format(formData.departureDate, "PPP") : t("sellSelectDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -984,12 +987,12 @@ export default function SellTicket() {
                 </div>
                 {isReturn && (
                   <div className="space-y-2">
-                    <Label>Return Date</Label>
+                    <Label>{t("sellReturnDate")}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.returnDate ? format(formData.returnDate, "PPP") : "Select date"}
+                          {formData.returnDate ? format(formData.returnDate, "PPP") : t("sellSelectDate")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -1012,22 +1015,22 @@ export default function SellTicket() {
 
           {/* Flight Details */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Flight Details</h2>
+            <h2 className="text-lg font-semibold">{t("sellFlightDetails")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Airline</Label>
+                  <Label>{t("sellAirline")}</Label>
                   <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v, fareType: "" })}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirline")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Fare Type</Label>
+                  <Label>{t("sellFareType")}</Label>
                   <Select value={formData.fareType} onValueChange={(v) => setFormData({ ...formData, fareType: v })} disabled={!formData.airline}>
-                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select fare" /></SelectTrigger>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectFare")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {fareTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                     </SelectContent>
@@ -1049,22 +1052,22 @@ export default function SellTicket() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Flight Number</Label>
+                  <Label>{t("sellFlightNumber")}</Label>
                   <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Number of Tickets</Label>
+                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
                   <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Number of Tickets</Label>
+                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
                   <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Stopovers</Label>
+                  <Label>{t("sellStopovers")}</Label>
                   <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
                 </div>
               </div>
@@ -1073,13 +1076,13 @@ export default function SellTicket() {
 
           {/* What's Included */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">What's Included</h2>
+            <h2 className="text-lg font-semibold">{t("sellWhatsIncluded")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               {ticketCount > 1 && (
                 <div className="flex items-center justify-between pb-2 border-b border-border/50">
                   <div className="space-y-0.5">
-                    <p className="text-sm font-medium">Same for all tickets?</p>
-                    <p className="text-xs text-muted-foreground">Toggle off if inclusions differ between tickets</p>
+                    <p className="text-sm font-medium">{t("sellSameForAllQ")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellSameForAllHint")}</p>
                   </div>
                   <Switch checked={sameInclusions} onCheckedChange={setSameInclusions} />
                 </div>
@@ -1099,7 +1102,7 @@ export default function SellTicket() {
                           setPerTicketInclusions((prev) =>
                             prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
                           ),
-                        `Ticket ${i + 1}`
+                        t("sellTicketLabelN", { n: i + 1 })
                       )}
                     </div>
                   ))}
@@ -1110,22 +1113,22 @@ export default function SellTicket() {
 
           {/* Pricing */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Pricing</h2>
+            <h2 className="text-lg font-semibold">{t("sellPricingHeader")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Original Price (€)</Label>
+                  <Label>{t("sellOriginalPrice")}</Label>
                   <Input type="number" min="0" step="0.01" placeholder="145.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Your Selling Price (€)</Label>
+                  <Label>{t("sellYourPrice")}</Label>
                   <Input type="number" min="1" step="0.01" placeholder="89.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
                 </div>
               </div>
               {priceError && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
-                  Selling price must be lower than the original price
+                  {t("sellPriceLowerError")}
                 </p>
               )}
             </div>
@@ -1133,7 +1136,7 @@ export default function SellTicket() {
 
           {/* Tags */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Trip Type</h2>
+            <h2 className="text-lg font-semibold">{t("sellTripTypeHeader")}</h2>
             <div className="flex flex-wrap gap-2">
               {tripTags.map((tag) => (
                 <Badge
@@ -1142,7 +1145,7 @@ export default function SellTicket() {
                   className={cn("cursor-pointer transition-all py-2 px-3", formData.selectedTags.includes(tag.value) ? "bg-primary/20 border-primary text-primary" : "hover:border-primary/50")}
                   onClick={() => toggleTag(tag.value)}
                 >
-                  {tag.label}
+                  {t(tag.labelKey)}
                 </Badge>
               ))}
             </div>
@@ -1150,9 +1153,9 @@ export default function SellTicket() {
 
           {/* Additional Notes */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Additional Notes</h2>
+            <h2 className="text-lg font-semibold">{t("sellAdditionalNotesHeader")}</h2>
             <Textarea
-              placeholder="Add any extra information about your tickets..."
+              placeholder={t("sellNotesPlaceholderFlight")}
               value={formData.additionalNotes}
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
               className="bg-secondary/50 min-h-24"
@@ -1165,15 +1168,13 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Boost Visibility
+              {t("sellBoostHeader")}
             </h2>
             <div className="glass rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="font-medium">🔥 Bump to Hot Deals</p>
-                  <p className="text-xs text-muted-foreground">
-                    Feature your listing in the Hot Deals section on the Home page for 7 days
-                  </p>
+                  <p className="font-medium">{t("sellBoostBumpTitle")}</p>
+                  <p className="text-xs text-muted-foreground">{t("sellBoostBumpDesc")}</p>
                 </div>
                 <Switch
                   checked={formData.bumpListing}
@@ -1197,13 +1198,13 @@ export default function SellTicket() {
                 disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification}
               >
                 {createListingMutation.isPending ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
                 ) : isVerifyingFlight ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Verifying flight...</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />{t("sellSubmitVerifying")}</>
                 ) : blockedByVerification ? (
-                  <><AlertCircle className="w-5 h-5" />Listing blocked — verification failed</>
+                  <><AlertCircle className="w-5 h-5" />{t("sellSubmitBlocked")}</>
                 ) : (
-                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
+                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? t("sellSubmitUpdate") : t("sellHeaderCreate")}</>
                 )}
               </Button>
             );
