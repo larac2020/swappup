@@ -260,16 +260,16 @@ export default function MyListings() {
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Eye className="w-3.5 h-3.5" />
-              <span>{views} view{views !== 1 ? "s" : ""}</span>
+              <span>{t("myListingsViews", { count: views, plural: views !== 1 ? "s" : "" })}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Heart className="w-3.5 h-3.5" />
-              <span>{favs} favorite{favs !== 1 ? "s" : ""}</span>
+              <span>{t("myListingsFavs", { count: favs, plural: favs !== 1 ? "s" : "" })}</span>
             </div>
             {boosted && (
               <Badge className="gradient-gold text-primary-foreground border-0 text-xs gap-1">
                 <Flame className="w-3 h-3" />
-                Boosted
+                {t("myListingsBoosted")}
               </Badge>
             )}
           </div>
@@ -282,7 +282,7 @@ export default function MyListings() {
             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
           >
             <Eye className="w-4 h-4" />
-            View
+            {t("myListingsView")}
           </button>
           <div className="w-px bg-border/50" />
           <button
@@ -290,7 +290,7 @@ export default function MyListings() {
             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
           >
             <Pencil className="w-4 h-4" />
-            Edit
+            {t("myListingsEdit")}
           </button>
           <div className="w-px bg-border/50" />
           <button
@@ -301,7 +301,7 @@ export default function MyListings() {
             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-primary hover:bg-primary/10 transition-colors"
           >
             <Rocket className="w-4 h-4" />
-            Boost
+            {t("myListingsBoost")}
           </button>
           <div className="w-px bg-border/50" />
           <button
@@ -309,7 +309,7 @@ export default function MyListings() {
             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
           >
             {l.is_active ? <ToggleRight className="w-4 h-4 text-success" /> : <ToggleLeft className="w-4 h-4" />}
-            {l.is_active ? "Active" : "Inactive"}
+            {l.is_active ? t("myListingsActive") : t("myListingsInactive")}
           </button>
         </div>
       </div>
