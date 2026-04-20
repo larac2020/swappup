@@ -390,7 +390,7 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const isVoucher = formData.listingType === "travel_credit";
+      const isTrain = formData.listingType === "train_ticket";
 
       const listingData: Record<string, any> = {
         listing_type: formData.listingType,
@@ -401,27 +401,27 @@ export default function SellTicket() {
         tags: formData.selectedTags as any,
       };
 
-      if (isVoucher) {
-        listingData.title = `${formData.airline} ${creditTypes.find(c => c.value === formData.creditType)?.label || "Credit"}`;
-        listingData.credit_type = formData.creditType;
-        listingData.credit_value = formData.creditValue ? parseFloat(formData.creditValue) : null;
-        listingData.credit_currency = formData.creditCurrency;
-        listingData.credit_expiry_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : null;
-        // Set required flight fields to placeholder values for vouchers
-        listingData.origin_city = "N/A";
-        listingData.origin_country = "N/A";
-        listingData.destination_city = "N/A";
-        listingData.destination_country = "N/A";
-        listingData.departure_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
-        listingData.ticket_count = 1;
-        // Add voucher verification data
-        if (voucherVerification) {
-          listingData.voucher_verified = voucherVerification.isValid && voucherVerification.confidenceScore >= 70;
-          listingData.voucher_confidence_score = voucherVerification.confidenceScore;
-          listingData.voucher_reference_code = voucherVerification.referenceCode || null;
-          listingData.voucher_verification_flags = voucherVerification.flags || [];
-          listingData.voucher_restrictions = voucherVerification.restrictions || null;
-        }
+      if (isTrain) {
+        const op = getOperator(formData.operator);
+        const fare = op?.fares.find((f) => f.value === formData.trainClass);
+        listingData.airline = formData.operator; // store operator name in airline col for legacy compat
+        listingData.operator = formData.operator;
+        listingData.train_number = formData.trainNumber || null;
+        listingData.train_class = formData.trainClass || null;
+        listingData.origin_station = formData.trainOriginStation || null;
+        listingData.destination_station = formData.trainDestinationStation || null;
+        listingData.departure_time = formData.departureTime || null;
+        listingData.title = `${formData.destinationCity} Train Trip`;
+        listingData.origin_city = formData.originCity;
+        listingData.origin_country = formData.originCountry;
+        listingData.destination_city = formData.destinationCity;
+        listingData.destination_country = formData.destinationCountry;
+        listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
+        listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
+        listingData.ticket_count = ticketCount;
+        listingData.stopovers = 0;
+        // Store name-change fee SEPARATELY (additive at checkout)
+        listingData.name_change_fee = fare?.fee ?? 0;
       } else {
         listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
         listingData.origin_city = formData.originCity;
@@ -438,6 +438,8 @@ export default function SellTicket() {
         listingData.speedy_boarding = sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false;
         listingData.stopovers = parseInt(formData.stopovers);
         listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
+        // Store flight name-change fee SEPARATELY (additive at checkout)
+        listingData.name_change_fee = flightTransferFee ?? null;
       }
 
       if (editId) {
