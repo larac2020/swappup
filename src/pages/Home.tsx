@@ -217,6 +217,18 @@ export default function Home() {
     },
   });
 
+  // Filter listings client-side based on the selected type filter.
+  const applyTypeFilter = (rows: any[]): any[] => {
+    if (typeFilter === "all") {
+      // Hide travel credits everywhere; show only flights and trains.
+      return rows.filter((r) => {
+        const t = r.listing_type || "flight_ticket";
+        return t === "flight_ticket" || t === "train_ticket";
+      });
+    }
+    return rows.filter((r) => (r.listing_type || "flight_ticket") === typeFilter);
+  };
+
   const renderSection = (
     title: string,
     icon: React.ReactNode,
@@ -224,7 +236,8 @@ export default function Home() {
     isLoading: boolean,
     browseLink?: string
   ) => {
-    if (!isLoading && listings.length === 0) return null;
+    const filtered = applyTypeFilter(listings);
+    if (!isLoading && filtered.length === 0) return null;
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-4">
@@ -245,7 +258,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-1 px-4 scrollbar-hide">
-            {listings.map((listing) => (
+            {filtered.map((listing) => (
               <MiniListingCard
                 key={listing.id}
                 id={listing.id}
@@ -359,15 +372,6 @@ export default function Home() {
           favTagListings,
           loadingFavTags,
           "/browse"
-        )}
-
-        {/* Travel Credits / Vouchers */}
-        {renderSection(
-          "Travel Credits",
-          <CreditCard className="w-4 h-4 text-primary" />,
-          travelCredits,
-          loadingCredits,
-          "/browse?type=credits"
         )}
 
         {/* Under €100 */}
