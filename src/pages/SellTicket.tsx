@@ -395,6 +395,19 @@ export default function SellTicket() {
         setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
 
         toast({ title: "Ticket parsed!", description: `Detected ${count} ticket${count > 1 ? "s" : ""}. Please review the details below.` });
+
+        // Auto-verify against airline schedule when we have the minimum required fields
+        if (p.airline && p.flightNumber && p.departureDate) {
+          await verifyFlightSchedule({
+            airline: p.airline,
+            flightNumber: p.flightNumber,
+            departureDate: p.departureDate,
+            originCity: p.originCity,
+            destinationCity: p.destinationCity,
+            originCountry: p.originCountry,
+            destinationCountry: p.destinationCountry,
+          });
+        }
       }
     } catch (err: any) {
       console.error("Ticket parse error:", err);
