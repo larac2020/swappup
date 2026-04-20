@@ -116,6 +116,21 @@ export default function SellTicket() {
   const [voucherVerification, setVoucherVerification] = useState<any>(null);
   const [editLoaded, setEditLoaded] = useState(false);
 
+  // Flight schedule verification (Aviationstack via edge function)
+  const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
+  const [flightVerification, setFlightVerification] = useState<{
+    status: "verified" | "mismatch" | "not_found" | "provider_error" | "error" | "invalid_input";
+    flags?: string[];
+    verified?: {
+      airline?: string | null;
+      originIata?: string | null;
+      destinationIata?: string | null;
+      originAirport?: string | null;
+      destinationAirport?: string | null;
+    };
+    message?: string;
+  } | null>(null);
+
   // Shared inclusions (used when sameInclusions is true)
   const [sharedInclusions, setSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
   // Per-ticket inclusions (used when sameInclusions is false)
