@@ -168,7 +168,7 @@ export default function SellTicket() {
       setIsReturn(hasReturn);
 
       setFormData({
-        listingType: (editListing as any).listing_type || "flight_ticket",
+        listingType: ((editListing as any).listing_type === "train_ticket" ? "train_ticket" : "flight_ticket") as "flight_ticket" | "train_ticket",
         originCountry: editListing.origin_country,
         originCity: editListing.origin_city,
         originAirport: "",
@@ -187,10 +187,12 @@ export default function SellTicket() {
         additionalNotes: editListing.additional_notes || "",
         selectedTags: (editListing.tags as string[]) || [],
         bumpListing: false,
-        creditType: (editListing as any).credit_type || "",
-        creditValue: (editListing as any).credit_value ? String(Number((editListing as any).credit_value)) : "",
-        creditCurrency: (editListing as any).credit_currency || "EUR",
-        creditExpiryDate: (editListing as any).credit_expiry_date ? new Date((editListing as any).credit_expiry_date) : undefined,
+        operator: (editListing as any).operator || "",
+        trainNumber: (editListing as any).train_number || "",
+        trainClass: (editListing as any).train_class || "",
+        trainOriginStation: (editListing as any).origin_station || "",
+        trainDestinationStation: (editListing as any).destination_station || "",
+        departureTime: (editListing as any).departure_time || "",
       });
 
       const shared: TicketInclusions = {
