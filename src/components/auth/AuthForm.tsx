@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import swappupLogo from "@/assets/swappup-logo.png";
 
 type AuthMode = "login" | "signup" | "forgot";
 
@@ -141,20 +142,11 @@ export function AuthForm() {
       <div className="relative z-10 w-full max-w-md space-y-8">
         {/* Logo & Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-display font-bold tracking-tight text-foreground">
-            <span
-              style={{
-                background: "linear-gradient(135deg, hsl(38, 92%, 55%) 0%, hsl(40, 95%, 65%) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              Swapp
-            </span>
-            Up
-          </h1>
+          <img
+            src={swappupLogo}
+            alt="SwappUp"
+            className="mx-auto h-24 w-auto"
+          />
           <p className="text-muted-foreground">
             {mode === "login"
               ? "Welcome back. Sign in to continue."
