@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface TransferabilityCheckProps {
   airline: string;
   fareType: string;
+  onResult?: (r: { status: "allowed" | "denied" | "unknown"; blocking: boolean; fee: number | null }) => void;
 }
 
 // Fare type transferability rules per airline category
@@ -72,11 +73,23 @@ const fareTypes = [
 
 export { fareTypes };
 
-export default function TransferabilityCheck({ airline, fareType }: TransferabilityCheckProps) {
+export default function TransferabilityCheck({ airline, fareType, onResult }: TransferabilityCheckProps) {
   const result = useMemo(() => {
     const airlineData = getAirlineData(airline);
     return getTransferability(airlineData, fareType);
   }, [airline, fareType]);
+
+  // Propagate to parent so it can disable the publish button when blocking.
+  useMemo(() => {
+    if (result && onResult) {
+      onResult({
+        status: result.status,
+        blocking: result.status === "denied",
+        fee: result.fee,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.status, result?.fee]);
 
   if (!result) return null;
 
@@ -132,6 +145,14 @@ export default function TransferabilityCheck({ airline, fareType }: Transferabil
           <p className="text-xs text-muted-foreground">{result.warning}</p>
         </div>
       )}
+
+      {/* Always-visible warning to verify on airline website */}
+      <div className="flex items-start gap-2 p-2 rounded-lg bg-background/60">
+        <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Name-change fees change frequently. Always confirm the current fee on the airline's official website before listing.
+        </p>
+      </div>
     </div>
   );
 }
