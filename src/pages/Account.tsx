@@ -258,7 +258,7 @@ export default function Account() {
           {t("accountSignOut")}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">FlySwap v1.0.0</p>
+        <p className="text-center text-xs text-muted-foreground">{t("accountVersion")}</p>
       </div>
     </AppLayout>
   );

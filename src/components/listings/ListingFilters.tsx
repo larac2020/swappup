@@ -16,16 +16,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { airlines, getUniqueCities, getCountries, getCitiesByCountry } from "@/data/flightData";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const tripTags = [
-  { value: "city_trip", label: "City Trip" },
-  { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" },
-  { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" },
-  { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" },
-  { value: "business", label: "Business" },
+  { value: "city_trip", labelKey: "tagCityTrip" as const },
+  { value: "beach", labelKey: "tagBeach" as const },
+  { value: "winter_holiday", labelKey: "tagWinterHoliday" as const },
+  { value: "ski_trip", labelKey: "tagSkiTrip" as const },
+  { value: "adventure", labelKey: "tagAdventure" as const },
+  { value: "romantic", labelKey: "tagRomantic" as const },
+  { value: "family", labelKey: "tagFamily" as const },
+  { value: "business", labelKey: "tagBusiness" as const },
 ];
 
 type FlexOption = "exact" | "+-1" | "+-3" | "month" | "any";
@@ -79,6 +80,7 @@ export const defaultFilters: FilterState = {
 };
 
 export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [], externalFilters }: ListingFiltersProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
@@ -415,7 +417,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     const items: { label: string; value: string; icon?: React.ReactNode; isSeparator?: boolean }[] = [];
     // Current location
     items.push({
-      label: geoLoading ? "Locating..." : currentLocationCountry ? `Current Location (${currentLocationCountry})` : "Use Current Location",
+      label: geoLoading ? t("filterLocating") : currentLocationCountry ? t("filterCurrentLocationLabel", { location: currentLocationCountry }) : t("filterCurrentLocation"),
       value: "__current__",
       icon: <Navigation className="w-3.5 h-3.5 text-primary" />,
     });
@@ -423,13 +425,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     const favCountry = (profile as any)?.favorite_departure_country;
     if (favCountry) {
       items.push({
-        label: `${favCountry} (Favorite)`,
+        label: t("filterFavoriteLabel", { name: favCountry }),
         value: favCountry,
         icon: <Star className="w-3.5 h-3.5 text-primary" />,
       });
     }
     // Any
-    items.push({ label: "Any Country", value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
+    items.push({ label: t("filterAnyCountry"), value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
     items.push({ label: "", value: "", isSeparator: true });
     filteredFromCountries.forEach(c => items.push({ label: c, value: c, icon: <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> }));
     return items;
@@ -439,18 +441,18 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   const fromCityItems = useMemo(() => {
     const items: { label: string; value: string; icon?: React.ReactNode; isSeparator?: boolean }[] = [];
     items.push({
-      label: geoLoading ? "Locating..." : currentLocationCity ? `Current Location (${currentLocationCity})` : "Use Current Location",
+      label: geoLoading ? t("filterLocating") : currentLocationCity ? t("filterCurrentLocationLabel", { location: currentLocationCity }) : t("filterCurrentLocation"),
       value: "__current__",
       icon: <Navigation className="w-3.5 h-3.5 text-primary" />,
     });
     if (profile?.favorite_departure_city) {
       items.push({
-        label: `${profile.favorite_departure_city} (Favorite)`,
+        label: t("filterFavoriteLabel", { name: profile.favorite_departure_city }),
         value: profile.favorite_departure_city,
         icon: <Star className="w-3.5 h-3.5 text-primary" />,
       });
     }
-    items.push({ label: "Any City", value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
+    items.push({ label: t("filterAnyCity"), value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
     items.push({ label: "", value: "", isSeparator: true });
     filteredFromCities.forEach(c => items.push({ label: c, value: c, icon: <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> }));
     return items;
@@ -459,7 +461,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   // Build to-country items
   const toCountryItems = useMemo(() => {
     const items: { label: string; value: string; icon?: React.ReactNode; isSeparator?: boolean }[] = [];
-    items.push({ label: "Any Country", value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
+    items.push({ label: t("filterAnyCountry"), value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
     items.push({ label: "", value: "", isSeparator: true });
     filteredToCountries.forEach(c => items.push({ label: c, value: c, icon: <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> }));
     return items;
@@ -468,7 +470,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
   // Build to-city items
   const toCityItems = useMemo(() => {
     const items: { label: string; value: string; icon?: React.ReactNode; isSeparator?: boolean }[] = [];
-    items.push({ label: "Any City", value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
+    items.push({ label: t("filterAnyCity"), value: "any", icon: <Globe className="w-3.5 h-3.5 text-primary" /> });
     items.push({ label: "", value: "", isSeparator: true });
     filteredToCities.forEach(c => items.push({ label: c, value: c, icon: <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> }));
     return items;
@@ -481,7 +483,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
         <div className="relative flex-1" ref={searchRef}>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search destinations, airlines..."
+            placeholder={t("filterSearchPlaceholder")}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
@@ -515,11 +517,11 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
           <SheetContent className="w-full sm:max-w-md bg-card border-border overflow-y-auto">
             <SheetHeader className="text-left">
               <div className="flex items-center justify-between">
-                <SheetTitle className="text-foreground">Filters</SheetTitle>
+                <SheetTitle className="text-foreground">{t("filterFilters")}</SheetTitle>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">{resultCount} results</span>
+                  <span className="text-sm text-muted-foreground">{t("filterResults", { count: resultCount })}</span>
                   {activeFilterCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters}>Clear all</Button>
+                    <Button variant="ghost" size="sm" onClick={clearFilters}>{t("filterClearAll")}</Button>
                   )}
                 </div>
               </div>
@@ -530,7 +532,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <PlaneIcon className="w-4 h-4 text-primary rotate-45" />
-                  From
+                  {t("filterFrom")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   {/* From Country */}
@@ -540,10 +542,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden [&>*]:min-w-0", !currentFilters.originCountry && "text-muted-foreground")}
                       onClick={() => { setShowFromCountry(!showFromCountry); setShowFromCity(false); }}
                     >
-                      <span className="block truncate max-w-full">{currentFilters.originCountry === "any" ? "Any" : currentFilters.originCountry || "Country"}</span>
+                      <span className="block truncate max-w-full">{currentFilters.originCountry === "any" ? t("filterAny") : currentFilters.originCountry || t("filterCountry")}</span>
                     </Button>
                     {renderDropdown(
-                      fromCountryRef, showFromCountry, fromCountrySearch, setFromCountrySearch, "Search country...",
+                      fromCountryRef, showFromCountry, fromCountrySearch, setFromCountrySearch, t("filterSearchCountry"),
                       fromCountryItems,
                       (val) => {
                         if (val === "__current__") { requestCurrentLocation(); return; }
@@ -562,10 +564,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.origin && "text-muted-foreground", currentFilters.originCountry === "any" && "opacity-50 cursor-not-allowed")}
                       onClick={() => { if (currentFilters.originCountry !== "any") { setShowFromCity(!showFromCity); setShowFromCountry(false); } }}
                     >
-                      {currentFilters.originCountry === "any" ? "Any" : currentFilters.origin === "any" ? "Any" : currentFilters.origin || "City"}
+                      {currentFilters.originCountry === "any" ? t("filterAny") : currentFilters.origin === "any" ? t("filterAny") : currentFilters.origin || t("filterCity")}
                     </Button>
                     {renderDropdown(
-                      fromCityRef, showFromCity, fromCitySearch, setFromCitySearch, "Search city...",
+                      fromCityRef, showFromCity, fromCitySearch, setFromCitySearch, t("filterSearchCity"),
                       fromCityItems,
                       (val) => {
                         if (val === "__current__") { requestCurrentLocation(); return; }
@@ -583,7 +585,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <PlaneIcon className="w-4 h-4 text-primary -rotate-45" />
-                  To
+                  {t("filterTo")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   {/* To Country */}
@@ -593,10 +595,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       className={cn("w-full justify-start text-left font-normal text-sm h-10 min-w-0 overflow-hidden [&>*]:min-w-0", !currentFilters.destinationCountry && "text-muted-foreground")}
                       onClick={() => { setShowToCountry(!showToCountry); setShowToCity(false); }}
                     >
-                      <span className="block truncate max-w-full">{currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destinationCountry || "Country"}</span>
+                      <span className="block truncate max-w-full">{currentFilters.destinationCountry === "any" ? t("filterAny") : currentFilters.destinationCountry || t("filterCountry")}</span>
                     </Button>
                     {renderDropdown(
-                      toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, "Search country...",
+                      toCountryRef, showToCountry, toCountrySearch, setToCountrySearch, t("filterSearchCountry"),
                       toCountryItems,
                       (val) => {
                         localUpdate({ destinationCountry: val === "any" ? "any" : val, destination: val === "any" ? "" : "" });
@@ -614,10 +616,10 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       className={cn("w-full justify-start text-left font-normal text-sm h-10", !currentFilters.destination && "text-muted-foreground", currentFilters.destinationCountry === "any" && "opacity-50 cursor-not-allowed")}
                       onClick={() => { if (currentFilters.destinationCountry !== "any") { setShowToCity(!showToCity); setShowToCountry(false); } }}
                     >
-                      {currentFilters.destinationCountry === "any" ? "Any" : currentFilters.destination === "any" ? "Any" : currentFilters.destination || "City"}
+                      {currentFilters.destinationCountry === "any" ? t("filterAny") : currentFilters.destination === "any" ? t("filterAny") : currentFilters.destination || t("filterCity")}
                     </Button>
                     {renderDropdown(
-                      toCityRef, showToCity, toCitySearch, setToCitySearch, "Search city...",
+                      toCityRef, showToCity, toCitySearch, setToCitySearch, t("filterSearchCity"),
                       toCityItems,
                       (val) => {
                         localUpdate({ destination: val === "any" ? "any" : val });
@@ -634,17 +636,17 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4 text-primary" />
-                  Dates
+                  {t("filterDates")}
                 </Label>
 
                 {/* Flexible date options */}
                 <div className="flex flex-wrap gap-2">
                   {([
-                    { value: "exact" as FlexOption, label: "Exact" },
-                    { value: "+-1" as FlexOption, label: "± 1 day" },
-                    { value: "+-3" as FlexOption, label: "± 3 days" },
-                    { value: "month" as FlexOption, label: "Cheapest month" },
-                    { value: "any" as FlexOption, label: "Any date" },
+                    { value: "exact" as FlexOption, label: t("filterExact") },
+                    { value: "+-1" as FlexOption, label: t("filterFlex1") },
+                    { value: "+-3" as FlexOption, label: t("filterFlex3") },
+                    { value: "month" as FlexOption, label: t("filterFlexCheapest") },
+                    { value: "any" as FlexOption, label: t("filterFlexAny") },
                   ]).map((opt) => (
                     <Badge
                       key={opt.value}
@@ -669,7 +671,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
                 {currentFilters.flexOption === "month" && (
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Tap a month to search. Colors show cheapest prices.</p>
+                    <p className="text-xs text-muted-foreground">{t("filterMonthHint")}</p>
                     <div className="grid grid-cols-3 gap-2">
                       {Array.from({ length: 12 }).map((_, i) => {
                         const month = addMonths(startOfMonth(new Date()), i);
@@ -715,7 +717,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                             {price !== undefined ? (
                               <div className="text-sm font-bold mt-0.5">€{price}</div>
                             ) : (
-                              <div className="text-[10px] mt-0.5">No flights</div>
+                              <div className="text-[10px] mt-0.5">{t("filterNoFlights")}</div>
                             )}
                           </div>
                         );
@@ -723,7 +725,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     </div>
                     {currentFilters.departureDateFrom && (
                       <p className="text-xs text-muted-foreground">
-                        Searching all of {format(new Date(currentFilters.departureDateFrom), "MMMM yyyy")}
+                        {t("filterSearchingMonth", { month: format(new Date(currentFilters.departureDateFrom), "MMMM yyyy") })}
                       </p>
                     )}
                   </div>
@@ -734,7 +736,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("justify-start text-left font-normal text-sm h-10", !currentFilters.departureDateFrom && "text-muted-foreground")}>
-                          {currentFilters.departureDateFrom ? format(new Date(currentFilters.departureDateFrom), "dd MMM yy") : "From"}
+                          {currentFilters.departureDateFrom ? format(new Date(currentFilters.departureDateFrom), "dd MMM yy") : t("filterFrom")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 bg-card border-border z-50" align="start">
@@ -751,7 +753,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("justify-start text-left font-normal text-sm h-10", !currentFilters.departureDateTo && "text-muted-foreground")}>
-                          {currentFilters.departureDateTo ? format(new Date(currentFilters.departureDateTo), "dd MMM yy") : "To"}
+                          {currentFilters.departureDateTo ? format(new Date(currentFilters.departureDateTo), "dd MMM yy") : t("filterTo")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 bg-card border-border z-50" align="start">
@@ -780,7 +782,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <PlaneIcon className="w-4 h-4 text-primary" />
-                  Airline
+                  {t("filterAirline")}
                 </Label>
                 {currentFilters.airlines.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
@@ -798,13 +800,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                     className={cn("w-full justify-start text-left font-normal text-sm h-10", currentFilters.airlines.length === 0 && "text-muted-foreground")}
                     onClick={() => setShowAirlineDropdown(!showAirlineDropdown)}
                   >
-                    {currentFilters.airlines.length === 0 ? "Any airline" : `${currentFilters.airlines.length} selected`}
+                    {currentFilters.airlines.length === 0 ? t("filterAnyAirline") : t("filterSelectedCount", { count: currentFilters.airlines.length })}
                   </Button>
                   {showAirlineDropdown && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 max-h-64 overflow-hidden">
                       <div className="p-2 border-b border-border">
                         <Input
-                          placeholder="Search airlines..."
+                          placeholder={t("filterSearchAirlines")}
                           value={airlineSearch}
                           onChange={(e) => setAirlineSearch(e.target.value)}
                           className="h-8 text-sm bg-secondary/30"
@@ -818,7 +820,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                           onClick={() => { localUpdate({ airlines: [] }); setShowAirlineDropdown(false); setAirlineSearch(""); }}
                         >
                           <Globe className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-sm">Any airline</span>
+                          <span className="text-sm">{t("filterAnyAirline")}</span>
                         </button>
                         <div className="px-4 py-1"><Separator /></div>
                         {filteredAirlines.map((a) => (
@@ -845,7 +847,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               {/* Price Range */}
               <div className="space-y-4">
                 <Label className="flex items-center justify-between">
-                  <span>Price Range</span>
+                  <span>{t("filterPrice")}</span>
                   <span className="text-primary font-semibold">€{priceRange[0]} – €{priceRange[1]}</span>
                 </Label>
                 <Slider
@@ -867,7 +869,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
               {/* Direct flights only */}
               <div className="flex items-center justify-between">
-                <Label>Direct flights only</Label>
+                <Label>{t("filterDirectFlights")}</Label>
                 <Switch
                   checked={currentFilters.directOnly || false}
                   onCheckedChange={(checked) => localUpdate({ directOnly: checked || undefined })}
@@ -876,18 +878,18 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
 
               {/* Includes */}
               <div className="space-y-3">
-                <Label>Includes</Label>
+                <Label>{t("filterIncludes")}</Label>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm"><Luggage className="w-4 h-4 text-muted-foreground" />Luggage</div>
+                    <div className="flex items-center gap-2 text-sm"><Luggage className="w-4 h-4 text-muted-foreground" />{t("filterLuggage")}</div>
                     <Switch checked={currentFilters.luggageIncluded || false} onCheckedChange={(checked) => localUpdate({ luggageIncluded: checked || undefined })} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-muted-foreground" />Carry-on</div>
+                    <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-muted-foreground" />{t("filterCarryOnShort")}</div>
                     <Switch checked={currentFilters.carryOnIncluded || false} onCheckedChange={(checked) => localUpdate({ carryOnIncluded: checked || undefined })} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm"><UtensilsCrossed className="w-4 h-4 text-muted-foreground" />Meal</div>
+                    <div className="flex items-center gap-2 text-sm"><UtensilsCrossed className="w-4 h-4 text-muted-foreground" />{t("filterMeal")}</div>
                     <Switch checked={currentFilters.mealIncluded || false} onCheckedChange={(checked) => localUpdate({ mealIncluded: checked || undefined })} />
                   </div>
                 </div>
@@ -897,7 +899,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-primary" />
-                  Minimum Tickets
+                  {t("filterMinTickets")}
                 </Label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4].map((count) => (
@@ -918,7 +920,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
-                  Trip Type
+                  {t("filterTripType")}
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {tripTags.map((tag) => (
@@ -933,7 +935,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       )}
                       onClick={() => toggleTag(tag.value)}
                     >
-                      {tag.label}
+                      {t(tag.labelKey)}
                     </Badge>
                   ))}
                 </div>
@@ -942,7 +944,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               {/* Search Button */}
               <Button className="w-full h-12 text-base font-semibold" onClick={handleSearchClick}>
                 <Search className="w-4 h-4 mr-2" />
-                Search
+                {t("filterApply")}
               </Button>
             </div>
           </SheetContent>
@@ -952,49 +954,49 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
       {/* Active Filters Badges */}
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-sm text-muted-foreground">{resultCount} results</span>
+          <span className="text-sm text-muted-foreground">{t("filterResults", { count: resultCount })}</span>
           {filters.originCountry && filters.originCountry !== "any" && (
             <Badge variant="secondary" className="gap-1">
-              From: {filters.originCountry}
+              {t("filterFrom")}: {filters.originCountry}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ originCountry: "", origin: "" })} />
             </Badge>
           )}
           {filters.origin && filters.origin !== "any" && !filters.originCountry && (
             <Badge variant="secondary" className="gap-1">
-              From: {filters.origin}
+              {t("filterFrom")}: {filters.origin}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ origin: "" })} />
             </Badge>
           )}
           {filters.destinationCountry && filters.destinationCountry !== "any" && (
             <Badge variant="secondary" className="gap-1">
-              To: {filters.destinationCountry}
+              {t("filterTo")}: {filters.destinationCountry}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ destinationCountry: "", destination: "" })} />
             </Badge>
           )}
           {filters.destination && filters.destination !== "any" && !filters.destinationCountry && (
             <Badge variant="secondary" className="gap-1">
-              To: {filters.destination}
+              {t("filterTo")}: {filters.destination}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ destination: "" })} />
             </Badge>
           )}
           {filters.departureDateFrom && (
             <Badge variant="secondary" className="gap-1">
-              From: {format(new Date(filters.departureDateFrom), "dd MMM")}
+              {t("filterFrom")}: {format(new Date(filters.departureDateFrom), "dd MMM")}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ departureDateFrom: undefined })} />
             </Badge>
           )}
           {filters.departureDateTo && (
             <Badge variant="secondary" className="gap-1">
-              Until: {format(new Date(filters.departureDateTo), "dd MMM")}
+              {t("filterUntil")}: {format(new Date(filters.departureDateTo), "dd MMM")}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ departureDateTo: undefined })} />
             </Badge>
           )}
           {filters.flexOption !== "exact" && (
             <Badge variant="secondary" className="gap-1">
-              {filters.flexOption === "+-1" && "± 1 day"}
-              {filters.flexOption === "+-3" && "± 3 days"}
-              {filters.flexOption === "month" && "Cheapest month"}
-              {filters.flexOption === "any" && "Any date"}
+              {filters.flexOption === "+-1" && t("filterFlex1")}
+              {filters.flexOption === "+-3" && t("filterFlex3")}
+              {filters.flexOption === "month" && t("filterFlexCheapest")}
+              {filters.flexOption === "any" && t("filterFlexAny")}
               <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ flexOption: "exact" })} />
             </Badge>
           )}
@@ -1014,20 +1016,20 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
             </Badge>
           )}
           {filters.directOnly && (
-            <Badge variant="secondary" className="gap-1">Direct only<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ directOnly: undefined })} /></Badge>
+            <Badge variant="secondary" className="gap-1">{t("filterDirectOnly")}<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ directOnly: undefined })} /></Badge>
           )}
           {filters.luggageIncluded && (
-            <Badge variant="secondary" className="gap-1">Luggage<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ luggageIncluded: undefined })} /></Badge>
+            <Badge variant="secondary" className="gap-1">{t("filterLuggage")}<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ luggageIncluded: undefined })} /></Badge>
           )}
           {filters.carryOnIncluded && (
-            <Badge variant="secondary" className="gap-1">Carry-on<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ carryOnIncluded: undefined })} /></Badge>
+            <Badge variant="secondary" className="gap-1">{t("filterCarryOnShort")}<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ carryOnIncluded: undefined })} /></Badge>
           )}
           {filters.mealIncluded && (
-            <Badge variant="secondary" className="gap-1">Meal<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ mealIncluded: undefined })} /></Badge>
+            <Badge variant="secondary" className="gap-1">{t("filterMeal")}<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ mealIncluded: undefined })} /></Badge>
           )}
           {filters.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="gap-1">
-              {tripTags.find((t) => t.value === tag)?.label}
+              {(() => { const found = tripTags.find((tt) => tt.value === tag); return found ? t(found.labelKey) : tag; })()}
               <X className="w-3 h-3 cursor-pointer" onClick={() => {
                 const newTags = filters.tags.filter(t => t !== tag);
                 updateFilters({ tags: newTags });
