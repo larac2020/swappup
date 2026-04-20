@@ -744,7 +744,7 @@ const translations = {
     cartTitle: "Il Tuo Carrello",
     cartEmpty: "Il carrello è vuoto",
     cartEmptyDesc: "Sfoglia i nostri annunci per trovare offerte incredibili sui biglietti aerei.",
-    cartBrowseTickets: "Sfoglia Biglietti",
+    cartBrowseTickets: "Cerca viaggi",
     cartItems: "{count} {itemLabel}",
     cartItem: "articolo",
     cartItems_plural: "articoli",
