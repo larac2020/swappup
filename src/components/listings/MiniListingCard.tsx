@@ -56,7 +56,7 @@ export function MiniListingCard({
         <div className="relative h-24 overflow-hidden">
           <img
             src={imageUrl || "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400&auto=format&fit=crop"}
-            alt={isVoucher ? title || airline : destinationCity}
+            alt={destinationCity || title || carrierLabel}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />

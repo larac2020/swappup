@@ -272,6 +272,7 @@ export default function Home() {
                 listingType={(listing as any).listing_type ?? "flight_ticket"}
                 creditType={(listing as any).credit_type}
                 title={listing.title}
+                operator={(listing as any).operator}
               />
             ))}
           </div>
