@@ -1267,13 +1267,31 @@ export default function SellTicket() {
             </div>
           </div>
 
-          <Button type="submit" variant="gold" size="xl" className="w-full" disabled={createListingMutation.isPending}>
-            {createListingMutation.isPending ? (
-              <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
-            ) : (
-              <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
-            )}
-          </Button>
+          {(() => {
+            const blockedByVerification =
+              formData.listingType === "flight_ticket" &&
+              flightVerification != null &&
+              (flightVerification.status === "mismatch" || flightVerification.status === "not_found");
+            return (
+              <Button
+                type="submit"
+                variant="gold"
+                size="xl"
+                className="w-full"
+                disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification}
+              >
+                {createListingMutation.isPending ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
+                ) : isVerifyingFlight ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />Verifying flight...</>
+                ) : blockedByVerification ? (
+                  <><AlertCircle className="w-5 h-5" />Listing blocked — verification failed</>
+                ) : (
+                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
+                )}
+              </Button>
+            );
+          })()}
         </form>
         )}
       </div>
