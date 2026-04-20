@@ -1204,7 +1204,7 @@ export default function SellTicket() {
                 ) : blockedByVerification ? (
                   <><AlertCircle className="w-5 h-5" />{t("sellSubmitBlocked")}</>
                 ) : (
-                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
+                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? t("sellSubmitUpdate") : t("sellHeaderCreate")}</>
                 )}
               </Button>
             );
