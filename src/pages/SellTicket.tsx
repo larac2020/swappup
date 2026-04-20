@@ -116,6 +116,9 @@ export default function SellTicket() {
   const [isUploading, setIsUploading] = useState(false);
   const [editLoaded, setEditLoaded] = useState(false);
 
+  // Ticket upload is mandatory (except in edit mode where the listing already exists)
+  const [ticketUploaded, setTicketUploaded] = useState(false);
+
   // Transferability blocking flags from the in-form check cards
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
@@ -165,6 +168,8 @@ export default function SellTicket() {
   useEffect(() => {
     if (editListing && !editLoaded) {
       setEditLoaded(true);
+      // Existing listing — treat upload requirement as satisfied
+      setTicketUploaded(true);
       const hasReturn = !!editListing.return_date;
       setIsReturn(hasReturn);
 
@@ -266,6 +271,7 @@ export default function SellTicket() {
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
     setTrainTransferResult(null);
+    setTicketUploaded(false);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -336,6 +342,8 @@ export default function SellTicket() {
         const p = data.parsed;
         const hasReturn = !!p.returnDate;
         setIsReturn(hasReturn);
+        // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
+        setTicketUploaded(true);
 
         const parsedCount = p.ticketCount ? String(p.ticketCount) : "1";
 
@@ -374,7 +382,9 @@ export default function SellTicket() {
       }
     } catch (err: any) {
       console.error("Ticket parse error:", err);
-      toast({ title: "Could not read ticket", description: "Please fill in the details manually.", variant: "destructive" });
+      // The file was still uploaded successfully, parsing just failed — count as satisfied
+      setTicketUploaded(true);
+      toast({ title: "Could not read ticket", description: "We couldn't auto-fill the details. Please fill them in manually.", variant: "destructive" });
     } finally {
       setIsUploading(false);
       // Reset file input so re-uploading the same file triggers onChange
@@ -496,6 +506,33 @@ export default function SellTicket() {
       toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
       return;
     }
+    // Mandatory ticket upload (skipped only in edit mode)
+    if (!isEditMode && !ticketUploaded) {
+      toast({
+        title: "Ticket upload required",
+        description: "Please upload a photo or PDF of your ticket confirmation before publishing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Departure must be at least 24 hours in the future
+    const minTs = Date.now() + 24 * 60 * 60 * 1000;
+    if (formData.departureDate && formData.departureDate.getTime() < minTs) {
+      toast({
+        title: "Departure too soon",
+        description: "Tickets must depart at least 24 hours from now. Expired or same-day tickets cannot be listed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (isReturn && formData.returnDate && formData.departureDate && formData.returnDate.getTime() < formData.departureDate.getTime()) {
+      toast({
+        title: "Invalid return date",
+        description: "Return date must be on or after the departure date.",
+        variant: "destructive",
+      });
+      return;
+    }
     const isTrain = formData.listingType === "train_ticket";
     if (isTrain) {
       if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
@@ -540,8 +577,14 @@ export default function SellTicket() {
     createListingMutation.mutate();
   };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Tickets must depart at least 24 hours from now.
+  // We compute the earliest *day* the user is allowed to pick (start of that day).
+  const minDepartureDate = useMemo(() => {
+    const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const today = minDepartureDate; // backward-compat for existing references below
 
   const renderInclusionToggles = (inclusions: TicketInclusions, onChange: (field: keyof TicketInclusions, value: boolean) => void, label?: string) => (
     <div className="space-y-3">
@@ -668,6 +711,45 @@ export default function SellTicket() {
             </div>
           </div>
 
+          {/* Upload Ticket — REQUIRED for both flights & trains */}
+          {!isEditMode && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Upload className="w-5 h-5 text-primary" />
+                Upload Ticket Confirmation
+                <span className="text-xs font-normal text-destructive">* Required</span>
+              </h2>
+              <label
+                className={cn(
+                  "glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors border-2 border-dashed",
+                  ticketUploaded ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/30"
+                )}
+              >
+                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">Reading your ticket...</p>
+                  </>
+                ) : ticketUploaded ? (
+                  <>
+                    <CheckCircle2 className="w-8 h-8 text-primary" />
+                    <p className="text-sm font-medium">Ticket uploaded</p>
+                    <p className="text-xs text-muted-foreground">Click to replace</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Upload a photo, screenshot or PDF of your ticket confirmation
+                    </p>
+                    <p className="text-xs text-muted-foreground">We'll auto-fill the details where possible</p>
+                  </>
+                )}
+              </label>
+            </div>
+          )}
+
           {/* TRAIN TICKET FORM */}
           {formData.listingType === "train_ticket" && (
             <TrainForm
@@ -676,7 +758,7 @@ export default function SellTicket() {
               isReturn={isReturn}
               setIsReturn={setIsReturn}
               priceError={!!priceError}
-              today={today}
+              today={minDepartureDate}
               onTransferResult={setTrainTransferResult}
               transferResult={trainTransferResult}
             />
@@ -685,32 +767,9 @@ export default function SellTicket() {
           {/* FLIGHT TICKET FORM */}
           {formData.listingType === "flight_ticket" && (
             <>
-          {/* Upload Ticket */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Upload className="w-5 h-5 text-primary" />
-              Upload Ticket Confirmation
-            </h2>
-            <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
-              <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">Reading your ticket...</p>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Upload a photo or screenshot of your ticket confirmation to auto-fill details
-                  </p>
-                  <p className="text-xs text-muted-foreground">or fill in manually below</p>
-                </>
-              )}
-            </label>
-
-            {/* Flight schedule verification status */}
-            {(isVerifyingFlight || flightVerification) && (
+          {/* Flight schedule verification status */}
+          {(isVerifyingFlight || flightVerification) && (
+            <div>
               <div className={cn(
                 "rounded-xl border-2 p-4 space-y-2 animate-in fade-in slide-in-from-top-2",
                 isVerifyingFlight
@@ -765,8 +824,8 @@ export default function SellTicket() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Route */}
           <div className="space-y-4">
@@ -888,6 +947,7 @@ export default function SellTicket() {
                         selected={formData.departureDate}
                         onSelect={(date) => setFormData({ ...formData, departureDate: date })}
                         initialFocus
+                        disabled={(date) => date < minDepartureDate}
                         modifiers={{ today: today }}
                         modifiersClassNames={{ today: "text-muted-foreground" }}
                       />
@@ -910,6 +970,7 @@ export default function SellTicket() {
                           selected={formData.returnDate}
                           onSelect={(date) => setFormData({ ...formData, returnDate: date })}
                           initialFocus
+                          disabled={(date) => date < (formData.departureDate ?? minDepartureDate)}
                           modifiers={{ today: today }}
                           modifiersClassNames={{ today: "text-muted-foreground" }}
                         />
