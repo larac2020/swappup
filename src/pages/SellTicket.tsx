@@ -495,15 +495,31 @@ export default function SellTicket() {
       toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
       return;
     }
-    const isVoucher = formData.listingType === "travel_credit";
-    if (isVoucher) {
-      if (!formData.airline || !formData.creditType || !formData.price) {
-        toast({ title: "Missing fields", description: "Please fill in airline, credit type, and selling price.", variant: "destructive" });
+    const isTrain = formData.listingType === "train_ticket";
+    if (isTrain) {
+      if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
+        toast({ title: "Missing fields", description: "Please fill in route, operator, fare class, date and selling price.", variant: "destructive" });
+        return;
+      }
+      if (trainTransferResult?.blocking) {
+        toast({
+          title: "Listing blocked",
+          description: "This operator/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          variant: "destructive",
+        });
         return;
       }
     } else {
       if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
         toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+        return;
+      }
+      if (flightTransferBlocked) {
+        toast({
+          title: "Listing blocked",
+          description: "This airline/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -512,7 +528,7 @@ export default function SellTicket() {
       return;
     }
     // Block flight listings that failed external schedule verification
-    if (!isVoucher && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
+    if (!isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
       toast({
         title: "Listing blocked",
         description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
