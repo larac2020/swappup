@@ -888,6 +888,64 @@ export default function SellTicket() {
                 </>
               )}
             </label>
+
+            {/* Flight schedule verification status */}
+            {(isVerifyingFlight || flightVerification) && (
+              <div className={cn(
+                "rounded-xl border-2 p-4 space-y-2 animate-in fade-in slide-in-from-top-2",
+                isVerifyingFlight
+                  ? "border-primary/30 bg-primary/5"
+                  : flightVerification?.status === "verified"
+                    ? "border-green-500/30 bg-green-500/10"
+                    : flightVerification?.status === "error" || flightVerification?.status === "provider_error"
+                      ? "border-yellow-500/30 bg-yellow-500/10"
+                      : "border-destructive/30 bg-destructive/10"
+              )}>
+                {isVerifyingFlight ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    <p className="text-sm">Verifying flight against the airline's schedule…</p>
+                  </div>
+                ) : flightVerification?.status === "verified" ? (
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">Flight verified</p>
+                      <p className="text-xs text-muted-foreground">
+                        {flightVerification.verified?.airline} · {flightVerification.verified?.originIata} → {flightVerification.verified?.destinationIata}
+                      </p>
+                    </div>
+                  </div>
+                ) : flightVerification?.status === "mismatch" ? (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                    <div className="space-y-2 flex-1">
+                      <p className="font-semibold text-sm text-destructive">Ticket data doesn't match airline records</p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        {flightVerification.flags?.map((f, i) => <li key={i}>{f}</li>)}
+                      </ul>
+                      <p className="text-xs text-destructive font-medium">This listing cannot be published until the data matches.</p>
+                    </div>
+                  </div>
+                ) : flightVerification?.status === "not_found" ? (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-destructive">Flight not found in airline schedule</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? "Please check the flight number and date."}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">Verification unavailable</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? "We couldn't verify this flight right now."}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Route */}
