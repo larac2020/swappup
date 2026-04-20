@@ -622,25 +622,25 @@ export default function SellTicket() {
       {label && <p className="text-sm font-medium text-muted-foreground">{label}</p>}
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.luggageIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Luggage className="w-5 h-5" /><span>Checked Luggage</span>
+          <Luggage className="w-5 h-5" /><span>{t("sellInclLuggage")}</span>
         </div>
         <Switch checked={inclusions.luggageIncluded} onCheckedChange={(v) => onChange("luggageIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.carryOnIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Luggage className="w-5 h-5" /><span>Carry-on Bag</span>
+          <Luggage className="w-5 h-5" /><span>{t("sellInclCarryOn")}</span>
         </div>
         <Switch checked={inclusions.carryOnIncluded} onCheckedChange={(v) => onChange("carryOnIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.mealIncluded ? "text-primary" : "text-muted-foreground")}>
-          <Utensils className="w-5 h-5" /><span>In-flight Meal</span>
+          <Utensils className="w-5 h-5" /><span>{t("sellInclMeal")}</span>
         </div>
         <Switch checked={inclusions.mealIncluded} onCheckedChange={(v) => onChange("mealIncluded", v)} />
       </div>
       <div className="flex items-center justify-between">
         <div className={cn("flex items-center gap-3 transition-colors", inclusions.speedyBoarding ? "text-primary" : "text-muted-foreground")}>
-          <Zap className="w-5 h-5" /><span>Speedy Boarding</span>
+          <Zap className="w-5 h-5" /><span>{t("sellInclSpeedy")}</span>
         </div>
         <Switch checked={inclusions.speedyBoarding} onCheckedChange={(v) => onChange("speedyBoarding", v)} />
       </div>
@@ -655,7 +655,7 @@ export default function SellTicket() {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold">{editId ? "Edit Listing" : "Create Listing"}</h1>
+            <h1 className="font-semibold">{editId ? t("sellHeaderEdit") : t("sellHeaderCreate")}</h1>
           </div>
         </div>
 
@@ -668,9 +668,9 @@ export default function SellTicket() {
                   <AlertCircle className="w-5 h-5 text-destructive" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-lg">Complete your account setup</h2>
+                  <h2 className="font-semibold text-lg">{t("sellGateTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    You need to complete all required sections before you can sell tickets.
+                    {t("sellGateDesc")}
                   </p>
                 </div>
               </div>
@@ -678,30 +678,30 @@ export default function SellTicket() {
                 {!isProfileComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Personal Information incomplete
+                    {t("sellGatePersonalIncomplete")}
                   </div>
                 )}
                 {!isVerified && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    ID Verification incomplete
+                    {t("sellGateIdIncomplete")}
                   </div>
                 )}
                 {!isAddressComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Address incomplete
+                    {t("sellGateAddressIncomplete")}
                   </div>
                 )}
                 {!isPaymentComplete && (
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <span className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center text-xs font-bold">!</span>
-                    Payment method not added
+                    {t("sellGatePaymentIncomplete")}
                   </div>
                 )}
               </div>
               <Button variant="gold" size="lg" className="w-full" onClick={() => navigate("/account")}>
-                Go to Account Settings
+                {t("sellGateGoToAccount")}
               </Button>
             </div>
           </div>
