@@ -256,6 +256,50 @@ export default function SellTicket() {
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
     setVoucherVerification(null);
+    setFlightVerification(null);
+  };
+
+  const verifyFlightSchedule = async (params: {
+    airline: string;
+    flightNumber: string;
+    departureDate: string;
+    originCity?: string;
+    destinationCity?: string;
+    originCountry?: string;
+    destinationCountry?: string;
+  }) => {
+    setIsVerifyingFlight(true);
+    setFlightVerification(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-flight", { body: params });
+      if (error) throw error;
+      setFlightVerification(data);
+      if (data?.status === "verified") {
+        toast({ title: "Flight verified ✅", description: "Schedule data matches the airline's records." });
+      } else if (data?.status === "mismatch") {
+        toast({
+          title: "Mismatch detected",
+          description: "The ticket data doesn't match the airline's published schedule. Listing is blocked.",
+          variant: "destructive",
+        });
+      } else if (data?.status === "not_found") {
+        toast({
+          title: "Flight not found",
+          description: "We couldn't find this flight in the airline's schedule. Listing is blocked.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error("Flight verify error:", err);
+      setFlightVerification({ status: "error", message: err?.message || "Verification failed" });
+      toast({
+        title: "Verification unavailable",
+        description: "Could not reach the verification service. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingFlight(false);
+    }
   };
 
   const handleVoucherUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
