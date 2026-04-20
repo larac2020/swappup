@@ -31,12 +31,13 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 interface BoostOption {
   label: string;
+  labelKey: "boost24h" | "boost3d" | "boost7d";
   duration: string;
   hours: number;
   price: string;
 }
 
-const boostOptions: (BoostOption & { labelKey: "boost24h" | "boost3d" | "boost7d" })[] = [
+const boostOptions: BoostOption[] = [
   { label: "24 hours", labelKey: "boost24h", duration: "24h", hours: 24, price: "1.99" },
   { label: "3 days", labelKey: "boost3d", duration: "3d", hours: 72, price: "3.99" },
   { label: "1 week", labelKey: "boost7d", duration: "7d", hours: 168, price: "4.99" },
