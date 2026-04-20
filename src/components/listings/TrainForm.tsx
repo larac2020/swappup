@@ -15,6 +15,7 @@ import {
   getTrainCitiesByCountry, getStationsForCity
 } from "@/data/trainData";
 import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Props {
   formData: any;
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function TrainForm({ formData, setFormData, isReturn, setIsReturn, priceError, today, onTransferResult, transferResult }: Props) {
+  const { t } = useLanguage();
   const countries = useMemo(() => getTrainCountries(), []);
   const originCities = useMemo(() => formData.originCountry ? getTrainCitiesByCountry(formData.originCountry) : [], [formData.originCountry]);
   const destinationCities = useMemo(() => formData.destinationCountry ? getTrainCitiesByCountry(formData.destinationCountry) : [], [formData.destinationCountry]);
@@ -43,30 +45,30 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
       <div className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <TrainFront className="w-5 h-5 text-primary" />
-          Train Route
+          {t("sellTrainRoute")}
         </h2>
         <div className="glass rounded-2xl p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>From Country</Label>
+              <Label>{t("sellFromCountry")}</Label>
               <Select value={formData.originCountry} onValueChange={(v) => update({ originCountry: v, originCity: "", trainOriginStation: "" })}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCountry")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>From City</Label>
+              <Label>{t("sellFromCity")}</Label>
               <Select value={formData.originCity} onValueChange={(v) => update({ originCity: v, trainOriginStation: "" })} disabled={!formData.originCountry}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectCity")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">{originCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
           {originStations.length > 0 && (
             <div className="space-y-2">
-              <Label>From Station</Label>
+              <Label>{t("sellFromStation")}</Label>
               <Select value={formData.trainOriginStation} onValueChange={(v) => update({ trainOriginStation: v })}>
-                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select station" /></SelectTrigger>
+                <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectStation")} /></SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   {originStations.map((s) => <SelectItem key={s.stationCode} value={s.stationCode}>{s.stationCode} — {s.stationName}</SelectItem>)}
                 </SelectContent>
