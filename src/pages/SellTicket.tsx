@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  ShieldCheck, Ticket, CreditCard
+  ShieldCheck, Ticket, CreditCard, CheckCircle2
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import { cn } from "@/lib/utils";
