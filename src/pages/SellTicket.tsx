@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
+import TrainForm from "@/components/listings/TrainForm";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
