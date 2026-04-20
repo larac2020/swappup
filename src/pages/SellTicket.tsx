@@ -17,21 +17,21 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  ShieldCheck, Ticket, CreditCard, CheckCircle2
+  Ticket, TrainFront, CheckCircle2, Clock
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
+import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
+import TrainForm from "@/components/listings/TrainForm";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   getCountries, getCitiesByCountry, getAirportCodesForCity,
   airlines, CityData
 } from "@/data/flightData";
-
-const creditTypes = [
-  { value: "flight_credit", label: "Flight Credit" },
-  { value: "airline_voucher", label: "Airline Voucher" },
-  { value: "travel_funds", label: "Travel Funds" },
-];
+import {
+  trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
+  getStationsForCity, currencySymbol
+} from "@/data/trainData";
 
 const tripTags = [
   { value: "city_trip", label: "City Trip" },
@@ -59,7 +59,7 @@ const defaultInclusions: TicketInclusions = {
 };
 
 const getDefaultFormData = () => ({
-  listingType: "flight_ticket" as "flight_ticket" | "travel_credit",
+  listingType: "flight_ticket" as "flight_ticket" | "train_ticket",
   originCountry: "",
   originCity: "",
   originAirport: "",
@@ -78,11 +78,13 @@ const getDefaultFormData = () => ({
   additionalNotes: "",
   selectedTags: [] as string[],
   bumpListing: false,
-  // Voucher fields
-  creditType: "",
-  creditValue: "",
-  creditCurrency: "EUR",
-  creditExpiryDate: undefined as Date | undefined,
+  // Train-only fields
+  operator: "",
+  trainNumber: "",
+  trainClass: "",
+  trainOriginStation: "",
+  trainDestinationStation: "",
+  departureTime: "",
 });
 
 export default function SellTicket() {
@@ -112,9 +114,12 @@ export default function SellTicket() {
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isVerifyingVoucher, setIsVerifyingVoucher] = useState(false);
-  const [voucherVerification, setVoucherVerification] = useState<any>(null);
   const [editLoaded, setEditLoaded] = useState(false);
+
+  // Transferability blocking flags from the in-form check cards
+  const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
+  const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
+  const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
 
   // Flight schedule verification (Aviationstack via edge function)
   const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
@@ -164,7 +169,7 @@ export default function SellTicket() {
       setIsReturn(hasReturn);
 
       setFormData({
-        listingType: (editListing as any).listing_type || "flight_ticket",
+        listingType: ((editListing as any).listing_type === "train_ticket" ? "train_ticket" : "flight_ticket") as "flight_ticket" | "train_ticket",
         originCountry: editListing.origin_country,
         originCity: editListing.origin_city,
         originAirport: "",
@@ -183,10 +188,12 @@ export default function SellTicket() {
         additionalNotes: editListing.additional_notes || "",
         selectedTags: (editListing.tags as string[]) || [],
         bumpListing: false,
-        creditType: (editListing as any).credit_type || "",
-        creditValue: (editListing as any).credit_value ? String(Number((editListing as any).credit_value)) : "",
-        creditCurrency: (editListing as any).credit_currency || "EUR",
-        creditExpiryDate: (editListing as any).credit_expiry_date ? new Date((editListing as any).credit_expiry_date) : undefined,
+        operator: (editListing as any).operator || "",
+        trainNumber: (editListing as any).train_number || "",
+        trainClass: (editListing as any).train_class || "",
+        trainOriginStation: (editListing as any).origin_station || "",
+        trainDestinationStation: (editListing as any).destination_station || "",
+        departureTime: (editListing as any).departure_time || "",
       });
 
       const shared: TicketInclusions = {
@@ -255,8 +262,10 @@ export default function SellTicket() {
     setSharedInclusions({ ...defaultInclusions });
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
-    setVoucherVerification(null);
     setFlightVerification(null);
+    setFlightTransferBlocked(false);
+    setFlightTransferFee(null);
+    setTrainTransferResult(null);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -299,52 +308,6 @@ export default function SellTicket() {
       });
     } finally {
       setIsVerifyingFlight(false);
-    }
-  };
-
-  const handleVoucherUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsVerifyingVoucher(true);
-    setVoucherVerification(null);
-    try {
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-
-      const { data, error } = await supabase.functions.invoke("verify-voucher", {
-        body: { image: base64, fileName: file.name },
-      });
-
-      if (error) throw error;
-
-      if (data?.verification) {
-        const v = data.verification;
-        setVoucherVerification(v);
-
-        // Auto-fill form fields from verified data
-        if (v.isValid && v.confidenceScore >= 50) {
-          setFormData((prev) => ({
-            ...prev,
-            airline: v.airline || prev.airline,
-            creditType: v.creditType || prev.creditType,
-            creditValue: v.creditValue ? String(v.creditValue) : prev.creditValue,
-            creditCurrency: v.currency || prev.creditCurrency,
-            creditExpiryDate: v.expiryDate ? new Date(v.expiryDate) : prev.creditExpiryDate,
-          }));
-          toast({ title: "Voucher verified! ✅", description: `Confidence: ${v.confidenceScore}%. Details auto-filled.` });
-        } else {
-          toast({ title: "Verification failed", description: v.flags?.join(", ") || "This document could not be verified.", variant: "destructive" });
-        }
-      }
-    } catch (err: any) {
-      console.error("Voucher verify error:", err);
-      toast({ title: "Verification failed", description: "Could not verify the voucher. Please try again.", variant: "destructive" });
-    } finally {
-      setIsVerifyingVoucher(false);
-      e.target.value = "";
     }
   };
 
@@ -428,7 +391,7 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const isVoucher = formData.listingType === "travel_credit";
+      const isTrain = formData.listingType === "train_ticket";
 
       const listingData: Record<string, any> = {
         listing_type: formData.listingType,
@@ -439,27 +402,27 @@ export default function SellTicket() {
         tags: formData.selectedTags as any,
       };
 
-      if (isVoucher) {
-        listingData.title = `${formData.airline} ${creditTypes.find(c => c.value === formData.creditType)?.label || "Credit"}`;
-        listingData.credit_type = formData.creditType;
-        listingData.credit_value = formData.creditValue ? parseFloat(formData.creditValue) : null;
-        listingData.credit_currency = formData.creditCurrency;
-        listingData.credit_expiry_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : null;
-        // Set required flight fields to placeholder values for vouchers
-        listingData.origin_city = "N/A";
-        listingData.origin_country = "N/A";
-        listingData.destination_city = "N/A";
-        listingData.destination_country = "N/A";
-        listingData.departure_date = formData.creditExpiryDate ? formData.creditExpiryDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
-        listingData.ticket_count = 1;
-        // Add voucher verification data
-        if (voucherVerification) {
-          listingData.voucher_verified = voucherVerification.isValid && voucherVerification.confidenceScore >= 70;
-          listingData.voucher_confidence_score = voucherVerification.confidenceScore;
-          listingData.voucher_reference_code = voucherVerification.referenceCode || null;
-          listingData.voucher_verification_flags = voucherVerification.flags || [];
-          listingData.voucher_restrictions = voucherVerification.restrictions || null;
-        }
+      if (isTrain) {
+        const op = getOperator(formData.operator);
+        const fare = op?.fares.find((f) => f.value === formData.trainClass);
+        listingData.airline = formData.operator; // store operator name in airline col for legacy compat
+        listingData.operator = formData.operator;
+        listingData.train_number = formData.trainNumber || null;
+        listingData.train_class = formData.trainClass || null;
+        listingData.origin_station = formData.trainOriginStation || null;
+        listingData.destination_station = formData.trainDestinationStation || null;
+        listingData.departure_time = formData.departureTime || null;
+        listingData.title = `${formData.destinationCity} Train Trip`;
+        listingData.origin_city = formData.originCity;
+        listingData.origin_country = formData.originCountry;
+        listingData.destination_city = formData.destinationCity;
+        listingData.destination_country = formData.destinationCountry;
+        listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
+        listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
+        listingData.ticket_count = ticketCount;
+        listingData.stopovers = 0;
+        // Store name-change fee SEPARATELY (additive at checkout)
+        listingData.name_change_fee = fare?.fee ?? 0;
       } else {
         listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
         listingData.origin_city = formData.originCity;
@@ -476,6 +439,8 @@ export default function SellTicket() {
         listingData.speedy_boarding = sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false;
         listingData.stopovers = parseInt(formData.stopovers);
         listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
+        // Store flight name-change fee SEPARATELY (additive at checkout)
+        listingData.name_change_fee = flightTransferFee ?? null;
       }
 
       if (editId) {
@@ -531,15 +496,31 @@ export default function SellTicket() {
       toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
       return;
     }
-    const isVoucher = formData.listingType === "travel_credit";
-    if (isVoucher) {
-      if (!formData.airline || !formData.creditType || !formData.price) {
-        toast({ title: "Missing fields", description: "Please fill in airline, credit type, and selling price.", variant: "destructive" });
+    const isTrain = formData.listingType === "train_ticket";
+    if (isTrain) {
+      if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
+        toast({ title: "Missing fields", description: "Please fill in route, operator, fare class, date and selling price.", variant: "destructive" });
+        return;
+      }
+      if (trainTransferResult?.blocking) {
+        toast({
+          title: "Listing blocked",
+          description: "This operator/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          variant: "destructive",
+        });
         return;
       }
     } else {
       if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
         toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+        return;
+      }
+      if (flightTransferBlocked) {
+        toast({
+          title: "Listing blocked",
+          description: "This airline/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -548,7 +529,7 @@ export default function SellTicket() {
       return;
     }
     // Block flight listings that failed external schedule verification
-    if (!isVoucher && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
+    if (!isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
       toast({
         title: "Listing blocked",
         description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
@@ -673,193 +654,32 @@ export default function SellTicket() {
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, listingType: "travel_credit" })}
+                onClick={() => setFormData({ ...formData, listingType: "train_ticket" })}
                 className={cn(
                   "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "travel_credit"
+                  formData.listingType === "train_ticket"
                     ? "border-primary bg-primary/10"
                     : "border-transparent hover:border-primary/30"
                 )}
               >
-                <CreditCard className={cn("w-6 h-6", formData.listingType === "travel_credit" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "travel_credit" ? "text-foreground" : "text-muted-foreground")}>Travel Credit / Voucher</span>
+                <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>Train Ticket</span>
               </button>
             </div>
           </div>
 
-          {/* VOUCHER FORM */}
-          {formData.listingType === "travel_credit" && (
-            <>
-              {/* Voucher Verification Upload */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-primary" />
-                  Verify Your Credit / Voucher
-                </h2>
-                <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
-                  <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleVoucherUpload} disabled={isVerifyingVoucher} />
-                  {isVerifyingVoucher ? (
-                    <>
-                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                      <p className="text-sm text-muted-foreground">Verifying your voucher...</p>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-8 h-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground text-center">
-                        Upload a screenshot of your travel credit, voucher, or confirmation email
-                      </p>
-                      <p className="text-xs text-muted-foreground">We'll verify authenticity and auto-fill details</p>
-                    </>
-                  )}
-                </label>
-
-                {/* Verification Result */}
-                {voucherVerification && (
-                  <div className={cn(
-                    "rounded-xl border-2 p-4 space-y-3 animate-in fade-in slide-in-from-top-2",
-                    voucherVerification.isValid && voucherVerification.confidenceScore >= 70
-                      ? "border-green-500/30 bg-green-500/10"
-                      : voucherVerification.isValid && voucherVerification.confidenceScore >= 50
-                        ? "border-yellow-500/30 bg-yellow-500/10"
-                        : "border-destructive/30 bg-destructive/10"
-                  )}>
-                    <div className="flex items-start gap-3">
-                      {voucherVerification.isValid && voucherVerification.confidenceScore >= 70 ? (
-                        <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
-                      )}
-                      <div className="space-y-1 flex-1">
-                        <p className={cn("font-semibold text-sm",
-                          voucherVerification.confidenceScore >= 70 ? "text-green-600 dark:text-green-400" :
-                          voucherVerification.confidenceScore >= 50 ? "text-yellow-600 dark:text-yellow-400" :
-                          "text-destructive"
-                        )}>
-                          {voucherVerification.confidenceScore >= 70 ? "✅ Verified" :
-                           voucherVerification.confidenceScore >= 50 ? "⚠️ Partially Verified" :
-                           "❌ Verification Failed"}
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            Confidence: {voucherVerification.confidenceScore}%
-                          </span>
-                        </p>
-                        {voucherVerification.referenceCode && (
-                          <p className="text-xs text-muted-foreground">Ref: {voucherVerification.referenceCode}</p>
-                        )}
-                        {voucherVerification.notes && (
-                          <p className="text-xs text-muted-foreground">{voucherVerification.notes}</p>
-                        )}
-                        {voucherVerification.flags?.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {voucherVerification.flags.map((flag: string, i: number) => (
-                              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">{flag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Voucher Details */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  Credit / Voucher Details
-                </h2>
-                <div className="glass rounded-2xl p-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label>Airline</Label>
-                    <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v })}>
-                      <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-60">
-                        {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Credit Type</Label>
-                    <Select value={formData.creditType} onValueChange={(v) => setFormData({ ...formData, creditType: v })}>
-                      <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {creditTypes.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Credit Value ({formData.creditCurrency})</Label>
-                      <Input type="number" min="0" step="0.01" placeholder="200.00" value={formData.creditValue} onChange={(e) => setFormData({ ...formData, creditValue: e.target.value })} className="bg-secondary/50" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Select value={formData.creditCurrency} onValueChange={(v) => setFormData({ ...formData, creditCurrency: v })}>
-                        <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Expiry Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.creditExpiryDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.creditExpiryDate ? format(formData.creditExpiryDate, "PPP") : "Select expiry date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.creditExpiryDate}
-                          onSelect={(date) => setFormData({ ...formData, creditExpiryDate: date })}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pricing for voucher */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Pricing</h2>
-                <div className="glass rounded-2xl p-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Original Value ({formData.creditCurrency})</Label>
-                      <Input type="number" min="0" step="0.01" placeholder="200.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Selling Price ({formData.creditCurrency})</Label>
-                      <Input type="number" min="1" step="0.01" placeholder="150.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
-                    </div>
-                  </div>
-                  {priceError && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      Selling price must be lower than the original value
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Additional Notes</h2>
-                <Textarea
-                  placeholder="Add any details about the credit/voucher (restrictions, conditions, how to redeem...)"
-                  value={formData.additionalNotes}
-                  onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                  className="bg-secondary/50 min-h-24"
-                />
-              </div>
-            </>
+          {/* TRAIN TICKET FORM */}
+          {formData.listingType === "train_ticket" && (
+            <TrainForm
+              formData={formData}
+              setFormData={setFormData}
+              isReturn={isReturn}
+              setIsReturn={setIsReturn}
+              priceError={!!priceError}
+              today={today}
+              onTransferResult={setTrainTransferResult}
+              transferResult={trainTransferResult}
+            />
           )}
 
           {/* FLIGHT TICKET FORM */}
@@ -1128,7 +948,14 @@ export default function SellTicket() {
 
               {/* Transferability Check */}
               {formData.airline && (
-                <TransferabilityCheck airline={formData.airline} fareType={formData.fareType || "standard"} />
+                <TransferabilityCheck
+                  airline={formData.airline}
+                  fareType={formData.fareType || "standard"}
+                  onResult={(r) => {
+                    setFlightTransferBlocked(r.blocking);
+                    setFlightTransferFee(r.fee);
+                  }}
+                />
               )}
 
               <div className="grid grid-cols-2 gap-4">
