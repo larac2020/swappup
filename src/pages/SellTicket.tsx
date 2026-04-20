@@ -506,6 +506,33 @@ export default function SellTicket() {
       toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
       return;
     }
+    // Mandatory ticket upload (skipped only in edit mode)
+    if (!isEditMode && !ticketUploaded) {
+      toast({
+        title: "Ticket upload required",
+        description: "Please upload a photo or PDF of your ticket confirmation before publishing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Departure must be at least 24 hours in the future
+    const minTs = Date.now() + 24 * 60 * 60 * 1000;
+    if (formData.departureDate && formData.departureDate.getTime() < minTs) {
+      toast({
+        title: "Departure too soon",
+        description: "Tickets must depart at least 24 hours from now. Expired or same-day tickets cannot be listed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (isReturn && formData.returnDate && formData.departureDate && formData.returnDate.getTime() < formData.departureDate.getTime()) {
+      toast({
+        title: "Invalid return date",
+        description: "Return date must be on or after the departure date.",
+        variant: "destructive",
+      });
+      return;
+    }
     const isTrain = formData.listingType === "train_ticket";
     if (isTrain) {
       if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
