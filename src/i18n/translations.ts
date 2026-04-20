@@ -29,7 +29,7 @@ const translations = {
     navSearch: "Search",
     navCart: "Cart",
     navListings: "Listings",
-    navAccount: "Account",
+    navAccount: "Profile",
 
     // Auth
     authWelcomeBack: "Welcome back. Sign in to continue.",
@@ -59,7 +59,7 @@ const translations = {
     authVerifyEmail: "Verify your email",
     authVerifyEmailDesc: "We've sent a verification link to your email. Please check your inbox.",
     authAccountCreated: "Account created!",
-    authAccountCreatedDesc: "Welcome to FlySwap.",
+    authAccountCreatedDesc: "Welcome to SwappUp.",
     authWelcomeBackToast: "Welcome back!",
     authWelcomeBackToastDesc: "You've successfully signed in.",
     authResetLinkSent: "Reset link sent",
@@ -82,7 +82,7 @@ const translations = {
     resetBackToSignIn: "Back to Sign In",
 
     // Home
-    homeWelcomeBack: "Welcome back,",
+    homeWelcomeBack: "Hi,",
     homeListings: "Listings",
     homePurchases: "Purchases",
     homeFavorites: "Favorites",
@@ -591,7 +591,7 @@ const translations = {
     navSearch: "Cerca",
     navCart: "Carrello",
     navListings: "Annunci",
-    navAccount: "Account",
+    navAccount: "Profilo",
 
     // Auth
     authWelcomeBack: "Bentornato. Accedi per continuare.",
@@ -621,7 +621,7 @@ const translations = {
     authVerifyEmail: "Verifica la tua email",
     authVerifyEmailDesc: "Abbiamo inviato un link di verifica alla tua email. Controlla la casella di posta.",
     authAccountCreated: "Account creato!",
-    authAccountCreatedDesc: "Benvenuto su FlySwap.",
+    authAccountCreatedDesc: "Benvenuto su SwappUp.",
     authWelcomeBackToast: "Bentornato!",
     authWelcomeBackToastDesc: "Accesso effettuato con successo.",
     authResetLinkSent: "Link di reset inviato",
@@ -644,7 +644,7 @@ const translations = {
     resetBackToSignIn: "Torna all'Accesso",
 
     // Home
-    homeWelcomeBack: "Bentornato,",
+    homeWelcomeBack: "Ciao,",
     homeListings: "Annunci",
     homePurchases: "Acquisti",
     homeFavorites: "Preferiti",
