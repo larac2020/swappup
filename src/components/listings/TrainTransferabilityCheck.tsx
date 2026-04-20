@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, Info, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getOperator, getOperatorFare, currencySymbol } from "@/data/trainData";
@@ -31,8 +31,8 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
     return { status: "allowed", blocking: false, fee: fare.fee, currency: fare.currency };
   }, [op, fare]);
 
-  // Notify parent (effect via ref-stable callback isn't needed; render-time call into onResult is intentional and idempotent)
-  useMemo(() => {
+  // Notify parent when the result changes.
+  useEffect(() => {
     if (result && onResult) onResult(result);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result?.status, result?.blocking, result?.fee, result?.currency]);

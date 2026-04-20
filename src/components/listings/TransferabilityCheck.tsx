@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { getAirlineData, AirlineData } from "@/data/flightData";
 import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
   }, [airline, fareType]);
 
   // Propagate to parent so it can disable the publish button when blocking.
-  useMemo(() => {
+  useEffect(() => {
     if (result && onResult) {
       onResult({
         status: result.status,
