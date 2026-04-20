@@ -323,13 +323,13 @@ export default function MyListings() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Ticket className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-display font-bold">My Listings</h1>
+            <h1 className="text-2xl font-display font-bold">{t("myListingsTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
               <Plus className="w-4 h-4" />
-              Sell
+              {t("myListingsSell")}
             </Button>
           </div>
         </div>
@@ -339,7 +339,7 @@ export default function MyListings() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by city, country, airline..."
+              placeholder={t("myListingsSearchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-secondary/50"
@@ -352,19 +352,19 @@ export default function MyListings() {
           <div className="grid grid-cols-3 gap-3">
             <div className="glass rounded-xl p-3 text-center">
               <p className="text-lg font-bold text-foreground">{listings.filter((l) => l.is_active).length}</p>
-              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xs text-muted-foreground">{t("myListingsActive")}</p>
             </div>
             <div className="glass rounded-xl p-3 text-center">
               <p className="text-lg font-bold text-foreground">
                 {Object.values(viewCounts).reduce((a, b) => a + b, 0)}
               </p>
-              <p className="text-xs text-muted-foreground">Total Views</p>
+              <p className="text-xs text-muted-foreground">{t("myListingsTotalViews")}</p>
             </div>
             <div className="glass rounded-xl p-3 text-center">
               <p className="text-lg font-bold text-foreground">
                 {Object.values(favCounts).reduce((a, b) => a + b, 0)}
               </p>
-              <p className="text-xs text-muted-foreground">Total Favorites</p>
+              <p className="text-xs text-muted-foreground">{t("myListingsTotalFavorites")}</p>
             </div>
           </div>
         )}
@@ -374,7 +374,7 @@ export default function MyListings() {
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4" />
-              Pending Transfers ({pendingSales.length})
+              {t("myListingsPendingTransfers")} ({pendingSales.length})
             </h2>
             {pendingSales.map((sale: any) => {
               const listing = sale.listings as any;
@@ -391,9 +391,9 @@ export default function MyListings() {
                 )}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{listing?.title || "Ticket"}</p>
+                      <p className="font-medium truncate">{listing?.title || t("myListingsTicket")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Buyer: {sale.buyer_full_name} • €{Number(sale.total_price).toFixed(2)}
+                        {t("myListingsBuyer")}: {sale.buyer_full_name} • €{Number(sale.total_price).toFixed(2)}
                       </p>
                     </div>
                     <Badge variant="outline" className={cn("text-xs", 
@@ -401,7 +401,7 @@ export default function MyListings() {
                       isExpired ? "bg-destructive/10 text-destructive border-destructive/30" :
                       "bg-warning/10 text-warning border-warning/30"
                     )}>
-                      {isConfirmed ? "Confirmed" : isExpired ? "Expired" : `${hoursLeft}h left`}
+                      {isConfirmed ? t("myListingsConfirmed") : isExpired ? t("myListingsExpired") : t("myListingsHoursLeft", { hours: hoursLeft })}
                     </Badge>
                   </div>
 
@@ -416,14 +416,14 @@ export default function MyListings() {
                       }}
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      Confirm Name Change
+                      {t("myListingsConfirmNameChange")}
                     </Button>
                   )}
 
                   {isConfirmed && (
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Booking Ref: <span className="font-mono font-bold">{sale.transfer_booking_ref}</span></p>
-                      <p>Confirmed: {sale.transfer_confirmed_at ? format(new Date(sale.transfer_confirmed_at), "MMM d, HH:mm") : "N/A"}</p>
+                      <p>{t("myListingsBookingRef")}: <span className="font-mono font-bold">{sale.transfer_booking_ref}</span></p>
+                      <p>{t("myListingsConfirmedAt")}: {sale.transfer_confirmed_at ? format(new Date(sale.transfer_confirmed_at), "MMM d, HH:mm") : "N/A"}</p>
                     </div>
                   )}
                 </div>
