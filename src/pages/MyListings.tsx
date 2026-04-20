@@ -442,7 +442,7 @@ export default function MyListings() {
             {activeListings.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-sm font-medium text-muted-foreground">
-                  Active ({activeListings.length})
+                  {t("myListingsActive")} ({activeListings.length})
                 </h2>
                 <div className="space-y-3">
                   {activeListings.map(renderListingCard)}
@@ -452,7 +452,7 @@ export default function MyListings() {
             {inactiveListings.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-sm font-medium text-muted-foreground">
-                  Inactive ({inactiveListings.length})
+                  {t("myListingsInactive")} ({inactiveListings.length})
                 </h2>
                 <div className="space-y-3 opacity-60">
                   {inactiveListings.map(renderListingCard)}
@@ -462,18 +462,18 @@ export default function MyListings() {
             {filtered.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p>No listings match "{searchQuery}"</p>
+                <p>{t("myListingsNoMatch", { query: searchQuery })}</p>
               </div>
             )}
           </div>
         ) : (
           <div className="text-center py-12 glass rounded-2xl">
             <Ticket className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">No listings yet</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Start selling your unused tickets</p>
+            <p className="text-muted-foreground">{t("myListingsNoListings")}</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">{t("myListingsStartSelling")}</p>
             <Button variant="gold" className="mt-4" onClick={() => navigate("/sell")}>
               <Plus className="w-4 h-4 mr-1" />
-              Create Listing
+              {t("myListingsCreateListing")}
             </Button>
           </div>
         )}
@@ -485,10 +485,10 @@ export default function MyListings() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
               <Rocket className="w-5 h-5 text-primary" />
-              Boost Your Listing
+              {t("boostTitle")}
             </DialogTitle>
             <DialogDescription>
-              Get more visibility in the "Hot Deals" section and appear at the top of search results.
+              {t("boostDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -503,8 +503,8 @@ export default function MyListings() {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-foreground">{opt.label}</p>
-                    <p className="text-xs text-muted-foreground">Boost for {opt.label.toLowerCase()}</p>
+                    <p className="font-medium text-foreground">{t(opt.labelKey)}</p>
+                    <p className="text-xs text-muted-foreground">{t("myListingsBoostFor", { label: t(opt.labelKey).toLowerCase() })}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -525,10 +525,10 @@ export default function MyListings() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
               <CreditCard className="w-5 h-5 text-primary" />
-              Confirm Payment
+              {t("boostConfirmTitle")}
             </DialogTitle>
             <DialogDescription>
-              Please review and confirm your boost purchase.
+              {t("boostConfirmDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -537,20 +537,20 @@ export default function MyListings() {
               {/* Summary */}
               <div className="glass rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Boost duration</span>
-                  <span className="font-medium">{selectedBoostOption.label}</span>
+                  <span className="text-sm text-muted-foreground">{t("myListingsBoostDuration")}</span>
+                  <span className="font-medium">{t(selectedBoostOption.labelKey)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Payment method</span>
+                  <span className="text-sm text-muted-foreground">{t("myListingsBoostPaymentMethod")}</span>
                   <span className="font-medium text-sm">
                     {localStorage.getItem("flyswap_payment_added") === "true"
-                      ? "💳 Card on file"
-                      : "⚠️ No card saved"
+                      ? t("myListingsCardOnFile")
+                      : t("myListingsNoCardSaved")
                     }
                   </span>
                 </div>
                 <div className="border-t border-border/50 pt-3 flex items-center justify-between">
-                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold">{t("boostTotal")}</span>
                   <span className="text-xl font-bold text-primary">€{selectedBoostOption.price}</span>
                 </div>
               </div>
@@ -558,7 +558,7 @@ export default function MyListings() {
               {localStorage.getItem("flyswap_payment_added") !== "true" && (
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <p>You need to add a payment method first. Go to Account → Payment Methods.</p>
+                  <p>{t("myListingsAddPaymentWarning")}</p>
                 </div>
               )}
 
@@ -571,7 +571,7 @@ export default function MyListings() {
                     setSelectedBoostOption(null);
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   variant="gold"
@@ -587,7 +587,7 @@ export default function MyListings() {
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  Confirm & Pay
+                  {t("myListingsConfirmAndPay")}
                 </Button>
               </div>
             </div>
