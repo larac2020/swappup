@@ -293,17 +293,17 @@ export default function SellTicket() {
       if (error) throw error;
       setFlightVerification(data);
       if (data?.status === "verified") {
-        toast({ title: "Flight verified ✅", description: "Schedule data matches the airline's records." });
+          toast({ title: t("sellToastFlightVerified"), description: t("sellToastFlightVerifiedDesc") });
       } else if (data?.status === "mismatch") {
         toast({
-          title: "Mismatch detected",
-          description: "The ticket data doesn't match the airline's published schedule. Listing is blocked.",
+            title: t("sellToastMismatch"),
+            description: t("sellToastMismatchDesc"),
           variant: "destructive",
         });
       } else if (data?.status === "not_found") {
         toast({
-          title: "Flight not found",
-          description: "We couldn't find this flight in the airline's schedule. Listing is blocked.",
+            title: t("sellToastNotFound"),
+            description: t("sellToastNotFoundDesc"),
           variant: "destructive",
         });
       }
@@ -311,8 +311,8 @@ export default function SellTicket() {
       console.error("Flight verify error:", err);
       setFlightVerification({ status: "error", message: err?.message || "Verification failed" });
       toast({
-        title: "Verification unavailable",
-        description: "Could not reach the verification service. Please try again.",
+          title: t("sellToastVerifyUnavailable"),
+          description: t("sellToastVerifyUnavailableDesc"),
         variant: "destructive",
       });
     } finally {
@@ -353,8 +353,8 @@ export default function SellTicket() {
           // Treat as a hard failure — do NOT mark upload as satisfied
           setTicketUploaded(false);
           toast({
-            title: "Ticket expired or too soon",
-            description: `This ticket departs ${parsedDeparture.toLocaleDateString()}. We only accept tickets at least 24 hours in the future.`,
+            title: t("sellToastExpiredTitle"),
+            description: t("sellToastExpiredDesc", { date: parsedDeparture.toLocaleDateString() }),
             variant: "destructive",
           });
           return;
@@ -394,8 +394,8 @@ export default function SellTicket() {
         setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
 
         toast({
-          title: "Ticket parsed!",
-          description: `Detected ${isTrain ? "train" : "flight"} ticket${count > 1 ? `s (${count})` : ""}. Please review the details below.`,
+          title: t("sellToastTicketParsed"),
+          description: t(isTrain ? "sellToastTicketParsedTrain" : "sellToastTicketParsedFlight", { plural: count > 1 ? `s (${count})` : "" }),
         });
 
         // Auto-verify against airline schedule (flights only) when we have the minimum required fields
@@ -415,7 +415,7 @@ export default function SellTicket() {
       console.error("Ticket parse error:", err);
       // The file was still uploaded successfully, parsing just failed — count as satisfied
       setTicketUploaded(true);
-      toast({ title: "Could not read ticket", description: "We couldn't auto-fill the details. Please fill them in manually.", variant: "destructive" });
+      toast({ title: t("sellToastCouldNotRead"), description: t("sellToastCouldNotReadDesc"), variant: "destructive" });
     } finally {
       setIsUploading(false);
       // Reset file input so re-uploading the same file triggers onChange
@@ -465,7 +465,7 @@ export default function SellTicket() {
         // Store name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = fare?.fee ?? 0;
       } else {
-        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? tripTags.find(t => t.value === formData.selectedTags[0])?.label || "Trip" : "Trip"}`;
+        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? t((tripTags.find((tg) => tg.value === formData.selectedTags[0])?.labelKey) || "tagCityTrip") : "Trip"}`;
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
         listingData.destination_city = formData.destinationCity;
