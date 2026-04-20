@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, Trash2, Plane, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
+import { ShoppingCart, Trash2, Plane, TrainFront, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getAirlineData } from "@/data/flightData";
+import { getOperatorFare } from "@/data/trainData";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -46,12 +48,29 @@ export default function Cart() {
     },
   });
 
+  // Compute additive name-change fee per item.
+  const computeFee = (listing: any): number => {
+    if (!listing) return 0;
+    if (listing.name_change_fee != null) return Number(listing.name_change_fee);
+    if (listing.listing_type === "train_ticket" && listing.operator && listing.train_class) {
+      return getOperatorFare(listing.operator, listing.train_class)?.fee ?? 0;
+    }
+    if (listing.listing_type !== "train_ticket") {
+      return getAirlineData(listing.airline)?.nameChangeFee ?? 0;
+    }
+    return 0;
+  };
+
   const subtotal = cartItems.reduce((sum, item) => {
     const listing = item.listings as any;
     return sum + (listing ? Number(listing.price) * item.quantity : 0);
   }, 0);
+  const feesTotal = cartItems.reduce((sum, item) => {
+    const listing = item.listings as any;
+    return sum + computeFee(listing) * item.quantity;
+  }, 0);
   const serviceFee = cartItems.length > 0 ? 4.99 : 0;
-  const total = subtotal + serviceFee;
+  const total = subtotal + feesTotal + serviceFee;
 
   if (isLoading) {
     return (
@@ -92,6 +111,9 @@ export default function Cart() {
           {cartItems.map((item) => {
             const listing = item.listings as any;
             if (!listing) return null;
+            const isTrain = listing.listing_type === "train_ticket";
+            const carrier = isTrain ? (listing.operator || listing.airline) : listing.airline;
+            const fee = computeFee(listing);
             return (
               <div key={item.id} className="glass rounded-2xl p-4 space-y-3">
                 <div className="flex gap-4">
@@ -105,10 +127,12 @@ export default function Cart() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{listing.origin_city}</span>
-                          <Plane className="w-4 h-4 text-primary rotate-90" />
+                          {isTrain
+                            ? <TrainFront className="w-4 h-4 text-primary" />
+                            : <Plane className="w-4 h-4 text-primary rotate-90" />}
                           <span className="font-semibold">{listing.destination_city}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">{listing.airline}</p>
+                        <p className="text-sm text-muted-foreground">{carrier}</p>
                       </div>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeFromCartMutation.mutate(item.id)} disabled={removeFromCartMutation.isPending}>
                         <Trash2 className="w-4 h-4" />
@@ -121,9 +145,21 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <span className="text-sm text-muted-foreground">{t("cartQty")}: {item.quantity}</span>
-                  <span className="text-lg font-bold text-primary">€{Number(listing.price)}</span>
+                <div className="pt-3 border-t border-border/50 space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t("priceTicketPrice")}</span>
+                    <span>€{(Number(listing.price) * item.quantity).toFixed(2)}</span>
+                  </div>
+                  {fee > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrier})</span>
+                      <span>€{(fee * item.quantity).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-1.5 border-t border-border/30">
+                    <span className="text-xs text-muted-foreground">{t("cartQty")}: {item.quantity}</span>
+                    <span className="text-base font-bold text-primary">€{((Number(listing.price) + fee) * item.quantity).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             );
@@ -147,6 +183,12 @@ export default function Cart() {
               <span className="text-muted-foreground">{t("cartSubtotal")}</span>
               <span>€{subtotal.toFixed(2)}</span>
             </div>
+            {feesTotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("priceNameChangeFee")}</span>
+                <span>€{feesTotal.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cartServiceFee")}</span>
               <span>€{serviceFee.toFixed(2)}</span>

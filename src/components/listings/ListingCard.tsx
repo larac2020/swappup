@@ -1,9 +1,10 @@
-import { Calendar, Plane, Users, Heart, ShoppingCart, Shield, CreditCard } from "lucide-react";
+import { Calendar, Plane, Users, Heart, ShoppingCart, Shield, TrainFront } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
+import { getPrimaryStationCode, getPrimaryStationName } from "@/data/trainData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +31,7 @@ interface ListingCardProps {
   creditValue?: number;
   creditCurrency?: string;
   creditExpiryDate?: string;
+  operator?: string;
 }
 
 const tagColors: Record<string, string> = {
@@ -66,19 +68,18 @@ export function ListingCard({
   creditValue,
   creditCurrency = "EUR",
   creditExpiryDate,
+  operator,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
-  const isVoucher = listingType === "travel_credit";
-
-  const originCode = !isVoucher ? getPrimaryAirportCode(originCity) : "";
-  const destCode = !isVoucher ? getPrimaryAirportCode(destinationCity) : "";
-  const originAirportName = !isVoucher ? getPrimaryAirportName(originCity) : "";
-  const destAirportName = !isVoucher ? getPrimaryAirportName(destinationCity) : "";
+  const isTrain = listingType === "train_ticket";
+  const originCode = isTrain ? getPrimaryStationCode(originCity) : getPrimaryAirportCode(originCity);
+  const destCode = isTrain ? getPrimaryStationCode(destinationCity) : getPrimaryAirportCode(destinationCity);
+  const carrierLabel = isTrain ? (operator || airline) : airline;
+  const RouteIcon = isTrain ? TrainFront : Plane;
 
   // Get profile
   const { data: profile } = useQuery({
@@ -230,39 +231,9 @@ export function ListingCard({
 
         {/* Content */}
         <div className="p-4 space-y-3">
-          {isVoucher ? (
+          {(
             <>
-              {/* Voucher info */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <CreditCard className="w-4 h-4 text-primary flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground text-sm truncate">{title}</p>
-                    <p className="text-xs text-muted-foreground">{creditType?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
-              </div>
-              {creditValue && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-xs">
-                    {creditCurrency === "GBP" ? "£" : creditCurrency === "USD" ? "$" : "€"}{creditValue} credit
-                  </Badge>
-                  {creditExpiryDate && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Exp: {formatDate(creditExpiryDate)}
-                    </span>
-                  )}
-                </div>
-              )}
-              <div className="flex items-center justify-end">
-                <BuyerProtectionBadge compact sellerVerified />
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Route with airline on the right */}
+              {/* Route with carrier on the right */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="text-center min-w-0">
@@ -271,7 +242,7 @@ export function ListingCard({
                     )}
                     <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
                   </div>
-                  <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
+                  <RouteIcon className={isTrain ? "w-4 h-4 text-primary flex-shrink-0" : "w-4 h-4 text-primary -rotate-45 flex-shrink-0"} />
                   <div className="text-center min-w-0">
                     {destCode && (
                       <span className="text-xs font-bold text-primary">{destCode}</span>
@@ -279,7 +250,7 @@ export function ListingCard({
                     <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{airline}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{carrierLabel}</span>
               </div>
 
               {/* Tags row */}

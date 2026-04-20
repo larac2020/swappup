@@ -238,9 +238,11 @@ export type Database = {
           credit_type: string | null
           credit_value: number | null
           departure_date: string
+          departure_time: string | null
           destination_city: string
           destination_country: string
           destination_image_url: string | null
+          destination_station: string | null
           flight_number: string | null
           id: string
           is_active: boolean | null
@@ -248,8 +250,10 @@ export type Database = {
           luggage_included: boolean | null
           meal_included: boolean | null
           name_change_fee: number | null
+          operator: string | null
           origin_city: string
           origin_country: string
+          origin_station: string | null
           original_price: number | null
           per_ticket_inclusions: Json | null
           price: number
@@ -260,6 +264,8 @@ export type Database = {
           tags: Database["public"]["Enums"]["listing_tag"][] | null
           ticket_count: number
           title: string
+          train_class: string | null
+          train_number: string | null
           updated_at: string
           voucher_confidence_score: number | null
           voucher_reference_code: string | null
@@ -278,9 +284,11 @@ export type Database = {
           credit_type?: string | null
           credit_value?: number | null
           departure_date: string
+          departure_time?: string | null
           destination_city: string
           destination_country: string
           destination_image_url?: string | null
+          destination_station?: string | null
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
@@ -288,8 +296,10 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          operator?: string | null
           origin_city: string
           origin_country: string
+          origin_station?: string | null
           original_price?: number | null
           per_ticket_inclusions?: Json | null
           price: number
@@ -300,6 +310,8 @@ export type Database = {
           tags?: Database["public"]["Enums"]["listing_tag"][] | null
           ticket_count?: number
           title: string
+          train_class?: string | null
+          train_number?: string | null
           updated_at?: string
           voucher_confidence_score?: number | null
           voucher_reference_code?: string | null
@@ -318,9 +330,11 @@ export type Database = {
           credit_type?: string | null
           credit_value?: number | null
           departure_date?: string
+          departure_time?: string | null
           destination_city?: string
           destination_country?: string
           destination_image_url?: string | null
+          destination_station?: string | null
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
@@ -328,8 +342,10 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          operator?: string | null
           origin_city?: string
           origin_country?: string
+          origin_station?: string | null
           original_price?: number | null
           per_ticket_inclusions?: Json | null
           price?: number
@@ -340,6 +356,8 @@ export type Database = {
           tags?: Database["public"]["Enums"]["listing_tag"][] | null
           ticket_count?: number
           title?: string
+          train_class?: string | null
+          train_number?: string | null
           updated_at?: string
           voucher_confidence_score?: number | null
           voucher_reference_code?: string | null
@@ -652,7 +670,7 @@ export type Database = {
         | "romantic"
         | "family"
         | "business"
-      listing_type: "flight_ticket" | "travel_credit"
+      listing_type: "flight_ticket" | "travel_credit" | "train_ticket"
       verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
@@ -791,7 +809,7 @@ export const Constants = {
         "family",
         "business",
       ],
-      listing_type: ["flight_ticket", "travel_credit"],
+      listing_type: ["flight_ticket", "travel_credit", "train_ticket"],
       verification_status: ["pending", "verified", "rejected"],
     },
   },

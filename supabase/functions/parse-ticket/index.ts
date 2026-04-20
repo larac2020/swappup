@@ -13,15 +13,17 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are a flight ticket parser. Given an image of a flight ticket, boarding pass, or booking confirmation, extract the following information and return it as a JSON object using the tool provided.
+    const systemPrompt = `You are a travel ticket parser. The ticket may be a FLIGHT (airline boarding pass / flight booking) or a TRAIN (rail booking from Trenitalia, Italo, SNCF, Deutsche Bahn, Renfe, Eurostar, ÖBB, NS, SBB, Thalys, etc.). Extract the available information and return it as a JSON object using the tool provided.
 
 Important rules:
-- For country names, use full names like "United Kingdom", "United States", "United Arab Emirates"
-- For dates, use ISO format: YYYY-MM-DD
-- For prices, return just the number without currency symbol
-- If you cannot determine a field, omit it from the response
-- Look for airline name, flight number, departure/arrival cities, dates, price, and the number of passengers/tickets
-- If the confirmation shows multiple passengers or tickets, return the total count in ticketCount`;
+- Set ticketKind to "flight" or "train" depending on what you see.
+- For country names, use full names like "United Kingdom", "United States", "United Arab Emirates".
+- For dates, use ISO format: YYYY-MM-DD.
+- For times use HH:MM (24h).
+- For prices, return just the number without currency symbol.
+- For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, price, ticketCount.
+- For TRAINS: extract operator (e.g. "Trenitalia", "Italo", "SNCF", "Deutsche Bahn", "Renfe", "Eurostar", "ÖBB", "NS", "SBB", "Thalys"), trainNumber, origin/destination station names AND cities + countries, departure date + time, fare class if visible (Base, Executive, Smart, Comfort, Prima, Club, TGV INOUI, Ouigo, Flexpreis, Sparpreis, Flexible, Promo, Standard Premier, Business Premier, Standard, Flex, Sparschiene, Saver, Supersaver, Premium), price and number of passengers.
+- If you cannot determine a field, omit it from the response.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -60,6 +62,13 @@ Important rules:
                   returnDate: { type: "string", description: "Return date in YYYY-MM-DD format if applicable" },
                   originalPrice: { type: "number", description: "Ticket price as a number" },
                   ticketCount: { type: "number", description: "Number of passengers or tickets in the booking" },
+                  ticketKind: { type: "string", enum: ["flight", "train"], description: "Whether this is a flight or train ticket" },
+                  operator: { type: "string", description: "Train operator name (only for trains)" },
+                  trainNumber: { type: "string", description: "Train number (only for trains)" },
+                  trainClass: { type: "string", description: "Fare class label as printed on the ticket (only for trains)" },
+                  originStation: { type: "string", description: "Origin station name (only for trains)" },
+                  destinationStation: { type: "string", description: "Destination station name (only for trains)" },
+                  departureTime: { type: "string", description: "Departure time HH:MM 24h (only for trains)" },
                 },
                 required: [],
                 additionalProperties: false,
