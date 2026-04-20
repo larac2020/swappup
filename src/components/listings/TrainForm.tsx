@@ -132,7 +132,14 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={formData.departureDate} onSelect={(d) => update({ departureDate: d })} initialFocus className="p-3 pointer-events-auto" />
+                  <Calendar
+                    mode="single"
+                    selected={formData.departureDate}
+                    onSelect={(d) => update({ departureDate: d })}
+                    initialFocus
+                    disabled={(date) => date < today}
+                    className="p-3 pointer-events-auto"
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -147,7 +154,14 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={formData.returnDate} onSelect={(d) => update({ returnDate: d })} initialFocus className="p-3 pointer-events-auto" />
+                    <Calendar
+                      mode="single"
+                      selected={formData.returnDate}
+                      onSelect={(d) => update({ returnDate: d })}
+                      initialFocus
+                      disabled={(date) => date < (formData.departureDate ?? today)}
+                      className="p-3 pointer-events-auto"
+                    />
                   </PopoverContent>
                 </Popover>
               </div>

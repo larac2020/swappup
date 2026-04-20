@@ -767,32 +767,9 @@ export default function SellTicket() {
           {/* FLIGHT TICKET FORM */}
           {formData.listingType === "flight_ticket" && (
             <>
-          {/* Upload Ticket */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Upload className="w-5 h-5 text-primary" />
-              Upload Ticket Confirmation
-            </h2>
-            <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
-              <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">Reading your ticket...</p>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Upload a photo or screenshot of your ticket confirmation to auto-fill details
-                  </p>
-                  <p className="text-xs text-muted-foreground">or fill in manually below</p>
-                </>
-              )}
-            </label>
-
-            {/* Flight schedule verification status */}
-            {(isVerifyingFlight || flightVerification) && (
+          {/* Flight schedule verification status */}
+          {(isVerifyingFlight || flightVerification) && (
+            <div>
               <div className={cn(
                 "rounded-xl border-2 p-4 space-y-2 animate-in fade-in slide-in-from-top-2",
                 isVerifyingFlight
@@ -847,8 +824,8 @@ export default function SellTicket() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Route */}
           <div className="space-y-4">
