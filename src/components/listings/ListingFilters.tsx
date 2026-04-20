@@ -935,7 +935,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                       )}
                       onClick={() => toggleTag(tag.value)}
                     >
-                      {tag.label}
+                      {t(tag.labelKey)}
                     </Badge>
                   ))}
                 </div>
@@ -1029,7 +1029,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
           )}
           {filters.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="gap-1">
-              {tripTags.find((t) => t.value === tag)?.label}
+              {(() => { const found = tripTags.find((tt) => tt.value === tag); return found ? t(found.labelKey) : tag; })()}
               <X className="w-3 h-3 cursor-pointer" onClick={() => {
                 const newTags = filters.tags.filter(t => t !== tag);
                 updateFilters({ tags: newTags });
