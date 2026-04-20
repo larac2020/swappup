@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState, defaultFilters } from "@/components/listings/ListingFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search, CreditCard, Ticket } from "lucide-react";
+import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search, TrainFront, Ticket } from "lucide-react";
 import { addDays, subDays, startOfMonth, endOfMonth, format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,8 @@ export default function Browse() {
   const [aiSearchQuery, setAiSearchQuery] = useState("");
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
-  const [listingTypeFilter, setListingTypeFilter] = useState<"all" | "flights" | "credits">(
-    initialType === "credits" ? "credits" : "all"
+  const [listingTypeFilter, setListingTypeFilter] = useState<"all" | "flights" | "trains">(
+    initialType === "trains" ? "trains" : initialType === "flights" ? "flights" : "all"
   );
   const [aiAppliedFilters, setAiAppliedFilters] = useState<FilterState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
@@ -136,10 +136,11 @@ export default function Browse() {
     const dateRange = getDateRange(filters);
 
     return listings.filter((listing) => {
-      // Listing type filter
+      // Listing type filter — only flight + train listings exist now.
       const lt = (listing as any).listing_type || "flight_ticket";
+      if (lt === "travel_credit") return false; // Credits removed from UI
       if (listingTypeFilter === "flights" && lt !== "flight_ticket") return false;
-      if (listingTypeFilter === "credits" && lt !== "travel_credit") return false;
+      if (listingTypeFilter === "trains" && lt !== "train_ticket") return false;
 
       // Text search (optional)
       if (searchQuery) {
@@ -331,8 +332,8 @@ export default function Browse() {
         <div className="flex gap-2">
           {[
             { value: "all" as const, label: t("browseAll"), icon: <Search className="w-3.5 h-3.5" /> },
-            { value: "flights" as const, label: t("browseFlights"), icon: <Ticket className="w-3.5 h-3.5" /> },
-            { value: "credits" as const, label: t("browseCreditsVouchers"), icon: <CreditCard className="w-3.5 h-3.5" /> },
+            { value: "flights" as const, label: t("browseFlights"), icon: <Plane className="w-3.5 h-3.5 -rotate-45" /> },
+            { value: "trains" as const, label: t("browseTrains"), icon: <TrainFront className="w-3.5 h-3.5" /> },
           ].map((tab) => (
             <Button
               key={tab.value}

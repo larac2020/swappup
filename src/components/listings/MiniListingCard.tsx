@@ -1,6 +1,7 @@
-import { Plane, CreditCard } from "lucide-react";
+import { Plane, TrainFront } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryAirportCode } from "@/data/flightData";
+import { getPrimaryStationCode } from "@/data/trainData";
 
 interface MiniListingCardProps {
   id: string;
@@ -14,6 +15,7 @@ interface MiniListingCardProps {
   listingType?: string;
   creditType?: string;
   title?: string;
+  operator?: string;
 }
 
 export function MiniListingCard({
@@ -28,11 +30,18 @@ export function MiniListingCard({
   listingType = "flight_ticket",
   creditType,
   title,
+  operator,
 }: MiniListingCardProps) {
   const navigate = useNavigate();
-  const isVoucher = listingType === "travel_credit";
-  const originCode = !isVoucher ? getPrimaryAirportCode(originCity) : "";
-  const destCode = !isVoucher ? getPrimaryAirportCode(destinationCity) : "";
+  const isTrain = listingType === "train_ticket";
+  const originCode = isTrain
+    ? getPrimaryStationCode(originCity) || originCity.slice(0, 3).toUpperCase()
+    : getPrimaryAirportCode(originCity) || originCity.slice(0, 3).toUpperCase();
+  const destCode = isTrain
+    ? getPrimaryStationCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase()
+    : getPrimaryAirportCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase();
+  const carrierLabel = isTrain ? (operator || airline) : airline;
+  const RouteIcon = isTrain ? TrainFront : Plane;
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -58,26 +67,12 @@ export function MiniListingCard({
         </div>
         {/* Info */}
         <div className="p-2.5 space-y-1">
-          {isVoucher ? (
-            <>
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="w-3 h-3 text-primary flex-shrink-0" />
-                <span className="text-xs font-bold text-primary truncate">{airline}</span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {creditType?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Credit"}
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-primary">{originCode || originCity.slice(0, 3).toUpperCase()}</span>
-                <Plane className="w-3 h-3 text-primary -rotate-45 flex-shrink-0" />
-                <span className="text-xs font-bold text-primary">{destCode || destinationCity.slice(0, 3).toUpperCase()}</span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{formatDate(departureDate)} · {airline}</p>
-            </>
-          )}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-primary">{originCode}</span>
+            <RouteIcon className={isTrain ? "w-3 h-3 text-primary flex-shrink-0" : "w-3 h-3 text-primary -rotate-45 flex-shrink-0"} />
+            <span className="text-xs font-bold text-primary">{destCode}</span>
+          </div>
+          <p className="text-xs text-muted-foreground truncate">{formatDate(departureDate)} · {carrierLabel}</p>
         </div>
       </div>
     </button>
