@@ -141,11 +141,8 @@ export function AuthForm() {
       <div className="relative z-10 w-full max-w-md space-y-8">
         {/* Logo & Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-gold shadow-glow mb-4">
-            <Plane className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">
-            <span className="gradient-text">Fly</span>Swap
+          <h1 className="text-4xl font-display font-bold tracking-tight">
+            <span className="gradient-text">Swapp</span>Up
           </h1>
           <p className="text-muted-foreground">
             {mode === "login"
