@@ -501,21 +501,21 @@ export default function SellTicket() {
     },
     onSuccess: () => {
       toast({
-        title: editId ? "Listing updated!" : "Listing created!",
-        description: editId ? "Your changes have been saved." : "Your ticket is now live on the marketplace.",
+        title: editId ? t("sellToastListingUpdated") : t("sellToastListingCreated"),
+        description: editId ? t("sellToastListingUpdatedDesc") : t("sellToastListingCreatedDesc"),
       });
       navigate(editId ? "/listings" : "/home");
     },
     onError: (error: any) => {
       const msg = error.message || "";
       if (msg.includes("DUPLICATE_LISTING")) {
-        toast({ title: "Duplicate listing", description: "You already have an active listing with the same flight number and departure date.", variant: "destructive" });
+        toast({ title: t("sellToastDuplicate"), description: t("sellToastDuplicateDesc"), variant: "destructive" });
       } else if (msg.includes("RATE_LIMIT")) {
-        toast({ title: "Listing limit reached", description: "You've reached your maximum number of active listings. Deactivate some before creating new ones.", variant: "destructive" });
+        toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
-        toast({ title: "Price too high", description: "Selling price cannot exceed the original ticket price.", variant: "destructive" });
+        toast({ title: t("sellToastPriceCap"), description: t("sellToastPriceCapDesc"), variant: "destructive" });
       } else {
-        toast({ title: "Error", description: msg, variant: "destructive" });
+        toast({ title: t("error"), description: msg, variant: "destructive" });
       }
     },
   });
@@ -534,14 +534,14 @@ export default function SellTicket() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) {
-      toast({ title: "Error", description: "Profile not loaded yet.", variant: "destructive" });
+      toast({ title: t("error"), description: t("sellToastProfileNotLoaded"), variant: "destructive" });
       return;
     }
     // Mandatory ticket upload (skipped only in edit mode)
     if (!isEditMode && !ticketUploaded) {
       toast({
-        title: "Ticket upload required",
-        description: "Please upload a photo or PDF of your ticket confirmation before publishing.",
+        title: t("sellToastUploadRequiredTitle"),
+        description: t("sellToastUploadRequiredDesc"),
         variant: "destructive",
       });
       return;
@@ -550,16 +550,16 @@ export default function SellTicket() {
     const minTs = Date.now() + 24 * 60 * 60 * 1000;
     if (formData.departureDate && formData.departureDate.getTime() < minTs) {
       toast({
-        title: "Departure too soon",
-        description: "Tickets must depart at least 24 hours from now. Expired or same-day tickets cannot be listed.",
+        title: t("sellToastDepartureTooSoonTitle"),
+        description: t("sellToastDepartureTooSoonDesc"),
         variant: "destructive",
       });
       return;
     }
     if (isReturn && formData.returnDate && formData.departureDate && formData.returnDate.getTime() < formData.departureDate.getTime()) {
       toast({
-        title: "Invalid return date",
-        description: "Return date must be on or after the departure date.",
+        title: t("sellToastInvalidReturnTitle"),
+        description: t("sellToastInvalidReturnDesc"),
         variant: "destructive",
       });
       return;
@@ -567,40 +567,40 @@ export default function SellTicket() {
     const isTrain = formData.listingType === "train_ticket";
     if (isTrain) {
       if (!formData.originCity || !formData.destinationCity || !formData.operator || !formData.trainClass || !formData.departureDate || !formData.price) {
-        toast({ title: "Missing fields", description: "Please fill in route, operator, fare class, date and selling price.", variant: "destructive" });
+        toast({ title: t("sellMissingFields"), description: t("sellToastMissingTrain"), variant: "destructive" });
         return;
       }
       if (trainTransferResult?.blocking) {
         toast({
-          title: "Listing blocked",
-          description: "This operator/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastBlockedTrain"),
           variant: "destructive",
         });
         return;
       }
     } else {
       if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
-        toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+        toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
         return;
       }
       if (flightTransferBlocked) {
         toast({
-          title: "Listing blocked",
-          description: "This airline/fare does not allow name changes. You cannot resell this ticket on SwappUp.",
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastBlockedFlight"),
           variant: "destructive",
         });
         return;
       }
     }
     if (priceError) {
-      toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
+      toast({ title: t("sellToastPriceCap"), description: t("sellPriceTooHighDesc"), variant: "destructive" });
       return;
     }
     // Block flight listings that failed external schedule verification
     if (!isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
       toast({
-        title: "Listing blocked",
-        description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
+        title: t("sellToastListingBlocked"),
+        description: t("sellToastBlockedVerify"),
         variant: "destructive",
       });
       return;
