@@ -109,6 +109,57 @@ export type Database = {
           },
         ]
       }
+      flight_verifications: {
+        Row: {
+          airline_iata: string
+          created_at: string
+          departure_date: string
+          flight_number: string
+          id: string
+          provider: string
+          raw_response: Json | null
+          status: string
+          updated_at: string
+          verified_airline: string | null
+          verified_destination_city: string | null
+          verified_destination_iata: string | null
+          verified_origin_city: string | null
+          verified_origin_iata: string | null
+        }
+        Insert: {
+          airline_iata: string
+          created_at?: string
+          departure_date: string
+          flight_number: string
+          id?: string
+          provider?: string
+          raw_response?: Json | null
+          status: string
+          updated_at?: string
+          verified_airline?: string | null
+          verified_destination_city?: string | null
+          verified_destination_iata?: string | null
+          verified_origin_city?: string | null
+          verified_origin_iata?: string | null
+        }
+        Update: {
+          airline_iata?: string
+          created_at?: string
+          departure_date?: string
+          flight_number?: string
+          id?: string
+          provider?: string
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          verified_airline?: string | null
+          verified_destination_city?: string | null
+          verified_destination_iata?: string | null
+          verified_origin_city?: string | null
+          verified_origin_iata?: string | null
+        }
+        Relationships: []
+      }
       fraud_scores: {
         Row: {
           flags: Json
