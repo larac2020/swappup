@@ -169,10 +169,6 @@ export default function ListingDetail() {
     );
   }
 
-  const discount = listing.original_price
-    ? Math.round((1 - Number(listing.price) / Number(listing.original_price)) * 100)
-    : 0;
-
   const sellerName = seller?.full_name || "Seller";
   const sellerInitials = sellerName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
