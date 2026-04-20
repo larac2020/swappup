@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ListingCardProps {
   id: string;
@@ -70,6 +71,7 @@ export function ListingCard({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
   const isVoucher = listingType === "travel_credit";
 
@@ -323,7 +325,7 @@ export function ListingCard({
             disabled={addToCart.isPending}
           >
             <ShoppingCart className="w-4 h-4" />
-            Add to Cart
+            {t("cardAddToCart")}
           </Button>
         </div>
       </div>
