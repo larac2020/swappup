@@ -719,7 +719,7 @@ export default function SellTicket() {
               isReturn={isReturn}
               setIsReturn={setIsReturn}
               priceError={!!priceError}
-              today={today}
+              today={minDepartureDate}
               onTransferResult={setTrainTransferResult}
               transferResult={trainTransferResult}
             />
@@ -931,6 +931,7 @@ export default function SellTicket() {
                         selected={formData.departureDate}
                         onSelect={(date) => setFormData({ ...formData, departureDate: date })}
                         initialFocus
+                        disabled={(date) => date < minDepartureDate}
                         modifiers={{ today: today }}
                         modifiersClassNames={{ today: "text-muted-foreground" }}
                       />
@@ -953,6 +954,7 @@ export default function SellTicket() {
                           selected={formData.returnDate}
                           onSelect={(date) => setFormData({ ...formData, returnDate: date })}
                           initialFocus
+                          disabled={(date) => date < (formData.departureDate ?? minDepartureDate)}
                           modifiers={{ today: today }}
                           modifiersClassNames={{ today: "text-muted-foreground" }}
                         />
