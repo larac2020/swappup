@@ -27,6 +27,7 @@ import {
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import TransferConfirmation from "@/components/listings/TransferConfirmation";
 import { format } from "date-fns";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface BoostOption {
   label: string;
@@ -46,6 +47,7 @@ export default function MyListings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
