@@ -711,7 +711,7 @@ export default function SellTicket() {
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
           {/* Listing Type Selector */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">What are you selling?</h2>
+            <h2 className="text-lg font-semibold">{t("sellWhatSelling")}</h2>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -724,7 +724,7 @@ export default function SellTicket() {
                 )}
               >
                 <Ticket className={cn("w-6 h-6", formData.listingType === "flight_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>Flight Ticket</span>
+                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("flightTicket")}</span>
               </button>
               <button
                 type="button"
@@ -737,7 +737,7 @@ export default function SellTicket() {
                 )}
               >
                 <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>Train Ticket</span>
+                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("trainTicket")}</span>
               </button>
             </div>
           </div>
@@ -747,8 +747,8 @@ export default function SellTicket() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Upload className="w-5 h-5 text-primary" />
-                Upload Ticket Confirmation
-                <span className="text-xs font-normal text-destructive">* Required</span>
+                {t("sellUploadHeader")}
+                <span className="text-xs font-normal text-destructive">{t("sellUploadRequired")}</span>
               </h2>
               <label
                 className={cn(
@@ -760,21 +760,21 @@ export default function SellTicket() {
                 {isUploading ? (
                   <>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">Reading your ticket...</p>
+                    <p className="text-sm text-muted-foreground">{t("sellUploadReading")}</p>
                   </>
                 ) : ticketUploaded ? (
                   <>
                     <CheckCircle2 className="w-8 h-8 text-primary" />
-                    <p className="text-sm font-medium">Ticket uploaded</p>
-                    <p className="text-xs text-muted-foreground">Click to replace</p>
+                    <p className="text-sm font-medium">{t("sellUploadDone")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellUploadReplace")}</p>
                   </>
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground text-center">
-                      Upload a photo, screenshot or PDF of your ticket confirmation
+                      {t("sellUploadHint")}
                     </p>
-                    <p className="text-xs text-muted-foreground">We'll auto-fill the details where possible</p>
+                    <p className="text-xs text-muted-foreground">{t("sellUploadAutofillHint")}</p>
                   </>
                 )}
               </label>
@@ -814,13 +814,13 @@ export default function SellTicket() {
                 {isVerifyingFlight ? (
                   <div className="flex items-center gap-3">
                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                    <p className="text-sm">Verifying flight against the airline's schedule…</p>
+                    <p className="text-sm">{t("sellVerifyingTitle")}</p>
                   </div>
                 ) : flightVerification?.status === "verified" ? (
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">Flight verified</p>
+                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">{t("sellVerifiedTitle")}</p>
                       <p className="text-xs text-muted-foreground">
                         {flightVerification.verified?.airline} · {flightVerification.verified?.originIata} → {flightVerification.verified?.destinationIata}
                       </p>
@@ -830,27 +830,27 @@ export default function SellTicket() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="space-y-2 flex-1">
-                      <p className="font-semibold text-sm text-destructive">Ticket data doesn't match airline records</p>
+                      <p className="font-semibold text-sm text-destructive">{t("sellMismatchTitle")}</p>
                       <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                         {flightVerification.flags?.map((f, i) => <li key={i}>{f}</li>)}
                       </ul>
-                      <p className="text-xs text-destructive font-medium">This listing cannot be published until the data matches.</p>
+                      <p className="text-xs text-destructive font-medium">{t("sellMismatchBlock")}</p>
                     </div>
                   </div>
                 ) : flightVerification?.status === "not_found" ? (
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-destructive">Flight not found in airline schedule</p>
-                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? "Please check the flight number and date."}</p>
+                      <p className="font-semibold text-sm text-destructive">{t("sellNotFoundTitle")}</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? t("sellNotFoundDesc")}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">Verification unavailable</p>
-                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? "We couldn't verify this flight right now."}</p>
+                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">{t("sellVerifyUnavailableTitle")}</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? t("sellVerifyUnavailableDesc")}</p>
                     </div>
                   </div>
                 )}
