@@ -547,6 +547,15 @@ export default function SellTicket() {
       toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
       return;
     }
+    // Block flight listings that failed external schedule verification
+    if (!isVoucher && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
+      toast({
+        title: "Listing blocked",
+        description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
+        variant: "destructive",
+      });
+      return;
+    }
     createListingMutation.mutate();
   };
 
