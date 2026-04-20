@@ -653,193 +653,32 @@ export default function SellTicket() {
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, listingType: "travel_credit" })}
+                onClick={() => setFormData({ ...formData, listingType: "train_ticket" })}
                 className={cn(
                   "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "travel_credit"
+                  formData.listingType === "train_ticket"
                     ? "border-primary bg-primary/10"
                     : "border-transparent hover:border-primary/30"
                 )}
               >
-                <CreditCard className={cn("w-6 h-6", formData.listingType === "travel_credit" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "travel_credit" ? "text-foreground" : "text-muted-foreground")}>Travel Credit / Voucher</span>
+                <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>Train Ticket</span>
               </button>
             </div>
           </div>
 
-          {/* VOUCHER FORM */}
-          {formData.listingType === "travel_credit" && (
-            <>
-              {/* Voucher Verification Upload */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-primary" />
-                  Verify Your Credit / Voucher
-                </h2>
-                <label className="glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors border-2 border-dashed border-border">
-                  <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleVoucherUpload} disabled={isVerifyingVoucher} />
-                  {isVerifyingVoucher ? (
-                    <>
-                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                      <p className="text-sm text-muted-foreground">Verifying your voucher...</p>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-8 h-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground text-center">
-                        Upload a screenshot of your travel credit, voucher, or confirmation email
-                      </p>
-                      <p className="text-xs text-muted-foreground">We'll verify authenticity and auto-fill details</p>
-                    </>
-                  )}
-                </label>
-
-                {/* Verification Result */}
-                {voucherVerification && (
-                  <div className={cn(
-                    "rounded-xl border-2 p-4 space-y-3 animate-in fade-in slide-in-from-top-2",
-                    voucherVerification.isValid && voucherVerification.confidenceScore >= 70
-                      ? "border-green-500/30 bg-green-500/10"
-                      : voucherVerification.isValid && voucherVerification.confidenceScore >= 50
-                        ? "border-yellow-500/30 bg-yellow-500/10"
-                        : "border-destructive/30 bg-destructive/10"
-                  )}>
-                    <div className="flex items-start gap-3">
-                      {voucherVerification.isValid && voucherVerification.confidenceScore >= 70 ? (
-                        <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
-                      )}
-                      <div className="space-y-1 flex-1">
-                        <p className={cn("font-semibold text-sm",
-                          voucherVerification.confidenceScore >= 70 ? "text-green-600 dark:text-green-400" :
-                          voucherVerification.confidenceScore >= 50 ? "text-yellow-600 dark:text-yellow-400" :
-                          "text-destructive"
-                        )}>
-                          {voucherVerification.confidenceScore >= 70 ? "✅ Verified" :
-                           voucherVerification.confidenceScore >= 50 ? "⚠️ Partially Verified" :
-                           "❌ Verification Failed"}
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            Confidence: {voucherVerification.confidenceScore}%
-                          </span>
-                        </p>
-                        {voucherVerification.referenceCode && (
-                          <p className="text-xs text-muted-foreground">Ref: {voucherVerification.referenceCode}</p>
-                        )}
-                        {voucherVerification.notes && (
-                          <p className="text-xs text-muted-foreground">{voucherVerification.notes}</p>
-                        )}
-                        {voucherVerification.flags?.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {voucherVerification.flags.map((flag: string, i: number) => (
-                              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">{flag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Voucher Details */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  Credit / Voucher Details
-                </h2>
-                <div className="glass rounded-2xl p-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label>Airline</Label>
-                    <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v })}>
-                      <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select airline" /></SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-60">
-                        {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Credit Type</Label>
-                    <Select value={formData.creditType} onValueChange={(v) => setFormData({ ...formData, creditType: v })}>
-                      <SelectTrigger className="bg-secondary/50"><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {creditTypes.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Credit Value ({formData.creditCurrency})</Label>
-                      <Input type="number" min="0" step="0.01" placeholder="200.00" value={formData.creditValue} onChange={(e) => setFormData({ ...formData, creditValue: e.target.value })} className="bg-secondary/50" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Select value={formData.creditCurrency} onValueChange={(v) => setFormData({ ...formData, creditCurrency: v })}>
-                        <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Expiry Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.creditExpiryDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.creditExpiryDate ? format(formData.creditExpiryDate, "PPP") : "Select expiry date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.creditExpiryDate}
-                          onSelect={(date) => setFormData({ ...formData, creditExpiryDate: date })}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pricing for voucher */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Pricing</h2>
-                <div className="glass rounded-2xl p-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Original Value ({formData.creditCurrency})</Label>
-                      <Input type="number" min="0" step="0.01" placeholder="200.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Selling Price ({formData.creditCurrency})</Label>
-                      <Input type="number" min="1" step="0.01" placeholder="150.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
-                    </div>
-                  </div>
-                  {priceError && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      Selling price must be lower than the original value
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Additional Notes</h2>
-                <Textarea
-                  placeholder="Add any details about the credit/voucher (restrictions, conditions, how to redeem...)"
-                  value={formData.additionalNotes}
-                  onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                  className="bg-secondary/50 min-h-24"
-                />
-              </div>
-            </>
+          {/* TRAIN TICKET FORM */}
+          {formData.listingType === "train_ticket" && (
+            <TrainForm
+              formData={formData}
+              setFormData={setFormData}
+              isReturn={isReturn}
+              setIsReturn={setIsReturn}
+              priceError={!!priceError}
+              today={today}
+              onTransferResult={setTrainTransferResult}
+              transferResult={trainTransferResult}
+            />
           )}
 
           {/* FLIGHT TICKET FORM */}
