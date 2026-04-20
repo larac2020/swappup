@@ -16,16 +16,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { airlines, getUniqueCities, getCountries, getCitiesByCountry } from "@/data/flightData";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const tripTags = [
-  { value: "city_trip", label: "City Trip" },
-  { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" },
-  { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" },
-  { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" },
-  { value: "business", label: "Business" },
+  { value: "city_trip", labelKey: "tagCityTrip" as const },
+  { value: "beach", labelKey: "tagBeach" as const },
+  { value: "winter_holiday", labelKey: "tagWinterHoliday" as const },
+  { value: "ski_trip", labelKey: "tagSkiTrip" as const },
+  { value: "adventure", labelKey: "tagAdventure" as const },
+  { value: "romantic", labelKey: "tagRomantic" as const },
+  { value: "family", labelKey: "tagFamily" as const },
+  { value: "business", labelKey: "tagBusiness" as const },
 ];
 
 type FlexOption = "exact" | "+-1" | "+-3" | "month" | "any";
@@ -79,6 +80,7 @@ export const defaultFilters: FilterState = {
 };
 
 export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [], externalFilters }: ListingFiltersProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
