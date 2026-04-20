@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 
 export default function Browse() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const initialDestination = searchParams.get("destination") || "";
   const initialType = searchParams.get("type") || "all";
@@ -73,13 +75,13 @@ export default function Browse() {
         setFilters(newFilters);
         setAiAppliedFilters(newFilters);
 
-        toast.success("Search filters applied");
+        toast.success(t("browseSearchApplied"));
       } else {
-        toast.error("Could not understand your search");
+        toast.error(t("browseSearchFailed"));
       }
     } catch (error) {
       console.error("AI search error:", error);
-      toast.error("Search failed. Please try again.");
+      toast.error(t("browseSearchError"));
     } finally {
       setIsAiSearching(false);
     }
@@ -321,16 +323,16 @@ export default function Browse() {
     <AppLayout>
       <div className="px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold">Find Deals</h1>
-          <p className="text-muted-foreground">Discover amazing deals from other travelers</p>
+          <h1 className="text-2xl font-display font-bold">{t("browseFindDeals")}</h1>
+          <p className="text-muted-foreground">{t("browseSubtitle")}</p>
         </div>
 
         {/* Listing Type Tabs */}
         <div className="flex gap-2">
           {[
-            { value: "all" as const, label: "All", icon: <Search className="w-3.5 h-3.5" /> },
-            { value: "flights" as const, label: "Flights", icon: <Ticket className="w-3.5 h-3.5" /> },
-            { value: "credits" as const, label: "Credits & Vouchers", icon: <CreditCard className="w-3.5 h-3.5" /> },
+            { value: "all" as const, label: t("browseAll"), icon: <Search className="w-3.5 h-3.5" /> },
+            { value: "flights" as const, label: t("browseFlights"), icon: <Ticket className="w-3.5 h-3.5" /> },
+            { value: "credits" as const, label: t("browseCreditsVouchers"), icon: <CreditCard className="w-3.5 h-3.5" /> },
           ].map((tab) => (
             <Button
               key={tab.value}
@@ -349,11 +351,11 @@ export default function Browse() {
         <div className="glass rounded-xl p-4 border border-border/50 space-y-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold">AI Search</h2>
+            <h2 className="text-sm font-semibold">{t("browseAiSearch")}</h2>
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="Try: 'cheap beach vacation in July' or 'family trip to Paris next month'"
+              placeholder={t("browseAiPlaceholder")}
               value={aiSearchQuery}
               onChange={(e) => setAiSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAiSearch()}
@@ -391,17 +393,17 @@ export default function Browse() {
           <>
             {/* Sort bar */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{sortedListings.length} result{sortedListings.length !== 1 ? "s" : ""}</p>
+              <p className="text-sm text-muted-foreground">{t("filterResults", { count: sortedListings.length })}</p>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
                 <SelectTrigger className="w-44 h-9 text-sm glass border-border/50">
                   <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="date_soon">Soonest departure</SelectItem>
-                  <SelectItem value="price_low">Price: Low → High</SelectItem>
-                  <SelectItem value="price_high">Price: High → Low</SelectItem>
-                  <SelectItem value="newest">Newest listed</SelectItem>
+                  <SelectItem value="date_soon">{t("browseSortSoonest")}</SelectItem>
+                  <SelectItem value="price_low">{t("browseSortPriceLow")}</SelectItem>
+                  <SelectItem value="price_high">{t("browseSortPriceHigh")}</SelectItem>
+                  <SelectItem value="newest">{t("browseSortNewest")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -435,7 +437,7 @@ export default function Browse() {
             {sortedListings.length === 0 && (
               <div className="space-y-8">
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No tickets match your filters</p>
+                  <p className="text-muted-foreground">{t("browseNoResults")}</p>
                 </div>
 
                 {noResultSuggestions && noResultSuggestions.map((section, idx) => (
