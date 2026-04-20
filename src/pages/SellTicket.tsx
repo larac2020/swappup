@@ -271,6 +271,7 @@ export default function SellTicket() {
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
     setTrainTransferResult(null);
+    setTicketUploaded(false);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -341,6 +342,8 @@ export default function SellTicket() {
         const p = data.parsed;
         const hasReturn = !!p.returnDate;
         setIsReturn(hasReturn);
+        // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
+        setTicketUploaded(true);
 
         const parsedCount = p.ticketCount ? String(p.ticketCount) : "1";
 
@@ -379,7 +382,9 @@ export default function SellTicket() {
       }
     } catch (err: any) {
       console.error("Ticket parse error:", err);
-      toast({ title: "Could not read ticket", description: "Please fill in the details manually.", variant: "destructive" });
+      // The file was still uploaded successfully, parsing just failed — count as satisfied
+      setTicketUploaded(true);
+      toast({ title: "Could not read ticket", description: "We couldn't auto-fill the details. Please fill them in manually.", variant: "destructive" });
     } finally {
       setIsUploading(false);
       // Reset file input so re-uploading the same file triggers onChange
