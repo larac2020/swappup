@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  ShieldCheck, Ticket, CreditCard
+  ShieldCheck, Ticket, CreditCard, CheckCircle2
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import { cn } from "@/lib/utils";
@@ -115,6 +115,21 @@ export default function SellTicket() {
   const [isVerifyingVoucher, setIsVerifyingVoucher] = useState(false);
   const [voucherVerification, setVoucherVerification] = useState<any>(null);
   const [editLoaded, setEditLoaded] = useState(false);
+
+  // Flight schedule verification (Aviationstack via edge function)
+  const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
+  const [flightVerification, setFlightVerification] = useState<{
+    status: "verified" | "mismatch" | "not_found" | "provider_error" | "error" | "invalid_input";
+    flags?: string[];
+    verified?: {
+      airline?: string | null;
+      originIata?: string | null;
+      destinationIata?: string | null;
+      originAirport?: string | null;
+      destinationAirport?: string | null;
+    };
+    message?: string;
+  } | null>(null);
 
   // Shared inclusions (used when sameInclusions is true)
   const [sharedInclusions, setSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
@@ -241,6 +256,50 @@ export default function SellTicket() {
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
     setVoucherVerification(null);
+    setFlightVerification(null);
+  };
+
+  const verifyFlightSchedule = async (params: {
+    airline: string;
+    flightNumber: string;
+    departureDate: string;
+    originCity?: string;
+    destinationCity?: string;
+    originCountry?: string;
+    destinationCountry?: string;
+  }) => {
+    setIsVerifyingFlight(true);
+    setFlightVerification(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-flight", { body: params });
+      if (error) throw error;
+      setFlightVerification(data);
+      if (data?.status === "verified") {
+        toast({ title: "Flight verified ✅", description: "Schedule data matches the airline's records." });
+      } else if (data?.status === "mismatch") {
+        toast({
+          title: "Mismatch detected",
+          description: "The ticket data doesn't match the airline's published schedule. Listing is blocked.",
+          variant: "destructive",
+        });
+      } else if (data?.status === "not_found") {
+        toast({
+          title: "Flight not found",
+          description: "We couldn't find this flight in the airline's schedule. Listing is blocked.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error("Flight verify error:", err);
+      setFlightVerification({ status: "error", message: err?.message || "Verification failed" });
+      toast({
+        title: "Verification unavailable",
+        description: "Could not reach the verification service. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingFlight(false);
+    }
   };
 
   const handleVoucherUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -336,6 +395,19 @@ export default function SellTicket() {
         setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
 
         toast({ title: "Ticket parsed!", description: `Detected ${count} ticket${count > 1 ? "s" : ""}. Please review the details below.` });
+
+        // Auto-verify against airline schedule when we have the minimum required fields
+        if (p.airline && p.flightNumber && p.departureDate) {
+          await verifyFlightSchedule({
+            airline: p.airline,
+            flightNumber: p.flightNumber,
+            departureDate: p.departureDate,
+            originCity: p.originCity,
+            destinationCity: p.destinationCity,
+            originCountry: p.originCountry,
+            destinationCountry: p.destinationCountry,
+          });
+        }
       }
     } catch (err: any) {
       console.error("Ticket parse error:", err);
@@ -473,6 +545,15 @@ export default function SellTicket() {
     }
     if (priceError) {
       toast({ title: "Price too high", description: "Selling price must be lower than the original price.", variant: "destructive" });
+      return;
+    }
+    // Block flight listings that failed external schedule verification
+    if (!isVoucher && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
+      toast({
+        title: "Listing blocked",
+        description: "This flight could not be verified against the airline's schedule. Please re-upload a valid ticket.",
+        variant: "destructive",
+      });
       return;
     }
     createListingMutation.mutate();
@@ -807,6 +888,64 @@ export default function SellTicket() {
                 </>
               )}
             </label>
+
+            {/* Flight schedule verification status */}
+            {(isVerifyingFlight || flightVerification) && (
+              <div className={cn(
+                "rounded-xl border-2 p-4 space-y-2 animate-in fade-in slide-in-from-top-2",
+                isVerifyingFlight
+                  ? "border-primary/30 bg-primary/5"
+                  : flightVerification?.status === "verified"
+                    ? "border-green-500/30 bg-green-500/10"
+                    : flightVerification?.status === "error" || flightVerification?.status === "provider_error"
+                      ? "border-yellow-500/30 bg-yellow-500/10"
+                      : "border-destructive/30 bg-destructive/10"
+              )}>
+                {isVerifyingFlight ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    <p className="text-sm">Verifying flight against the airline's schedule…</p>
+                  </div>
+                ) : flightVerification?.status === "verified" ? (
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-green-600 dark:text-green-400">Flight verified</p>
+                      <p className="text-xs text-muted-foreground">
+                        {flightVerification.verified?.airline} · {flightVerification.verified?.originIata} → {flightVerification.verified?.destinationIata}
+                      </p>
+                    </div>
+                  </div>
+                ) : flightVerification?.status === "mismatch" ? (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                    <div className="space-y-2 flex-1">
+                      <p className="font-semibold text-sm text-destructive">Ticket data doesn't match airline records</p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        {flightVerification.flags?.map((f, i) => <li key={i}>{f}</li>)}
+                      </ul>
+                      <p className="text-xs text-destructive font-medium">This listing cannot be published until the data matches.</p>
+                    </div>
+                  </div>
+                ) : flightVerification?.status === "not_found" ? (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-destructive">Flight not found in airline schedule</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification.message ?? "Please check the flight number and date."}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">Verification unavailable</p>
+                      <p className="text-xs text-muted-foreground">{flightVerification?.message ?? "We couldn't verify this flight right now."}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Route */}
@@ -1128,13 +1267,31 @@ export default function SellTicket() {
             </div>
           </div>
 
-          <Button type="submit" variant="gold" size="xl" className="w-full" disabled={createListingMutation.isPending}>
-            {createListingMutation.isPending ? (
-              <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
-            ) : (
-              <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
-            )}
-          </Button>
+          {(() => {
+            const blockedByVerification =
+              formData.listingType === "flight_ticket" &&
+              flightVerification != null &&
+              (flightVerification.status === "mismatch" || flightVerification.status === "not_found");
+            return (
+              <Button
+                type="submit"
+                variant="gold"
+                size="xl"
+                className="w-full"
+                disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification}
+              >
+                {createListingMutation.isPending ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />{editId ? "Saving..." : "Creating Listing..."}</>
+                ) : isVerifyingFlight ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />Verifying flight...</>
+                ) : blockedByVerification ? (
+                  <><AlertCircle className="w-5 h-5" />Listing blocked — verification failed</>
+                ) : (
+                  <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? "Save Changes" : "Create Listing"}</>
+                )}
+              </Button>
+            );
+          })()}
         </form>
         )}
       </div>
