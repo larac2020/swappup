@@ -116,6 +116,9 @@ export default function SellTicket() {
   const [isUploading, setIsUploading] = useState(false);
   const [editLoaded, setEditLoaded] = useState(false);
 
+  // Ticket upload is mandatory (except in edit mode where the listing already exists)
+  const [ticketUploaded, setTicketUploaded] = useState(false);
+
   // Transferability blocking flags from the in-form check cards
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
@@ -165,6 +168,8 @@ export default function SellTicket() {
   useEffect(() => {
     if (editListing && !editLoaded) {
       setEditLoaded(true);
+      // Existing listing — treat upload requirement as satisfied
+      setTicketUploaded(true);
       const hasReturn = !!editListing.return_date;
       setIsReturn(hasReturn);
 
