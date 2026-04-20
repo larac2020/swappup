@@ -17,21 +17,20 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  ShieldCheck, Ticket, CreditCard, CheckCircle2
+  Ticket, TrainFront, CheckCircle2, Clock
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
+import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   getCountries, getCitiesByCountry, getAirportCodesForCity,
   airlines, CityData
 } from "@/data/flightData";
-
-const creditTypes = [
-  { value: "flight_credit", label: "Flight Credit" },
-  { value: "airline_voucher", label: "Airline Voucher" },
-  { value: "travel_funds", label: "Travel Funds" },
-];
+import {
+  trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
+  getStationsForCity, currencySymbol
+} from "@/data/trainData";
 
 const tripTags = [
   { value: "city_trip", label: "City Trip" },
