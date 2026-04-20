@@ -417,7 +417,7 @@ const translations = {
     privacyTitle: "Privacy & Data",
     privacyHowWeUse: "How We Use Your Data",
     privacyCoreService: "Core Service Data",
-    privacyCoreServiceDesc: "Your profile, listings, and transaction data are processed to provide the FlySwap marketplace service. This is necessary for the contract we have with you.",
+    privacyCoreServiceDesc: "Your profile, listings, and transaction data are processed to provide the SwappUp marketplace service. This is necessary for the contract we have with you.",
     privacyAnalytics: "Analytics",
     privacyAnalyticsDesc: "We use anonymised usage data (pages visited, search patterns) to improve the platform experience. This helps us understand how features are used.",
     privacyMarketing: "Marketing Communications",
@@ -444,7 +444,7 @@ const translations = {
     privacyDeleteFailed: "Failed to request account deletion. Please contact support.",
     privacyPrefsUpdated: "Preferences updated",
     privacyPrefsFailed: "Failed to update preferences",
-    privacyContact: "For any data protection enquiries, contact us at privacy@flyswap.com. We aim to respond within 30 days as required under UK GDPR.",
+    privacyContact: "For any data protection enquiries, contact us at privacy@swappup.com. We aim to respond within 30 days as required under UK GDPR.",
 
     // Support
     supportTitle: "Help & Support",
@@ -528,13 +528,13 @@ const translations = {
 
     // FAQ
     faqNameChange: "How does the name change process work?",
-    faqNameChangeAnswer: "When you purchase a ticket, the seller provides the original booking details. You'll need to contact the airline directly to change the name on the ticket. The airline charges a name change fee, which is shown on each listing. This fee is paid directly to the airline, not through FlySwap.",
-    faqSafe: "Is it safe to buy tickets on FlySwap?",
+    faqNameChangeAnswer: "When you purchase a ticket, the seller provides the original booking details. You'll need to contact the airline directly to change the name on the ticket. The airline charges a name change fee, which is shown on each listing. This fee is paid directly to the airline, not through SwappUp.",
+    faqSafe: "Is it safe to buy tickets on SwappUp?",
     faqSafeAnswer: "Yes! All sellers must verify their identity before listing tickets. We also provide buyer protection - if a ticket turns out to be invalid, you'll receive a full refund. Payment is held securely until the ticket transfer is confirmed.",
     faqVerified: "How do I get verified to sell tickets?",
     faqVerifiedAnswer: "Go to Account > ID Verification and upload a valid government-issued ID (passport, driver's license, or national ID card). Verification typically takes 1-2 business days. Once verified, you can start listing tickets.",
     faqCancelled: "What happens if my flight is cancelled?",
-    faqCancelledAnswer: "If the airline cancels the flight, the seller is responsible for providing a refund through FlySwap. Our buyer protection covers you in this scenario. Contact our support team with the cancellation notice.",
+    faqCancelledAnswer: "If the airline cancels the flight, the seller is responsible for providing a refund through SwappUp. Our buyer protection covers you in this scenario. Contact our support team with the cancellation notice.",
     faqRefunds: "How do refunds work?",
     faqRefundsAnswer: "Refunds are processed within 5-7 business days. If you're entitled to a refund, the amount will be returned to your original payment method. Service fees may be non-refundable depending on the circumstances.",
     faqOneWay: "Can I sell one-way tickets?",
@@ -979,7 +979,7 @@ const translations = {
     privacyTitle: "Privacy e Dati",
     privacyHowWeUse: "Come Utilizziamo i Tuoi Dati",
     privacyCoreService: "Dati del Servizio Principale",
-    privacyCoreServiceDesc: "Il tuo profilo, annunci e dati delle transazioni sono elaborati per fornire il servizio marketplace FlySwap. Ciò è necessario per il contratto che abbiamo con te.",
+    privacyCoreServiceDesc: "Il tuo profilo, annunci e dati delle transazioni sono elaborati per fornire il servizio marketplace SwappUp. Ciò è necessario per il contratto che abbiamo con te.",
     privacyAnalytics: "Analisi",
     privacyAnalyticsDesc: "Utilizziamo dati di utilizzo anonimizzati (pagine visitate, pattern di ricerca) per migliorare l'esperienza della piattaforma. Questo ci aiuta a capire come vengono utilizzate le funzionalità.",
     privacyMarketing: "Comunicazioni di Marketing",
@@ -1006,7 +1006,7 @@ const translations = {
     privacyDeleteFailed: "Impossibile richiedere l'eliminazione dell'account. Contatta il supporto.",
     privacyPrefsUpdated: "Preferenze aggiornate",
     privacyPrefsFailed: "Aggiornamento preferenze fallito",
-    privacyContact: "Per qualsiasi richiesta sulla protezione dei dati, contattaci a privacy@flyswap.com. Ci impegniamo a rispondere entro 30 giorni come richiesto dal GDPR.",
+    privacyContact: "Per qualsiasi richiesta sulla protezione dei dati, contattaci a privacy@swappup.com. Ci impegniamo a rispondere entro 30 giorni come richiesto dal GDPR.",
 
     // Support
     supportTitle: "Assistenza e Supporto",
@@ -1090,13 +1090,13 @@ const translations = {
 
     // FAQ
     faqNameChange: "Come funziona il processo di cambio nome?",
-    faqNameChangeAnswer: "Quando acquisti un biglietto, il venditore fornisce i dettagli della prenotazione originale. Dovrai contattare direttamente la compagnia aerea per cambiare il nome sul biglietto. La compagnia addebita una tassa per il cambio nome, che è indicata su ogni annuncio. Questa tassa viene pagata direttamente alla compagnia aerea, non tramite FlySwap.",
-    faqSafe: "È sicuro comprare biglietti su FlySwap?",
+    faqNameChangeAnswer: "Quando acquisti un biglietto, il venditore fornisce i dettagli della prenotazione originale. Dovrai contattare direttamente la compagnia aerea per cambiare il nome sul biglietto. La compagnia addebita una tassa per il cambio nome, che è indicata su ogni annuncio. Questa tassa viene pagata direttamente alla compagnia aerea, non tramite SwappUp.",
+    faqSafe: "È sicuro comprare biglietti su SwappUp?",
     faqSafeAnswer: "Sì! Tutti i venditori devono verificare la propria identità prima di pubblicare biglietti. Offriamo anche protezione dell'acquirente - se un biglietto risulta non valido, riceverai un rimborso completo. Il pagamento è trattenuto in modo sicuro fino alla conferma del trasferimento del biglietto.",
     faqVerified: "Come faccio a verificarmi per vendere biglietti?",
     faqVerifiedAnswer: "Vai su Account > Verifica ID e carica un documento d'identità valido rilasciato dal governo (passaporto, patente o carta d'identità). La verifica richiede generalmente 1-2 giorni lavorativi. Una volta verificato, puoi iniziare a pubblicare biglietti.",
     faqCancelled: "Cosa succede se il mio volo viene cancellato?",
-    faqCancelledAnswer: "Se la compagnia aerea cancella il volo, il venditore è responsabile di fornire un rimborso tramite FlySwap. La nostra protezione dell'acquirente ti copre in questo scenario. Contatta il nostro team di supporto con l'avviso di cancellazione.",
+    faqCancelledAnswer: "Se la compagnia aerea cancella il volo, il venditore è responsabile di fornire un rimborso tramite SwappUp. La nostra protezione dell'acquirente ti copre in questo scenario. Contatta il nostro team di supporto con l'avviso di cancellazione.",
     faqRefunds: "Come funzionano i rimborsi?",
     faqRefundsAnswer: "I rimborsi vengono elaborati entro 5-7 giorni lavorativi. Se hai diritto a un rimborso, l'importo verrà restituito al tuo metodo di pagamento originale. Le commissioni di servizio potrebbero non essere rimborsabili a seconda delle circostanze.",
     faqOneWay: "Posso vendere biglietti di sola andata?",
