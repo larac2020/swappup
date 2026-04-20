@@ -105,7 +105,7 @@ export function AuthForm() {
         } else {
           toast({
             title: "Account created!",
-            description: "Welcome to FlySwap.",
+            description: "Welcome to SwappUp.",
           });
         }
       } else {
