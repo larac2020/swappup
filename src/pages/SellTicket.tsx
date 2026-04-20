@@ -340,6 +340,23 @@ export default function SellTicket() {
 
       if (data?.parsed) {
         const p = data.parsed;
+        // Determine ticket kind from AI output (defaults to flight)
+        const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
+
+        // Reject expired / too-soon tickets at parse time so we never pre-fill an invalid date
+        const minTs = Date.now() + 24 * 60 * 60 * 1000;
+        const parsedDeparture = p.departureDate ? new Date(p.departureDate) : undefined;
+        if (parsedDeparture && (isNaN(parsedDeparture.getTime()) || parsedDeparture.getTime() < minTs)) {
+          // Treat as a hard failure — do NOT mark upload as satisfied
+          setTicketUploaded(false);
+          toast({
+            title: "Ticket expired or too soon",
+            description: `This ticket departs ${parsedDeparture.toLocaleDateString()}. We only accept tickets at least 24 hours in the future.`,
+            variant: "destructive",
+          });
+          return;
+        }
+
         const hasReturn = !!p.returnDate;
         setIsReturn(hasReturn);
         // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
@@ -349,26 +366,37 @@ export default function SellTicket() {
 
         setFormData((prev) => ({
           ...prev,
+          listingType: isTrain ? "train_ticket" : "flight_ticket",
           originCountry: p.originCountry || "",
           originCity: p.originCity || "",
           destinationCountry: p.destinationCountry || "",
           destinationCity: p.destinationCity || "",
-          airline: p.airline || "",
-          flightNumber: p.flightNumber || "",
+          airline: isTrain ? (p.operator || "") : (p.airline || ""),
+          flightNumber: isTrain ? "" : (p.flightNumber || ""),
           originalPrice: p.originalPrice?.toString() || "",
-          departureDate: p.departureDate ? new Date(p.departureDate) : undefined,
+          departureDate: parsedDeparture,
           returnDate: hasReturn ? new Date(p.returnDate) : undefined,
           ticketCount: parsedCount,
+          // Train-only fields
+          operator: isTrain ? (p.operator || "") : "",
+          trainNumber: isTrain ? (p.trainNumber || "") : "",
+          trainClass: isTrain ? (p.trainClass || "") : "",
+          trainOriginStation: isTrain ? (p.originStation || "") : "",
+          trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
+          departureTime: isTrain ? (p.departureTime || "") : "",
         }));
 
         // Sync per-ticket array
         const count = parseInt(parsedCount) || 1;
         setPerTicketInclusions(Array(count).fill(null).map(() => ({ ...defaultInclusions })));
 
-        toast({ title: "Ticket parsed!", description: `Detected ${count} ticket${count > 1 ? "s" : ""}. Please review the details below.` });
+        toast({
+          title: "Ticket parsed!",
+          description: `Detected ${isTrain ? "train" : "flight"} ticket${count > 1 ? `s (${count})` : ""}. Please review the details below.`,
+        });
 
-        // Auto-verify against airline schedule when we have the minimum required fields
-        if (p.airline && p.flightNumber && p.departureDate) {
+        // Auto-verify against airline schedule (flights only) when we have the minimum required fields
+        if (!isTrain && p.airline && p.flightNumber && p.departureDate) {
           await verifyFlightSchedule({
             airline: p.airline,
             flightNumber: p.flightNumber,
