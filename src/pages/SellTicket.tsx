@@ -711,6 +711,45 @@ export default function SellTicket() {
             </div>
           </div>
 
+          {/* Upload Ticket — REQUIRED for both flights & trains */}
+          {!isEditMode && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Upload className="w-5 h-5 text-primary" />
+                Upload Ticket Confirmation
+                <span className="text-xs font-normal text-destructive">* Required</span>
+              </h2>
+              <label
+                className={cn(
+                  "glass rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors border-2 border-dashed",
+                  ticketUploaded ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/30"
+                )}
+              >
+                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">Reading your ticket...</p>
+                  </>
+                ) : ticketUploaded ? (
+                  <>
+                    <CheckCircle2 className="w-8 h-8 text-primary" />
+                    <p className="text-sm font-medium">Ticket uploaded</p>
+                    <p className="text-xs text-muted-foreground">Click to replace</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Upload a photo, screenshot or PDF of your ticket confirmation
+                    </p>
+                    <p className="text-xs text-muted-foreground">We'll auto-fill the details where possible</p>
+                  </>
+                )}
+              </label>
+            </div>
+          )}
+
           {/* TRAIN TICKET FORM */}
           {formData.listingType === "train_ticket" && (
             <TrainForm
