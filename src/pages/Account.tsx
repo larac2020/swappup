@@ -58,11 +58,25 @@ export default function Account() {
     enabled: !!user?.id,
   });
 
+  // Check Stripe for saved payment methods (truthful persistence)
+  const { data: paymentData } = useQuery({
+    queryKey: ["payment-method", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("check-payment-method");
+      if (error) throw error;
+      return data as { hasPaymentMethod: boolean };
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5,
+  });
+
   // Compute completion status for each section
   const sectionComplete = {
     profile: !!(profile?.full_name && profile?.phone),
     address: !!(profile?.address_line1 && profile?.city && profile?.postal_code && profile?.country),
-    payment: typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true",
+    payment:
+      !!paymentData?.hasPaymentMethod ||
+      (typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true"),
     verification: profile?.verification_status === "verified",
   };
 

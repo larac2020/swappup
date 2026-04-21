@@ -27,16 +27,27 @@ export function useProfileCompletion() {
     enabled: !!user?.id,
   });
 
+  const { data: paymentData } = useQuery({
+    queryKey: ["payment-method", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("check-payment-method");
+      if (error) throw error;
+      return data as { hasPaymentMethod: boolean };
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const sections: SectionStatus = {
     profile: !!(profile?.full_name && profile?.phone),
     verification: profile?.verification_status === "verified",
     address: !!(profile?.address_line1 && profile?.city && profile?.postal_code && profile?.country),
-    payment: false, // We can't check Stripe from here; we'll assume incomplete for now unless we track it
+    payment: !!paymentData?.hasPaymentMethod,
     preferences: !!(profile?.favorite_departure_city || (profile?.favorite_categories as string[] | null)?.length),
   };
 
-  // Payment: check localStorage as a simple flag for now
-  if (typeof window !== "undefined") {
+  // Fallback: localStorage flag (set right after Stripe success) for instant UI feedback
+  if (!sections.payment && typeof window !== "undefined") {
     sections.payment = localStorage.getItem("flyswap_payment_added") === "true";
   }
 
