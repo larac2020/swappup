@@ -12,16 +12,18 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { getCountries, getCitiesByCountry } from "@/data/flightData";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { TranslationKey } from "@/i18n/translations";
 
-const tripCategories = [
-  { value: "city_trip", label: "City Trip" },
-  { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" },
-  { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" },
-  { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" },
-  { value: "business", label: "Business" },
+const tripCategories: { value: string; labelKey: TranslationKey }[] = [
+  { value: "city_trip", labelKey: "tagCityTrip" },
+  { value: "beach", labelKey: "tagBeach" },
+  { value: "winter_holiday", labelKey: "tagWinterHoliday" },
+  { value: "ski_trip", labelKey: "tagSkiTrip" },
+  { value: "adventure", labelKey: "tagAdventure" },
+  { value: "romantic", labelKey: "tagRomantic" },
+  { value: "family", labelKey: "tagFamily" },
+  { value: "business", labelKey: "tagBusiness" },
 ];
 
 export default function Preferences() {
@@ -29,6 +31,7 @@ export default function Preferences() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -94,9 +97,9 @@ export default function Preferences() {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["profile-completion"] });
-      toast({ title: "Preferences saved" });
+      toast({ title: t("preferencesSaved") });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -109,18 +112,18 @@ export default function Preferences() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl font-display font-bold">Personalization</h1>
-          <p className="text-sm text-muted-foreground">Tailor your experience</p>
+          <h1 className="text-xl font-display font-bold">{t("preferencesTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("preferencesDesc")}</p>
         </div>
       </div>
 
       <div className="glass rounded-2xl p-5 space-y-4">
-        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Optional</Badge>
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">{t("optional")}</Badge>
 
         <div className="space-y-1.5">
-          <Label>Favorite Departure Country</Label>
+          <Label>{t("preferencesFavCountry")}</Label>
           <Select value={favCountry} onValueChange={(v) => { setFavCountry(v); setFavCity(""); }}>
-            <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+            <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("preferencesSelectCountry")} /></SelectTrigger>
             <SelectContent>
               {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
@@ -129,9 +132,9 @@ export default function Preferences() {
 
         {favCountry && (
           <div className="space-y-1.5">
-            <Label>Favorite Departure City</Label>
+            <Label>{t("preferencesFavCity")}</Label>
             <Select value={favCity} onValueChange={setFavCity}>
-              <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+              <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("preferencesSelectCity")} /></SelectTrigger>
               <SelectContent>
                 {favCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
@@ -140,19 +143,19 @@ export default function Preferences() {
         )}
 
         <div className="space-y-1.5">
-          <Label>Default Number of Passengers</Label>
+          <Label>{t("preferencesDefaultPax")}</Label>
           <Select value={defaultPax} onValueChange={setDefaultPax}>
             <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
             <SelectContent>
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "passenger" : "passengers"}</SelectItem>
+                <SelectItem key={n} value={String(n)}>{n} {n === 1 ? t("preferencesPassenger") : t("preferencesPassengers")}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-1.5">
-          <Label>Favorite Categories</Label>
+          <Label>{t("preferencesFavCategories")}</Label>
           <div className="flex flex-wrap gap-2">
             {tripCategories.map((cat) => (
               <button
@@ -167,7 +170,7 @@ export default function Preferences() {
                     : "bg-secondary border-border/50 text-muted-foreground hover:border-primary/50"
                 }`}
               >
-                {cat.label}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
@@ -175,7 +178,7 @@ export default function Preferences() {
       </div>
 
       <Button variant="gold" className="w-full" onClick={handleSave} disabled={saving}>
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Preferences"}
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("preferencesSave")}
       </Button>
     </div>
   );

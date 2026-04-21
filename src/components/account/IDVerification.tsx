@@ -8,12 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function IDVerification() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idPreview, setIdPreview] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export default function IDVerification() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 10MB allowed.", variant: "destructive" });
+      toast({ title: t("idFileTooLarge"), description: t("idFileTooLargeDesc"), variant: "destructive" });
       return;
     }
     setIdFile(file);
@@ -65,7 +67,7 @@ export default function IDVerification() {
 
       if (!verification?.is_valid_id || !verification?.appears_genuine) {
         toast({
-          title: "Document not accepted",
+          title: t("idDocumentNotAccepted"),
           description: verification?.reason || "Please upload a valid identity document.",
           variant: "destructive",
         });
@@ -74,7 +76,7 @@ export default function IDVerification() {
 
       if (verification?.name_matches_profile === false) {
         toast({
-          title: "Name mismatch",
+          title: t("idNameMismatch"),
           description: `The name on the document ("${verification.extracted_name || "unknown"}") does not match your profile name ("${profile?.full_name || "not set"}"). Please update your Personal Information first.`,
           variant: "destructive",
         });
@@ -98,19 +100,19 @@ export default function IDVerification() {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setIdFile(null);
       setIdPreview(null);
-      toast({ title: "ID verified!", description: `${verification.document_type} accepted.` });
+      toast({ title: t("idVerifiedToast"), description: `${verification.document_type} accepted.` });
       navigate("/account");
     } catch (err: any) {
-      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+      toast({ title: t("idVerificationFailed"), description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
   };
 
   const statusConfig = {
-    verified: { icon: CheckCircle, label: "Verified", className: "bg-success/10 text-success border-success/30" },
-    pending: { icon: Clock, label: "Pending Review", className: "bg-warning/10 text-warning border-warning/30" },
-    rejected: { icon: XCircle, label: "Rejected", className: "bg-destructive/10 text-destructive border-destructive/30" },
+    verified: { icon: CheckCircle, label: t("idVerified"), className: "bg-success/10 text-success border-success/30" },
+    pending: { icon: Clock, label: t("idPending"), className: "bg-warning/10 text-warning border-warning/30" },
+    rejected: { icon: XCircle, label: t("idRejected"), className: "bg-destructive/10 text-destructive border-destructive/30" },
   };
 
   const status = (profile?.verification_status as keyof typeof statusConfig) || "pending";
@@ -131,8 +133,8 @@ export default function IDVerification() {
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold">ID Verification</h1>
-          <p className="text-sm text-muted-foreground">Verify your identity with AI</p>
+          <h1 className="text-xl font-display font-bold">{t("idTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("idDesc")}</p>
         </div>
       </div>
 
@@ -141,7 +143,7 @@ export default function IDVerification() {
         <div className="flex items-center gap-3">
           <StatusIcon className={`w-5 h-5 ${status === "verified" ? "text-success" : status === "rejected" ? "text-destructive" : "text-warning"}`} />
           <div className="flex-1">
-            <p className="font-medium">Verification Status</p>
+            <p className="font-medium">{t("idStatus")}</p>
             <Badge variant="outline" className={statusConfig[status]?.className}>
               {statusConfig[status]?.label}
             </Badge>
@@ -154,12 +156,12 @@ export default function IDVerification() {
         <Alert className="bg-accent/50 border-accent">
           <Info className="w-4 h-4" />
           <AlertDescription className="text-sm">
-            The name on your ID must match the name in your <strong>Personal Information</strong>. Make sure your profile name is correct before uploading.
+            {t("idNameMustMatch")}
           </AlertDescription>
         </Alert>
 
         <p className="text-sm text-muted-foreground text-center">
-          Upload a clear photo of your passport, national ID card, or driving license. Our AI will verify it instantly.
+          {t("idUploadDesc")}
         </p>
 
         {idPreview ? (
@@ -176,11 +178,11 @@ export default function IDVerification() {
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => cameraInputRef.current?.click()}
               className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
-              <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Take Photo</span>
+              <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">{t("idTakePhoto")}</span>
             </button>
             <button onClick={() => fileInputRef.current?.click()}
               className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
-              <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Upload File</span>
+              <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">{t("idUploadFile")}</span>
             </button>
           </div>
         )}
@@ -206,7 +208,7 @@ export default function IDVerification() {
 
         {idFile && (
           <Button variant="gold" size="lg" className="w-full" onClick={uploadAndVerifyId} disabled={uploading}>
-            {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : "Verify & Submit"}
+            {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("idVerifying")}</> : t("idVerifySubmit")}
           </Button>
         )}
       </div>
