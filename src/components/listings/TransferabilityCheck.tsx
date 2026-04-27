@@ -1,12 +1,14 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { getAirlineData, AirlineData } from "@/data/flightData";
-import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, ShieldCheck, AlertOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface TransferabilityCheckProps {
   airline: string;
   fareType: string;
-  onResult?: (r: { status: "allowed" | "denied" | "unknown"; blocking: boolean; fee: number | null }) => void;
+  onResult?: (r: { status: "allowed" | "denied" | "unknown"; blocking: boolean; fee: number | null; acknowledged: boolean }) => void;
 }
 
 // Fare type transferability rules per airline category
@@ -74,10 +76,20 @@ const fareTypes = [
 export { fareTypes };
 
 export default function TransferabilityCheck({ airline, fareType, onResult }: TransferabilityCheckProps) {
+  const { t } = useLanguage();
   const result = useMemo(() => {
     const airlineData = getAirlineData(airline);
     return getTransferability(airlineData, fareType);
   }, [airline, fareType]);
+
+  // Seller must explicitly confirm they've verified the fee.
+  // Resets whenever the underlying fee or status changes.
+  const [acknowledged, setAcknowledged] = useState(false);
+  useEffect(() => {
+    setAcknowledged(false);
+  }, [result?.status, result?.fee]);
+
+  const requiresAck = result?.status === "allowed" && result.fee !== null;
 
   // Propagate to parent so it can disable the publish button when blocking.
   useEffect(() => {
@@ -86,10 +98,11 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
         status: result.status,
         blocking: result.status === "denied",
         fee: result.fee,
+        acknowledged: requiresAck ? acknowledged : true,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result?.status, result?.fee]);
+  }, [result?.status, result?.fee, acknowledged, requiresAck]);
 
   if (!result) return null;
 
@@ -153,6 +166,28 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
           Name-change fees change frequently. Always confirm the current fee on the airline's official website before listing.
         </p>
       </div>
+
+      {/* Personal-liability warning + confirmation gate */}
+      {requiresAck && (
+        <div className="rounded-lg border-2 border-destructive/40 bg-destructive/10 p-3 space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertOctagon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+            <p className="text-xs text-foreground leading-relaxed">
+              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: `£${result.fee}` })}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={acknowledged ? "secondary" : "destructive"}
+            className="w-full"
+            onClick={() => setAcknowledged((v) => !v)}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            {acknowledged ? t("sellerLiabilityConfirmed") : t("sellerLiabilityConfirmCta")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
