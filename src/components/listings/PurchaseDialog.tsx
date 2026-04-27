@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,7 +162,8 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Your name and email will be shared with the seller to complete the name change on the booking. 
                     The platform is not responsible for any misuse of this information by the seller. 
-                    By proceeding, you acknowledge and accept this risk.
+                    By proceeding, you acknowledge and accept this risk. See our{" "}
+                    <Link to="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link> for details.
                   </p>
                 </div>
               </div>

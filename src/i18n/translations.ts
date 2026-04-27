@@ -767,6 +767,19 @@ const translations = {
     trainTransferOperatorWebsite: "{operator}'s website",
     trainTransferBeforeListing: "before listing.",
 
+    // Legal pages
+    legalTermsTitle: "Terms of Service",
+    legalPrivacyTitle: "Privacy Policy",
+    legalLastUpdated: "Last updated",
+    legalAcceptCheckbox: "I have read and accept the Terms of Service and Privacy Policy",
+    legalReacceptTitle: "We've updated our Terms",
+    legalReacceptDesc: "Our Terms of Service and Privacy Policy have changed. Please review and accept them to continue using SwappUp.",
+    legalReviewTerms: "Review Terms of Service",
+    legalReviewPrivacy: "Review Privacy Policy",
+    legalAcceptAndContinue: "Accept and continue",
+    legalSignOut: "Sign out",
+    legalMustAccept: "You must accept the Terms of Service and Privacy Policy to create an account.",
+
     // Account extra
     accountVersion: "SwappUp v1.0.0",
   },
@@ -1535,6 +1548,19 @@ const translations = {
     trainTransferAlwaysCheck: "I costi del cambio nominativo cambiano spesso. Verifica sempre l'importo aggiornato sul",
     trainTransferOperatorWebsite: "sito di {operator}",
     trainTransferBeforeListing: "prima di pubblicare.",
+
+    // Legal pages
+    legalTermsTitle: "Termini di Servizio",
+    legalPrivacyTitle: "Informativa sulla Privacy",
+    legalLastUpdated: "Ultimo aggiornamento",
+    legalAcceptCheckbox: "Ho letto e accetto i Termini di Servizio e l'Informativa sulla Privacy",
+    legalReacceptTitle: "Abbiamo aggiornato i nostri Termini",
+    legalReacceptDesc: "I nostri Termini di Servizio e l'Informativa sulla Privacy sono cambiati. Esaminali e accettali per continuare a usare SwappUp.",
+    legalReviewTerms: "Leggi i Termini di Servizio",
+    legalReviewPrivacy: "Leggi l'Informativa sulla Privacy",
+    legalAcceptAndContinue: "Accetta e continua",
+    legalSignOut: "Esci",
+    legalMustAccept: "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per creare un account.",
 
     // Account extra
     accountVersion: "SwappUp v1.0.0",

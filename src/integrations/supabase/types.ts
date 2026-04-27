@@ -434,6 +434,10 @@ export type Database = {
           id_document_url: string | null
           phone: string | null
           postal_code: string | null
+          privacy_accepted_at: string | null
+          privacy_accepted_version: string | null
+          terms_accepted_at: string | null
+          terms_accepted_version: string | null
           transactions_bought: number | null
           transactions_sold: number | null
           updated_at: string
@@ -459,6 +463,10 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
+          privacy_accepted_at?: string | null
+          privacy_accepted_version?: string | null
+          terms_accepted_at?: string | null
+          terms_accepted_version?: string | null
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string
@@ -484,6 +492,10 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
+          privacy_accepted_at?: string | null
+          privacy_accepted_version?: string | null
+          terms_accepted_at?: string | null
+          terms_accepted_version?: string | null
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string

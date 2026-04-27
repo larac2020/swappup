@@ -1,89 +1,79 @@
+## Goal
 
+Add proper Terms of Service and Privacy Policy pages — accessible from the Account screen, the Auth signup form, and the purchase flow — and record that users have actually accepted them.
 
-# Add Train Tickets to SwappUp (Revised)
+## Recommended approach
 
-Trains become a first-class listing type alongside flights. Travel credits are removed entirely. Name-change fees are shown as an **additional** cost on top of the ticket price, never bundled in. Non-transferable operators/fares are blocked at listing creation.
+Treat the legal copy as **content, not data**: store it in versioned Markdown files in the repo and render it through a single shared `LegalPage` component. This is the standard pattern for SaaS apps because:
 
-## What the user will see
+- Lawyers can review/diff plain Markdown in PRs.
+- No DB round-trip, instantly available offline / on first paint.
+- Easy to localize (one file per language).
+- Versioning is just a `version` constant — when it changes, users are re-prompted to accept.
 
-**Home**
-- A new always-visible horizontal filter bar at the top: **All / Flights / Trains** (segmented control style, matching the dark/gold aesthetic).
-- Selecting one filters every horizontal row (Hot Deals, Recommended, etc.) on the Home page.
-- Existing "Travel credit" rows and shortcuts are removed.
+A DB-backed CMS is overkill here and would force a non-technical legal review through a custom admin UI.
 
-**Selling (`/sell`)**
-- Type picker shows **Flight ticket / Train ticket** only (Travel credit option removed).
-- "Train ticket" reveals a train form: origin & destination **station**, operator (Trenitalia, Italo, SNCF, DB, Renfe, Eurostar, ÖBB, NS, SBB, Thalys), train number, fare class, departure date & time, optional return.
-- Same AI photo-upload, parsed as a train ticket.
-- A train **Transferability check** card appears once operator + fare are chosen:
-  - Green/yellow → seller can publish, fee is shown.
-  - Red ("not transferable") → publish button is **disabled** with an inline message: *"This operator/fare does not allow name changes. You cannot resell this ticket on SwappUp."*
-- Always-visible amber warning under the fee:  
-  *"Name-change fees change frequently. Always confirm the current fee on <Operator>'s official website before listing."*
+## What gets built
 
-**Browsing**
-- Browse filter pills: **All / Flights / Trains** (Credits removed).
-- Train cards show a Train icon and `MIL → ROM` station codes, with operator on the right.
+### 1. Content files (Markdown, per language)
 
-**Buying (Listing detail + Cart)**
-- Train and flight listings show a clear additive breakdown:
-  ```
-  Ticket price                €120.00
-  Name-change fee (Italo)     + €10.00
-  ─────────────────────────────────────
-  Total you pay               €130.00
-  ```
-- A persistent disclaimer below the breakdown:  
-  *"The name-change fee is added on top of the ticket price and held in escrow. The seller pays it directly to the operator to transfer the ticket into your name. Fees can change — verify the current amount on <Operator>'s official website before purchase."*
-- Cart line items reflect the same `ticket + fee` split, and checkout total includes the fee.
+```text
+src/content/legal/
+  terms.en.md
+  terms.it.md
+  privacy.en.md
+  privacy.it.md
+  version.ts        // exports TERMS_VERSION = "2025-04-27", PRIVACY_VERSION = "2025-04-27"
+```
 
-**Italian**
-- All new strings added to `translations.ts` (EN + IT). Examples: "Train ticket" → "Biglietto del treno", "Station" → "Stazione", "Operator" → "Operatore", "Name-change fee (added on top)" → "Costo cambio nominativo (aggiuntivo)", "This operator does not allow name changes" → "Questo operatore non consente il cambio nominativo", warning copy fully localized.
+Initial copy will be a **standard marketplace template** tailored to Swappup (peer-to-peer ticket resale, escrow flow, ID verification, GDPR — UK/EU). Clearly labeled "Template — review with legal counsel before launch".
 
-## Name-change fee & transferability database
+### 2. New routes & shared component
 
-Built into `src/data/trainData.ts` (mirrors `flightData.ts`). Each operator has fare classes with `{ fee, transferable: 'yes' | 'restricted' | 'no' }`. `no` blocks listing creation.
+- `/terms` and `/privacy` — public routes (no auth wall) so they can be linked from the signup screen and external sources.
+- `src/components/legal/LegalPage.tsx` — renders a Markdown file with proper typography (prose styling), back button, "Last updated" date, and language-aware content selection via `useLanguage`.
+- Use `react-markdown` + `remark-gfm` (small, already-common deps) for rendering.
 
-| Operator | Country | Fare → Status (fee) |
-|---|---|---|
-| Trenitalia (Frecce) | IT | Base → yes (€8); Executive → yes (€15) |
-| Italo | IT | Smart/Comfort/Prima/Club → yes (€10) |
-| SNCF | FR | TGV INOUI → yes (€19); Ouigo → **no** |
-| Deutsche Bahn | DE | Flexpreis → yes (€0); Sparpreis → **no** |
-| Renfe | ES | Flexible → yes (€20); Promo → **no** |
-| Eurostar | UK/FR | Premier/Business Premier → yes (£30); Standard → **no** |
-| ÖBB | AT | Flex → yes (€0); Sparschiene → **no** |
-| NS | NL | Standard day ticket → yes (€0) |
-| SBB | CH | Standard → yes (CHF 0); Saver/Supersaver → **no** |
-| Thalys / Eurostar Red | BE/NL/FR | Comfort/Premium → yes (€25); Standard → **no** |
+### 3. Wire-up across the app
 
-Same `transferable: 'no'` enforcement is added to the existing flight transferability check (today it only warns — it will now also block listing creation, consistent with trains).
+- **AuthForm signup**: replace `href="#"` placeholders with `<Link to="/terms">` / `<Link to="/privacy">` (open in new tab). Add a required checkbox: *"I accept the Terms of Service and Privacy Policy"* — block submit until checked. Save accepted versions to `profiles.terms_accepted_version` / `privacy_accepted_version` + timestamps on signup.
+- **Account → Support section**: the existing `/terms` and `/privacy` items already point to these routes — they will start working automatically.
+- **PurchaseDialog**: keep existing privacy checkbox but link "privacy risks" text to `/privacy`.
+- **Re-acceptance on version bump**: on app load, if the logged-in user's stored accepted version is older than the current `TERMS_VERSION` / `PRIVACY_VERSION`, show a one-time modal asking them to re-accept before continuing.
 
-## Technical changes
+### 4. Database (one migration)
 
-**Database (single migration)**
-- Extend `listing_type` enum with `train_ticket`. Keep `travel_credit` in the enum (existing rows may exist) but remove all UI paths that create or browse it.
-- Add nullable train columns to `listings`: `operator text`, `train_number text`, `train_class text`, `origin_station text`, `destination_station text`, `departure_time time`.
-- `name_change_fee` stays as the dedicated additive fee column; `price` stays as the ticket-only price. No bundling.
-- Reuse `purchases.name_change_fee` (already exists) for the additive fee at checkout.
+Add to `profiles`:
+- `terms_accepted_version text`
+- `terms_accepted_at timestamptz`
+- `privacy_accepted_version text`
+- `privacy_accepted_at timestamptz`
 
-**Code**
-- New `src/data/trainData.ts` with `stations`, `operators`, `getOperatorFare(operator, fareClass)`, `getPrimaryStationCode`.
-- New `src/components/listings/TrainTransferabilityCheck.tsx` — same visual pattern as `TransferabilityCheck.tsx`, returns `{ status, fee, blocking }`. Always renders the "verify on operator website" warning.
-- `TransferabilityCheck.tsx` (flights): add the same "verify on airline website" warning and propagate a `blocking` flag for restrictive airlines/fares so the publish button can be disabled.
-- `SellTicket.tsx`:
-  - Remove "Travel credit" from the type picker.
-  - Add train branch (form + parse + submit) writing the new columns. `name_change_fee` is computed and stored separately; `price` remains the ticket-only price.
-  - Disable submit when transferability is `no` (flights and trains).
-- `Home.tsx`: add the always-visible **All / Flights / Trains** segmented filter at the top; pass it down to all row queries; drop the credit-specific row and the credit shortcut.
-- `Browse.tsx`: filter pills become **All / Flights / Trains**; remove credit option; default query covers flights + trains.
-- `ListingCard.tsx` & `MiniListingCard.tsx`: handle `train_ticket` (Train icon, station codes, operator). Remove `travel_credit` UI branches.
-- `ListingDetail.tsx`: render train fields where flight fields appear; replace the current single price line with the additive breakdown component (ticket + name-change fee + total) for both flight and train listings; show the persistent operator-fee disclaimer.
-- `Cart.tsx` + `PurchaseDialog.tsx`: surface the additive fee per line and in the total; keep checkout flow otherwise unchanged.
-- `parse-ticket` edge function: extend prompt so Gemini also parses train PDFs/screenshots (operator, train number, stations, fare class).
-- `translations.ts`: add all new EN/IT keys, including disclaimer and blocking message.
+No new table needed — keeping it on the profile is fine because we only need the *latest* accepted version per user. (If you ever need a full audit trail later, we can add a `legal_acceptances` table.)
 
-**Out of scope**
-- No live train schedule verification API (no Aviationstack equivalent).
-- No backfill/migration of any existing `travel_credit` listings — they simply stop appearing in UI.
+### 5. Localization
 
+Both EN and IT versions ship from day one, matching the existing i18n system. The `LegalPage` picks the file based on `language` from `useLanguage()`.
+
+## Out of scope (call out explicitly)
+
+- **Cookie banner / consent management**: separate concern (ePrivacy / GDPR cookies). Can be added next if needed.
+- **Legal review**: the initial copy is a template. You will need a lawyer to review before going live, especially for UK/EU consumer-resale rules.
+- **DB-backed CMS for editing in-app**: not built — edits happen via PR.
+
+## Files to create / change
+
+**Create**
+- `src/content/legal/terms.en.md`, `terms.it.md`, `privacy.en.md`, `privacy.it.md`
+- `src/content/legal/version.ts`
+- `src/components/legal/LegalPage.tsx`
+- `src/components/legal/ReacceptDialog.tsx`
+- `src/pages/Terms.tsx`, `src/pages/Privacy.tsx` (thin wrappers)
+- One migration for the four new `profiles` columns
+
+**Edit**
+- `src/App.tsx` — register `/terms` and `/privacy` as public routes; mount `ReacceptDialog` inside `ProtectedRoute`.
+- `src/components/auth/AuthForm.tsx` — real links + required acceptance checkbox + write versions on signup.
+- `src/components/listings/PurchaseDialog.tsx` — link the privacy notice text to `/privacy`.
+- `src/i18n/translations.ts` — keys for the checkbox, re-accept modal, and page titles.
+- `package.json` — add `react-markdown` and `remark-gfm`.
