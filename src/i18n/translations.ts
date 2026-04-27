@@ -1549,6 +1549,19 @@ const translations = {
     trainTransferOperatorWebsite: "sito di {operator}",
     trainTransferBeforeListing: "prima di pubblicare.",
 
+    // Legal pages
+    legalTermsTitle: "Termini di Servizio",
+    legalPrivacyTitle: "Informativa sulla Privacy",
+    legalLastUpdated: "Ultimo aggiornamento",
+    legalAcceptCheckbox: "Ho letto e accetto i Termini di Servizio e l'Informativa sulla Privacy",
+    legalReacceptTitle: "Abbiamo aggiornato i nostri Termini",
+    legalReacceptDesc: "I nostri Termini di Servizio e l'Informativa sulla Privacy sono cambiati. Esaminali e accettali per continuare a usare SwappUp.",
+    legalReviewTerms: "Leggi i Termini di Servizio",
+    legalReviewPrivacy: "Leggi l'Informativa sulla Privacy",
+    legalAcceptAndContinue: "Accetta e continua",
+    legalSignOut: "Esci",
+    legalMustAccept: "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per creare un account.",
+
     // Account extra
     accountVersion: "SwappUp v1.0.0",
   },
