@@ -22,6 +22,7 @@ import {
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
 import TrainForm from "@/components/listings/TrainForm";
+import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -1132,6 +1133,7 @@ export default function SellTicket() {
                   {t("sellPriceLowerError")}
                 </p>
               )}
+              <SellerFeeBreakdown price={formData.price} />
             </div>
           </div>
 

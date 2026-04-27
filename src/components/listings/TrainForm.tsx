@@ -16,6 +16,7 @@ import {
 } from "@/data/trainData";
 import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
 import { useLanguage } from "@/i18n/LanguageContext";
+import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
 
 interface Props {
   formData: any;
@@ -241,6 +242,7 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
           <p className="text-xs text-muted-foreground">
             {t("sellAdditiveFeeHint")}
           </p>
+          <SellerFeeBreakdown price={formData.price} />
         </div>
       </div>
 
