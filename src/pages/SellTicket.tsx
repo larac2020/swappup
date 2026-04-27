@@ -803,7 +803,7 @@ export default function SellTicket() {
                   ticketUploaded ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/30"
                 )}
               >
-                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
+                <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
                 {isUploading ? (
                   <>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
