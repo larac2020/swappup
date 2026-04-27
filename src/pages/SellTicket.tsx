@@ -375,27 +375,74 @@ export default function SellTicket() {
         // Determine ticket kind from AI output (defaults to flight)
         const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
 
-        // Reject expired / too-soon tickets at parse time so we never pre-fill an invalid date.
-        // Listings must depart at least 72 hours in the future.
+        // Strict ISO YYYY-MM-DD parsing built in UTC midnight to avoid TZ drift.
+        // We deliberately reject any other format so the AI cannot smuggle in
+        // ambiguous DD/MM/YYYY values (or a booking date masquerading as travel date).
+        const parseIsoDate = (s: unknown): Date | undefined => {
+          if (typeof s !== "string") return undefined;
+          const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (!m) return undefined;
+          const y = +m[1], mo = +m[2], d = +m[3];
+          if (mo < 1 || mo > 12 || d < 1 || d > 31) return undefined;
+          const dt = new Date(Date.UTC(y, mo - 1, d, 12, 0, 0)); // noon UTC for safety
+          if (
+            dt.getUTCFullYear() !== y ||
+            dt.getUTCMonth() !== mo - 1 ||
+            dt.getUTCDate() !== d
+          ) return undefined;
+          return dt;
+        };
+
+        // Listings must depart at least 72h in the future.
         const minTs = Date.now() + 72 * 60 * 60 * 1000;
-        const parsedDeparture = p.departureDate ? new Date(p.departureDate) : undefined;
-        if (parsedDeparture && (isNaN(parsedDeparture.getTime()) || parsedDeparture.getTime() < minTs)) {
-          // Treat as a hard failure — do NOT mark upload as satisfied
+        const parsedDeparture = parseIsoDate(p.departureDate);
+        const parsedReturn = parseIsoDate(p.returnDate);
+
+        // Hard fail when the outbound date is missing/invalid OR < 72h away.
+        // (A common AI mistake we've seen: returning the booking/purchase date.)
+        if (!parsedDeparture || parsedDeparture.getTime() < minTs) {
           setTicketUploaded(false);
           toast({
             title: t("sellToastExpiredTitle"),
-            description: t("sellToastExpiredDesc", { date: parsedDeparture.toLocaleDateString() }),
+            description: parsedDeparture
+              ? t("sellToastExpiredDesc", { date: parsedDeparture.toLocaleDateString() })
+              : t("sellToastExpiredDesc", { date: "—" }),
             variant: "destructive",
           });
           return;
         }
 
-        const hasReturn = !!p.returnDate;
+        // If a return leg is present, it must also be ≥72h away AND on/after outbound.
+        if (parsedReturn && (parsedReturn.getTime() < minTs || parsedReturn.getTime() < parsedDeparture.getTime())) {
+          setTicketUploaded(false);
+          toast({
+            title: t("sellToastExpiredTitle"),
+            description: t("sellToastExpiredDesc", { date: parsedReturn.toLocaleDateString() }),
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const hasReturn = !!parsedReturn;
         setIsReturn(hasReturn);
         // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
         setTicketUploaded(true);
 
         const parsedCount = p.ticketCount ? String(p.ticketCount) : "1";
+
+        // Normalise time to HH:MM 24h. Accepts "9:5", "09:05", "09:05:30", "09:05Z" → "09:05".
+        const normTime = (s: unknown): string => {
+          if (typeof s !== "string") return "";
+          const m = s.trim().match(/^(\d{1,2}):(\d{2})/);
+          if (!m) return "";
+          const hh = Math.min(23, Math.max(0, parseInt(m[1], 10)));
+          const mm = Math.min(59, Math.max(0, parseInt(m[2], 10)));
+          return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+        };
+
+        // Outbound departure time — fall back to legacy `departureTime` field for trains.
+        const outboundDepTime =
+          normTime(p.outboundDepartureTime) || normTime(p.departureTime);
 
         setFormData((prev) => ({
           ...prev,
@@ -408,7 +455,7 @@ export default function SellTicket() {
           flightNumber: isTrain ? "" : (p.flightNumber || ""),
           originalPrice: p.originalPrice?.toString() || "",
           departureDate: parsedDeparture,
-          returnDate: hasReturn ? new Date(p.returnDate) : undefined,
+          returnDate: parsedReturn,
           ticketCount: parsedCount,
           // Train-only fields
           operator: isTrain ? (p.operator || "") : "",
@@ -416,7 +463,7 @@ export default function SellTicket() {
           trainClass: isTrain ? (p.trainClass || "") : "",
           trainOriginStation: isTrain ? (p.originStation || "") : "",
           trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
-          departureTime: isTrain ? (p.departureTime || "") : "",
+          departureTime: outboundDepTime,
         }));
 
         // Sync per-ticket array
