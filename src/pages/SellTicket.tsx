@@ -1065,6 +1065,7 @@ export default function SellTicket() {
                   onResult={(r) => {
                     setFlightTransferBlocked(r.blocking);
                     setFlightTransferFee(r.fee);
+                    setFlightFeeAcknowledged(r.acknowledged);
                   }}
                 />
               )}
