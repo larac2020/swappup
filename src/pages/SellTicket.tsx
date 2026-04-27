@@ -126,6 +126,7 @@ export default function SellTicket() {
   // Transferability blocking flags from the in-form check cards
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
+  const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
   const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
 
   // Flight schedule verification (Aviationstack via edge function)
@@ -580,6 +581,14 @@ export default function SellTicket() {
         });
         return;
       }
+      if (trainTransferResult && trainTransferResult.status === "allowed" && trainTransferResult.fee !== null && !trainTransferResult.acknowledged) {
+        toast({
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastFeeNotConfirmed"),
+          variant: "destructive",
+        });
+        return;
+      }
     } else {
       if (!formData.originCity || !formData.destinationCity || !formData.airline || !formData.departureDate) {
         toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
@@ -589,6 +598,14 @@ export default function SellTicket() {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastBlockedFlight"),
+          variant: "destructive",
+        });
+        return;
+      }
+      if (flightTransferFee !== null && !flightFeeAcknowledged) {
+        toast({
+          title: t("sellToastListingBlocked"),
+          description: t("sellToastFeeNotConfirmed"),
           variant: "destructive",
         });
         return;
@@ -1048,6 +1065,7 @@ export default function SellTicket() {
                   onResult={(r) => {
                     setFlightTransferBlocked(r.blocking);
                     setFlightTransferFee(r.fee);
+                    setFlightFeeAcknowledged(r.acknowledged);
                   }}
                 />
               )}

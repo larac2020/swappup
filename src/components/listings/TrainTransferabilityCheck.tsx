@@ -1,14 +1,16 @@
-import { useMemo, useEffect } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, Info, ExternalLink } from "lucide-react";
+import { useMemo, useEffect, useState } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, ExternalLink, ShieldCheck, AlertOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getOperator, getOperatorFare, currencySymbol } from "@/data/trainData";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 export interface TrainTransferabilityResult {
   status: "allowed" | "denied" | "unknown";
   blocking: boolean;
   fee: number | null;
   currency: string;
+  acknowledged: boolean;
 }
 
 interface Props {
@@ -25,19 +27,32 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
   const result = useMemo<TrainTransferabilityResult | null>(() => {
     if (!op) return null;
     if (!fare) {
-      return { status: "unknown", blocking: false, fee: null, currency: "EUR" };
+      return { status: "unknown", blocking: false, fee: null, currency: "EUR", acknowledged: true };
     }
     if (fare.transferable === "no") {
-      return { status: "denied", blocking: true, fee: null, currency: fare.currency };
+      return { status: "denied", blocking: true, fee: null, currency: fare.currency, acknowledged: true };
     }
-    return { status: "allowed", blocking: false, fee: fare.fee, currency: fare.currency };
+    return { status: "allowed", blocking: false, fee: fare.fee, currency: fare.currency, acknowledged: true };
   }, [op, fare]);
+
+  // Seller must explicitly confirm they've verified the fee.
+  const [acknowledged, setAcknowledged] = useState(false);
+  useEffect(() => {
+    setAcknowledged(false);
+  }, [result?.status, result?.fee]);
+
+  const requiresAck = result?.status === "allowed" && result.fee !== null;
 
   // Notify parent when the result changes.
   useEffect(() => {
-    if (result && onResult) onResult(result);
+    if (result && onResult) {
+      onResult({
+        ...result,
+        acknowledged: requiresAck ? acknowledged : true,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result?.status, result?.blocking, result?.fee, result?.currency]);
+  }, [result?.status, result?.blocking, result?.fee, result?.currency, acknowledged, requiresAck]);
 
   if (!op || !result) return null;
 
@@ -106,6 +121,28 @@ export default function TrainTransferabilityCheck({ operator, fareClass, onResul
           {t("trainTransferBeforeListing")}
         </p>
       </div>
+
+      {/* Personal-liability warning + confirmation gate */}
+      {requiresAck && (
+        <div className="rounded-lg border-2 border-destructive/40 bg-destructive/10 p-3 space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertOctagon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+            <p className="text-xs text-foreground leading-relaxed">
+              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescTrain", { fee: `${sym}${result.fee}` })}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={acknowledged ? "secondary" : "destructive"}
+            className="w-full"
+            onClick={() => setAcknowledged((v) => !v)}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            {acknowledged ? t("sellerLiabilityConfirmed") : t("sellerLiabilityConfirmCta")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -772,6 +772,14 @@ const translations = {
     trainTransferOperatorWebsite: "{operator}'s website",
     trainTransferBeforeListing: "before listing.",
 
+    // Seller liability confirmation (shown alongside the estimated name-change fee)
+    sellerLiabilityTitle: "You are personally liable for any underestimate.",
+    sellerLiabilityDescFlight: "The {fee} shown is an estimate based on the airline's published policy. If the carrier charges more at the time of name change, you — the seller — will pay the difference out of your own pocket. The buyer will only ever pay the fee shown on the listing.",
+    sellerLiabilityDescTrain: "The {fee} shown is an estimate based on the operator's published policy. If the carrier charges more at the time of name change, you — the seller — will pay the difference out of your own pocket. The buyer will only ever pay the fee shown on the listing.",
+    sellerLiabilityConfirmCta: "I've checked the fee and accept the risk",
+    sellerLiabilityConfirmed: "Fee accuracy confirmed",
+    sellToastFeeNotConfirmed: "Please confirm you've verified the name-change fee with the carrier before publishing.",
+
     // Legal pages
     legalTermsTitle: "Terms of Service",
     legalPrivacyTitle: "Privacy Policy",
@@ -1558,6 +1566,14 @@ const translations = {
     trainTransferAlwaysCheck: "I costi del cambio nominativo cambiano spesso. Verifica sempre l'importo aggiornato sul",
     trainTransferOperatorWebsite: "sito di {operator}",
     trainTransferBeforeListing: "prima di pubblicare.",
+
+    // Seller liability confirmation (shown alongside the estimated name-change fee)
+    sellerLiabilityTitle: "Sei personalmente responsabile di eventuali sottostime.",
+    sellerLiabilityDescFlight: "I {fee} indicati sono una stima basata sulla policy pubblicata della compagnia. Se al momento del cambio nominativo il vettore addebitasse di più, dovrai pagare tu — il venditore — la differenza di tasca tua. L'acquirente pagherà solo il costo mostrato sull'annuncio.",
+    sellerLiabilityDescTrain: "I {fee} indicati sono una stima basata sulla policy pubblicata dell'operatore. Se al momento del cambio nominativo il vettore addebitasse di più, dovrai pagare tu — il venditore — la differenza di tasca tua. L'acquirente pagherà solo il costo mostrato sull'annuncio.",
+    sellerLiabilityConfirmCta: "Ho verificato il costo e accetto il rischio",
+    sellerLiabilityConfirmed: "Accuratezza del costo confermata",
+    sellToastFeeNotConfirmed: "Conferma di aver verificato il costo del cambio nominativo con il vettore prima di pubblicare.",
 
     // Legal pages
     legalTermsTitle: "Termini di Servizio",
