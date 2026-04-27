@@ -1204,18 +1204,81 @@ export default function SellTicket() {
               <Sparkles className="w-5 h-5 text-primary" />
               {t("sellBoostHeader")}
             </h2>
-            <div className="glass rounded-2xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium">{t("sellBoostBumpTitle")}</p>
-                  <p className="text-xs text-muted-foreground">{t("sellBoostBumpDesc")}</p>
+            <p className="text-xs text-muted-foreground">{t("sellBoostChooseDesc")}</p>
+            <div className="grid gap-2">
+              {/* No-boost option */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, boostHours: 0 })}
+                className={`glass rounded-2xl p-4 text-left transition-all ${
+                  formData.boostHours === 0
+                    ? "border-2 border-primary shadow-glow-sm"
+                    : "border border-border/40 hover:border-border"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <p className="font-medium">{t("sellBoostNone")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellBoostNoneDesc")}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {t("sellBoostFree")}
+                  </span>
                 </div>
-                <Switch
-                  checked={formData.bumpListing}
-                  onCheckedChange={(checked) => setFormData({ ...formData, bumpListing: checked })}
-                />
-              </div>
+              </button>
+
+              {BOOST_OPTIONS.map((opt) => {
+                const selected = formData.boostHours === opt.hours;
+                return (
+                  <button
+                    key={opt.hours}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, boostHours: opt.hours })}
+                    className={`glass rounded-2xl p-4 text-left transition-all ${
+                      selected
+                        ? "border-2 border-primary shadow-glow-sm"
+                        : "border border-border/40 hover:border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <p className="font-medium flex items-center gap-2">
+                          🔥 {t(opt.labelKey)}
+                          {selected && (
+                            <span className="text-[10px] uppercase tracking-wide text-primary">
+                              {t("sellBoostSelected")}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{t("sellBoostBumpDesc")}</p>
+                      </div>
+                      <span className="text-lg font-bold text-primary whitespace-nowrap">
+                        €{opt.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            {formData.boostHours > 0 && (() => {
+              const selectedOpt = BOOST_OPTIONS.find((o) => o.hours === formData.boostHours);
+              if (!selectedOpt) return null;
+              return (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                  <p className="text-sm font-medium">{t("sellBoostSummaryTitle")}</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{t("sellBoostSummaryDuration")}</span>
+                    <span className="font-medium">{t(selectedOpt.labelKey)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-border/60 pt-2">
+                    <span className="font-medium">{t("sellBoostSummaryTotal")}</span>
+                    <span className="font-bold text-primary">€{selectedOpt.price.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("sellBoostChargeNotice")}</p>
+                </div>
+              );
+            })()}
           </div>
 
           {(() => {
