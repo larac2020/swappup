@@ -44,7 +44,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
           {
             role: "user",
             content: [
-              { type: "text", text: "Parse this flight ticket and extract all available information." },
+              { type: "text", text: "Parse this travel ticket booking confirmation (PDF) and extract all available information, including the TOTAL price the buyer originally paid." },
               { type: "image_url", image_url: { url: image } },
             ],
           },
@@ -66,7 +66,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   flightNumber: { type: "string", description: "Flight number e.g. FR1234" },
                   departureDate: { type: "string", description: "Departure date in YYYY-MM-DD format" },
                   returnDate: { type: "string", description: "Return date in YYYY-MM-DD format if applicable" },
-                  originalPrice: { type: "number", description: "Ticket price as a number" },
+                  originalPrice: { type: "number", description: "TOTAL price the buyer originally paid for the whole booking (all passengers, after taxes/fees), as a plain number with dot decimals. Used as the maximum allowed resale price." },
                   priceCurrency: { type: "string", description: "ISO 4217 currency code of the original price (e.g. EUR, GBP, USD)" },
                   ticketCount: { type: "number", description: "Number of passengers or tickets in the booking" },
                   ticketKind: { type: "string", enum: ["flight", "train"], description: "Whether this is a flight or train ticket" },
