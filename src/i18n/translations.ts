@@ -772,6 +772,14 @@ const translations = {
     trainTransferOperatorWebsite: "{operator}'s website",
     trainTransferBeforeListing: "before listing.",
 
+    // Seller liability confirmation (shown alongside the estimated name-change fee)
+    sellerLiabilityTitle: "You are personally liable for any underestimate.",
+    sellerLiabilityDescFlight: "The {fee} shown is an estimate based on the airline's published policy. If the carrier charges more at the time of name change, you — the seller — will pay the difference out of your own pocket. The buyer will only ever pay the fee shown on the listing.",
+    sellerLiabilityDescTrain: "The {fee} shown is an estimate based on the operator's published policy. If the carrier charges more at the time of name change, you — the seller — will pay the difference out of your own pocket. The buyer will only ever pay the fee shown on the listing.",
+    sellerLiabilityConfirmCta: "I've checked the fee and accept the risk",
+    sellerLiabilityConfirmed: "Fee accuracy confirmed",
+    sellToastFeeNotConfirmed: "Please confirm you've verified the name-change fee with the carrier before publishing.",
+
     // Legal pages
     legalTermsTitle: "Terms of Service",
     legalPrivacyTitle: "Privacy Policy",
