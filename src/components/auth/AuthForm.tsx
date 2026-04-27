@@ -300,12 +300,28 @@ export function AuthForm() {
             </div>
           )}
 
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+              <Checkbox
+                checked={legalAccepted}
+                onCheckedChange={(c) => setLegalAccepted(c === true)}
+                className="mt-0.5"
+              />
+              <span className="leading-relaxed">
+                I have read and accept the{" "}
+                <Link to="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</Link>
+                {" "}and{" "}
+                <Link to="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>
+              </span>
+            </label>
+          )}
+
           <Button
             type="submit"
             variant="gold"
             size="lg"
             className="w-full"
-            disabled={loading || (mode === "signup" && emailExists === true)}
+            disabled={loading || (mode === "signup" && (emailExists === true || !legalAccepted))}
           >
             {loading ? (
               <>
@@ -379,9 +395,9 @@ export function AuthForm() {
         {/* Terms */}
         <p className="text-center text-xs text-muted-foreground">
           By continuing, you agree to our{" "}
-          <a href="#" className="text-primary hover:underline">Terms of Service</a>
+          <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
           {" "}and{" "}
-          <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+          <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
         </p>
       </div>
     </div>
