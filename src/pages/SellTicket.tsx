@@ -209,7 +209,7 @@ export default function SellTicket() {
         stopovers: String(editListing.stopovers ?? 0),
         additionalNotes: editListing.additional_notes || "",
         selectedTags: (editListing.tags as string[]) || [],
-        bumpListing: false,
+        boostHours: 0,
         operator: (editListing as any).operator || "",
         trainNumber: (editListing as any).train_number || "",
         trainClass: (editListing as any).train_class || "",
@@ -440,8 +440,9 @@ export default function SellTicket() {
 
   const createListingMutation = useMutation({
     mutationFn: async () => {
-      const bumpedUntil = formData.bumpListing
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const boostHours = formData.boostHours || 0;
+      const bumpedUntil = boostHours > 0
+        ? new Date(Date.now() + boostHours * 60 * 60 * 1000).toISOString()
         : null;
 
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
