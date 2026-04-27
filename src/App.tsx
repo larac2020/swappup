@@ -18,6 +18,9 @@ import MyListings from "./pages/MyListings";
 import Support from "./pages/Support";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import ReacceptDialog from "./components/legal/ReacceptDialog";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +39,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <ReacceptDialog />
+      {children}
+    </>
+  );
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -78,6 +86,8 @@ const App = () => (
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
