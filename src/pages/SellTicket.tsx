@@ -1246,25 +1246,25 @@ export default function SellTicket() {
                     key={opt.hours}
                     type="button"
                     onClick={() => setFormData({ ...formData, boostHours: opt.hours })}
-                    className={`glass rounded-2xl p-4 text-left transition-all ${
+                    className={`relative rounded-2xl p-4 text-left transition-all ${
                       selected
-                        ? "border-2 border-primary shadow-glow-sm"
-                        : "border border-border/40 hover:border-border"
+                        ? "bg-gradient-to-br from-primary/25 via-primary/10 to-transparent border-2 border-primary ring-2 ring-primary/40 shadow-glow-sm scale-[1.02]"
+                        : "glass border border-border/40 hover:border-border"
                     }`}
                   >
+                    {selected && (
+                      <span className="absolute top-2 right-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-glow-sm">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </span>
+                    )}
                     <div className="flex items-center justify-between gap-3">
                       <div className="space-y-0.5">
-                        <p className="font-medium flex items-center gap-2">
+                        <p className={`flex items-center gap-2 ${selected ? "font-semibold text-primary" : "font-medium"}`}>
                           🔥 {t(opt.labelKey)}
-                          {selected && (
-                            <span className="text-[10px] uppercase tracking-wide text-primary">
-                              {t("sellBoostSelected")}
-                            </span>
-                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">{t("sellBoostBumpDesc")}</p>
                       </div>
-                      <span className="text-lg font-bold text-primary whitespace-nowrap">
+                      <span className={`whitespace-nowrap font-bold ${selected ? "text-xl text-primary" : "text-lg text-primary/80"} pr-7`}>
                         €{opt.price.toFixed(2)}
                       </span>
                     </div>
