@@ -819,7 +819,7 @@ export default function SellTicket() {
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground text-center">
-                      {t("sellUploadHint")}
+                      {t("sellUploadHintPdf")}
                     </p>
                     <p className="text-xs text-muted-foreground">{t("sellUploadAutofillHint")}</p>
                   </>
