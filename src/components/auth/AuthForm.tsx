@@ -1,12 +1,16 @@
 import { useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import swappupLogo from "@/assets/swappup-logo.png";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
 
 type AuthMode = "login" | "signup" | "forgot";
 
@@ -20,7 +24,9 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Check if email exists on blur (signup mode only)
   const checkEmailExists = useCallback(async (emailToCheck: string) => {
@@ -80,6 +86,10 @@ export function AuthForm() {
           toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
           return;
         }
+        if (!legalAccepted) {
+          toast({ title: t("error"), description: t("legalMustAccept"), variant: "destructive" });
+          return;
+        }
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -108,6 +118,20 @@ export function AuthForm() {
             title: "Account created!",
             description: "Welcome to SwappUp.",
           });
+        }
+
+        // Record accepted versions on the user's profile (created by handle_new_user trigger)
+        if (data?.user) {
+          const now = new Date().toISOString();
+          await supabase
+            .from("profiles")
+            .update({
+              terms_accepted_version: TERMS_VERSION,
+              terms_accepted_at: now,
+              privacy_accepted_version: PRIVACY_VERSION,
+              privacy_accepted_at: now,
+            })
+            .eq("user_id", data.user.id);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
