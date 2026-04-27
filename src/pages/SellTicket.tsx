@@ -346,8 +346,9 @@ export default function SellTicket() {
         // Determine ticket kind from AI output (defaults to flight)
         const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
 
-        // Reject expired / too-soon tickets at parse time so we never pre-fill an invalid date
-        const minTs = Date.now() + 24 * 60 * 60 * 1000;
+        // Reject expired / too-soon tickets at parse time so we never pre-fill an invalid date.
+        // Listings must depart at least 72 hours in the future.
+        const minTs = Date.now() + 72 * 60 * 60 * 1000;
         const parsedDeparture = p.departureDate ? new Date(p.departureDate) : undefined;
         if (parsedDeparture && (isNaN(parsedDeparture.getTime()) || parsedDeparture.getTime() < minTs)) {
           // Treat as a hard failure — do NOT mark upload as satisfied
@@ -546,8 +547,8 @@ export default function SellTicket() {
       });
       return;
     }
-    // Departure must be at least 24 hours in the future
-    const minTs = Date.now() + 24 * 60 * 60 * 1000;
+    // Departure must be at least 72 hours in the future
+    const minTs = Date.now() + 72 * 60 * 60 * 1000;
     if (formData.departureDate && formData.departureDate.getTime() < minTs) {
       toast({
         title: t("sellToastDepartureTooSoonTitle"),
@@ -608,10 +609,10 @@ export default function SellTicket() {
     createListingMutation.mutate();
   };
 
-  // Tickets must depart at least 24 hours from now.
+  // Tickets must depart at least 72 hours from now.
   // We compute the earliest *day* the user is allowed to pick (start of that day).
   const minDepartureDate = useMemo(() => {
-    const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const d = new Date(Date.now() + 72 * 60 * 60 * 1000);
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
