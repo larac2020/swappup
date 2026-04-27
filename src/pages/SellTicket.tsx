@@ -1219,29 +1219,26 @@ export default function SellTicket() {
               <Sparkles className="w-5 h-5 text-primary" />
               {t("sellBoostHeader")}
             </h2>
-            <p className="text-xs text-muted-foreground">{t("sellBoostChooseDesc")}</p>
-            <div className="grid gap-2">
-              {/* No-boost option */}
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, boostHours: 0 })}
-                className={`glass rounded-2xl p-4 text-left transition-all ${
-                  formData.boostHours === 0
-                    ? "border-2 border-primary shadow-glow-sm"
-                    : "border border-border/40 hover:border-border"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <p className="font-medium">{t("sellBoostNone")}</p>
-                    <p className="text-xs text-muted-foreground">{t("sellBoostNoneDesc")}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {t("sellBoostFree")}
-                  </span>
+            <div className="glass rounded-2xl p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="font-medium">{t("sellBoostBumpTitle")}</p>
+                  <p className="text-xs text-muted-foreground">{t("sellBoostChooseDesc")}</p>
                 </div>
-              </button>
+                <Switch
+                  checked={formData.boostHours > 0}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      boostHours: checked ? BOOST_OPTIONS[0].hours : 0,
+                    })
+                  }
+                />
+              </div>
+            </div>
 
+            {formData.boostHours > 0 && (
+            <div className="grid gap-2">
               {BOOST_OPTIONS.map((opt) => {
                 const selected = formData.boostHours === opt.hours;
                 return (
@@ -1275,6 +1272,7 @@ export default function SellTicket() {
                 );
               })}
             </div>
+            )}
 
             {formData.boostHours > 0 && (() => {
               const selectedOpt = BOOST_OPTIONS.find((o) => o.hours === formData.boostHours);
