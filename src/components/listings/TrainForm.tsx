@@ -242,7 +242,7 @@ export default function TrainForm({ formData, setFormData, isReturn, setIsReturn
           <p className="text-xs text-muted-foreground">
             {t("sellAdditiveFeeHint")}
           </p>
-          <SellerFeeBreakdown price={formData.price} currency={getOperator(formData.operator)?.currency === "GBP" ? "£" : "€"} />
+          <SellerFeeBreakdown price={formData.price} />
         </div>
       </div>
 
