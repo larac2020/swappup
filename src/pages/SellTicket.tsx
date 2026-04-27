@@ -338,6 +338,21 @@ export default function SellTicket() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Enforce PDF-only uploads. We rely on the PDF text layer to reliably
+    // extract the original total price (used as the resale price cap).
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      toast({
+        title: t("sellUploadPdfOnlyTitle"),
+        description: t("sellUploadPdfOnlyDesc"),
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     // Reset everything before populating with new data
     resetForm();
 
@@ -788,7 +803,7 @@ export default function SellTicket() {
                   ticketUploaded ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/30"
                 )}
               >
-                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
+                <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleTicketUpload} disabled={isUploading} />
                 {isUploading ? (
                   <>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -804,7 +819,7 @@ export default function SellTicket() {
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground text-center">
-                      {t("sellUploadHint")}
+                      {t("sellUploadHintPdf")}
                     </p>
                     <p className="text-xs text-muted-foreground">{t("sellUploadAutofillHint")}</p>
                   </>
