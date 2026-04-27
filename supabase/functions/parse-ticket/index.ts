@@ -20,8 +20,29 @@ Important rules:
 - For country names, use full names like "United Kingdom", "United States", "United Arab Emirates".
 - For dates, use ISO format: YYYY-MM-DD.
 - For times use HH:MM (24h).
-- For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, price, ticketCount.
-- For TRAINS: extract operator, trainNumber, origin/destination station names AND cities + countries, departure date + time, fare class if visible (Base, Executive, Smart, Comfort, Prima, Club, TGV INOUI, Ouigo, Flexpreis, Sparpreis, Flexible, Promo, Standard Premier, Business Premier, Standard, Flex, Sparschiene, Saver, Supersaver, Premium, Flexi), price and number of passengers.
+- For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, times, price, ticketCount.
+- For TRAINS: extract operator, trainNumber, origin/destination station names AND cities + countries, departure date + times, fare class if visible (Base, Executive, Smart, Comfort, Prima, Club, TGV INOUI, Ouigo, Flexpreis, Sparpreis, Flexible, Promo, Standard Premier, Business Premier, Standard, Flex, Sparschiene, Saver, Supersaver, Premium, Flexi), price and number of passengers.
+
+DATE EXTRACTION (CRITICAL — do NOT confuse with administrative dates):
+- "departureDate" MUST be the date the passenger physically TRAVELS / DEPARTS on the OUTBOUND leg (origin → destination).
+- "returnDate" MUST be the date the passenger TRAVELS BACK on the INBOUND leg (destination → origin), only if a return leg exists. Otherwise omit it.
+- NEVER use any of these as departureDate or returnDate (they are administrative, not travel dates):
+  - Booking date / Purchase date / Order date / Issue date / Issued on / "Data di acquisto" / "Data prenotazione" / "Data emissione"
+  - Payment date / Transaction date / Confirmation date
+  - Check-in opening date, ticket print date, document validity date
+  - Passenger date of birth, document expiry
+- If the only date you can confidently identify is a booking/purchase/issue date, OMIT departureDate rather than guessing.
+- Look for travel-date labels such as: "Departure", "Departing", "Outbound", "Travel date", "Flight date", "Date of travel", "Andata", "Partenza", "Data di viaggio"; for return: "Return", "Returning", "Inbound", "Ritorno".
+- Dates printed as DD/MM/YYYY or DD-MM-YYYY (common in EU tickets) MUST be converted to YYYY-MM-DD without swapping day and month.
+- If the ticket shows a year only as 2 digits, assume 20xx.
+- Sanity check before returning: the travel date must be in the FUTURE (today or later). If a candidate "departure" date is clearly in the past, you almost certainly picked a booking/issue date — re-scan the document and find the actual travel date instead, or omit it.
+
+TIME EXTRACTION:
+- "outboundDepartureTime" = HH:MM (24h) the passenger leaves the origin on the OUTBOUND leg.
+- "outboundArrivalTime" = HH:MM the passenger arrives at the destination on the OUTBOUND leg, if visible.
+- "inboundDepartureTime" / "inboundArrivalTime" = same but for the RETURN leg, only if a return exists.
+- Convert 12h times (e.g. "7:25 PM") to 24h ("19:25"). Strip seconds and timezone suffixes.
+- For TRAINS, "departureTime" must equal "outboundDepartureTime".
 
 PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
 - Return the TOTAL amount the buyer originally paid for ALL tickets in this booking, in numeric form, with no currency symbol and using a dot as decimal separator (e.g. 145.50, not "€145,50" or "145,50 EUR").
@@ -64,8 +85,12 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   destinationCountry: { type: "string", description: "Arrival country full name" },
                   airline: { type: "string", description: "Airline name" },
                   flightNumber: { type: "string", description: "Flight number e.g. FR1234" },
-                  departureDate: { type: "string", description: "Departure date in YYYY-MM-DD format" },
-                  returnDate: { type: "string", description: "Return date in YYYY-MM-DD format if applicable" },
+                  departureDate: { type: "string", description: "OUTBOUND travel date (when passenger physically departs origin) in YYYY-MM-DD. Never the booking/purchase/issue date." },
+                  returnDate: { type: "string", description: "INBOUND travel date (when passenger physically departs destination on the return leg) in YYYY-MM-DD. Omit if no return leg." },
+                  outboundDepartureTime: { type: "string", description: "Outbound departure time HH:MM 24h" },
+                  outboundArrivalTime: { type: "string", description: "Outbound arrival time HH:MM 24h" },
+                  inboundDepartureTime: { type: "string", description: "Inbound (return) departure time HH:MM 24h" },
+                  inboundArrivalTime: { type: "string", description: "Inbound (return) arrival time HH:MM 24h" },
                   originalPrice: { type: "number", description: "TOTAL price the buyer originally paid for the whole booking (all passengers, after taxes/fees), as a plain number with dot decimals. Used as the maximum allowed resale price." },
                   priceCurrency: { type: "string", description: "ISO 4217 currency code of the original price (e.g. EUR, GBP, USD)" },
                   ticketCount: { type: "number", description: "Number of passengers or tickets in the booking" },
@@ -75,7 +100,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   trainClass: { type: "string", description: "Fare class label as printed on the ticket (only for trains)" },
                   originStation: { type: "string", description: "Origin station name (only for trains)" },
                   destinationStation: { type: "string", description: "Destination station name (only for trains)" },
-                  departureTime: { type: "string", description: "Departure time HH:MM 24h (only for trains)" },
+                  departureTime: { type: "string", description: "Outbound departure time HH:MM 24h (trains; mirrors outboundDepartureTime)" },
                 },
                 required: [],
                 additionalProperties: false,
