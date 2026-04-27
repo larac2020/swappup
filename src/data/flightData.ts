@@ -81,6 +81,14 @@ export const cities: CityData[] = [
   // Croatia
   { city: "Dubrovnik", country: "Croatia", airportCode: "DBV", airportName: "Dubrovnik" },
   { city: "Split", country: "Croatia", airportCode: "SPU", airportName: "Split" },
+  // Poland
+  { city: "Warsaw", country: "Poland", airportCode: "WAW", airportName: "Chopin" },
+  { city: "Warsaw", country: "Poland", airportCode: "WMI", airportName: "Modlin" },
+  { city: "Krakow", country: "Poland", airportCode: "KRK", airportName: "John Paul II" },
+  { city: "Gdansk", country: "Poland", airportCode: "GDN", airportName: "Lech Wałęsa" },
+  { city: "Wroclaw", country: "Poland", airportCode: "WRO", airportName: "Copernicus" },
+  { city: "Poznan", country: "Poland", airportCode: "POZ", airportName: "Ławica" },
+  { city: "Katowice", country: "Poland", airportCode: "KTW", airportName: "Katowice" },
   // United States
   { city: "New York", country: "United States", airportCode: "JFK", airportName: "John F. Kennedy" },
   { city: "New York", country: "United States", airportCode: "EWR", airportName: "Newark" },

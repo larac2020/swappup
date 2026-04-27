@@ -115,6 +115,15 @@ export const trainOperators: TrainOperator[] = [
       { value: "standard", label: "Standard", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Standard tickets are nominative" },
     ],
   },
+  {
+    name: "PKP Intercity",
+    country: "Poland",
+    policyUrl: "https://www.intercity.pl",
+    fares: [
+      { value: "flexi", label: "Flexi", fee: 0, currency: "EUR", transferable: "yes", note: "Flexi fares are transferable" },
+      { value: "promo", label: "Promo", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Promo fares are nominative" },
+    ],
+  },
 ];
 
 // Major European train stations (city + station code).
@@ -166,6 +175,12 @@ export const trainStations: TrainStation[] = [
   { city: "Geneva", country: "Switzerland", stationCode: "GVA", stationName: "Genève Cornavin" },
   // Belgium
   { city: "Brussels", country: "Belgium", stationCode: "BRU", stationName: "Brussels-Midi" },
+  // Poland
+  { city: "Warsaw", country: "Poland", stationCode: "WAW", stationName: "Warszawa Centralna" },
+  { city: "Krakow", country: "Poland", stationCode: "KRK", stationName: "Kraków Główny" },
+  { city: "Gdansk", country: "Poland", stationCode: "GDN", stationName: "Gdańsk Główny" },
+  { city: "Wroclaw", country: "Poland", stationCode: "WRO", stationName: "Wrocław Główny" },
+  { city: "Poznan", country: "Poland", stationCode: "POZ", stationName: "Poznań Główny" },
 ];
 
 export function getTrainCountries(): string[] {
