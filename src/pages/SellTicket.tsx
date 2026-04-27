@@ -338,6 +338,21 @@ export default function SellTicket() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Enforce PDF-only uploads. We rely on the PDF text layer to reliably
+    // extract the original total price (used as the resale price cap).
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      toast({
+        title: t("sellUploadPdfOnlyTitle"),
+        description: t("sellUploadPdfOnlyDesc"),
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     // Reset everything before populating with new data
     resetForm();
 
