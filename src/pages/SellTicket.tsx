@@ -61,6 +61,18 @@ const defaultInclusions: TicketInclusions = {
   speedyBoarding: false,
 };
 
+interface BoostOption {
+  hours: number; // 0 = no boost
+  labelKey: "boost24h" | "boost3d" | "boost7d";
+  price: number; // EUR
+}
+
+const BOOST_OPTIONS: BoostOption[] = [
+  { hours: 24, labelKey: "boost24h", price: 1.99 },
+  { hours: 72, labelKey: "boost3d", price: 3.99 },
+  { hours: 168, labelKey: "boost7d", price: 4.99 },
+];
+
 const getDefaultFormData = () => ({
   listingType: "flight_ticket" as "flight_ticket" | "train_ticket",
   originCountry: "",
@@ -80,7 +92,7 @@ const getDefaultFormData = () => ({
   stopovers: "0",
   additionalNotes: "",
   selectedTags: [] as string[],
-  bumpListing: false,
+  boostHours: 0 as number, // 0 = no boost; otherwise 24 | 72 | 168
   // Train-only fields
   operator: "",
   trainNumber: "",
