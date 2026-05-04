@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.get-name-change-fee]
 verify_jwt = false
+
+[functions.stripe-purchase-webhook]
+verify_jwt = false
+
+[functions.expire-transfers]
+verify_jwt = false
