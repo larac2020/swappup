@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.verify-voucher]
 verify_jwt = false
+
+[functions.get-name-change-fee]
+verify_jwt = false
