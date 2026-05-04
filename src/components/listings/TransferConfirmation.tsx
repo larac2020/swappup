@@ -35,6 +35,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           transfer_confirmed_at: new Date().toISOString(),
           status: "transfer_confirmed",
           escrow_status: "pending_release",
+          seller_transferred: true,
         })
         .eq("id", purchase.id);
       if (error) throw error;
@@ -47,12 +48,14 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
         .single();
 
       if (buyerProfile) {
-        await supabase.from("notifications").insert({
-          user_id: buyerProfile.user_id,
-          title: "Transfer Confirmed — Ticket Details Ready",
-          message: `The seller has confirmed the name change for your ticket. Booking reference: ${bookingRef.trim()}. Surname for access: ${surname.trim()}. Please verify the details in your purchases.`,
-          type: "transfer_confirmed",
-          listing_id: purchase.listing_id,
+        await supabase.functions.invoke("send-notification", {
+          body: {
+            user_id: buyerProfile.user_id,
+            title: "Transfer confirmed — please verify your ticket",
+            message: `The seller has confirmed the name change. Booking ref: ${bookingRef.trim()}. Surname: ${surname.trim()}. Open your purchases to confirm receipt and release payment.`,
+            type: "transfer_confirmed",
+            listing_id: purchase.listing_id,
+          },
         });
       }
     },

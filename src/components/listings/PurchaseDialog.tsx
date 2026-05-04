@@ -63,53 +63,20 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
-      const transferDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-      const { error } = await supabase.from("purchases").insert({
-        buyer_id: buyerProfileId,
-        seller_id: listing.seller_id,
-        listing_id: listing.id,
-        quantity: 1,
-        total_price: totalPrice,
-        status: "pending_transfer",
-        escrow_status: "held",
-        escrow_deadline: transferDeadline,
-        buyer_full_name: fullName.trim(),
-        buyer_email: email.trim(),
-        name_change_fee: effectiveFee,
-        transfer_deadline: transferDeadline,
-        original_booking_ref: listing.flight_number || null,
+      const { data, error } = await supabase.functions.invoke("create-purchase-checkout", {
+        body: {
+          listing_id: listing.id,
+          full_name: fullName.trim(),
+          email: email.trim(),
+          name_change_fee: effectiveFee,
+        },
       });
       if (error) throw error;
-
-      // Create notification for seller
-      const { data: sellerProfile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("id", listing.seller_id)
-        .single();
-
-      if (sellerProfile) {
-        await supabase.from("notifications").insert({
-          user_id: sellerProfile.user_id,
-          title: "New Sale — Action Required",
-          message: `Your listing "${listing.title}" has been purchased. You have 24 hours to complete the name change and confirm the transfer.`,
-          type: "sale",
-          listing_id: listing.id,
-        });
-      }
+      if (!data?.url) throw new Error("Checkout session could not be created");
+      window.location.href = data.url;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchases"] });
-      onOpenChange(false);
-      setFullName("");
-      setEmail("");
-      setPrivacyAccepted(false);
-      setEscrowAccepted(false);
-      toast({
-        title: "Purchase submitted!",
-        description: "Payment is held in escrow. The seller has 24 hours to complete the name change.",
-      });
     },
     onError: (error: any) => {
       toast({ title: "Purchase failed", description: error.message, variant: "destructive" });

@@ -1,0 +1,92 @@
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "stripe-signature, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+    apiVersion: "2025-08-27.basil",
+  });
+  const sig = req.headers.get("stripe-signature");
+  const secret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const body = await req.text();
+
+  let event: Stripe.Event;
+  try {
+    if (secret && sig) {
+      event = await stripe.webhooks.constructEventAsync(body, sig, secret);
+    } else {
+      event = JSON.parse(body) as Stripe.Event;
+    }
+  } catch (e) {
+    return new Response(`Webhook error: ${(e as Error).message}`, { status: 400 });
+  }
+
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const purchaseId = session.metadata?.purchase_id;
+    if (!purchaseId) return new Response("ok");
+
+    const pi = typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+
+    const { data: purchase } = await admin.from("purchases").select("*").eq("id", purchaseId).single();
+    if (!purchase) return new Response("ok");
+
+    await admin.from("purchases").update({
+      status: "pending_transfer",
+      escrow_status: "authorized",
+      stripe_payment_id: pi || session.id,
+    }).eq("id", purchaseId);
+
+    // Decrement listing stock; deactivate if zero
+    const { data: listing } = await admin.from("listings").select("ticket_count, title")
+      .eq("id", purchase.listing_id).single();
+    if (listing) {
+      const newCount = Math.max(0, (listing.ticket_count ?? 1) - (purchase.quantity ?? 1));
+      await admin.from("listings").update({
+        ticket_count: newCount,
+        is_active: newCount > 0,
+      }).eq("id", purchase.listing_id);
+
+      // Notify seller
+      const { data: sellerProfile } = await admin.from("profiles")
+        .select("user_id").eq("id", purchase.seller_id).single();
+      if (sellerProfile) {
+        await admin.from("notifications").insert({
+          user_id: sellerProfile.user_id,
+          title: "New sale — action required",
+          message: `Your listing "${listing.title}" was purchased. You have 24 hours to complete the name change.`,
+          type: "sale",
+          listing_id: purchase.listing_id,
+        });
+      }
+    }
+  }
+
+  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const purchaseId = session.metadata?.purchase_id;
+    if (purchaseId) {
+      await admin.from("purchases").update({
+        status: "refunded",
+        escrow_status: "canceled",
+      }).eq("id", purchaseId);
+    }
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+});

@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -19,6 +21,8 @@ export default function Purchases() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const qc = useQueryClient();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -38,6 +42,30 @@ export default function Purchases() {
       return data;
     },
     enabled: !!profile?.id,
+  });
+
+  const releaseMutation = useMutation({
+    mutationFn: async (purchase_id: string) => {
+      const { error } = await supabase.functions.invoke("release-escrow", { body: { purchase_id } });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Receipt confirmed", description: "Payment has been released to the seller." });
+      qc.invalidateQueries({ queryKey: ["purchases"] });
+    },
+    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async ({ purchase_id, reason }: { purchase_id: string; reason: string }) => {
+      const { error } = await supabase.functions.invoke("cancel-escrow", { body: { purchase_id, reason } });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Refund requested", description: "Your payment hold has been released." });
+      qc.invalidateQueries({ queryKey: ["purchases"] });
+    },
+    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -131,11 +159,43 @@ export default function Purchases() {
                     <p className="text-xs text-muted-foreground pl-6">
                       Use these details to access your booking on the airline's website.
                     </p>
+                    {p.escrow_status !== "released" && (
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2 pl-6">
+                        <Button
+                          size="sm" variant="gold" className="gap-2"
+                          disabled={releaseMutation.isPending}
+                          onClick={() => releaseMutation.mutate(p.id)}
+                        >
+                          <ShieldCheck className="w-4 h-4" /> Confirm I received the ticket
+                        </Button>
+                        <Button
+                          size="sm" variant="outline" className="gap-2"
+                          disabled={cancelMutation.isPending}
+                          onClick={() => {
+                            const reason = window.prompt("Briefly describe the problem:") || "";
+                            if (reason) cancelMutation.mutate({ purchase_id: p.id, reason });
+                          }}
+                        >
+                          <AlertTriangle className="w-4 h-4" /> Report a problem
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* Refund button when seller missed deadline */}
+                {isPendingTransfer && isExpired && (
+                  <Button
+                    size="sm" variant="outline" className="gap-2"
+                    disabled={cancelMutation.isPending}
+                    onClick={() => cancelMutation.mutate({ purchase_id: p.id, reason: "Seller missed the 24h deadline" })}
+                  >
+                    <RotateCcw className="w-4 h-4" /> Request refund
+                  </Button>
+                )}
+
                 {/* Escrow Info */}
-                {p.escrow_status === "held" && (
+                {(p.escrow_status === "held" || p.escrow_status === "authorized") && (
                   <p className="text-xs text-muted-foreground px-1">
                     💰 Payment held in escrow until transfer is confirmed
                   </p>
