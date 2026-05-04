@@ -1,79 +1,55 @@
 ## Goal
 
-Add proper Terms of Service and Privacy Policy pages — accessible from the Account screen, the Auth signup form, and the purchase flow — and record that users have actually accepted them.
+When a buyer clicks "Buy", fetch a fresh, real-time name-change fee from the airline (instead of relying only on the seller's earlier estimate) and show it before payment is confirmed.
 
-## Recommended approach
+## Honest reality check
 
-Treat the legal copy as **content, not data**: store it in versioned Markdown files in the repo and render it through a single shared `LegalPage` component. This is the standard pattern for SaaS apps because:
+Airlines do **not** publish a clean public API for name-change fees. There are only three viable ways to get a "live" number, each with trade-offs:
 
-- Lawyers can review/diff plain Markdown in PRs.
-- No DB round-trip, instantly available offline / on first paint.
-- Easy to localize (one file per language).
-- Versioning is just a `version` constant — when it changes, users are re-prompted to accept.
+1. **Curated fee table (recommended baseline).** Maintain a `airline_change_fees` table (per airline, fare class, route type) that we update from each airline's official fee schedule. "Live" = always read from DB at purchase time, so updates propagate instantly. Reliable, fast, no scraping risk.
+2. **AI-assisted lookup via web search.** At purchase time, call an edge function that uses Lovable AI + a web search/scrape (Firecrawl connector) against the specific airline's "name change / correction" help page, and asks the model to extract the current fee for that fare type. Closer to "live" but: slow (5–15s), can fail, airlines word things ambiguously, and may return ranges.
+3. **Hybrid (recommended).** Use the curated table as the source of truth; refresh individual airline rows on-demand via the AI+scrape path when stale (e.g. >30 days) or when the buyer explicitly taps "Recheck fee".
 
-A DB-backed CMS is overkill here and would force a non-technical legal review through a custom admin UI.
+I recommend the **hybrid** approach. True per-booking live pricing from airline.com is not feasible without the PNR + the seller's airline credentials, which we don't have and shouldn't ask for.
 
-## What gets built
+## Scope of changes
 
-### 1. Content files (Markdown, per language)
+### Database
+- New table `airline_change_fees` (airline_code, route_type [domestic/intl], fare_class nullable, fee_amount, currency, source_url, last_verified_at).
+- Seed with the airlines already referenced in `flightData.ts`.
+- RLS: public read, admin-only write.
 
-```text
-src/content/legal/
-  terms.en.md
-  terms.it.md
-  privacy.en.md
-  privacy.it.md
-  version.ts        // exports TERMS_VERSION = "2025-04-27", PRIVACY_VERSION = "2025-04-27"
-```
+### Edge function: `get-name-change-fee`
+- Input: `{ airline_code, route_type, fare_class? }`.
+- Reads from `airline_change_fees`. If row missing or `last_verified_at` older than 30 days, calls the refresh path.
+- Refresh path: Firecrawl scrape of the airline's official fee page → Lovable AI (Gemini 2.5 Flash) extracts the fee → upsert into the table.
+- Returns `{ fee, currency, last_verified_at, source_url, confidence }`.
 
-Initial copy will be a **standard marketplace template** tailored to Swappup (peer-to-peer ticket resale, escrow flow, ID verification, GDPR — UK/EU). Clearly labeled "Template — review with legal counsel before launch".
+### Edge function: `refresh-name-change-fee` (admin/cron)
+- Same logic, but iterates all airlines. Wired to a scheduled run (weekly).
 
-### 2. New routes & shared component
+### Frontend — `PurchaseDialog.tsx`
+- On open, call `get-name-change-fee` and show:
+  - Fee amount + "verified <date>" + link to source.
+  - A "Recheck now" button that re-invokes the function ignoring cache.
+  - A clear disclaimer: *"This is the published airline fee. If the airline charges more at transfer time, the seller is responsible per our Terms."*
+- Block "Confirm purchase" until the fetch resolves (with a timeout fallback to the cached value).
 
-- `/terms` and `/privacy` — public routes (no auth wall) so they can be linked from the signup screen and external sources.
-- `src/components/legal/LegalPage.tsx` — renders a Markdown file with proper typography (prose styling), back button, "Last updated" date, and language-aware content selection via `useLanguage`.
-- Use `react-markdown` + `remark-gfm` (small, already-common deps) for rendering.
+### Frontend — `TransferabilityCheck.tsx` / `TrainTransferabilityCheck.tsx`
+- Replace the seller-side estimate source with the same `get-name-change-fee` function so seller and buyer see consistent numbers.
 
-### 3. Wire-up across the app
+### Connectors / secrets
+- Requires the **Firecrawl** connector (currently not connected). I'll prompt to connect it before deploying the refresh path.
+- Uses existing `LOVABLE_API_KEY` for the AI extraction.
 
-- **AuthForm signup**: replace `href="#"` placeholders with `<Link to="/terms">` / `<Link to="/privacy">` (open in new tab). Add a required checkbox: *"I accept the Terms of Service and Privacy Policy"* — block submit until checked. Save accepted versions to `profiles.terms_accepted_version` / `privacy_accepted_version` + timestamps on signup.
-- **Account → Support section**: the existing `/terms` and `/privacy` items already point to these routes — they will start working automatically.
-- **PurchaseDialog**: keep existing privacy checkbox but link "privacy risks" text to `/privacy`.
-- **Re-acceptance on version bump**: on app load, if the logged-in user's stored accepted version is older than the current `TERMS_VERSION` / `PRIVACY_VERSION`, show a one-time modal asking them to re-accept before continuing.
+### i18n
+- New strings in `src/i18n/translations.ts` for "Live fee check", "Verified on", "Recheck now", disclaimer, error fallback.
 
-### 4. Database (one migration)
+## Out of scope
+- Real per-PNR pricing from airline.com (not possible without seller's airline account).
+- Train operator scraping beyond what `TrainTransferabilityCheck` already supports — same hybrid pattern, separate table `train_change_fees` if you want it included (say the word).
 
-Add to `profiles`:
-- `terms_accepted_version text`
-- `terms_accepted_at timestamptz`
-- `privacy_accepted_version text`
-- `privacy_accepted_at timestamptz`
-
-No new table needed — keeping it on the profile is fine because we only need the *latest* accepted version per user. (If you ever need a full audit trail later, we can add a `legal_acceptances` table.)
-
-### 5. Localization
-
-Both EN and IT versions ship from day one, matching the existing i18n system. The `LegalPage` picks the file based on `language` from `useLanguage()`.
-
-## Out of scope (call out explicitly)
-
-- **Cookie banner / consent management**: separate concern (ePrivacy / GDPR cookies). Can be added next if needed.
-- **Legal review**: the initial copy is a template. You will need a lawyer to review before going live, especially for UK/EU consumer-resale rules.
-- **DB-backed CMS for editing in-app**: not built — edits happen via PR.
-
-## Files to create / change
-
-**Create**
-- `src/content/legal/terms.en.md`, `terms.it.md`, `privacy.en.md`, `privacy.it.md`
-- `src/content/legal/version.ts`
-- `src/components/legal/LegalPage.tsx`
-- `src/components/legal/ReacceptDialog.tsx`
-- `src/pages/Terms.tsx`, `src/pages/Privacy.tsx` (thin wrappers)
-- One migration for the four new `profiles` columns
-
-**Edit**
-- `src/App.tsx` — register `/terms` and `/privacy` as public routes; mount `ReacceptDialog` inside `ProtectedRoute`.
-- `src/components/auth/AuthForm.tsx` — real links + required acceptance checkbox + write versions on signup.
-- `src/components/listings/PurchaseDialog.tsx` — link the privacy notice text to `/privacy`.
-- `src/i18n/translations.ts` — keys for the checkbox, re-accept modal, and page titles.
-- `package.json` — add `react-markdown` and `remark-gfm`.
+## Open questions
+1. Confirm hybrid approach (curated table + on-demand refresh via Firecrawl + AI) vs. pure curated table only.
+2. OK to require connecting the **Firecrawl** connector? Without it, we fall back to curated-table-only.
+3. Include trains in the same change, or flights only for now?
