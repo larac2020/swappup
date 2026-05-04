@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      airline_change_fees: {
+        Row: {
+          airline_code: string
+          airline_name: string
+          confidence: string
+          created_at: string
+          currency: string
+          fee_amount: number
+          fee_max: number | null
+          id: string
+          is_transferable: boolean
+          last_verified_at: string
+          notes: string | null
+          route_type: string
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          airline_code: string
+          airline_name: string
+          confidence?: string
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          fee_max?: number | null
+          id?: string
+          is_transferable?: boolean
+          last_verified_at?: string
+          notes?: string | null
+          route_type?: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          airline_code?: string
+          airline_name?: string
+          confidence?: string
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          fee_max?: number | null
+          id?: string
+          is_transferable?: boolean
+          last_verified_at?: string
+          notes?: string | null
+          route_type?: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string

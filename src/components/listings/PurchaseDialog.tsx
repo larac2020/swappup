@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Loader2, ShieldCheck, User, Mail, CreditCard } from "lucide-react";
+import { AlertTriangle, Loader2, ShieldCheck, User, Mail, CreditCard, RefreshCw, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,9 +26,40 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   const [email, setEmail] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [escrowAccepted, setEscrowAccepted] = useState(false);
+  const [liveFee, setLiveFee] = useState<any>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
 
   const ticketPrice = Number(listing.price);
-  const totalPrice = ticketPrice + nameChangeFee;
+  const effectiveFee = liveFee?.fee_amount != null ? Number(liveFee.fee_amount) : nameChangeFee;
+  const totalPrice = ticketPrice + effectiveFee;
+
+  const fetchFee = async (force = false) => {
+    if (!listing?.airline) return;
+    setFeeLoading(true);
+    try {
+      const routeType =
+        listing.origin_country && listing.destination_country &&
+        listing.origin_country === listing.destination_country
+          ? "domestic"
+          : "international";
+      const { data, error } = await supabase.functions.invoke("get-name-change-fee", {
+        body: { airline: listing.airline, route_type: routeType, force_refresh: force },
+      });
+      if (error) throw error;
+      setLiveFee(data);
+      if (force) toast({ title: "Fee rechecked", description: "Latest published airline fee loaded." });
+    } catch (e: any) {
+      console.error(e);
+      if (force) toast({ title: "Recheck failed", description: e.message, variant: "destructive" });
+    } finally {
+      setFeeLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) fetchFee(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, listing?.id]);
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
@@ -45,7 +76,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
         escrow_deadline: transferDeadline,
         buyer_full_name: fullName.trim(),
         buyer_email: email.trim(),
-        name_change_fee: nameChangeFee,
+        name_change_fee: effectiveFee,
         transfer_deadline: transferDeadline,
         original_booking_ref: listing.flight_number || null,
       });
@@ -107,16 +138,54 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
               <span className="text-sm text-muted-foreground">Ticket price</span>
               <span className="font-medium">€{ticketPrice.toFixed(2)}</span>
             </div>
-            {nameChangeFee > 0 && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Name change fee ({listing.airline})</span>
-                <span className="font-medium">€{nameChangeFee.toFixed(2)}</span>
+            {effectiveFee > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    Name change fee ({listing.airline})
+                    {feeLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                  </span>
+                  <span className="font-medium">€{effectiveFee.toFixed(2)}</span>
+                </div>
+                {liveFee && (
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground/80">
+                    <span className="flex items-center gap-1">
+                      {liveFee.refresh_failed ? "Cached" : "Live"} ·{" "}
+                      {liveFee.last_verified_at
+                        ? new Date(liveFee.last_verified_at).toLocaleDateString()
+                        : "—"}
+                      {liveFee.source_url && (
+                        <a
+                          href={liveFee.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline inline-flex items-center gap-0.5"
+                        >
+                          source <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => fetchFee(true)}
+                      disabled={feeLoading}
+                      className="text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${feeLoading ? "animate-spin" : ""}`} />
+                      Recheck now
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <div className="border-t border-border/50 pt-3 flex items-center justify-between">
               <span className="font-semibold">Total (held in escrow)</span>
               <span className="text-xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
             </div>
+            <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-1">
+              The name-change fee shown is the airline's currently published amount. If the airline
+              charges more at transfer time, the seller covers the difference per our Terms.
+            </p>
           </div>
 
           {/* Buyer Details */}
