@@ -718,7 +718,100 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      purchases_seller_view: {
+        Row: {
+          buyer_confirmed: boolean | null
+          buyer_email: string | null
+          buyer_full_name: string | null
+          buyer_id: string | null
+          created_at: string | null
+          escrow_deadline: string | null
+          escrow_status: string | null
+          id: string | null
+          listing_id: string | null
+          name_change_fee: number | null
+          original_booking_ref: string | null
+          quantity: number | null
+          seller_id: string | null
+          seller_transferred: boolean | null
+          status: string | null
+          stripe_payment_id: string | null
+          total_price: number | null
+          transfer_booking_ref: string | null
+          transfer_confirmed_at: string | null
+          transfer_deadline: string | null
+          transfer_surname: string | null
+        }
+        Insert: {
+          buyer_confirmed?: boolean | null
+          buyer_email?: never
+          buyer_full_name?: never
+          buyer_id?: string | null
+          created_at?: string | null
+          escrow_deadline?: string | null
+          escrow_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          name_change_fee?: number | null
+          original_booking_ref?: string | null
+          quantity?: number | null
+          seller_id?: string | null
+          seller_transferred?: boolean | null
+          status?: string | null
+          stripe_payment_id?: string | null
+          total_price?: number | null
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
+        }
+        Update: {
+          buyer_confirmed?: boolean | null
+          buyer_email?: never
+          buyer_full_name?: never
+          buyer_id?: string | null
+          created_at?: string | null
+          escrow_deadline?: string | null
+          escrow_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          name_change_fee?: number | null
+          original_booking_ref?: string | null
+          quantity?: number | null
+          seller_id?: string | null
+          seller_transferred?: boolean | null
+          status?: string | null
+          stripe_payment_id?: string | null
+          total_price?: number | null
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
