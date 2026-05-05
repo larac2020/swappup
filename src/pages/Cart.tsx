@@ -9,6 +9,8 @@ import { ShoppingCart, Trash2, Plane, TrainFront, Calendar, AlertCircle, CreditC
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getAirlineData } from "@/data/flightData";
 import { getOperatorFare } from "@/data/trainData";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice, convertAmount } from "@/lib/currency";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function Cart() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
