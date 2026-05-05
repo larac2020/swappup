@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 interface ListingCardProps {
   id: string;
@@ -32,6 +34,7 @@ interface ListingCardProps {
   creditCurrency?: string;
   creditExpiryDate?: string;
   operator?: string;
+  currency?: string;
 }
 
 const tagColors: Record<string, string> = {
@@ -69,12 +72,14 @@ export function ListingCard({
   creditCurrency = "EUR",
   creditExpiryDate,
   operator,
+  currency = "EUR",
 }: ListingCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
   const isTrain = listingType === "train_ticket";
   const originCode = isTrain ? getPrimaryStationCode(originCity) : getPrimaryAirportCode(originCity);
   const destCode = isTrain ? getPrimaryStationCode(destinationCity) : getPrimaryAirportCode(destinationCity);
@@ -208,7 +213,7 @@ export function ListingCard({
           {/* Price badge — advertised price only */}
           <div className="absolute top-3 right-3">
             <div className="glass-strong rounded-xl px-3 py-1.5">
-              <span className="text-lg font-bold text-primary">€{price}</span>
+              <span className="text-lg font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
             </div>
           </div>
 
