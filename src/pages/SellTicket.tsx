@@ -220,6 +220,10 @@ export default function SellTicket() {
         trainOriginStation: (editListing as any).origin_station || "",
         trainDestinationStation: (editListing as any).destination_station || "",
         departureTime: (editListing as any).departure_time || "",
+        arrivalTime: (editListing as any).arrival_time || "",
+        returnDepartureTime: (editListing as any).return_departure_time || "",
+        returnArrivalTime: (editListing as any).return_arrival_time || "",
+        returnFlightNumber: (editListing as any).return_flight_number || "",
       });
 
       const shared: TicketInclusions = {
