@@ -73,7 +73,12 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
       });
       if (error) throw error;
       if (!data?.url) throw new Error("Checkout session could not be created");
-      window.location.href = data.url;
+      // Open in new tab — works inside Lovable preview iframe (which blocks top-level redirects to Stripe)
+      const win = window.open(data.url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        // Popup blocked — fall back to top-level redirect
+        window.top ? (window.top.location.href = data.url) : (window.location.href = data.url);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchases"] });
