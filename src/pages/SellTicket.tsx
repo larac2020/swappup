@@ -1158,16 +1158,51 @@ export default function SellTicket() {
                 />
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("sellFlightNumber")}</Label>
-                  <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+              {/* Outbound flight */}
+              <div className="space-y-3 rounded-xl border border-border/50 p-3">
+                <p className="text-sm font-medium text-primary">{t("sellOutboundFlight") || "Outbound flight"}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("sellFlightNumber")}</Label>
+                    <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div />
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
-                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("sellDepartureTime") || "Departure time"}</Label>
+                    <Input type="time" value={formData.departureTime} onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("sellArrivalTime") || "Arrival time"}</Label>
+                    <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
                 </div>
               </div>
+
+              {/* Inbound flight (only for return trips) */}
+              {isReturn && (
+                <div className="space-y-3 rounded-xl border border-border/50 p-3">
+                  <p className="text-sm font-medium text-primary">{t("sellInboundFlight") || "Inbound flight"}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t("sellFlightNumber")}</Label>
+                      <Input placeholder="e.g. VY8501" value={formData.returnFlightNumber} onChange={(e) => setFormData({ ...formData, returnFlightNumber: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                    <div />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t("sellDepartureTime") || "Departure time"}</Label>
+                      <Input type="time" value={formData.returnDepartureTime} onChange={(e) => setFormData({ ...formData, returnDepartureTime: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("sellArrivalTime") || "Arrival time"}</Label>
+                      <Input type="time" value={formData.returnArrivalTime} onChange={(e) => setFormData({ ...formData, returnArrivalTime: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
