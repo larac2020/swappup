@@ -273,6 +273,7 @@ export default function Home() {
                 creditType={(listing as any).credit_type}
                 title={listing.title}
                 operator={(listing as any).operator}
+                currency={(listing as any).currency || "EUR"}
               />
             ))}
           </div>
