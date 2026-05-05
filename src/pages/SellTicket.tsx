@@ -100,6 +100,10 @@ const getDefaultFormData = () => ({
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
+  arrivalTime: "",
+  returnDepartureTime: "",
+  returnArrivalTime: "",
+  returnFlightNumber: "",
 });
 
 export default function SellTicket() {
@@ -216,6 +220,10 @@ export default function SellTicket() {
         trainOriginStation: (editListing as any).origin_station || "",
         trainDestinationStation: (editListing as any).destination_station || "",
         departureTime: (editListing as any).departure_time || "",
+        arrivalTime: (editListing as any).arrival_time || "",
+        returnDepartureTime: (editListing as any).return_departure_time || "",
+        returnArrivalTime: (editListing as any).return_arrival_time || "",
+        returnFlightNumber: (editListing as any).return_flight_number || "",
       });
 
       const shared: TicketInclusions = {
@@ -551,6 +559,11 @@ export default function SellTicket() {
         listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
         listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
         listingData.flight_number = formData.flightNumber || null;
+        listingData.departure_time = formData.departureTime || null;
+        listingData.arrival_time = formData.arrivalTime || null;
+        listingData.return_flight_number = isReturn ? (formData.returnFlightNumber || null) : null;
+        listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
+        listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
         listingData.ticket_count = ticketCount;
         listingData.luggage_included = sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false;
         listingData.carry_on_included = sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true;
@@ -1145,16 +1158,51 @@ export default function SellTicket() {
                 />
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("sellFlightNumber")}</Label>
-                  <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+              {/* Outbound flight */}
+              <div className="space-y-3 rounded-xl border border-border/50 p-3">
+                <p className="text-sm font-medium text-primary">Outbound flight</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("sellFlightNumber")}</Label>
+                    <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div />
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
-                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Departure time</Label>
+                    <Input type="time" value={formData.departureTime} onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Arrival time</Label>
+                    <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
                 </div>
               </div>
+
+              {/* Inbound flight (only for return trips) */}
+              {isReturn && (
+                <div className="space-y-3 rounded-xl border border-border/50 p-3">
+                  <p className="text-sm font-medium text-primary">Inbound flight</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t("sellFlightNumber")}</Label>
+                      <Input placeholder="e.g. VY8501" value={formData.returnFlightNumber} onChange={(e) => setFormData({ ...formData, returnFlightNumber: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                    <div />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Departure time</Label>
+                      <Input type="time" value={formData.returnDepartureTime} onChange={(e) => setFormData({ ...formData, returnDepartureTime: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Arrival time</Label>
+                      <Input type="time" value={formData.returnArrivalTime} onChange={(e) => setFormData({ ...formData, returnArrivalTime: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
