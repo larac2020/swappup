@@ -234,9 +234,9 @@ export default function MyListings() {
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-lg font-bold text-primary">€{Number(l.price)}</span>
+              <span className="text-lg font-bold text-primary">{(((l as any).currency || "EUR") === "EUR" ? "€" : ((l as any).currency || "EUR") + " ")}{Number(l.price)}</span>
               {l.original_price && Number(l.original_price) > Number(l.price) && (
-                <p className="text-xs text-muted-foreground line-through">€{Number(l.original_price)}</p>
+                <p className="text-xs text-muted-foreground line-through">{(((l as any).currency || "EUR") === "EUR" ? "€" : ((l as any).currency || "EUR") + " ")}{Number(l.original_price)}</p>
               )}
             </div>
           </div>
@@ -394,7 +394,7 @@ export default function MyListings() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{listing?.title || t("myListingsTicket")}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t("myListingsBuyer")}: {sale.buyer_full_name} • €{Number(sale.total_price).toFixed(2)}
+                        {t("myListingsBuyer")}: {sale.buyer_full_name} • {((listing as any)?.currency || "EUR") === "EUR" ? "€" : ((listing as any)?.currency || "EUR") + " "}{Number(sale.total_price).toFixed(2)}
                       </p>
                     </div>
                     <Badge variant="outline" className={cn("text-xs", 

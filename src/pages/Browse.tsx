@@ -431,6 +431,7 @@ export default function Browse() {
                   creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
                   creditCurrency={(listing as any).credit_currency}
                   creditExpiryDate={(listing as any).credit_expiry_date}
+                  currency={(listing as any).currency || "EUR"}
                 />
               ))}
             </div>
@@ -469,6 +470,7 @@ export default function Browse() {
                           creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
                           creditCurrency={(listing as any).credit_currency}
                           creditExpiryDate={(listing as any).credit_expiry_date}
+                          currency={(listing as any).currency || "EUR"}
                         />
                       ))}
                     </div>

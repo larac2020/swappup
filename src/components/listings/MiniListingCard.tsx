@@ -2,6 +2,8 @@ import { Plane, TrainFront } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryAirportCode } from "@/data/flightData";
 import { getPrimaryStationCode } from "@/data/trainData";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 interface MiniListingCardProps {
   id: string;
@@ -16,6 +18,7 @@ interface MiniListingCardProps {
   creditType?: string;
   title?: string;
   operator?: string;
+  currency?: string;
 }
 
 export function MiniListingCard({
@@ -31,8 +34,10 @@ export function MiniListingCard({
   creditType,
   title,
   operator,
+  currency = "EUR",
 }: MiniListingCardProps) {
   const navigate = useNavigate();
+  const displayCurrency = useDisplayCurrency();
   const isTrain = listingType === "train_ticket";
   const originCode = isTrain
     ? getPrimaryStationCode(originCity) || originCity.slice(0, 3).toUpperCase()
@@ -62,7 +67,7 @@ export function MiniListingCard({
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
           {/* Price */}
           <div className="absolute bottom-1.5 right-1.5">
-            <span className="text-sm font-bold text-primary">€{price}</span>
+            <span className="text-sm font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
           </div>
         </div>
         {/* Info */}

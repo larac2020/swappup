@@ -10,6 +10,8 @@ import { AlertTriangle, Loader2, ShieldCheck, User, Mail, CreditCard, RefreshCw,
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 interface PurchaseDialogProps {
   open: boolean;
@@ -32,6 +34,10 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   const ticketPrice = Number(listing.price);
   const effectiveFee = liveFee?.fee_amount != null ? Number(liveFee.fee_amount) : nameChangeFee;
   const totalPrice = ticketPrice + effectiveFee;
+  const listingCurrency = (listing as any).currency || "EUR";
+  const displayCurrency = useDisplayCurrency();
+  const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
+  const showConversionNote = displayCurrency !== listingCurrency;
 
   const fetchFee = async (force = false) => {
     if (!listing?.airline) return;
@@ -108,7 +114,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
           <div className="glass rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Ticket price</span>
-              <span className="font-medium">€{ticketPrice.toFixed(2)}</span>
+              <span className="font-medium">{fmt(ticketPrice)}</span>
             </div>
             {effectiveFee > 0 && (
               <div className="space-y-1">
@@ -117,7 +123,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                     Name change fee ({listing.airline})
                     {feeLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                   </span>
-                  <span className="font-medium">€{effectiveFee.toFixed(2)}</span>
+                  <span className="font-medium">{fmt(effectiveFee)}</span>
                 </div>
                 {liveFee && (
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground/80">
@@ -152,8 +158,13 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
             )}
             <div className="border-t border-border/50 pt-3 flex items-center justify-between">
               <span className="font-semibold">Total (held in escrow)</span>
-              <span className="text-xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
+              <span className="text-xl font-bold text-primary">{fmt(totalPrice)}</span>
             </div>
+            {showConversionNote && (
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                Shown in {displayCurrency}. You will be charged the equivalent of {formatPrice(totalPrice, listingCurrency, listingCurrency)} ({listingCurrency}).
+              </p>
+            )}
             <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-1">
               The name-change fee shown is the airline's currently published amount. If the airline
               charges more at transfer time, the seller covers the difference per our Terms.
@@ -229,7 +240,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                   onCheckedChange={(c) => setEscrowAccepted(c === true)}
                 />
                 <label htmlFor="escrow-accept" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
-                  I agree that my payment of <strong>€{totalPrice.toFixed(2)}</strong> will be held in escrow until the seller confirms 
+                  I agree that my payment of <strong>{fmt(totalPrice)}</strong> will be held in escrow until the seller confirms
                   the name change. If not completed within 24 hours, I will receive a full refund.
                 </label>
               </div>
@@ -252,7 +263,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
               ) : (
                 <CreditCard className="w-4 h-4" />
               )}
-              Pay €{totalPrice.toFixed(2)}
+              Pay {fmt(totalPrice)}
             </Button>
           </div>
         </div>

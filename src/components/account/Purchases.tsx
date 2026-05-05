@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
@@ -21,6 +23,7 @@ export default function Purchases() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -89,6 +92,7 @@ export default function Purchases() {
         <div className="space-y-3">
           {purchases.map((p: any) => {
             const listing = p.listings as any;
+            const cur = listing?.currency || "EUR";
             const status = statusConfig[p.status] || statusConfig.pending;
             const isTransferConfirmed = p.status === "transfer_confirmed";
             const isPendingTransfer = p.status === "pending_transfer";
@@ -106,7 +110,7 @@ export default function Purchases() {
                     <p className="text-xs text-muted-foreground">{format(new Date(p.created_at), "MMM d, yyyy")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-primary">€{Number(p.total_price).toFixed(2)}</p>
+                    <p className="font-semibold text-primary">{formatPrice(Number(p.total_price), cur, displayCurrency)}</p>
                     <Badge variant="outline" className={`text-xs ${status.className}`}>{status.label}</Badge>
                   </div>
                 </div>
@@ -114,9 +118,9 @@ export default function Purchases() {
                 {/* Price Breakdown */}
                 {p.name_change_fee > 0 && (
                   <div className="text-xs text-muted-foreground flex items-center gap-3 px-1">
-                    <span>Ticket: €{(Number(p.total_price) - Number(p.name_change_fee)).toFixed(2)}</span>
+                    <span>Ticket: {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
                     <span>•</span>
-                    <span>Name change fee: €{Number(p.name_change_fee).toFixed(2)}</span>
+                    <span>Name change fee: {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
                   </div>
                 )}
 

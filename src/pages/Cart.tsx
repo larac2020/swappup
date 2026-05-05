@@ -9,6 +9,8 @@ import { ShoppingCart, Trash2, Plane, TrainFront, Calendar, AlertCircle, CreditC
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getAirlineData } from "@/data/flightData";
 import { getOperatorFare } from "@/data/trainData";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice, convertAmount } from "@/lib/currency";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function Cart() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const { data: myProfile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -63,13 +66,17 @@ export default function Cart() {
 
   const subtotal = cartItems.reduce((sum, item) => {
     const listing = item.listings as any;
-    return sum + (listing ? Number(listing.price) * item.quantity : 0);
+    if (!listing) return sum;
+    const cur = listing.currency || "EUR";
+    return sum + convertAmount(Number(listing.price) * item.quantity, cur, displayCurrency);
   }, 0);
   const feesTotal = cartItems.reduce((sum, item) => {
     const listing = item.listings as any;
-    return sum + computeFee(listing) * item.quantity;
+    const cur = (listing as any)?.currency || "EUR";
+    return sum + convertAmount(computeFee(listing) * item.quantity, cur, displayCurrency);
   }, 0);
-  const serviceFee = cartItems.length > 0 ? 4.99 : 0;
+  // Service fee is fixed in EUR — convert for display.
+  const serviceFee = cartItems.length > 0 ? convertAmount(4.99, "EUR", displayCurrency) : 0;
   const total = subtotal + feesTotal + serviceFee;
 
   if (isLoading) {
@@ -148,17 +155,17 @@ export default function Cart() {
                 <div className="pt-3 border-t border-border/50 space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("priceTicketPrice")}</span>
-                    <span>€{(Number(listing.price) * item.quantity).toFixed(2)}</span>
+                    <span>{formatPrice(Number(listing.price) * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
                   </div>
                   {fee > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrier})</span>
-                      <span>€{(fee * item.quantity).toFixed(2)}</span>
+                      <span>{formatPrice(fee * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between pt-1.5 border-t border-border/30">
                     <span className="text-xs text-muted-foreground">{t("cartQty")}: {item.quantity}</span>
-                    <span className="text-base font-bold text-primary">€{((Number(listing.price) + fee) * item.quantity).toFixed(2)}</span>
+                    <span className="text-base font-bold text-primary">{formatPrice((Number(listing.price) + fee) * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
                   </div>
                 </div>
               </div>
@@ -181,21 +188,21 @@ export default function Cart() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cartSubtotal")}</span>
-              <span>€{subtotal.toFixed(2)}</span>
+              <span>{formatPrice(subtotal, displayCurrency, displayCurrency)}</span>
             </div>
             {feesTotal > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("priceNameChangeFee")}</span>
-                <span>€{feesTotal.toFixed(2)}</span>
+                <span>{formatPrice(feesTotal, displayCurrency, displayCurrency)}</span>
               </div>
             )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cartServiceFee")}</span>
-              <span>€{serviceFee.toFixed(2)}</span>
+              <span>{formatPrice(serviceFee, displayCurrency, displayCurrency)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-border/50 text-base font-semibold">
               <span>{t("cartTotal")}</span>
-              <span className="text-primary">€{total.toFixed(2)}</span>
+              <span className="text-primary">{formatPrice(total, displayCurrency, displayCurrency)}</span>
             </div>
           </div>
         </div>

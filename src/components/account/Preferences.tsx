@@ -14,6 +14,7 @@ import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
+import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 
 const tripCategories: { value: string; labelKey: TranslationKey }[] = [
   { value: "city_trip", labelKey: "tagCityTrip" },
@@ -53,6 +54,7 @@ export default function Preferences() {
   const [favCity, setFavCity] = useState("");
   const [defaultPax, setDefaultPax] = useState("1");
   const [favCategories, setFavCategories] = useState<string[]>([]);
+  const [preferredCurrency, setPreferredCurrency] = useState("EUR");
   const [saving, setSaving] = useState(false);
 
   const favCities = useMemo(
@@ -78,6 +80,7 @@ export default function Preferences() {
       if (profile.favorite_departure_city) setFavCity(profile.favorite_departure_city);
       if (profile.default_pax) setDefaultPax(String(profile.default_pax));
       if (profile.favorite_categories) setFavCategories(profile.favorite_categories);
+      if ((profile as any).preferred_currency) setPreferredCurrency((profile as any).preferred_currency);
     }
   }, [profile, countries]);
 
@@ -92,11 +95,13 @@ export default function Preferences() {
           favorite_departure_country: favCountry || null,
           default_pax: parseInt(defaultPax) || 1,
           favorite_categories: favCategories.length > 0 ? favCategories : null,
+          preferred_currency: preferredCurrency || "EUR",
         } as any)
         .eq("user_id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["profile-completion"] });
+      queryClient.invalidateQueries({ queryKey: ["preferred-currency"] });
       toast({ title: t("preferencesSaved") });
     } catch (err: any) {
       toast({ title: t("error"), description: err.message, variant: "destructive" });
@@ -152,6 +157,19 @@ export default function Preferences() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Preferred currency</Label>
+          <Select value={preferredCurrency} onValueChange={setPreferredCurrency}>
+            <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <SelectItem key={c} value={c}>{getCurrencySymbol(c)} — {c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">All listing prices will be shown in this currency.</p>
         </div>
 
         <div className="space-y-1.5">

@@ -289,6 +289,7 @@ export type Database = {
           credit_expiry_date: string | null
           credit_type: string | null
           credit_value: number | null
+          currency: string
           departure_date: string
           departure_time: string | null
           destination_city: string
@@ -339,6 +340,7 @@ export type Database = {
           credit_expiry_date?: string | null
           credit_type?: string | null
           credit_value?: number | null
+          currency?: string
           departure_date: string
           departure_time?: string | null
           destination_city: string
@@ -389,6 +391,7 @@ export type Database = {
           credit_expiry_date?: string | null
           credit_type?: string | null
           credit_value?: number | null
+          currency?: string
           departure_date?: string
           departure_time?: string | null
           destination_city?: string
@@ -497,6 +500,7 @@ export type Database = {
           id_document_url: string | null
           phone: string | null
           postal_code: string | null
+          preferred_currency: string
           privacy_accepted_at: string | null
           privacy_accepted_version: string | null
           terms_accepted_at: string | null
@@ -526,6 +530,7 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
+          preferred_currency?: string
           privacy_accepted_at?: string | null
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null
@@ -555,6 +560,7 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
+          preferred_currency?: string
           privacy_accepted_at?: string | null
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null

@@ -69,6 +69,7 @@ export default function Favorites() {
                   creditValue={(l as any).credit_value ? Number((l as any).credit_value) : undefined}
                   creditCurrency={(l as any).credit_currency}
                   creditExpiryDate={(l as any).credit_expiry_date}
+                  currency={(l as any).currency || "EUR"}
                 />
               );
             })}

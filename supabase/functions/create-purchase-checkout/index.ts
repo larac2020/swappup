@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
     const ticketPrice = Number(listing.price);
     const fee = Number(name_change_fee || 0);
     const total = ticketPrice + fee;
+    const currency = String((listing as any).currency || "EUR").toLowerCase();
     const transferDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     // Pre-create purchase row (status: pending, escrow: pending)
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
       customer_email: email.trim(),
       line_items: [{
         price_data: {
-          currency: "eur",
+          currency,
           product_data: { name: listing.title || "Flight ticket" },
           unit_amount: Math.round(total * 100),
         },

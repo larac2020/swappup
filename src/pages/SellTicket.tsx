@@ -33,6 +33,7 @@ import {
   trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
   getStationsForCity, currencySymbol
 } from "@/data/trainData";
+import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 
@@ -88,6 +89,7 @@ const getDefaultFormData = () => ({
   flightNumber: "",
   price: "",
   originalPrice: "",
+  currency: "EUR",
   ticketCount: "1",
   stopovers: "0",
   additionalNotes: "",
@@ -209,6 +211,7 @@ export default function SellTicket() {
         flightNumber: editListing.flight_number || "",
         price: String(Number(editListing.price)),
         originalPrice: editListing.original_price ? String(Number(editListing.original_price)) : "",
+        currency: (editListing as any).currency || "EUR",
         ticketCount: String(editListing.ticket_count),
         stopovers: String(editListing.stopovers ?? 0),
         additionalNotes: editListing.additional_notes || "",
@@ -525,6 +528,7 @@ export default function SellTicket() {
         airline: formData.airline,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
+        currency: formData.currency || "EUR",
         additional_notes: formData.additionalNotes || null,
         tags: formData.selectedTags as any,
       };
@@ -1258,6 +1262,24 @@ export default function SellTicket() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">{t("sellPricingHeader")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Currency</Label>
+                <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                  <SelectTrigger className="bg-secondary/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {getCurrencySymbol(c)} — {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Buyers will see this price converted to their preferred currency, but you'll be paid in {formData.currency}.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("sellOriginalPrice")}</Label>
@@ -1274,7 +1296,7 @@ export default function SellTicket() {
                   {t("sellPriceLowerError")}
                 </p>
               )}
-              <SellerFeeBreakdown price={formData.price} />
+              <SellerFeeBreakdown price={formData.price} currency={getCurrencySymbol(formData.currency)} />
             </div>
           </div>
 

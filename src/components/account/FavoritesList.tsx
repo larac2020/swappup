@@ -4,11 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft, Loader2, Heart, Plane } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 export default function FavoritesList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const { data: favorites, isLoading } = useQuery({
     queryKey: ["favorites", user?.id],
@@ -49,7 +52,7 @@ export default function FavoritesList() {
                     <p className="font-medium truncate">{listing?.title || "Listing"}</p>
                     <p className="text-xs text-muted-foreground">{listing?.origin_city} → {listing?.destination_city}</p>
                   </div>
-                  <p className="font-semibold text-primary">€{listing?.price}</p>
+                  <p className="font-semibold text-primary">{listing ? formatPrice(Number(listing.price), listing.currency || "EUR", displayCurrency) : ""}</p>
                 </div>
               </button>
             );
