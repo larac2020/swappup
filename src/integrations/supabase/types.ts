@@ -281,6 +281,7 @@ export type Database = {
         Row: {
           additional_notes: string | null
           airline: string
+          arrival_time: string | null
           bumped_until: string | null
           carry_on_included: boolean | null
           created_at: string
@@ -308,7 +309,10 @@ export type Database = {
           original_price: number | null
           per_ticket_inclusions: Json | null
           price: number
+          return_arrival_time: string | null
           return_date: string | null
+          return_departure_time: string | null
+          return_flight_number: string | null
           seller_id: string
           speedy_boarding: boolean | null
           stopovers: number | null
@@ -327,6 +331,7 @@ export type Database = {
         Insert: {
           additional_notes?: string | null
           airline: string
+          arrival_time?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
@@ -354,7 +359,10 @@ export type Database = {
           original_price?: number | null
           per_ticket_inclusions?: Json | null
           price: number
+          return_arrival_time?: string | null
           return_date?: string | null
+          return_departure_time?: string | null
+          return_flight_number?: string | null
           seller_id: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
@@ -373,6 +381,7 @@ export type Database = {
         Update: {
           additional_notes?: string | null
           airline?: string
+          arrival_time?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
@@ -400,7 +409,10 @@ export type Database = {
           original_price?: number | null
           per_ticket_inclusions?: Json | null
           price?: number
+          return_arrival_time?: string | null
           return_date?: string | null
+          return_departure_time?: string | null
+          return_flight_number?: string | null
           seller_id?: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
