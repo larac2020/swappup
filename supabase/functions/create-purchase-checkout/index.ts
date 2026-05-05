@@ -82,8 +82,8 @@ Deno.serve(async (req) => {
       }],
       payment_intent_data: { capture_method: "manual" },
       metadata: { purchase_id: purchase.id },
-      success_url: `${origin}/account/purchases?purchase=${purchase.id}&success=1`,
-      cancel_url: `${origin}/account/purchases?purchase=${purchase.id}&canceled=1`,
+      success_url: `${origin}/listing/${listing.id}?purchase=${purchase.id}&success=1`,
+      cancel_url: `${origin}/listing/${listing.id}?purchase=${purchase.id}&canceled=1`,
     });
 
     await admin.from("purchases").update({ stripe_payment_id: session.id }).eq("id", purchase.id);
