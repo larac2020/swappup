@@ -19,6 +19,8 @@ import { ReportSellerDialog } from "@/components/listings/ReportSellerDialog";
 import { getAirlineData } from "@/data/flightData";
 import { getOperatorFare, getPrimaryStationCode, getPrimaryStationName } from "@/data/trainData";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 import { TrainFront } from "lucide-react";
 
 const tagLabels: Record<string, string> = {
@@ -34,6 +36,7 @@ export default function ListingDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -191,6 +194,8 @@ export default function ListingDetail() {
   else nameChangeFee = getAirlineData(listing.airline)?.nameChangeFee || 0;
   const ticketPrice = Number(listing.price);
   const totalPrice = ticketPrice + nameChangeFee;
+  const listingCurrency = (listing as any).currency || "EUR";
+  const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
 
   return (
     <AppLayout showNav={false}>
@@ -222,7 +227,7 @@ export default function ListingDetail() {
 
           <div className="absolute bottom-4 right-4">
             <div className="glass-strong rounded-2xl px-4 py-2">
-              <span className="text-2xl font-bold text-primary">€{Number(listing.price)}</span>
+              <span className="text-2xl font-bold text-primary">{fmt(Number(listing.price))}</span>
             </div>
           </div>
         </div>
@@ -238,13 +243,13 @@ export default function ListingDetail() {
                   <X className="w-5 h-5" />
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">{listing.origin_city} → {listing.destination_city} — €{Number(listing.price)}</p>
+              <p className="text-sm text-muted-foreground">{listing.origin_city} → {listing.destination_city} — {fmt(Number(listing.price))}</p>
               <div className="grid grid-cols-3 gap-3">
                 <button
                   className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
                   onClick={() => {
                     const url = window.location.href;
-                    const text = `Check out this flight: ${listing.origin_city} → ${listing.destination_city} for €${Number(listing.price)}`;
+                    const text = `Check out this flight: ${listing.origin_city} → ${listing.destination_city} for ${fmt(Number(listing.price))}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
                     setShowShareMenu(false);
                   }}
@@ -259,7 +264,7 @@ export default function ListingDetail() {
                   onClick={() => {
                     const url = window.location.href;
                     const subject = `Flight deal: ${listing.origin_city} → ${listing.destination_city}`;
-                    const body = `Check out this flight from ${listing.origin_city} to ${listing.destination_city} for €${Number(listing.price)}!\n\n${url}`;
+                    const body = `Check out this flight from ${listing.origin_city} to ${listing.destination_city} for ${fmt(Number(listing.price))}!\n\n${url}`;
                     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
                     setShowShareMenu(false);
                   }}
@@ -442,17 +447,17 @@ export default function ListingDetail() {
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("priceTicketPrice")}</span>
-                <span>€{ticketPrice.toFixed(2)}</span>
+                <span>{fmt(ticketPrice)}</span>
               </div>
               {nameChangeFee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrierLabel})</span>
-                  <span>€{nameChangeFee.toFixed(2)}</span>
+                  <span>{fmt(nameChangeFee)}</span>
                 </div>
               )}
               <div className="flex justify-between pt-2 border-t border-border/50 text-base font-semibold">
                 <span>{t("priceTotalYouPay")}</span>
-                <span className="text-primary">€{totalPrice.toFixed(2)}</span>
+                <span className="text-primary">{fmt(totalPrice)}</span>
               </div>
             </div>
             {nameChangeFee > 0 && (
@@ -467,7 +472,7 @@ export default function ListingDetail() {
             <div className="sticky bottom-4 flex gap-3">
               <Button variant="gold" size="xl" className="flex-1" onClick={() => setShowPurchaseDialog(true)}>
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Buy Now — €{(Number(listing.price) + nameChangeFee).toFixed(2)}
+                Buy Now — {fmt(Number(listing.price) + nameChangeFee)}
               </Button>
             </div>
           )}
