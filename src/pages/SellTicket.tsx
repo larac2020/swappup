@@ -100,6 +100,10 @@ const getDefaultFormData = () => ({
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
+  arrivalTime: "",
+  returnDepartureTime: "",
+  returnArrivalTime: "",
+  returnFlightNumber: "",
 });
 
 export default function SellTicket() {
