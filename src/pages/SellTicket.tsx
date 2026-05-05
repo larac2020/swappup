@@ -559,6 +559,11 @@ export default function SellTicket() {
         listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
         listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
         listingData.flight_number = formData.flightNumber || null;
+        listingData.departure_time = formData.departureTime || null;
+        listingData.arrival_time = formData.arrivalTime || null;
+        listingData.return_flight_number = isReturn ? (formData.returnFlightNumber || null) : null;
+        listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
+        listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
         listingData.ticket_count = ticketCount;
         listingData.luggage_included = sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false;
         listingData.carry_on_included = sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true;
