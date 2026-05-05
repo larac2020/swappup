@@ -1160,7 +1160,7 @@ export default function SellTicket() {
 
               {/* Outbound flight */}
               <div className="space-y-3 rounded-xl border border-border/50 p-3">
-                <p className="text-sm font-medium text-primary">{t("sellOutboundFlight") || "Outbound flight"}</p>
+                <p className="text-sm font-medium text-primary">Outbound flight</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{t("sellFlightNumber")}</Label>
@@ -1170,11 +1170,11 @@ export default function SellTicket() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{t("sellDepartureTime") || "Departure time"}</Label>
+                    <Label>Departure time</Label>
                     <Input type="time" value={formData.departureTime} onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })} className="bg-secondary/50" />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("sellArrivalTime") || "Arrival time"}</Label>
+                    <Label>Arrival time</Label>
                     <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
                   </div>
                 </div>
@@ -1183,7 +1183,7 @@ export default function SellTicket() {
               {/* Inbound flight (only for return trips) */}
               {isReturn && (
                 <div className="space-y-3 rounded-xl border border-border/50 p-3">
-                  <p className="text-sm font-medium text-primary">{t("sellInboundFlight") || "Inbound flight"}</p>
+                  <p className="text-sm font-medium text-primary">Inbound flight</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>{t("sellFlightNumber")}</Label>
@@ -1193,11 +1193,11 @@ export default function SellTicket() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t("sellDepartureTime") || "Departure time"}</Label>
+                      <Label>Departure time</Label>
                       <Input type="time" value={formData.returnDepartureTime} onChange={(e) => setFormData({ ...formData, returnDepartureTime: e.target.value })} className="bg-secondary/50" />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t("sellArrivalTime") || "Arrival time"}</Label>
+                      <Label>Arrival time</Label>
                       <Input type="time" value={formData.returnArrivalTime} onChange={(e) => setFormData({ ...formData, returnArrivalTime: e.target.value })} className="bg-secondary/50" />
                     </div>
                   </div>
