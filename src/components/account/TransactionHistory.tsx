@@ -6,11 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice } from "@/lib/currency";
 
 export default function TransactionHistory() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -54,6 +57,7 @@ export default function TransactionHistory() {
           {transactions.map((tx) => {
             const isBuyer = tx.buyer_id === profile?.id;
             const listing = tx.listings as any;
+            const cur = (listing as any)?.currency || "EUR";
             return (
               <div key={tx.id} className="glass rounded-2xl p-4">
                 <div className="flex items-center gap-3">
@@ -67,7 +71,7 @@ export default function TransactionHistory() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className={`font-semibold ${isBuyer ? "text-destructive" : "text-success"}`}>{isBuyer ? "-" : "+"}€{tx.total_price}</p>
+                    <p className={`font-semibold ${isBuyer ? "text-destructive" : "text-success"}`}>{isBuyer ? "-" : "+"}{formatPrice(Number(tx.total_price), cur, displayCurrency)}</p>
                     <Badge variant="outline" className="text-xs">{tx.status}</Badge>
                   </div>
                 </div>
