@@ -182,10 +182,20 @@ export default function ListingDetail() {
   const isTrain = (listing as any).listing_type === "train_ticket";
   const operatorName = (listing as any).operator || listing.airline;
   const carrierLabel = isTrain ? operatorName : listing.airline;
-  const originCode = isTrain ? getPrimaryStationCode(listing.origin_city) : getPrimaryAirportCode(listing.origin_city);
-  const destCode = isTrain ? getPrimaryStationCode(listing.destination_city) : getPrimaryAirportCode(listing.destination_city);
-  const originAirportName = isTrain ? getPrimaryStationName(listing.origin_city) : getPrimaryAirportName(listing.origin_city);
-  const destAirportName = isTrain ? getPrimaryStationName(listing.destination_city) : getPrimaryAirportName(listing.destination_city);
+  const savedOriginAirport = (listing as any).origin_airport as string | null | undefined;
+  const savedDestAirport = (listing as any).destination_airport as string | null | undefined;
+  const originCode = isTrain
+    ? getPrimaryStationCode(listing.origin_city)
+    : (savedOriginAirport || getPrimaryAirportCode(listing.origin_city));
+  const destCode = isTrain
+    ? getPrimaryStationCode(listing.destination_city)
+    : (savedDestAirport || getPrimaryAirportCode(listing.destination_city));
+  const originAirportName = isTrain
+    ? getPrimaryStationName(listing.origin_city)
+    : (getAirportNameByCode(savedOriginAirport) || getPrimaryAirportName(listing.origin_city));
+  const destAirportName = isTrain
+    ? getPrimaryStationName(listing.destination_city)
+    : (getAirportNameByCode(savedDestAirport) || getPrimaryAirportName(listing.destination_city));
 
   // Calculate name change fee from operator/airline data
   let nameChangeFee = 0;
