@@ -447,6 +447,57 @@ export type Database = {
           },
         ]
       }
+      name_change_fee_disputes: {
+        Row: {
+          airline_code: string
+          airline_name: string | null
+          created_at: string
+          currency: string
+          evidence_url: string | null
+          id: string
+          listing_id: string | null
+          note: string | null
+          platform_fee: number | null
+          proposed_fee: number
+          resolved_at: string | null
+          route_type: string
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          airline_code: string
+          airline_name?: string | null
+          created_at?: string
+          currency?: string
+          evidence_url?: string | null
+          id?: string
+          listing_id?: string | null
+          note?: string | null
+          platform_fee?: number | null
+          proposed_fee: number
+          resolved_at?: string | null
+          route_type?: string
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          airline_code?: string
+          airline_name?: string | null
+          created_at?: string
+          currency?: string
+          evidence_url?: string | null
+          id?: string
+          listing_id?: string | null
+          note?: string | null
+          platform_fee?: number | null
+          proposed_fee?: number
+          resolved_at?: string | null
+          route_type?: string
+          seller_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
