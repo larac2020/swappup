@@ -654,6 +654,7 @@ export type Database = {
           transfer_booking_ref: string | null
           transfer_confirmed_at: string | null
           transfer_deadline: string | null
+          transfer_payment_proof_url: string | null
           transfer_surname: string | null
         }
         Insert: {
@@ -677,6 +678,7 @@ export type Database = {
           transfer_booking_ref?: string | null
           transfer_confirmed_at?: string | null
           transfer_deadline?: string | null
+          transfer_payment_proof_url?: string | null
           transfer_surname?: string | null
         }
         Update: {
@@ -700,6 +702,7 @@ export type Database = {
           transfer_booking_ref?: string | null
           transfer_confirmed_at?: string | null
           transfer_deadline?: string | null
+          transfer_payment_proof_url?: string | null
           transfer_surname?: string | null
         }
         Relationships: [
