@@ -235,9 +235,6 @@ export default function MyListings() {
             </div>
             <div className="text-right shrink-0">
               <span className="text-lg font-bold text-primary">{(((l as any).currency || "EUR") === "EUR" ? "€" : ((l as any).currency || "EUR") + " ")}{Number(l.price)}</span>
-              {l.original_price && Number(l.original_price) > Number(l.price) && (
-                <p className="text-xs text-muted-foreground line-through">{(((l as any).currency || "EUR") === "EUR" ? "€" : ((l as any).currency || "EUR") + " ")}{Number(l.original_price)}</p>
-              )}
             </div>
           </div>
 
