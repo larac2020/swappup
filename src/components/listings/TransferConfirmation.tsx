@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, Clock, User, Plane, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, User, Plane, AlertTriangle, Upload, FileCheck2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,9 +24,29 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
   const buyerSurname = purchase?.buyer_full_name?.split(" ").pop() || "";
   const [bookingRef, setBookingRef] = useState(purchase?.original_booking_ref || "");
   const [surname, setSurname] = useState(buyerSurname);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const confirmMutation = useMutation({
     mutationFn: async () => {
+      if (!proofFile) throw new Error("Please upload a payment confirmation for the name change fee.");
+      const maxBytes = 8 * 1024 * 1024;
+      if (proofFile.size > maxBytes) throw new Error("File too large (max 8MB).");
+      const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+      if (!allowed.includes(proofFile.type)) throw new Error("Unsupported file type. Use PNG, JPG, WEBP or PDF.");
+
+      setUploading(true);
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const ext = proofFile.name.split(".").pop()?.toLowerCase() || "bin";
+      const path = `${uid}/${purchase.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("transfer-proofs")
+        .upload(path, proofFile, { upsert: false, contentType: proofFile.type });
+      setUploading(false);
+      if (upErr) throw upErr;
+
       const { error } = await supabase
         .from("purchases")
         .update({
@@ -36,6 +56,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           status: "transfer_confirmed",
           escrow_status: "pending_release",
           seller_transferred: true,
+          transfer_payment_proof_url: path,
         })
         .eq("id", purchase.id);
       if (error) throw error;
@@ -52,7 +73,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           body: {
             user_id: buyerProfile.user_id,
             title: "Transfer confirmed — please verify your ticket",
-            message: `The seller has confirmed the name change. Booking ref: ${bookingRef.trim()}. Surname: ${surname.trim()}. Open your purchases to confirm receipt and release payment.`,
+            message: `The seller has confirmed the name change and uploaded a payment proof. Booking ref: ${bookingRef.trim()}. Surname: ${surname.trim()}. Open your purchases to verify and release payment.`,
             type: "transfer_confirmed",
             listing_id: purchase.listing_id,
           },
@@ -158,12 +179,38 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             </div>
           </div>
 
+          {/* Payment proof upload */}
+          <div className="space-y-2">
+            <Label htmlFor="payment-proof" className="flex items-center gap-2">
+              <FileCheck2 className="w-4 h-4 text-primary" />
+              Payment Confirmation (required)
+            </Label>
+            <div className="glass rounded-xl p-3 border border-border/60 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Upload a screenshot or PDF receipt from the airline confirming you paid the name-change fee
+                (€{Number(purchase.name_change_fee).toFixed(2)}). This protects the buyer and is required to release escrow.
+              </p>
+              <Input
+                id="payment-proof"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,application/pdf"
+                onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                className="bg-secondary/50 file:text-foreground"
+              />
+              {proofFile && (
+                <p className="text-xs text-primary flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> {proofFile.name} ({(proofFile.size / 1024).toFixed(0)} KB)
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Validation Info */}
           <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              By confirming, you certify that the name change has been completed with the airline and the booking 
-              is now accessible using the details provided. The buyer will be notified and the payment will be 
-              released after platform validation.
+              By confirming, you certify the name change has been completed with the airline, the booking is
+              accessible using the details above, and the uploaded receipt is genuine. False or fabricated
+              proofs may lead to refunds, account suspension, and legal action.
             </p>
           </div>
 
@@ -175,15 +222,15 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             <Button
               variant="gold"
               className="flex-1 gap-2"
-              disabled={!bookingRef.trim() || !surname.trim() || isExpired || confirmMutation.isPending}
+              disabled={!bookingRef.trim() || !surname.trim() || !proofFile || isExpired || confirmMutation.isPending || uploading}
               onClick={() => confirmMutation.mutate()}
             >
-              {confirmMutation.isPending ? (
+              {(confirmMutation.isPending || uploading) ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <CheckCircle2 className="w-4 h-4" />
               )}
-              Confirm Transfer
+              {uploading ? "Uploading proof…" : "Confirm Transfer"}
             </Button>
           </div>
         </div>
