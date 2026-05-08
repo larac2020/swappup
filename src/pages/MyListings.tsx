@@ -201,8 +201,8 @@ export default function MyListings() {
   const inactiveListings = filtered.filter((l) => !l.is_active);
 
   const renderListingCard = (l: (typeof listings)[0]) => {
-    const originCode = getPrimaryAirportCode(l.origin_city);
-    const destCode = getPrimaryAirportCode(l.destination_city);
+    const originCode = (l as any).origin_airport || getPrimaryAirportCode(l.origin_city);
+    const destCode = (l as any).destination_airport || getPrimaryAirportCode(l.destination_city);
     const boosted = isBoosted(l);
     const views = viewCounts[l.id] ?? 0;
     const favs = favCounts[l.id] ?? 0;
