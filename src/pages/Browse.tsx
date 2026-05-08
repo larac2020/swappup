@@ -432,6 +432,8 @@ export default function Browse() {
                   creditCurrency={(listing as any).credit_currency}
                   creditExpiryDate={(listing as any).credit_expiry_date}
                   currency={(listing as any).currency || "EUR"}
+                  originAirport={(listing as any).origin_airport ?? undefined}
+                  destinationAirport={(listing as any).destination_airport ?? undefined}
                 />
               ))}
             </div>
@@ -471,6 +473,8 @@ export default function Browse() {
                           creditCurrency={(listing as any).credit_currency}
                           creditExpiryDate={(listing as any).credit_expiry_date}
                           currency={(listing as any).currency || "EUR"}
+                          originAirport={(listing as any).origin_airport ?? undefined}
+                          destinationAirport={(listing as any).destination_airport ?? undefined}
                         />
                       ))}
                     </div>
