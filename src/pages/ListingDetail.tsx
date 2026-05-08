@@ -8,7 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plane, Calendar, Users, Luggage, Utensils, Zap,
-  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X, Flag
+  Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X, Flag,
+  Facebook, Linkedin, Send, Twitter, Music2
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPrimaryAirportCode, getPrimaryAirportName, getAirportNameByCode } from "@/data/flightData";
@@ -254,7 +255,7 @@ export default function ListingDetail() {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">{listing.origin_city} → {listing.destination_city} — {fmt(Number(listing.price))}</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <button
                   className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
                   onClick={() => {
@@ -268,6 +269,76 @@ export default function ListingDetail() {
                     <MessageCircle className="w-5 h-5 text-[hsl(142,70%,49%)]" />
                   </div>
                   <span className="text-xs text-muted-foreground">WhatsApp</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[hsl(221,44%,41%)]/20 flex items-center justify-center">
+                    <Facebook className="w-5 h-5 text-[hsl(221,44%,55%)]" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Facebook</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    const title = `${listing.origin_city} → ${listing.destination_city} — ${fmt(Number(listing.price))}`;
+                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[hsl(201,100%,35%)]/20 flex items-center justify-center">
+                    <Linkedin className="w-5 h-5 text-[hsl(201,100%,50%)]" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">LinkedIn</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    const text = `Check out this flight: ${listing.origin_city} → ${listing.destination_city} for ${fmt(Number(listing.price))}`;
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                    <Twitter className="w-5 h-5 text-foreground" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">X / Twitter</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={() => {
+                    const url = window.location.href;
+                    const text = `Check out this flight: ${listing.origin_city} → ${listing.destination_city} for ${fmt(Number(listing.price))}`;
+                    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[hsl(200,80%,45%)]/20 flex items-center justify-center">
+                    <Send className="w-5 h-5 text-[hsl(200,80%,55%)]" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Telegram</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                  onClick={async () => {
+                    const url = window.location.href;
+                    try { await navigator.clipboard.writeText(url); } catch {}
+                    toast({ title: "Link copied", description: "Paste it into your TikTok bio or post." });
+                    window.open(`https://www.tiktok.com/`, "_blank");
+                    setShowShareMenu(false);
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                    <Music2 className="w-5 h-5 text-foreground" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">TikTok</span>
                 </button>
                 <button
                   className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
