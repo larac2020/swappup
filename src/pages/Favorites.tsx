@@ -70,6 +70,8 @@ export default function Favorites() {
                   creditCurrency={(l as any).credit_currency}
                   creditExpiryDate={(l as any).credit_expiry_date}
                   currency={(l as any).currency || "EUR"}
+                  originAirport={(l as any).origin_airport ?? undefined}
+                  destinationAirport={(l as any).destination_airport ?? undefined}
                 />
               );
             })}
