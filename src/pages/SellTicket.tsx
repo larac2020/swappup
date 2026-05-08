@@ -665,7 +665,9 @@ export default function SellTicket() {
         toast({ title: t("sellMissingFields"), description: t("sellToastMissingTrain"), variant: "destructive" });
         return;
       }
-      if (trainTransferResult?.blocking) {
+      // In edit mode, transferability/fee acknowledgement was already validated at creation —
+      // don't force the user to re-run the check or re-acknowledge it.
+      if (!isEditMode && trainTransferResult?.blocking) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastBlockedTrain"),
@@ -673,7 +675,7 @@ export default function SellTicket() {
         });
         return;
       }
-      if (trainTransferResult && trainTransferResult.status === "allowed" && trainTransferResult.fee !== null && !trainTransferResult.acknowledged) {
+      if (!isEditMode && trainTransferResult && trainTransferResult.status === "allowed" && trainTransferResult.fee !== null && !trainTransferResult.acknowledged) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastFeeNotConfirmed"),
@@ -686,7 +688,7 @@ export default function SellTicket() {
         toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
         return;
       }
-      if (flightTransferBlocked) {
+      if (!isEditMode && flightTransferBlocked) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastBlockedFlight"),
@@ -694,7 +696,7 @@ export default function SellTicket() {
         });
         return;
       }
-      if (flightTransferFee !== null && !flightFeeAcknowledged) {
+      if (!isEditMode && flightTransferFee !== null && !flightFeeAcknowledged) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastFeeNotConfirmed"),
@@ -708,7 +710,7 @@ export default function SellTicket() {
       return;
     }
     // Block flight listings that failed external schedule verification
-    if (!isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
+    if (!isEditMode && !isTrain && flightVerification && (flightVerification.status === "mismatch" || flightVerification.status === "not_found")) {
       toast({
         title: t("sellToastListingBlocked"),
         description: t("sellToastBlockedVerify"),
