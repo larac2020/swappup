@@ -6,7 +6,7 @@ import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -217,6 +217,23 @@ export default function Home() {
     },
   });
 
+  // Pending sales awaiting seller's name-change / transfer action
+  const { data: pendingSales = [] } = useQuery({
+    queryKey: ["pendingSellerTransfers", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("id, listing_id, transfer_deadline, listings(title, origin_city, destination_city)")
+        .eq("seller_id", profile!.id)
+        .eq("seller_transferred", false)
+        .in("status", ["paid", "pending_transfer"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.id,
+  });
+
   // Filter listings client-side based on the selected type filter.
   const applyTypeFilter = (rows: any[]): any[] => {
     if (typeFilter === "all") {
@@ -331,6 +348,34 @@ export default function Home() {
 
         {/* Segmented Type Filter — always visible */}
         <div className="px-4">
+          {pendingSales.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {pendingSales.map((sale: any) => {
+                const deadline = sale.transfer_deadline ? new Date(sale.transfer_deadline) : null;
+                const hoursLeft = deadline ? Math.max(0, Math.round((deadline.getTime() - Date.now()) / 3600000)) : null;
+                const route = sale.listings ? `${sale.listings.origin_city} → ${sale.listings.destination_city}` : sale.listings?.title;
+                return (
+                  <button
+                    key={sale.id}
+                    onClick={() => navigate(`/account/purchases?sale=${sale.id}`)}
+                    className="w-full text-left rounded-xl p-3 border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors flex items-start gap-3"
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <AlertCircle className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">Ticket sold — complete the name change</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {route}
+                        {hoursLeft !== null && ` • ${hoursLeft}h left to transfer`}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-primary mt-1" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="glass rounded-xl p-1 flex gap-1">
             {([
               { value: "all" as const, label: t("browseAll"), icon: <Sparkles className="w-3.5 h-3.5" /> },
