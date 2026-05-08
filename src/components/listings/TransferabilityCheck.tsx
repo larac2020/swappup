@@ -1,8 +1,10 @@
 import { useMemo, useEffect, useState } from "react";
 import { getAirlineData, AirlineData } from "@/data/flightData";
-import { CheckCircle2, XCircle, AlertTriangle, Info, ShieldCheck, AlertOctagon } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, ShieldCheck, AlertOctagon, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface TransferabilityCheckProps {
@@ -89,20 +91,34 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
     setAcknowledged(false);
   }, [result?.status, result?.fee]);
 
-  const requiresAck = result?.status === "allowed" && result.fee !== null;
+  // Seller-editable override of the estimated fee. Defaults to the lookup value
+  // but can always be changed (or set, if the airline is unknown / "no change").
+  const [overrideFee, setOverrideFee] = useState<string>("");
+  useEffect(() => {
+    setOverrideFee(result?.fee != null ? String(result.fee) : "");
+  }, [result?.status, result?.fee]);
+
+  const parsedOverride = overrideFee.trim() === "" ? null : Number(overrideFee);
+  const effectiveFee =
+    parsedOverride !== null && !Number.isNaN(parsedOverride) && parsedOverride >= 0
+      ? parsedOverride
+      : result?.fee ?? null;
+
+  const requiresAck = effectiveFee !== null && effectiveFee > 0;
 
   // Propagate to parent so it can disable the publish button when blocking.
   useEffect(() => {
     if (result && onResult) {
       onResult({
         status: result.status,
-        blocking: result.status === "denied",
-        fee: result.fee,
+        // Seller has provided a fee → no longer blocking even if our table said "denied"
+        blocking: result.status === "denied" && (effectiveFee === null || effectiveFee === 0),
+        fee: effectiveFee,
         acknowledged: requiresAck ? acknowledged : true,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result?.status, result?.fee, acknowledged, requiresAck]);
+  }, [result?.status, result?.fee, acknowledged, requiresAck, effectiveFee]);
 
   if (!result) return null;
 
@@ -142,14 +158,35 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
             {result.status === "allowed" ? "✅ " : result.status === "denied" ? "❌ " : "⚠️ "}
             {result.title}
           </p>
-          {result.fee !== null && (
-            <p className="text-lg font-bold text-foreground">
-              Estimated fee: <span className="text-primary">£{result.fee}</span>
-              <span className="text-xs font-normal text-muted-foreground ml-1">per person per flight</span>
-            </p>
-          )}
           <p className="text-xs text-muted-foreground leading-relaxed">{result.description}</p>
         </div>
+      </div>
+
+      {/* Editable name-change fee — always shown so sellers can override the estimate */}
+      <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
+        <Label htmlFor="name-change-fee-override" className="text-xs font-medium flex items-center gap-1.5">
+          <Pencil className="w-3.5 h-3.5" />
+          Name-change fee (per person, per flight)
+        </Label>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">£</span>
+          <Input
+            id="name-change-fee-override"
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            placeholder="0"
+            value={overrideFee}
+            onChange={(e) => setOverrideFee(e.target.value)}
+            className="bg-secondary/50 h-9"
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          {result.fee !== null
+            ? `Our estimate is £${result.fee}, but fees vary. Enter the actual fee from your airline's website — this is what the buyer will pay on top of the ticket price.`
+            : "Enter the fee shown on your airline's website. The buyer will pay this on top of the ticket price."}
+        </p>
       </div>
 
       {result.warning && (
