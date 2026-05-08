@@ -200,10 +200,10 @@ export default function SellTicket() {
         listingType: ((editListing as any).listing_type === "train_ticket" ? "train_ticket" : "flight_ticket") as "flight_ticket" | "train_ticket",
         originCountry: editListing.origin_country,
         originCity: editListing.origin_city,
-        originAirport: "",
+        originAirport: (editListing as any).origin_airport || "",
         destinationCountry: editListing.destination_country,
         destinationCity: editListing.destination_city,
-        destinationAirport: "",
+        destinationAirport: (editListing as any).destination_airport || "",
         departureDate: new Date(editListing.departure_date),
         returnDate: hasReturn ? new Date(editListing.return_date!) : undefined,
         airline: editListing.airline,
@@ -569,6 +569,8 @@ export default function SellTicket() {
         listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
         listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
         listingData.ticket_count = ticketCount;
+        listingData.origin_airport = formData.originAirport || null;
+        listingData.destination_airport = formData.destinationAirport || null;
         listingData.luggage_included = sameInclusions ? sharedInclusions.luggageIncluded : perTicketInclusions[0]?.luggageIncluded ?? false;
         listingData.carry_on_included = sameInclusions ? sharedInclusions.carryOnIncluded : perTicketInclusions[0]?.carryOnIncluded ?? true;
         listingData.meal_included = sameInclusions ? sharedInclusions.mealIncluded : perTicketInclusions[0]?.mealIncluded ?? false;

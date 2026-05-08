@@ -35,6 +35,8 @@ interface ListingCardProps {
   creditExpiryDate?: string;
   operator?: string;
   currency?: string;
+  originAirport?: string;
+  destinationAirport?: string;
 }
 
 const tagColors: Record<string, string> = {
@@ -73,6 +75,8 @@ export function ListingCard({
   creditExpiryDate,
   operator,
   currency = "EUR",
+  originAirport,
+  destinationAirport,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -81,8 +85,12 @@ export function ListingCard({
   const { t } = useLanguage();
   const displayCurrency = useDisplayCurrency();
   const isTrain = listingType === "train_ticket";
-  const originCode = isTrain ? getPrimaryStationCode(originCity) : getPrimaryAirportCode(originCity);
-  const destCode = isTrain ? getPrimaryStationCode(destinationCity) : getPrimaryAirportCode(destinationCity);
+  const originCode = isTrain
+    ? getPrimaryStationCode(originCity)
+    : (originAirport || getPrimaryAirportCode(originCity));
+  const destCode = isTrain
+    ? getPrimaryStationCode(destinationCity)
+    : (destinationAirport || getPrimaryAirportCode(destinationCity));
   const carrierLabel = isTrain ? (operator || airline) : airline;
   const RouteIcon = isTrain ? TrainFront : Plane;
 

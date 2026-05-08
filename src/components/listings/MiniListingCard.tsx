@@ -19,6 +19,8 @@ interface MiniListingCardProps {
   title?: string;
   operator?: string;
   currency?: string;
+  originAirport?: string;
+  destinationAirport?: string;
 }
 
 export function MiniListingCard({
@@ -35,16 +37,18 @@ export function MiniListingCard({
   title,
   operator,
   currency = "EUR",
+  originAirport,
+  destinationAirport,
 }: MiniListingCardProps) {
   const navigate = useNavigate();
   const displayCurrency = useDisplayCurrency();
   const isTrain = listingType === "train_ticket";
   const originCode = isTrain
     ? getPrimaryStationCode(originCity) || originCity.slice(0, 3).toUpperCase()
-    : getPrimaryAirportCode(originCity) || originCity.slice(0, 3).toUpperCase();
+    : (originAirport || getPrimaryAirportCode(originCity) || originCity.slice(0, 3).toUpperCase());
   const destCode = isTrain
     ? getPrimaryStationCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase()
-    : getPrimaryAirportCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase();
+    : (destinationAirport || getPrimaryAirportCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase());
   const carrierLabel = isTrain ? (operator || airline) : airline;
   const RouteIcon = isTrain ? TrainFront : Plane;
 

@@ -292,6 +292,7 @@ export type Database = {
           currency: string
           departure_date: string
           departure_time: string | null
+          destination_airport: string | null
           destination_city: string
           destination_country: string
           destination_image_url: string | null
@@ -304,6 +305,7 @@ export type Database = {
           meal_included: boolean | null
           name_change_fee: number | null
           operator: string | null
+          origin_airport: string | null
           origin_city: string
           origin_country: string
           origin_station: string | null
@@ -343,6 +345,7 @@ export type Database = {
           currency?: string
           departure_date: string
           departure_time?: string | null
+          destination_airport?: string | null
           destination_city: string
           destination_country: string
           destination_image_url?: string | null
@@ -355,6 +358,7 @@ export type Database = {
           meal_included?: boolean | null
           name_change_fee?: number | null
           operator?: string | null
+          origin_airport?: string | null
           origin_city: string
           origin_country: string
           origin_station?: string | null
@@ -394,6 +398,7 @@ export type Database = {
           currency?: string
           departure_date?: string
           departure_time?: string | null
+          destination_airport?: string | null
           destination_city?: string
           destination_country?: string
           destination_image_url?: string | null
@@ -406,6 +411,7 @@ export type Database = {
           meal_included?: boolean | null
           name_change_fee?: number | null
           operator?: string | null
+          origin_airport?: string | null
           origin_city?: string
           origin_country?: string
           origin_station?: string | null
