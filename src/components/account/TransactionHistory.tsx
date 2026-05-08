@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft, Loader2, FileText, ArrowUpRight, ArrowDownLeft } from "lucide-react";
@@ -14,6 +16,17 @@ export default function TransactionHistory() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const displayCurrency = useDisplayCurrency();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilter = (searchParams.get("type") as "all" | "bought" | "sold") || "all";
+  const [filter, setFilter] = useState<"all" | "bought" | "sold">(
+    initialFilter === "bought" || initialFilter === "sold" ? initialFilter : "all"
+  );
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (filter === "all") next.delete("type"); else next.set("type", filter);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -45,16 +58,46 @@ export default function TransactionHistory() {
         </div>
       </div>
 
+      <div className="glass rounded-xl p-1 flex gap-1">
+        {([
+          { value: "all" as const, label: t("browseAll") },
+          { value: "sold" as const, label: t("accountSold") },
+          { value: "bought" as const, label: t("transactionsPurchased") },
+        ]).map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setFilter(opt.value)}
+            className={cn(
+              "flex-1 py-2 rounded-lg text-xs font-semibold transition-all",
+              filter === opt.value
+                ? "bg-primary text-primary-foreground shadow-glow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : !transactions?.length ? (
+      ) : !(transactions ?? []).filter((tx) => {
+          if (filter === "all") return true;
+          const isBuyer = tx.buyer_id === profile?.id;
+          return filter === "bought" ? isBuyer : !isBuyer;
+        }).length ? (
         <div className="glass rounded-2xl p-8 text-center space-y-3">
           <FileText className="w-12 h-12 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">{t("transactionsEmpty")}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {transactions.map((tx) => {
+          {transactions!.filter((tx) => {
+            if (filter === "all") return true;
+            const isBuyer = tx.buyer_id === profile?.id;
+            return filter === "bought" ? isBuyer : !isBuyer;
+          }).map((tx) => {
             const isBuyer = tx.buyer_id === profile?.id;
             const listing = tx.listings as any;
             const cur = (listing as any)?.currency || "EUR";
