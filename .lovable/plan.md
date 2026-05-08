@@ -1,70 +1,55 @@
-# Fix Purchase Flow End-to-End
 
-Implement the 6 critical fixes identified in the audit, in order of dependency.
+# Trustworthy name-change fee (anti-overcharge)
 
-## 1. Notifications via Edge Function (service role)
+## Problem
 
-Create `supabase/functions/send-notification/index.ts` that validates the caller's JWT, then inserts into `notifications` using the service role (bypassing the RLS that only allows `service_role` to insert).
+Today the seller types the name-change fee in a free input. Because the buyer pays this fee on top of the ticket price (held in escrow), a seller can inflate it and pocket the difference. We need a flow where the platform is the source of truth, and the seller can only contest — not freely set — the amount.
 
-Replace every direct `supabase.from('notifications').insert(...)` call in `PurchaseDialog.tsx`, `TransferConfirmation.tsx`, and `Purchases.tsx` with `supabase.functions.invoke('send-notification', { body: { user_id, title, message, type, listing_id } })`.
+## New flow
 
-## 2. Real Stripe payment with manual capture (true escrow)
+```text
+1. Seller picks airline + fare type
+2. Platform calls get-name-change-fee → returns { fee, currency, source_url, confidence, last_verified_at }
+3. UI shows a LOCKED suggested fee (read-only) with the source link & "verified X days ago"
+4. Seller has two choices:
+   a) "This is correct" → fee is locked in, listing proceeds
+   b) "Report as inaccurate" → opens a small form (proposed fee + optional screenshot URL/note),
+      triggers a background re-verification (force_refresh on get-name-change-fee)
+5. After re-verification:
+   - If the re-checked platform fee differs from the original → use the new platform fee, notify seller
+   - If platform fee is unchanged → keep platform fee; seller's proposal is recorded as a
+     "fee dispute" for moderation but NOT applied to the listing
+6. Hard cap: listing.name_change_fee can NEVER exceed the most recent platform-verified fee
+   for that airline+route. Enforced by a DB trigger so it can't be bypassed via the API.
+```
 
-- New edge function `create-purchase-checkout`: validates buyer != seller, validates listing is active and has stock, creates a Stripe Checkout Session in `mode: "payment"` with `payment_intent_data: { capture_method: "manual" }` so funds are authorised but not captured until the buyer confirms receipt. Stores a `pending` purchase row (service role) with `stripe_payment_id` = session id, `escrow_status: "authorized"`, `transfer_deadline` = now + 24h.
-- New edge function `stripe-purchase-webhook` handling `checkout.session.completed` → updates purchase to `pending_transfer`, decrements `listings.ticket_count`, sets `is_active = false` if count hits 0, and notifies the seller.
-- New edge function `release-escrow`: called when buyer confirms receipt. Captures the PaymentIntent, marks purchase `completed`, increments `profiles.transactions_sold` (seller) and `transactions_bought` (buyer), notifies both parties.
-- New edge function `cancel-escrow`: called on seller no-show after deadline or buyer-reported failure. Cancels the PaymentIntent (releases the hold), marks purchase `refunded`, reactivates the listing, notifies buyer.
+The seller therefore can never push the fee above what the platform's automated verification finds on the airline's official site.
 
-`PurchaseDialog.tsx` is updated to call `create-purchase-checkout` and redirect to Stripe Checkout instead of inserting purchases directly.
+## Changes
 
-## 3. Listing deactivation + stock guard
+### Database
+- New table `name_change_fee_disputes`: `id, listing_id (nullable), seller_id, airline_code, route_type, platform_fee, proposed_fee, evidence_url, note, status (open/resolved/rejected), created_at, resolved_at`. RLS: sellers can insert/select their own; service role manages.
+- New trigger `enforce_name_change_fee_cap` on `listings` BEFORE INSERT/UPDATE: if `name_change_fee` is set, look up the latest `airline_change_fees` row for that airline+route and reject if `name_change_fee > fee_amount` (or `fee_max` when present). Raises `FEE_CAP` error.
 
-Database trigger `before_purchase_insert` on `purchases`:
-- Reject if `buyer_id = seller_id` (`SELF_PURCHASE`).
-- Reject if listing `is_active = false` or `ticket_count < quantity` (`OUT_OF_STOCK`).
+### Edge functions
+- `get-name-change-fee` (existing) — already supports `force_refresh`; reuse as-is.
+- New `report-name-change-fee` — validates JWT, inserts a `name_change_fee_disputes` row, calls `get-name-change-fee` with `force_refresh: true`, returns `{ updated: boolean, newFee, oldFee }` so the UI can react immediately.
 
-Stock decrement and `is_active` flip happen in the webhook (step 2) using service role.
+### Frontend
+- `src/components/listings/TransferabilityCheck.tsx`
+  - Replace the editable `Input` with a read-only "Platform-verified fee" card showing fee, currency, source link, and last verified date.
+  - Add two buttons: "This is correct" (acknowledge) and "Report as inaccurate".
+  - "Report as inaccurate" opens a small inline form (proposed fee + evidence URL + note) → calls `report-name-change-fee`. While loading, show "Re-checking the airline website…". On response, refresh the displayed platform fee; if it changed, surface a toast "We updated the fee to £X based on a fresh check." If unchanged, show "We re-checked the airline site and confirmed £X. Your report has been logged for review."
+  - The seller's proposed value is never written to `listings.name_change_fee`.
+- `src/pages/SellTicket.tsx` — keep using `effectiveFee` from `onResult`, which now always equals the platform fee.
+- Buyer side (`PurchaseDialog`, escrow totals) — no logic change; they already use `listings.name_change_fee`.
 
-## 4. Buyer "Confirm receipt" UI
-
-Update `Purchases.tsx`:
-- For purchases in `pending_transfer` with `seller_transferred = true`, show a "Confirm I received the ticket" button → calls `release-escrow`.
-- Show a "Report problem" button → opens a dialog, calls `cancel-escrow` with reason.
-- Show live countdown to `transfer_deadline`; once passed and seller hasn't transferred, show "Request refund" → calls `cancel-escrow`.
-
-## 5. Scheduled deadline enforcement
-
-New edge function `expire-transfers` that selects purchases past `transfer_deadline` still in `pending_transfer` and calls the cancel logic for each. Schedule via `pg_cron` + `pg_net` to run every 15 minutes.
-
-## 6. PII protection
-
-Update `purchases` SELECT RLS so that `buyer_full_name` and `buyer_email` are only returned to the seller AFTER `escrow_status = 'authorized'` (i.e. payment is real). Done by replacing the policy with one that returns the row but masking via a security-definer view `purchases_for_seller` that nulls these fields until payment is authorised. Frontend reads from the view for seller-side displays.
-
-## Technical details
-
-**New tables / migrations**
-- Trigger `prevent_self_purchase_and_check_stock` on `purchases` BEFORE INSERT.
-- View `purchases_seller_view` (security_invoker) exposing masked PII.
-- pg_cron job invoking `expire-transfers` every 15 min.
-
-**New edge functions**
-- `send-notification` (verify_jwt in code)
-- `create-purchase-checkout`
-- `stripe-purchase-webhook` (verify_jwt = false, signature-verified)
-- `release-escrow`
-- `cancel-escrow`
-- `expire-transfers`
-
-**Secrets needed**
-- `STRIPE_WEBHOOK_SECRET` — must be added after the webhook function URL is generated and registered in Stripe dashboard.
-
-**Frontend touched**
-- `src/components/listings/PurchaseDialog.tsx` — redirect to Stripe instead of direct DB insert.
-- `src/components/listings/TransferConfirmation.tsx` — switch notifications to edge function.
-- `src/pages/Purchases.tsx` — add confirm/report/refund actions and countdown.
-- New page `src/pages/PurchaseSuccess.tsx` and `PurchaseCanceled.tsx` for Stripe redirects.
+### Why this prevents overcharging
+1. The input field is gone — the seller cannot type a number that lands in the listing.
+2. The DB trigger enforces a hard upper bound from `airline_change_fees`, so even a malicious client patch can't bypass it.
+3. The reporting path forces a fresh, automated check against the airline's site rather than trusting the seller. Disputes are logged for moderator review and to improve future verifications.
 
 ## Out of scope
-- Disputes / partial refunds workflow.
-- Multi-currency handling (assumes EUR).
-- Email notifications (in-app only for now).
+- Moderator UI for resolving disputes (data is captured; UI can come later).
+- Per-fare-class differentiation beyond what `get-name-change-fee` already returns.
+- Refund logic if the actual fee charged by the airline turns out lower than the cap (could be handled later via partial escrow release).
