@@ -210,7 +210,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
           <div className="flex items-start gap-2">
             <AlertOctagon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
             <p className="text-xs text-foreground leading-relaxed">
-              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: `£${result.fee}` })}
+              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: `£${effectiveFee}` })}
             </p>
           </div>
           <Button
