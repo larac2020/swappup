@@ -11,7 +11,7 @@ import {
   Clock, ShoppingCart, Share2, Heart, Loader2, Copy, Mail, MessageCircle, X, Flag
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
+import { getPrimaryAirportCode, getPrimaryAirportName, getAirportNameByCode } from "@/data/flightData";
 import { useState } from "react";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 import PurchaseDialog from "@/components/listings/PurchaseDialog";
