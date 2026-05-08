@@ -156,6 +156,12 @@ export function getPrimaryAirportName(city: string): string {
   return cities.find((c) => c.city === city)?.airportName ?? "";
 }
 
+// Lookup airport name by IATA code
+export function getAirportNameByCode(code: string | null | undefined): string {
+  if (!code) return "";
+  return cities.find((c) => c.airportCode === code)?.airportName ?? "";
+}
+
 // Airlines with typical name change fees
 export interface AirlineData {
   name: string;
