@@ -6,7 +6,7 @@ import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront, AlertCircle } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront, AlertCircle, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -326,11 +326,16 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               <button onClick={() => navigate("/listings")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <Ticket className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{myListingsCount}</p>
                 <p className="text-[10px] text-muted-foreground">{t("homeListings")}</p>
+              </button>
+              <button onClick={() => navigate("/account/transactions?type=sold")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
+                <Tag className="w-4 h-4 text-primary mx-auto mb-0.5" />
+                <p className="text-base font-bold">{profile?.transactions_sold ?? 0}</p>
+                <p className="text-[10px] text-muted-foreground">{t("accountSold")}</p>
               </button>
               <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <ShoppingBag className="w-4 h-4 text-primary mx-auto mb-0.5" />
