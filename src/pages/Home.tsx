@@ -274,6 +274,8 @@ export default function Home() {
                 title={listing.title}
                 operator={(listing as any).operator}
                 currency={(listing as any).currency || "EUR"}
+                originAirport={(listing as any).origin_airport ?? undefined}
+                destinationAirport={(listing as any).destination_airport ?? undefined}
               />
             ))}
           </div>
