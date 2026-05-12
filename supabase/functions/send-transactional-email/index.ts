@@ -21,6 +21,15 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 }
 
+// Templates classified as "optional" — respect user preference toggles.
+// Anything NOT in these sets is treated as essential transactional and always sent.
+const REMINDER_TEMPLATES = new Set<string>([
+  'seller-reminder-start', // gentle 1h nudge after sale
+])
+const MARKETING_TEMPLATES = new Set<string>([
+  // (none yet — placeholder for future product/marketing emails)
+])
+
 // Generate a cryptographically random 32-byte hex token
 function generateToken(): string {
   const bytes = new Uint8Array(32)
@@ -163,6 +172,43 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // 2b. Honour user's notification preferences for optional categories.
+  // Essential transactional emails (purchase confirmations, escrow, deadlines,
+  // payouts, refunds, security) ignore preferences and always send.
+  const isReminder = REMINDER_TEMPLATES.has(templateName)
+  const isMarketing = MARKETING_TEMPLATES.has(templateName)
+  if (isReminder || isMarketing) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', effectiveRecipient.toLowerCase())
+      .maybeSingle()
+    if (profile?.user_id) {
+      const { data: prefs } = await supabase
+        .from('notification_preferences')
+        .select('reminder_emails, marketing_emails')
+        .eq('user_id', profile.user_id)
+        .maybeSingle()
+      const optedOut =
+        (isReminder && prefs && prefs.reminder_emails === false) ||
+        (isMarketing && prefs && prefs.marketing_emails === false)
+      if (optedOut) {
+        await supabase.from('email_send_log').insert({
+          message_id: messageId,
+          template_name: templateName,
+          recipient_email: effectiveRecipient,
+          status: 'suppressed',
+          error_message: 'user_preference_opt_out',
+        })
+        console.log('Email skipped per user preference', { effectiveRecipient, templateName })
+        return new Response(
+          JSON.stringify({ success: false, reason: 'user_preference_opt_out' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
   }
 
   // 3. Get or create unsubscribe token (one token per email address)
