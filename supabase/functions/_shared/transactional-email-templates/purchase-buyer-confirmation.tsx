@@ -26,7 +26,8 @@ const dict = {
     safe: 'Your money is safe with us and will only be sent to {seller} once your name is on the booking.',
     tripTitle: 'Your purchase',
     whatNext: 'What happens next',
-    step1: '{seller} has 24 hours to update the booking with your name.',
+    step1Before: '',
+    step1After: ' has 24 hours to update the booking with your name.',
     step2: 'As soon as {seller} confirms the change in the app, we will let you know by email.',
     pushTip: '💡 Turn on push notifications so you do not miss the moment.',
     updatePrefs: 'Update notification preferences',
@@ -47,7 +48,8 @@ const dict = {
     safe: 'I tuoi soldi sono al sicuro con noi e verranno inviati a {seller} solo quando il tuo nome sarà sulla prenotazione.',
     tripTitle: 'Il tuo acquisto',
     whatNext: 'Cosa succede ora',
-    step1: '{seller} ha 24 ore per aggiornare la prenotazione con il tuo nome.',
+    step1Before: '',
+    step1After: ' ha 24 ore per aggiornare la prenotazione con il tuo nome.',
     step2: 'Non appena {seller} conferma il cambio in app, ti avviseremo via email.',
     pushTip: '💡 Attiva le notifiche push per non perdere il momento.',
     updatePrefs: 'Aggiorna le preferenze di notifica',
@@ -78,7 +80,9 @@ const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, orderNumbe
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>{t(loc, dict, 'whatNext')}</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
-          <li style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: t(loc, dict, 'step1', { seller }).replace(seller, `<strong>${seller}</strong>`) }} />
+          <li style={{ marginBottom: '6px' }}>
+            {t(loc, dict, 'step1Before')}<strong>{seller}</strong>{t(loc, dict, 'step1After')}
+          </li>
           <li style={{ marginBottom: '10px' }}>
             {t(loc, dict, 'step2', { seller })}
             <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
