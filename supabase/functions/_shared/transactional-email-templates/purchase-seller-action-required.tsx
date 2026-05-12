@@ -2,7 +2,7 @@
 import * as React from 'npm:react@18.3.1'
 import { Heading, Text, Section, Link } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { EmailLayout, TripCard, TripDetails, h1, p, button, brand, APP_URL, PREFERENCES_URL } from './_layout.tsx'
+import { EmailLayout, TripCard, TripDetails, h1, p, button, brand, card, row, label, APP_URL, PREFERENCES_URL } from './_layout.tsx'
 
 interface Props {
   sellerName?: string
@@ -32,12 +32,22 @@ const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee
         you have <strong>24 hours</strong> to update the airline booking with the buyer's name.
       </Text>
       <TripCard trip={tripWithExtras} title="Your sales details" />
-      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Buyer details to use with the airline</Heading>
-      <Text style={p}>
-        <strong>Full name:</strong> {buyerFullName || ''}<br/>
-        {bookingRef && <><strong>Original booking reference:</strong> {bookingRef}<br/></>}
-        {nameChangeFee && <><strong>Name change fee:</strong> {nameChangeFee} (we hold this safely and pay it back to you once the sale is complete)</>}
-      </Text>
+      <Section style={{ ...card, borderLeft: `3px solid ${brand.gold}` }}>
+        <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+          Buyer details to use with the airline
+        </Text>
+        {buyerFullName && (
+          <Text style={row}><span style={label}>Full name: </span>{buyerFullName}</Text>
+        )}
+        {bookingRef && (
+          <Text style={row}><span style={label}>Original booking reference: </span>{bookingRef}</Text>
+        )}
+        {nameChangeFee && (
+          <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}` }}>
+            <span style={label}>Name change fee: </span>{nameChangeFee} (we hold this safely and pay it back to you once the sale is complete)
+          </Text>
+        )}
+      </Section>
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Unlock your payment</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
