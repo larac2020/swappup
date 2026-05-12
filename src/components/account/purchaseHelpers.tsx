@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
-import QRCode from "qrcode";
 import { format } from "date-fns";
 import { formatPrice } from "@/lib/currency";
 
@@ -45,11 +44,23 @@ function header(doc: jsPDF, subtitle: string) {
   doc.line(20, 32, 190, 32);
 }
 
-export async function downloadTicketPdf(p: any, listing: any) {
+export async function downloadTicketPdf(p: any, listing: any, seller?: any) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  header(doc, "Ticket details");
+  header(doc, "Booking confirmation");
 
-  let y = 44;
+  // Disclaimer banner
+  doc.setFillColor(255, 247, 224);
+  doc.rect(20, 36, 170, 7, "F");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 80, 0);
+  doc.text(
+    "This is a swappup booking confirmation, not your boarding pass. Use the credentials below to retrieve your ticket on the airline's website.",
+    22,
+    40.5,
+    { maxWidth: 166 },
+  );
+
+  let y = 50;
   doc.setTextColor(20, 20, 20);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
@@ -80,6 +91,7 @@ export async function downloadTicketPdf(p: any, listing: any) {
   }
   if (listing?.train_class) rows.push(["Class", listing.train_class]);
   rows.push(["Passengers", String(p.quantity ?? 1)]);
+  if (seller?.full_name) rows.push(["Seller", seller.full_name]);
 
   doc.setTextColor(20, 20, 20);
   doc.setFontSize(11);
@@ -137,30 +149,19 @@ export async function downloadTicketPdf(p: any, listing: any) {
     y += 14;
   }
 
-  // QR code
-  try {
-    const qrData = `BOOKING:${p.transfer_booking_ref ?? ""}|SURNAME:${p.transfer_surname ?? ""}`;
-    const qrUrl = await QRCode.toDataURL(qrData, { width: 256, margin: 1 });
-    doc.addImage(qrUrl, "PNG", 140, 60, 50, 50);
-    doc.setFontSize(8);
-    doc.setTextColor(110, 110, 110);
-    doc.text("Reference QR", 152, 115);
-  } catch {
-    /* ignore */
-  }
-
   // Footer
   doc.setFontSize(8);
   doc.setTextColor(140, 140, 140);
   doc.text(
-    "Use these details to access your booking on the airline's website.",
+    "swappup booking confirmation — not a boarding pass. Retrieve your ticket on the airline's website using the credentials above.",
     20,
     280,
+    { maxWidth: 170 },
   );
   doc.text(`Purchase ID: ${p.id}`, 20, 285);
   doc.text(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, 20, 290);
 
-  doc.save(`swappup-ticket-${p.transfer_booking_ref || p.id}.pdf`);
+  doc.save(`swappup-booking-${p.transfer_booking_ref || p.id}.pdf`);
 }
 
 export function downloadReceiptPdf(p: any, listing: any, profile: any) {
