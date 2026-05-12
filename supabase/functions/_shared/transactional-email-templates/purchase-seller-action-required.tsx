@@ -19,25 +19,25 @@ interface Props {
 }
 
 const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee, trip, bookingRef, deadline, purchaseId, orderNumber, totalPrice }: Props) => {
-  const buyer = buyerName || buyerFullName || 'the buyer'
+  const buyer = buyerName || buyerFullName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
     ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: buyerFullName || trip.bookingName, escrowAmount: totalPrice || trip.escrowAmount, orderNumber: order }
     : undefined
   return (
-    <EmailLayout preview="You've made a sale — please update the booking" transactional>
+    <EmailLayout preview="You've made a sale, please update the booking" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Great news — your ticket has just been sold to {buyer}. To complete the sale and release your
-        payout, you have <strong>24 hours</strong> to update the airline booking with the buyer's name.
+        Great news! Your ticket has just been sold to {buyer}. To complete the sale and receive your money,
+        you have <strong>24 hours</strong> to update the airline booking with the buyer's name.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your sale details" />
+      <TripCard trip={tripWithExtras} title="Your booking" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Buyer details to use with the airline</Heading>
       <Text style={p}>
-        <strong>Full name:</strong> {buyerFullName || '—'}<br/>
-        <strong>Email:</strong> {buyerEmail || '—'}<br/>
+        <strong>Full name:</strong> {buyerFullName || ''}<br/>
+        <strong>Email:</strong> {buyerEmail || ''}<br/>
         {bookingRef && <><strong>Original booking reference:</strong> {bookingRef}<br/></>}
-        {nameChangeFee && <><strong>Name change fee to pay:</strong> {nameChangeFee} (held in escrow and reimbursed to you on completion)</>}
+        {nameChangeFee && <><strong>Name change fee:</strong> {nameChangeFee} (we hold this safely and pay it back to you once the sale is complete)</>}
       </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
       <Text style={p} as="div">
@@ -46,7 +46,7 @@ const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee
             Go to the airline website and <strong>update the booking</strong> with the buyer's name.
           </li>
           <li style={{ marginBottom: '10px' }}>
-            Upload the new booking confirmation in the swappup app to mark the transfer as done.
+            Upload the new booking confirmation in the swappup app to mark the change as done.
             <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
               <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
                 💡 Turn on push notifications to get instant updates on your sale.{' '}
@@ -55,17 +55,17 @@ const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee
             </Section>
           </li>
           <li style={{ marginBottom: '6px' }}>
-            Once the buyer verifies everything looks good, your payout is released — usually within 2–5 business days.
+            Once the buyer verifies everything looks good, your money is released. It usually arrives in your account within 2 to 5 business days.
           </li>
         </ol>
       </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Can't make the deadline?</Heading>
       <Text style={p}>
-        If you don't update the booking by {deadline || 'the 24-hour deadline'}, the purchase is automatically
-        refunded to the buyer and the sale is cancelled. If something is blocking you, get in touch with us as soon as possible.
+        If you do not update the booking by {deadline || 'the 24 hour deadline'}, the purchase is automatically
+        refunded to the buyer and the sale is cancelled. If something is blocking you, please get in touch with us as soon as possible.
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Open your sale</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>View sale in app</Link>
       </Section>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
@@ -78,7 +78,7 @@ export const template = {
   component: Email,
   subject: (data: Record<string, any>) => {
     const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
-    return order ? `You've made a sale — please update the booking (Order ${order})` : `You've made a sale — please update the booking`
+    return order ? `You've made a sale! Please update the booking (Order ${order})` : `You've made a sale! Please update the booking`
   },
   displayName: 'Seller action required',
   previewData: {

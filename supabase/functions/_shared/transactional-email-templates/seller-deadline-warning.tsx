@@ -14,17 +14,17 @@ interface Props {
 }
 
 const Email = ({ sellerName, buyerName, trip, deadline, purchaseId, orderNumber }: Props) => {
-  const buyer = buyerName || 'the buyer'
+  const buyer = buyerName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip ? { ...trip, orderNumber: order } : undefined
   return (
     <EmailLayout preview="Only 4 hours left to complete your sale" accent="danger" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Just a heads-up — your 24-hour window to update the booking with {buyer}'s name is almost over.
+        Just a heads up. Your 24 hour window to update the booking with {buyer}'s name is almost over.
         After {deadline || 'the deadline'}, the purchase is <strong>automatically refunded</strong> and the sale is cancelled.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your sale details" />
+      <TripCard trip={tripWithExtras} title="Your booking" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What to do right now</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
@@ -32,16 +32,16 @@ const Email = ({ sellerName, buyerName, trip, deadline, purchaseId, orderNumber 
             Go to the airline website and <strong>update the booking</strong> with the buyer's name.
           </li>
           <li style={{ marginBottom: '6px' }}>
-            Upload the new booking confirmation in the swappup app to release the sale.
+            Upload the new booking confirmation in the swappup app to complete the sale.
           </li>
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button('#b1311f', '#ffffff')}>Complete now</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button('#b1311f', '#ffffff')}>View sale in app</Link>
       </Section>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Already done it?</Heading>
       <Text style={p}>
-        Great — just upload the new booking confirmation in the app and the sale will be released straight away.
+        Great. Just upload the new booking confirmation in the app and the sale will go through straight away.
       </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team

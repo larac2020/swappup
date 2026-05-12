@@ -158,7 +158,7 @@ export const TripCard = ({ trip, title = 'Your purchase details' }: { trip?: Tri
       {trip.bookingName && (
         <Text style={row}><span style={label}>New name on the booking: </span>{trip.bookingName}</Text>
       )}
-      {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until transfer): </span>{trip.escrowAmount}</Text>}
+      {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until your booking is updated): </span>{trip.escrowAmount}</Text>}
     </Section>
   )
 }

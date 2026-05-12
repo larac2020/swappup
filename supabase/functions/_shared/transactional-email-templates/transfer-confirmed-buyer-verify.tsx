@@ -16,32 +16,32 @@ interface Props {
 }
 
 const Email = ({ buyerName, sellerName, newBookingRef, surname, trip, purchaseId, orderNumber, totalPrice }: Props) => {
-  const seller = sellerName || 'the seller'
+  const seller = sellerName || 'your seller'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
     ? { ...trip, bookingRef: newBookingRef || trip.bookingRef, bookingName: surname || trip.bookingName, escrowAmount: totalPrice || trip.escrowAmount, orderNumber: order }
     : undefined
   return (
-    <EmailLayout preview="Your ticket is ready — please verify and release payment" transactional>
+    <EmailLayout preview="Your ticket is ready, please verify and confirm" transactional>
       <Text style={p}>{buyerName ? `Hi ${buyerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Good news — {seller} has updated the airline booking with your name. The last step is yours:
-        please verify everything looks right and confirm in the app to release the payment.
+        Good news! {seller} has updated the airline booking with your name. The last step is yours:
+        please check that everything looks right and confirm in the app to release the payment.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your booking details" />
+      <TripCard trip={tripWithExtras} title="Your booking" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
           <li style={{ marginBottom: '6px' }}>
-            Go to the airline website and check the booking is correctly under your name, using the
+            Go to the airline website and check that the booking is correctly under your name, using the
             booking reference{newBookingRef ? <> <strong>{newBookingRef}</strong></> : null}.
           </li>
           <li style={{ marginBottom: '10px' }}>
             <strong>Within 48 hours</strong>, head back to the swappup app and confirm everything is in order.
-            Only at that point we'll release the payment to {seller} and the purchase is finalised.
+            Only at that point we will send the payment to {seller} and your purchase is finalised.
             <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
               <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
-                💡 Turn on push notifications so you don't forget the 48-hour window.{' '}
+                💡 Turn on push notifications so you do not forget the 48 hour window.{' '}
                 <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'underline', fontWeight: 600 }}>Update notification preferences</Link>.
               </Text>
             </Section>
@@ -49,12 +49,12 @@ const Email = ({ buyerName, sellerName, newBookingRef, surname, trip, purchaseId
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>Verify & release payment</Link>
+        <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>View purchase in app</Link>
       </Section>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Found an issue with the booking?</Heading>
       <Text style={p}>
-        If something doesn't look right, you can dispute the transfer from the same screen — your money stays
-        safely in escrow until you're happy.
+        If something does not look right, you can flag the issue from the same screen. Your money stays
+        safely with us until you are happy.
       </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
@@ -67,7 +67,7 @@ export const template = {
   component: Email,
   subject: (data: Record<string, any>) => {
     const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
-    return order ? `Your ticket is ready — please verify (Order ${order})` : 'Your ticket is ready — please verify'
+    return order ? `Your ticket is ready, please verify (Order ${order})` : 'Your ticket is ready, please verify'
   },
   displayName: 'Buyer verification needed',
   previewData: {
