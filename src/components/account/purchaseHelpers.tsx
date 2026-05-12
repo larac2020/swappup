@@ -415,7 +415,7 @@ export async function shareTicket(p: any, listing: any) {
   if (typeof navigator === "undefined" || !("share" in navigator)) return;
   const route =
     listing?.origin_city && listing?.destination_city
-      ? `${listing.origin_city} › ${listing.destination_city}`
+      ? `${listing.origin_city} → ${listing.destination_city}`
       : listing?.title || "Ticket";
   const dateStr = listing?.departure_date
     ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy")
