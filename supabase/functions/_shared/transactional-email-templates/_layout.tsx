@@ -9,6 +9,7 @@ export const SUPPORT_EMAIL = 'support@swappup.com'
 export const APP_URL = 'https://swappup.com'
 export const HELP_URL = 'https://swappup.com/help'
 export const TERMS_URL = 'https://swappup.com/terms'
+export const PREFERENCES_URL = 'https://swappup.com/account?tab=notifications'
 
 // Brand tokens — Flyswap/Swappup dark + gold
 export const brand = {
@@ -33,23 +34,16 @@ interface LayoutProps {
 }
 
 export const EmailLayout = ({ preview, children, accent = 'gold' }: LayoutProps) => {
-  const accentColor =
-    accent === 'danger' ? brand.danger : accent === 'success' ? brand.success : brand.gold
   return (
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>{preview}</Preview>
       <Body style={{ backgroundColor: brand.bg, fontFamily: "'Helvetica Neue', Arial, sans-serif", margin: 0, padding: 0 }}>
-        {/* Top gold accent stripe — mirrors the PDF header */}
-        <div style={{ height: '4px', backgroundColor: accentColor, width: '100%' }} />
         <Container style={{ maxWidth: '560px', margin: '0 auto', padding: '0 0 32px' }}>
-          {/* Hero: white block with left gold ribbon and orange lowercase wordmark */}
-          <Section style={{ backgroundColor: brand.bg, padding: '24px 28px 20px 24px', borderLeft: `4px solid ${accentColor}` }}>
-            <Text style={{ margin: 0, color: brand.gold, fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', lineHeight: '30px' }}>
+          {/* Wordmark — clean, no rules or stripes */}
+          <Section style={{ padding: '32px 28px 8px' }}>
+            <Text style={{ margin: 0, color: brand.gold, fontSize: '28px', fontWeight: 700, letterSpacing: '-0.6px', lineHeight: '32px' }}>
               swappup
-            </Text>
-            <Text style={{ margin: '4px 0 0', color: brand.muted, fontSize: '10px', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              Peer-to-peer flight marketplace
             </Text>
           </Section>
           <Section style={{ padding: '28px' }}>{children}</Section>
@@ -68,12 +62,17 @@ export const EmailLayout = ({ preview, children, accent = 'gold' }: LayoutProps)
             </Text>
           </Section>
 
-          {/* Disclaimer — mirrors PDF footer wording */}
+          {/* Preferences + disclaimer */}
           <Section style={{ padding: '18px 28px 0' }}>
-            <Hr style={{ borderColor: brand.gold, borderWidth: '0.5px', margin: '0 0 10px' }} />
+            <Hr style={{ borderColor: brand.border, borderWidth: '0.5px', margin: '0 0 12px' }} />
+            <Text style={{ margin: '0 0 8px', color: brand.muted, fontSize: '12px', lineHeight: '18px' }}>
+              <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'none', fontWeight: 600 }}>Manage email preferences</Link>
+              {' · '}
+              <Link href={`${APP_URL}/unsubscribe`} style={{ color: brand.muted, textDecoration: 'underline' }}>Unsubscribe</Link>
+            </Text>
             <Text style={{ margin: 0, color: brand.muted, fontSize: '11px', lineHeight: '16px' }}>
-              swappup is a peer-to-peer marketplace. This email confirms activity on your swappup account; it is not a boarding pass and does not grant boarding rights. Your airline ticket is provided by the seller via a name change on the original booking. For terms and consumer rights, visit{' '}
-              <Link href={TERMS_URL} style={{ color: brand.muted, textDecoration: 'underline' }}>swappup.com/terms</Link>.
+              This email confirms activity on your swappup account. It is not a boarding pass and does not grant boarding rights — your seat is added to the airline booking by the seller through a name change. See our{' '}
+              <Link href={TERMS_URL} style={{ color: brand.muted, textDecoration: 'underline' }}>terms</Link>.
             </Text>
           </Section>
         </Container>
@@ -113,24 +112,27 @@ export interface TripDetails {
   airline?: string
   flightNumber?: string
   bookingRef?: string
-  airlineLogin?: string
+  bookingName?: string
   escrowAmount?: string
 }
 
-export const TripCard = ({ trip }: { trip?: TripDetails }) => {
+export const TripCard = ({ trip, title = 'Your purchase details' }: { trip?: TripDetails; title?: string }) => {
   if (!trip) return null
   return (
     <Section style={card}>
+      <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+        {title}
+      </Text>
       {trip.origin && trip.destination && (
-        <Text style={{ ...row, fontWeight: 600, fontSize: '15px', color: brand.charcoal }}>
+        <Text style={row}>
           {trip.origin} → {trip.destination}
         </Text>
       )}
       {trip.departureDate && <Text style={row}><span style={label}>Departure: </span>{trip.departureDate}</Text>}
       {trip.airline && <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
       {trip.bookingRef && <Text style={row}><span style={label}>Booking reference: </span>{trip.bookingRef}</Text>}
-      {trip.airlineLogin && <Text style={row}><span style={label}>Airline login: </span>{trip.airlineLogin}</Text>}
-      {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Held in escrow: </span>{trip.escrowAmount}</Text>}
+      {trip.bookingName && <Text style={row}><span style={label}>Name on the booking: </span>{trip.bookingName}</Text>}
+      {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until transfer): </span>{trip.escrowAmount}</Text>}
     </Section>
   )
 }

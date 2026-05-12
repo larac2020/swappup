@@ -11,41 +11,52 @@ interface Props {
   trip?: TripDetails
   purchaseId?: string
   bookingRef?: string
-  airlineLogin?: string
+  bookingName?: string
 }
 
-const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, bookingRef, airlineLogin }: Props) => {
+const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, bookingRef, bookingName }: Props) => {
   const seller = sellerName || 'the seller'
   const tripWithExtras: TripDetails | undefined = trip
-    ? { ...trip, bookingRef: bookingRef || trip.bookingRef, airlineLogin: airlineLogin || trip.airlineLogin, escrowAmount: totalPrice }
+    ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: bookingName || trip.bookingName, escrowAmount: totalPrice }
     : undefined
   return (
-    <EmailLayout preview="Your purchase is confirmed — here's what happens next">
+    <EmailLayout preview="You're booked! Here's everything about your trip">
       <Text style={p}>{buyerName ? `Hi ${buyerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Thanks so much for buying with swappup — your seat is on its way. Your payment is safely
-        tucked into escrow while {seller} updates the booking with your name. We'll be right beside
-        you the whole way.
-      </Text>
-      <TripCard trip={tripWithExtras} />
-      <Text style={p}>
-        Here's how the next bit unfolds: {seller} has <strong>24 hours</strong> to update the
-        booking with your name and share the new reference. As soon as that's done, we'll email
-        you to take a quick look and confirm everything matches. Once you give the green light,
-        we release {seller}'s payment — and your seat is officially yours.
+        Thank you so much for buying with swappup — we couldn't be happier to have you on board.
+        Your seat is officially on its way ✈️
       </Text>
       <Text style={p}>
-        And if anything goes sideways, you're fully covered: no name change means an automatic
-        refund, no questions asked.
+        Your payment is safe with us and will only be sent to {seller} once your name is on the
+        booking. You're in great hands — we'll be with you every step of the way.
       </Text>
-      <Section style={{ margin: '20px 0 6px' }}>
-        <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>View purchase</Link>
+      <TripCard trip={tripWithExtras} title="Your purchase details" />
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
+      <Text style={p} as="div">
+        <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
+          <li style={{ marginBottom: '6px' }}>
+            <strong>{seller} has 24 hours</strong> to add your name to the airline booking.
+          </li>
+          <li style={{ marginBottom: '6px' }}>
+            We'll email you to double-check the updated booking matches your details.
+          </li>
+          <li style={{ marginBottom: '6px' }}>
+            Once you confirm, we release the payment to {seller} — and the seat is all yours.
+          </li>
+          <li>
+            If {seller} doesn't update the booking in time, you get a <strong>full automatic
+            refund</strong> — no forms, no waiting.
+          </li>
+        </ol>
+      </Text>
+      <Section style={{ margin: '22px 0 6px' }}>
+        <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>View my purchase</Link>
       </Section>
       <Text style={small}>
-        Opens swappup.com — works on mobile and desktop, in your browser or installed app.
+        Opens swappup.com — works on mobile and desktop.
       </Text>
       <Text style={small}>
-        Reference: {purchaseId || '—'}.
+        Reference: {purchaseId || '—'}
       </Text>
     </EmailLayout>
   )
@@ -61,7 +72,7 @@ export const template = {
     totalPrice: '€124.50',
     trip: { origin: 'London (LGW)', destination: 'Rome (FCO)', departureDate: '12 Jun 2026', airline: 'Ryanair', flightNumber: 'FR2345' },
     bookingRef: 'XYZ123',
-    airlineLogin: 'maria.r@example.com',
+    bookingName: 'Alex Johnson',
     purchaseId: 'abc-123',
   },
 } satisfies TemplateEntry
