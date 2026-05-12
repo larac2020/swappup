@@ -77,7 +77,11 @@ export default function Purchases() {
   const { data: purchases, isLoading } = useQuery({
     queryKey: ["purchases", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("purchases").select("*, listings(*)").eq("buyer_id", profile!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*, listings(*), seller:profiles!purchases_seller_id_fkey(id, full_name, email)")
+        .eq("buyer_id", profile!.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
