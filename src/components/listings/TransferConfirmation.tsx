@@ -64,7 +64,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
       // Notify buyer
       const { data: buyerProfile } = await supabase
         .from("profiles")
-        .select("user_id")
+        .select("user_id, email, full_name")
         .eq("id", purchase.buyer_id)
         .single();
 
@@ -78,6 +78,38 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             listing_id: purchase.listing_id,
           },
         });
+
+        // Email 4 — buyer verification needed
+        const recipient = buyerProfile.email || purchase.buyer_email;
+        if (recipient) {
+          const { data: listing } = await supabase
+            .from("listings")
+            .select("origin_city, origin_country, destination_city, destination_country, departure_date, airline, flight_number")
+            .eq("id", purchase.listing_id)
+            .single();
+          const { data: sellerProfile } = await supabase
+            .from("profiles").select("full_name").eq("id", purchase.seller_id).single();
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transfer-confirmed-buyer-verify",
+              recipientEmail: recipient,
+              idempotencyKey: `buyer-verify-${purchase.id}`,
+              templateData: {
+                buyerName: (purchase.buyer_full_name || buyerProfile.full_name || "").split(" ")[0],
+                sellerName: (sellerProfile?.full_name || "").split(" ")[0],
+                newBookingRef: bookingRef.trim(),
+                surname: surname.trim(),
+                trip: listing ? {
+                  origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ""}`,
+                  destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ""}`,
+                  departureDate: listing.departure_date,
+                  airline: listing.airline,
+                  flightNumber: listing.flight_number,
+                } : undefined,
+              },
+            },
+          }).catch((e) => console.error("email buyer-verify failed", e));
+        }
       }
     },
     onSuccess: () => {
