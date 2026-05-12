@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Mail } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Mail, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type State = "loading" | "valid" | "already" | "invalid" | "submitting" | "done" | "error";
 
@@ -11,6 +12,8 @@ const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 export default function Unsubscribe() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const token = params.get("token");
   const [state, setState] = useState<State>("loading");
   const [error, setError] = useState<string>("");
@@ -57,54 +60,108 @@ export default function Unsubscribe() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="glass-strong border border-border/60 rounded-2xl p-8 max-w-md w-full text-center">
-        <Mail className="w-10 h-10 mx-auto text-primary mb-3" />
-        <h1 className="text-xl font-semibold mb-2">Email preferences</h1>
-
-        {state === "loading" && (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground py-6">
-            <Loader2 className="w-4 h-4 animate-spin" /> Checking your link…
-          </div>
-        )}
-
-        {state === "valid" && (
-          <>
-            <p className="text-sm text-muted-foreground mb-6">
-              Confirm to stop receiving non-essential emails from Swappup. You'll still get critical
-              transaction updates required to complete purchases or sales.
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Brand bar — mirrors PDF/email gold accent */}
+      <div className="h-1 w-full bg-primary" />
+      <header className="border-b border-border/40 bg-card/40">
+        <div className="max-w-md mx-auto flex items-center gap-3 px-6 py-4">
+          <div className="w-1 h-7 bg-primary rounded-sm" />
+          <div className="leading-tight">
+            <p className="text-lg font-bold lowercase tracking-tight">swappup</p>
+            <p className="text-[10px] uppercase tracking-[1.5px] text-primary/80 font-semibold">
+              Email preferences
             </p>
-            <Button variant="gold" className="w-full" onClick={confirm}>Confirm unsubscribe</Button>
-          </>
-        )}
-
-        {state === "submitting" && (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground py-6">
-            <Loader2 className="w-4 h-4 animate-spin" /> Updating your preferences…
           </div>
-        )}
+        </div>
+      </header>
 
-        {state === "done" && (
-          <div className="py-4">
-            <CheckCircle2 className="w-10 h-10 mx-auto text-success mb-2" />
-            <p className="text-sm">You've been unsubscribed. We're sorry to see you go.</p>
+      <main className="flex-1 flex items-center justify-center p-6">
+        <div className="glass-strong border border-border/60 rounded-2xl p-8 max-w-md w-full">
+          <div className="flex items-center gap-2 mb-4">
+            <Mail className="w-5 h-5 text-primary" />
+            <h1 className="text-lg font-semibold">Manage your emails</h1>
           </div>
-        )}
 
-        {state === "already" && (
-          <div className="py-4">
-            <CheckCircle2 className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm">You're already unsubscribed — no further action needed.</p>
-          </div>
-        )}
+          {state === "loading" && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
+              <Loader2 className="w-4 h-4 animate-spin" /> Checking your link…
+            </div>
+          )}
 
-        {(state === "invalid" || state === "error") && (
-          <div className="py-4">
-            <XCircle className="w-10 h-10 mx-auto text-destructive mb-2" />
-            <p className="text-sm">{error || "This unsubscribe link is invalid or has expired."}</p>
-          </div>
-        )}
-      </div>
+          {state === "valid" && (
+            <>
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                Confirm to stop receiving non-essential emails from swappup. You'll still get
+                critical updates required to complete your purchases or sales — these protect both
+                buyers and sellers and can't be turned off.
+              </p>
+              <Button variant="gold" className="w-full" onClick={confirm}>
+                Confirm unsubscribe
+              </Button>
+              <p className="text-xs text-muted-foreground mt-4 text-center">
+                Want finer control? Manage individual categories from your profile.
+              </p>
+            </>
+          )}
+
+          {state === "submitting" && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
+              <Loader2 className="w-4 h-4 animate-spin" /> Updating your preferences…
+            </div>
+          )}
+
+          {state === "done" && (
+            <div className="py-2 text-center">
+              <CheckCircle2 className="w-10 h-10 mx-auto text-success mb-3" />
+              <p className="text-sm mb-1 font-medium">You've been unsubscribed</p>
+              <p className="text-xs text-muted-foreground">
+                We're sorry to see you go. You can re-enable emails anytime from your profile.
+              </p>
+            </div>
+          )}
+
+          {state === "already" && (
+            <div className="py-2 text-center">
+              <CheckCircle2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm">
+                You're already unsubscribed — no further action needed.
+              </p>
+            </div>
+          )}
+
+          {(state === "invalid" || state === "error") && (
+            <div className="py-2 text-center">
+              <XCircle className="w-10 h-10 mx-auto text-destructive mb-3" />
+              <p className="text-sm">{error || "This unsubscribe link is invalid or has expired."}</p>
+            </div>
+          )}
+
+          {/* Always-available shortcut to the in-app preference centre */}
+          {isAuthenticated && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-6"
+              onClick={() => navigate("/account/notifications")}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Manage all email preferences
+            </Button>
+          )}
+        </div>
+      </main>
+
+      <footer className="border-t border-border/40 py-4 px-6 text-center">
+        <p className="text-[11px] text-muted-foreground">
+          Need help? Email{" "}
+          <a href="mailto:support@swappup.com" className="text-primary hover:underline">
+            support@swappup.com
+          </a>
+        </p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1">
+          swappup is a peer-to-peer marketplace. We facilitate transactions between users but do not issue or operate flights.
+        </p>
+      </footer>
     </div>
   );
 }
