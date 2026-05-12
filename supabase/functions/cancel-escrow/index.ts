@@ -46,7 +46,9 @@ Deno.serve(async (req) => {
     }).eq("id", purchase_id);
 
     // Restore listing stock
-    const { data: listing } = await admin.from("listings").select("ticket_count, is_active, title").eq("id", purchase.listing_id).single();
+    const { data: listing } = await admin.from("listings")
+      .select("ticket_count, is_active, title, origin_city, origin_country, destination_city, destination_country, departure_date, airline, flight_number")
+      .eq("id", purchase.listing_id).single();
     if (listing) {
       await admin.from("listings").update({
         ticket_count: (listing.ticket_count ?? 0) + (purchase.quantity ?? 1),
@@ -55,8 +57,8 @@ Deno.serve(async (req) => {
     }
 
     // Notify both parties
-    const { data: buyerP } = await admin.from("profiles").select("user_id").eq("id", purchase.buyer_id).single();
-    const { data: sellerP } = await admin.from("profiles").select("user_id").eq("id", purchase.seller_id).single();
+    const { data: buyerP } = await admin.from("profiles").select("user_id, email, full_name").eq("id", purchase.buyer_id).single();
+    const { data: sellerP } = await admin.from("profiles").select("user_id, email, full_name").eq("id", purchase.seller_id).single();
     if (buyerP) await admin.from("notifications").insert({
       user_id: buyerP.user_id, title: "Refund issued",
       message: `Your purchase has been refunded${reason ? ": " + reason : "."}`,
@@ -67,6 +69,50 @@ Deno.serve(async (req) => {
       message: `A purchase was canceled${reason ? ": " + reason : "."}`,
       type: "refund", listing_id: purchase.listing_id,
     });
+
+    // Send emails 6 + 7 only when cancellation was triggered by the system (expire-transfers).
+    // Buyer-initiated refunds use a different in-app flow.
+    if (isService && listing) {
+      const trip = {
+        origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ""}`,
+        destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ""}`,
+        departureDate: listing.departure_date,
+        airline: listing.airline,
+        flightNumber: listing.flight_number,
+      };
+
+      // Email 6 — buyer apology
+      const buyerRecipient = buyerP?.email || purchase.buyer_email;
+      if (buyerRecipient) {
+        await admin.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "transfer-missed-buyer-apology",
+            recipientEmail: buyerRecipient,
+            idempotencyKey: `buyer-apology-${purchase.id}`,
+            templateData: {
+              buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
+              refundAmount: purchase.total_price ? `€${Number(purchase.total_price).toFixed(2)}` : undefined,
+              trip,
+            },
+          },
+        }).catch((e) => console.error("email buyer apology failed", e));
+      }
+
+      // Email 7 — seller warning
+      if (sellerP?.email) {
+        await admin.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "transfer-missed-seller-warning",
+            recipientEmail: sellerP.email,
+            idempotencyKey: `seller-missed-${purchase.id}`,
+            templateData: {
+              sellerName: (sellerP.full_name || "").split(" ")[0],
+              trip,
+            },
+          },
+        }).catch((e) => console.error("email seller warning failed", e));
+      }
+    }
 
     return j({ ok: true });
   } catch (e) {
