@@ -31,15 +31,14 @@ const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee
         Great news! Your ticket has just been sold to {buyer}. To complete the sale and receive your money,
         you have <strong>24 hours</strong> to update the airline booking with the buyer's name.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your booking" />
+      <TripCard trip={tripWithExtras} title="Your sales details" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Buyer details to use with the airline</Heading>
       <Text style={p}>
         <strong>Full name:</strong> {buyerFullName || ''}<br/>
-        <strong>Email:</strong> {buyerEmail || ''}<br/>
         {bookingRef && <><strong>Original booking reference:</strong> {bookingRef}<br/></>}
         {nameChangeFee && <><strong>Name change fee:</strong> {nameChangeFee} (we hold this safely and pay it back to you once the sale is complete)</>}
       </Text>
-      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Unlock your payment</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
           <li style={{ marginBottom: '6px' }}>
@@ -47,15 +46,15 @@ const Email = ({ sellerName, buyerName, buyerFullName, buyerEmail, nameChangeFee
           </li>
           <li style={{ marginBottom: '10px' }}>
             Upload the new booking confirmation in the swappup app to mark the change as done.
+          </li>
+          <li style={{ marginBottom: '10px' }}>
+            Once the buyer verifies everything looks good, your money is released. It usually arrives in your account within 2 to 5 business days.
             <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
               <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
-                💡 Turn on push notifications to get instant updates on your sale.{' '}
+                💡 Turn on push notifications to know the moment the buyer confirms and your payment is on the way.{' '}
                 <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'underline', fontWeight: 600 }}>Update notification preferences</Link>.
               </Text>
             </Section>
-          </li>
-          <li style={{ marginBottom: '6px' }}>
-            Once the buyer verifies everything looks good, your money is released. It usually arrives in your account within 2 to 5 business days.
           </li>
         </ol>
       </Text>
