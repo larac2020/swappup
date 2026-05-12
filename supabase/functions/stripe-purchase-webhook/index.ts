@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     }).eq("id", purchaseId);
 
     // Decrement listing stock; deactivate if zero
-    const { data: listing } = await admin.from("listings").select("ticket_count, title")
+    const { data: listing } = await admin.from("listings").select("*")
       .eq("id", purchase.listing_id).single();
     if (listing) {
       const newCount = Math.max(0, (listing.ticket_count ?? 1) - (purchase.quantity ?? 1));
@@ -62,7 +62,9 @@ Deno.serve(async (req) => {
 
       // Notify seller
       const { data: sellerProfile } = await admin.from("profiles")
-        .select("user_id").eq("id", purchase.seller_id).single();
+        .select("user_id, email, full_name").eq("id", purchase.seller_id).single();
+      const { data: buyerProfile } = await admin.from("profiles")
+        .select("user_id, email, full_name").eq("id", purchase.buyer_id).single();
       if (sellerProfile) {
         await admin.from("notifications").insert({
           user_id: sellerProfile.user_id,
@@ -71,6 +73,58 @@ Deno.serve(async (req) => {
           type: "sale",
           listing_id: purchase.listing_id,
         });
+      }
+
+      // Build trip data shared by both emails
+      const trip = {
+        origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ''}`,
+        destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ''}`,
+        departureDate: listing.departure_date,
+        airline: listing.airline,
+        flightNumber: listing.flight_number,
+      };
+      const fmt = (n: number | string | null | undefined) =>
+        n == null ? undefined : `€${Number(n).toFixed(2)}`;
+      const deadline = purchase.transfer_deadline
+        ? new Date(purchase.transfer_deadline).toUTCString()
+        : undefined;
+
+      // Email 1a — buyer confirmation
+      if (buyerProfile?.email || purchase.buyer_email) {
+        await admin.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'purchase-buyer-confirmation',
+            recipientEmail: purchase.buyer_email || buyerProfile?.email,
+            idempotencyKey: `buyer-confirm-${purchase.id}`,
+            templateData: {
+              buyerName: (purchase.buyer_full_name || buyerProfile?.full_name || '').split(' ')[0],
+              sellerName: (sellerProfile?.full_name || '').split(' ')[0],
+              totalPrice: fmt(purchase.total_price),
+              trip,
+              purchaseId: purchase.id,
+            },
+          },
+        }).catch((e) => console.error('email buyer-confirm failed', e));
+      }
+
+      // Email 1b — seller action required
+      if (sellerProfile?.email) {
+        await admin.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'purchase-seller-action-required',
+            recipientEmail: sellerProfile.email,
+            idempotencyKey: `seller-action-${purchase.id}`,
+            templateData: {
+              sellerName: (sellerProfile.full_name || '').split(' ')[0],
+              buyerFullName: purchase.buyer_full_name,
+              buyerEmail: purchase.buyer_email,
+              nameChangeFee: fmt(purchase.name_change_fee),
+              bookingRef: purchase.original_booking_ref,
+              deadline,
+              trip,
+            },
+          },
+        }).catch((e) => console.error('email seller-action failed', e));
       }
     }
   }
