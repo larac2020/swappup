@@ -234,6 +234,12 @@ export default function Purchases() {
                     <span className="font-medium text-foreground">{p.quantity}</span>
                     {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
                   </p>
+                  {p.seller?.full_name && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Seller:</span>{" "}
+                      <span className="font-medium text-foreground">{p.seller.full_name}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Price Breakdown + Receipt */}
