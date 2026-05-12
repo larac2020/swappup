@@ -66,7 +66,8 @@ const dict = {
 
 const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, orderNumber, bookingRef, bookingName, locale }: Props) => {
   const loc = normalizeLocale(locale)
-  const seller = sellerName || t(loc, dict, 'seller')
+  // Seller PII is intentionally hidden from the buyer; always use a generic label.
+  const seller = t(loc, dict, 'seller')
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
     ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: bookingName || trip.bookingName, escrowAmount: totalPrice, orderNumber: order }
