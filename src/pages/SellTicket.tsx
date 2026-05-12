@@ -593,6 +593,7 @@ export default function SellTicket() {
           ...listingData,
           seller_id: profile!.id,
           bumped_until: bumpedUntil,
+          name_change_risk_acknowledged_at: new Date().toISOString(),
         } as any);
         if (error) throw error;
       }
