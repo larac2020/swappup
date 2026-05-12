@@ -222,6 +222,45 @@ export default function Purchases() {
           })}
         </div>
       )}
+
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report a problem</DialogTitle>
+            <DialogDescription>
+              Sorry you're having trouble with this purchase. Please email our support team
+              and we'll look into it right away. Include your order reference and a short
+              description of the issue.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/30 p-3 text-sm">
+            <p className="text-muted-foreground">Send an email to:</p>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                `Problem with purchase ${reportPurchaseId ?? ""}`,
+              )}`}
+              className="font-semibold text-foreground underline underline-offset-4"
+            >
+              {SUPPORT_EMAIL}
+            </a>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReportOpen(false)}>
+              Close
+            </Button>
+            <Button
+              variant="gold"
+              onClick={() => {
+                window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                  `Problem with purchase ${reportPurchaseId ?? ""}`,
+                )}`;
+              }}
+            >
+              Open email
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
