@@ -7,36 +7,56 @@ import { EmailLayout, TripCard, TripDetails, h1, p, small, button, APP_URL } fro
 interface Props {
   sellerName?: string
   trip?: TripDetails
+  purchaseId?: string
+  orderNumber?: string
 }
 
-const Email = ({ sellerName, trip }: Props) => (
-  <EmailLayout preview="Your sale was cancelled — here's what happened" accent="danger">
-    <Heading style={h1}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Heading>
-    <Text style={p}>
-      Your recent sale was cancelled because the name change wasn't completed within the
-      <strong> 24-hour window</strong>. The buyer has been refunded in full and your listing was reactivated where possible.
-    </Text>
-    <TripCard trip={trip} />
-    <Text style={p}>
-      <strong>For next time:</strong> as soon as a sale comes in, you have 24 hours to perform the name change
-      with the airline and upload proof of payment. The earlier you start, the smoother the sale.
-    </Text>
-    <Section style={{ margin: '20px 0' }}>
-      <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Review your sales</Link>
-    </Section>
-    <Text style={small}>
-      Repeated missed deadlines may impact your seller reputation and ability to list. If something prevented
-      you from completing in time, contact support so we can help.
-    </Text>
-  </EmailLayout>
-)
+const Email = ({ sellerName, trip, purchaseId, orderNumber }: Props) => {
+  const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
+  const tripWithExtras: TripDetails | undefined = trip ? { ...trip, orderNumber: order } : undefined
+  return (
+    <EmailLayout preview="Your sale was cancelled — here's what happened" accent="danger" transactional>
+      <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
+      <Text style={p}>
+        We're sorry to share that your recent sale was cancelled because the booking wasn't updated with the
+        buyer's name within the <strong>24-hour window</strong>. The buyer has been refunded in full and your
+        listing has been reactivated where possible.
+      </Text>
+      <TripCard trip={tripWithExtras} title="Cancelled sale details" />
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>For next time</Heading>
+      <Text style={p}>
+        As soon as a sale comes in, you have 24 hours to update the booking with the airline and upload the
+        new confirmation. The earlier you start, the smoother the sale — and the faster your payout.
+      </Text>
+      <Section style={{ margin: '20px 0 8px' }}>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Review your sales</Link>
+      </Section>
+      <Text style={small}>
+        Repeated missed deadlines may impact your seller reputation and ability to list. If something prevented
+        you from completing in time, get in touch with us so we can help.
+      </Text>
+      <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
+        Have a great day,<br />The swappup team
+      </Text>
+    </EmailLayout>
+  )
+}
 
 export const template = {
   component: Email,
-  subject: 'Your sale was cancelled — 24-hour deadline missed',
+  subject: (data: Record<string, any>) => {
+    const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
+    return order ? `Your sale was cancelled — 24-hour deadline missed (Order ${order})` : 'Your sale was cancelled — 24-hour deadline missed'
+  },
   displayName: 'Seller warning (transfer missed)',
   previewData: {
     sellerName: 'Maria',
-    trip: { origin: 'London (LGW)', destination: 'Rome (FCO)', departureDate: '12 Jun 2026', airline: 'Ryanair' },
+    purchaseId: 'abc-123',
+    trip: {
+      origin: 'London (LGW)', destination: 'Rome (FCO)',
+      departureDate: '12 Jun 2026', departureTime: '07:45',
+      returnDate: '19 Jun 2026', returnTime: '21:10',
+      airline: 'Ryanair', flightNumber: 'FR2345', passengers: 1,
+    },
   },
 } satisfies TemplateEntry
