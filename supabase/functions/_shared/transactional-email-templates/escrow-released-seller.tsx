@@ -9,42 +9,60 @@ interface Props {
   buyerName?: string
   payoutAmount?: string
   trip?: TripDetails
+  purchaseId?: string
+  orderNumber?: string
 }
 
-const Email = ({ sellerName, buyerName, payoutAmount, trip }: Props) => (
-  <EmailLayout preview="Payment released — your payout is on its way" accent="success">
-    <Heading style={h1}>{sellerName ? `Nice one, ${sellerName}!` : 'Sale completed'}</Heading>
-    <Text style={p}>
-      {buyerName || 'The buyer'} has confirmed the ticket transfer. The escrow has been released
-      and your payout is now on its way.
-    </Text>
-    <TripCard trip={trip} />
-    {payoutAmount && (
-      <Text style={p}><strong>Payout amount:</strong> {payoutAmount}</Text>
-    )}
-    <Text style={p}>
-      Funds typically arrive in your connected payout account within <strong>2–5 business days</strong>,
-      depending on your bank.
-    </Text>
-    <Section style={{ margin: '20px 0' }}>
-      <Link href={`${APP_URL}/account?tab=transactions`} style={button()}>View payout</Link>
-    </Section>
-    <Text style={small}>Thanks for selling on swappup — list another ticket any time.</Text>
-    <Text style={{ ...small, marginTop: '12px', fontStyle: 'italic' }}>
-      This is a payment notification, not a tax invoice. For accounting purposes, download the
-      official receipt from your account under Transactions.
-    </Text>
-  </EmailLayout>
-)
+const Email = ({ sellerName, buyerName, payoutAmount, trip, purchaseId, orderNumber }: Props) => {
+  const buyer = buyerName || 'the buyer'
+  const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
+  const tripWithExtras: TripDetails | undefined = trip
+    ? { ...trip, escrowAmount: payoutAmount || trip.escrowAmount, orderNumber: order }
+    : undefined
+  return (
+    <EmailLayout preview="Payment released — your payout is on its way" accent="success" transactional>
+      <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
+      <Text style={p}>
+        Brilliant news — {buyer} has confirmed the ticket transfer. The escrow has been released
+        and your payout{payoutAmount ? <> of <strong>{payoutAmount}</strong></> : null} is now on its way.
+      </Text>
+      <TripCard trip={tripWithExtras} title="Your sale details" />
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
+      <Text style={p}>
+        Funds typically land in your connected payout account within <strong>2–5 business days</strong>,
+        depending on your bank. You can track the status any time from the Transactions screen in the app.
+      </Text>
+      <Section style={{ margin: '20px 0 8px' }}>
+        <Link href={`${APP_URL}/account?tab=transactions`} style={button()}>View payout</Link>
+      </Section>
+      <Text style={small} as="div">
+        This is a payment notification, not a tax invoice. For accounting purposes, download the
+        official receipt from your account under Transactions.
+      </Text>
+      <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
+        Thanks for selling on swappup — have a great day,<br />The swappup team
+      </Text>
+    </EmailLayout>
+  )
+}
 
 export const template = {
   component: Email,
-  subject: 'Sale complete — your payout is on its way',
+  subject: (data: Record<string, any>) => {
+    const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
+    return order ? `Sale complete — your payout is on its way (Order ${order})` : 'Sale complete — your payout is on its way'
+  },
   displayName: 'Seller payout released',
   previewData: {
     sellerName: 'Maria',
     buyerName: 'Alex',
     payoutAmount: '€118.20',
-    trip: { origin: 'London (LGW)', destination: 'Rome (FCO)', departureDate: '12 Jun 2026', airline: 'Ryanair' },
+    purchaseId: 'abc-123',
+    trip: {
+      origin: 'London (LGW)', destination: 'Rome (FCO)',
+      departureDate: '12 Jun 2026', departureTime: '07:45',
+      returnDate: '19 Jun 2026', returnTime: '21:10',
+      airline: 'Ryanair', flightNumber: 'FR2345', passengers: 1,
+    },
   },
 } satisfies TemplateEntry

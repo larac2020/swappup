@@ -8,35 +8,59 @@ interface Props {
   buyerName?: string
   trip?: TripDetails
   refundAmount?: string
+  purchaseId?: string
+  orderNumber?: string
 }
 
-const Email = ({ buyerName, trip, refundAmount }: Props) => (
-  <EmailLayout preview="We're sorry — your purchase has been refunded" accent="danger">
-    <Heading style={h1}>{buyerName ? `${buyerName}, we're sorry` : 'We\'re sorry'}</Heading>
-    <Text style={p}>
-      Unfortunately, the seller didn't complete the name change within the 24-hour window. To protect you,
-      Swappup escrow has automatically <strong>refunded your purchase in full</strong>{refundAmount ? ` (${refundAmount})` : ''}.
-      The refund typically appears in your account within 5–10 business days.
-    </Text>
-    <TripCard trip={trip} />
-    <Text style={p}>
-      Don't give up on the trip — there may be other sellers offering similar tickets. Tap below to browse
-      alternatives on the same route.
-    </Text>
-    <Section style={{ margin: '20px 0' }}>
-      <Link href={`${APP_URL}/browse`} style={button()}>Find another ticket</Link>
-    </Section>
-    <Text style={small}>Sellers who repeatedly miss deadlines are reviewed and may be removed from the platform.</Text>
-  </EmailLayout>
-)
+const Email = ({ buyerName, trip, refundAmount, purchaseId, orderNumber }: Props) => {
+  const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
+  const tripWithExtras: TripDetails | undefined = trip
+    ? { ...trip, escrowAmount: refundAmount || trip.escrowAmount, orderNumber: order }
+    : undefined
+  return (
+    <EmailLayout preview="We're sorry — your purchase has been refunded" accent="danger" transactional>
+      <Text style={p}>{buyerName ? `Hi ${buyerName},` : 'Hi there,'}</Text>
+      <Text style={p}>
+        We're really sorry — the seller didn't update the booking with your name within the 24-hour window.
+        To protect you, swappup escrow has automatically <strong>refunded your purchase in full</strong>
+        {refundAmount ? <> ({refundAmount})</> : null}. The refund typically appears in your account within
+        <strong> 5–10 business days</strong>, depending on your bank.
+      </Text>
+      <TripCard trip={tripWithExtras} title="Your purchase details" />
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Don't give up on the trip</Heading>
+      <Text style={p}>
+        There may be other sellers offering similar tickets on the same route. Tap below to browse alternatives —
+        we'll do our best to help you find another option.
+      </Text>
+      <Section style={{ margin: '20px 0 8px' }}>
+        <Link href={`${APP_URL}/browse`} style={button()}>Find another ticket</Link>
+      </Section>
+      <Text style={small}>
+        Sellers who repeatedly miss deadlines are reviewed and may be removed from the platform.
+      </Text>
+      <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
+        Thanks for your patience — have a great day,<br />The swappup team
+      </Text>
+    </EmailLayout>
+  )
+}
 
 export const template = {
   component: Email,
-  subject: 'Sorry — your purchase has been refunded',
+  subject: (data: Record<string, any>) => {
+    const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
+    return order ? `Sorry — your purchase has been refunded (Order ${order})` : 'Sorry — your purchase has been refunded'
+  },
   displayName: 'Buyer apology (transfer missed)',
   previewData: {
     buyerName: 'Alex',
     refundAmount: '€124.50',
-    trip: { origin: 'London (LGW)', destination: 'Rome (FCO)', departureDate: '12 Jun 2026', airline: 'Ryanair' },
+    purchaseId: 'abc-123',
+    trip: {
+      origin: 'London (LGW)', destination: 'Rome (FCO)',
+      departureDate: '12 Jun 2026', departureTime: '07:45',
+      returnDate: '19 Jun 2026', returnTime: '21:10',
+      airline: 'Ryanair', flightNumber: 'FR2345', passengers: 1,
+    },
   },
 } satisfies TemplateEntry
