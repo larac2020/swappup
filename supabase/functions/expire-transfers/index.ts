@@ -14,25 +14,53 @@ Deno.serve(async (req) => {
     );
 
     const now = new Date().toISOString();
-    const { data: expired } = await admin.from("purchases")
+    const { data: expiredSeller } = await admin.from("purchases")
       .select("id")
       .eq("status", "pending_transfer")
       .lt("transfer_deadline", now);
 
-    let count = 0;
-    for (const p of expired || []) {
+    let sellerCount = 0;
+    for (const p of expiredSeller || []) {
       await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/cancel-escrow`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
         },
-        body: JSON.stringify({ purchase_id: p.id, reason: "Seller did not complete the name change in time" }),
+        body: JSON.stringify({
+          purchase_id: p.id,
+          reason: "Seller did not complete the name change in time",
+          cause: "seller_missed",
+        }),
       });
-      count++;
+      sellerCount++;
     }
 
-    return new Response(JSON.stringify({ expired: count }), {
+    // Buyer 48h verification window expired — seller transferred but buyer never confirmed.
+    const { data: expiredBuyer } = await admin.from("purchases")
+      .select("id")
+      .eq("status", "transfer_confirmed")
+      .eq("escrow_status", "pending_release")
+      .lt("escrow_deadline", now);
+
+    let buyerCount = 0;
+    for (const p of expiredBuyer || []) {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/cancel-escrow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          purchase_id: p.id,
+          reason: "Buyer did not confirm the booking within 48 hours",
+          cause: "buyer_no_confirm",
+        }),
+      });
+      buyerCount++;
+    }
+
+    return new Response(JSON.stringify({ expiredSeller: sellerCount, expiredBuyer: buyerCount }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
