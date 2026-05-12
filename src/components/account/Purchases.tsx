@@ -183,7 +183,7 @@ export default function Purchases() {
                           disabled={releaseMutation.isPending}
                           onClick={() => releaseMutation.mutate(p.id)}
                         >
-                          <ShieldCheck className="w-4 h-4" /> Confirm I received the ticket
+                          <ShieldCheck className="w-4 h-4" /> Confirm everything is ok
                         </Button>
                         <Button
                           size="sm" variant="outline" className="gap-2"
