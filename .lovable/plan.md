@@ -1,52 +1,65 @@
-## Context: airline name-change reversal reality
+# Plan: per-recipient localized emails (EN + IT)
 
-Quick research on the major airlines you operate with:
+The app currently picks language client-side from `localStorage`. To send emails in the right language we need to (1) persist that preference server-side, (2) make every email template render in EN or IT, and (3) resolve the recipient's language at send time.
 
-- **Ryanair / easyJet / Wizz / low-cost carriers**: name changes are paid, treated as a brand-new ticket update. There is **no free "undo" window** — reverting to the original passenger means paying the same name-change fee again (or losing the ticket entirely on some fares).
-- **Legacy carriers (BA, Lufthansa, Air France, AA, Delta, Air Canada, Qantas)**: most do not allow true *name changes* at all, only *minor name corrections* (typos, marital surname). A full reversal usually requires ticket re-issue at full fare difference.
-- **24-hour DOT rule (US)**: only applies to *cancellations* of newly booked tickets, not to undoing name changes on resold tickets.
+## 1. Persist user language preference
 
-**Conclusion:** there is no realistic, free path to revert a name change. If the buyer fails to confirm within 48h after the seller has already executed the transfer, the seller has effectively spent the name-change fee on a ticket they no longer want under that name. Flyswap cannot recover that money from the airline.
+- New migration: add `preferred_language text not null default 'en' check (preferred_language in ('en','it'))` to `public.profiles`.
+- Update `src/i18n/LanguageContext.tsx`: when an authenticated user changes language, also write it to `profiles.preferred_language`. On login, hydrate `localStorage` from the profile so the choice follows the account across devices.
+- New users: copy the current `localStorage` value into the profile on first auth.
 
-The only fair, sustainable policy is: **the seller assumes that risk, and we make it explicit before they list**. Flyswap remains a marketplace, not an insurer of airline policy.
+## 2. Translate the 9 transactional templates
 
-## Proposed approach
+Files in `supabase/functions/_shared/transactional-email-templates/`:
+- `_layout.tsx` (chrome: "Need help?", footer disclaimer, "Manage email preferences", "Unsubscribe")
+- `purchase-buyer-confirmation.tsx`
+- `purchase-seller-action-required.tsx`
+- `seller-reminder-start.tsx`
+- `seller-deadline-warning.tsx`
+- `transfer-confirmed-buyer-verify.tsx`
+- `transfer-missed-buyer-apology.tsx`
+- `transfer-missed-seller-warning.tsx`
+- `transfer-buyer-no-confirm-seller.tsx`
+- `escrow-released-seller.tsx`
 
-Three coordinated changes:
+Approach:
+- Add a tiny in-file translation helper in `_shared/transactional-email-templates/i18n.ts` exporting `type Locale = 'en' | 'it'` and a `t(locale, dict)` helper. Each template defines a local `dict = { en: {...}, it: {...} }` object — kept inside the template file so copy + translation live together.
+- Every component accepts a `locale?: Locale` prop (default `'en'`).
+- `_layout.tsx`'s `EmailLayout`, `TripCard`, and the shared `TripDetails` labels (e.g. `escrowAmountLabel`, "Your purchase details", "Order number", "Route", "Departure", "Return", "Airline", "Passengers", "Booking reference", "New name on the booking", "Amount paid…") become locale-aware.
+- `subject` becomes a function of `data` (already supported by the registry) so the email subject is also translated based on `data.locale`.
+- Each template's `previewData` includes both `locale: 'en'` and we add a sibling preview entry for `it` so the dashboard preview can show both — done by extending `registry.ts`'s `TemplateEntry` to optionally accept `previewVariants?: Record<string, Record<string, any>>`. Non-breaking.
 
-### 1. Add a "buyer didn't confirm in 48h" email to the seller
+## 3. Resolve recipient language at send time
 
-New transactional template `transfer-buyer-no-confirm-seller.tsx`:
+In `supabase/functions/send-transactional-email/index.ts`:
+- After resolving `effectiveRecipient`, look up `profiles.preferred_language` for that email (case-insensitive). Fall back to `templateData.locale` if provided by the caller, then to `'en'`.
+- Inject the resolved `locale` into `templateData` before rendering and before calling the `subject` function.
 
-- Tone: factual, empathetic, not apologetic on Flyswap's behalf.
-- Explains: the buyer did not confirm the name change within the 48h verification window, so the sale has been cancelled and the buyer fully refunded.
-- Reminds the seller that, per the listing acknowledgement they accepted, the name-change fee they paid to the airline is **not recoverable by Flyswap** — the booking is now under the buyer's name on the airline side and the seller would need to deal with the airline directly if they want to revert it.
-- Includes the same standardized "ticket details" grey box used in the other seller emails (airline, booking ref, new name, route, original amount).
-- CTA: "Open the airline booking" (or "View sale in app").
-- Suggests next steps: contact the airline to attempt a goodwill reversal, or relist the ticket under the new buyer's name if the buyer agrees to release it (rare).
+No call-site changes required — the function infers the locale automatically. Callers (escrow flow, expire-transfers, cancel-escrow, seller-reminders, etc.) keep working unchanged.
 
-Triggered from the same backend job that already auto-cancels purchases when buyer 48h confirmation expires (alongside the existing buyer apology / refund flow).
+## 4. Auth emails (signup, magic-link, recovery, invite, email-change, reauthentication)
 
-### 2. Add a disclaimer + mandatory acknowledgement at listing publication
+Auth emails are currently the Lovable defaults — no custom templates exist yet.
 
-In the sell flow (`SellTicket.tsx`), just before the publish button:
+- Scaffold the 6 auth templates via the email setup tool.
+- Apply the same brand styling already used by the transactional templates (gold/charcoal, swappup wordmark, white body).
+- Auth hook only knows the recipient email; it cannot pass `templateData`. So inside `auth-email-hook` we will look up `profiles.preferred_language` by recipient email (same helper as transactional) and pass `locale` as a prop to the React Email component.
+- Each of the 6 templates ships an EN + IT dict in the same file, identical pattern to transactional templates.
+- Subjects are also localized (the auth-email-hook builds the subject string from a per-template `subject(locale)` helper exported by each template).
 
-- A clearly visible warning box (gold/amber accent, in line with the brand) titled **"Important: name-change risk"**.
-- Body text: explains that once the seller executes the airline name change for a buyer, the fee paid to the airline is not refundable by Flyswap. If the buyer fails to verify within 48h and the sale is cancelled, the seller will have lost the name-change fee. Airlines do not offer a free reversal window.
-- A required checkbox: *"I understand that the name-change fee I pay to the airline is not refundable by Flyswap if the buyer fails to confirm the transfer within 48 hours."*
-- Publish button stays disabled until the box is checked.
-- Persist the acknowledgement on the listing row (new column `name_change_risk_acknowledged_at timestamptz`) so we have a per-listing audit trail and can quote it in disputes.
+## 5. Deploy
 
-Same disclaimer surfaced (read-only, as a reminder) inside the seller's existing post-sale email and the deadline-warning email — short one-liner under the "Confirm the name change" CTA, so the seller is reminded of the risk *before* they pay the airline.
+- Migration applied automatically.
+- Redeploy `send-transactional-email`, `preview-transactional-email`, and `auth-email-hook`.
 
-### 3. Backend wiring
+## Out of scope
+- Adding more languages beyond EN/IT (architecture allows it; just not populated).
+- Translating Stripe receipt emails (Stripe-managed, not ours).
+- Re-translating `src/i18n/translations.ts` (in-app copy already translated).
 
-- Add `name_change_risk_acknowledged_at` to `listings` (migration).
-- The existing scheduled job that handles expired buyer confirmations triggers `send-transactional-email` with the new template `transfer-buyer-no-confirm-seller`, using an idempotency key like `buyer-no-confirm-seller-${purchaseId}`.
-- Register the new template in `registry.ts` and redeploy `send-transactional-email` and `preview-transactional-email`.
+## Technical notes (for reference)
 
-## Open questions before I build
-
-1. Do you want to **block the seller from executing the name change** entirely once we know the buyer's confirmation deadline is risky (e.g. require the buyer to pre-confirm intent)? Or keep the current flow and rely purely on the disclaimer? Recommended: keep current flow + disclaimer.
-2. For the disclaimer copy, do you want me to also mention that Flyswap **will pursue repeat-offender buyers** (suspension after X no-confirms) so sellers feel the platform is actively protecting them? Recommended: yes, one short reassurance line.
-3. Should the seller email include a **template message they can copy/paste to the airline** to request a goodwill reversal? Low success rate but a nice touch.
+- Translation lives in template files, not a central JSON, to keep each email's copy + layout co-located and reviewable in one diff. A small `i18n.ts` helper is the only shared piece.
+- `subject` already supports `(data) => string` in the registry — no schema change needed for that.
+- The `display_from_root` / sender domain config and unsubscribe footer are unchanged.
+- `preferred_language` defaults to `'en'` so existing rows stay safe; new IT users who switch language in the UI will be persisted on their next language change.

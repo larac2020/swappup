@@ -675,6 +675,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           preferred_currency: string
+          preferred_language: string
           privacy_accepted_at: string | null
           privacy_accepted_version: string | null
           terms_accepted_at: string | null
@@ -705,6 +706,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           preferred_currency?: string
+          preferred_language?: string
           privacy_accepted_at?: string | null
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null
@@ -735,6 +737,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           preferred_currency?: string
+          preferred_language?: string
           privacy_accepted_at?: string | null
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null
