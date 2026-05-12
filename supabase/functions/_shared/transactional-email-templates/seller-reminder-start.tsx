@@ -14,17 +14,17 @@ interface Props {
 }
 
 const Email = ({ sellerName, buyerName, trip, hoursLeft, purchaseId, orderNumber }: Props) => {
-  const buyer = buyerName || 'the buyer'
+  const buyer = buyerName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip ? { ...trip, orderNumber: order } : undefined
   return (
-    <EmailLayout preview="Friendly nudge — please update the booking" transactional>
+    <EmailLayout preview="A friendly nudge to update your booking" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Just a quick reminder — your sale to {buyer} is waiting on the name change with the airline.
-        You've got around <strong>{hoursLeft ?? 23} hours left</strong> before the purchase is automatically refunded.
+        Just a quick reminder. Your sale to {buyer} is waiting on the name change with the airline.
+        You have around <strong>{hoursLeft ?? 23} hours left</strong> before the purchase is automatically refunded.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your sale details" />
+      <TripCard trip={tripWithExtras} title="Your booking" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What to do now</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
@@ -43,9 +43,9 @@ const Email = ({ sellerName, buyerName, trip, hoursLeft, purchaseId, orderNumber
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Complete the name change</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>View sale in app</Link>
       </Section>
-      <Text style={p}>The sooner you complete the transfer, the sooner your payout is released.</Text>
+      <Text style={p}>The sooner you complete the change, the sooner you receive your money.</Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
       </Text>
