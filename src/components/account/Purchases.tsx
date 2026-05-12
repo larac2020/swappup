@@ -5,11 +5,20 @@ import { ChevronLeft, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTri
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
+import { useState } from "react";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
@@ -26,6 +35,10 @@ export default function Purchases() {
   const displayCurrency = useDisplayCurrency();
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportPurchaseId, setReportPurchaseId] = useState<string | null>(null);
+  const SUPPORT_EMAIL = "support@swappup.com";
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -176,8 +189,8 @@ export default function Purchases() {
                           size="sm" variant="outline" className="gap-2"
                           disabled={cancelMutation.isPending}
                           onClick={() => {
-                            const reason = window.prompt("Briefly describe the problem:") || "";
-                            if (reason) cancelMutation.mutate({ purchase_id: p.id, reason });
+                            setReportPurchaseId(p.id);
+                            setReportOpen(true);
                           }}
                         >
                           <AlertTriangle className="w-4 h-4" /> Report a problem
