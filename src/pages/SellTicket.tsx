@@ -145,6 +145,7 @@ export default function SellTicket() {
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
+  const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
   const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
 
   // Flight schedule verification (Aviationstack via edge function)
