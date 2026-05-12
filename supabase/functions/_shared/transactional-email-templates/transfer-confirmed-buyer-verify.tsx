@@ -2,7 +2,7 @@
 import * as React from 'npm:react@18.3.1'
 import { Heading, Text, Section, Link } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { EmailLayout, TripCard, TripDetails, h1, p, button, brand, APP_URL, PREFERENCES_URL } from './_layout.tsx'
+import { EmailLayout, TripDetails, h1, p, button, brand, APP_URL, card, row, label } from './_layout.tsx'
 
 interface Props {
   buyerName?: string
@@ -18,44 +18,68 @@ interface Props {
 const Email = ({ buyerName, sellerName, newBookingRef, surname, trip, purchaseId, orderNumber, totalPrice }: Props) => {
   const seller = sellerName || 'your seller'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
-  const tripWithExtras: TripDetails | undefined = trip
-    ? { ...trip, bookingRef: newBookingRef || trip.bookingRef, bookingName: surname || trip.bookingName, escrowAmount: totalPrice || trip.escrowAmount, orderNumber: order }
-    : undefined
+  const fmtLeg = (date?: string, time?: string) => {
+    if (!date && !time) return ''
+    if (date && time) return `${date} at ${time}`
+    return date || time || ''
+  }
+  const isRoundTrip = !!(trip?.returnDate || trip?.returnTime)
+  const bookingRef = newBookingRef || trip?.bookingRef
+  const bookingName = surname || trip?.bookingName
+  const amount = totalPrice || trip?.escrowAmount
   return (
     <EmailLayout preview="Your ticket is ready, please verify and confirm" transactional>
       <Text style={p}>{buyerName ? `Hi ${buyerName},` : 'Hi there,'}</Text>
       <Text style={p}>
         Good news! {seller} has updated the airline booking with your name. The last step is yours:
-        please check that everything looks right and confirm in the app to release the payment.
+        please check that everything looks right on the airline website and confirm in the app{' '}
+        <strong>within 48 hours</strong> to release the payment. Your money stays safely with us
+        until you confirm.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your booking" />
-      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
+      <Section style={card}>
+        <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+          Use these on the airline website
+        </Text>
+        {trip?.airline && <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
+        {bookingRef && <Text style={row}><span style={label}>Booking reference: </span><strong>{bookingRef}</strong></Text>}
+        {bookingName && <Text style={row}><span style={label}>New name on the booking: </span><strong>{bookingName}</strong></Text>}
+
+        <Text style={{ margin: '14px 0 10px', paddingTop: '12px', borderTop: `1px dashed ${brand.border}`, color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+          Purchase details
+        </Text>
+        {order && <Text style={row}><span style={label}>Order number: </span>{order}</Text>}
+        {trip?.origin && trip?.destination && (
+          <Text style={row}><span style={label}>Route: </span>{trip.origin} {isRoundTrip ? '⇄' : '→'} {trip.destination}</Text>
+        )}
+        {(trip?.departureDate || trip?.departureTime) && (
+          <Text style={row}><span style={label}>{isRoundTrip ? 'Outbound: ' : 'Departure: '}</span>{fmtLeg(trip?.departureDate, trip?.departureTime)}</Text>
+        )}
+        {isRoundTrip && (
+          <Text style={row}><span style={label}>Return: </span>{fmtLeg(trip?.returnDate, trip?.returnTime)}</Text>
+        )}
+        {trip?.passengers && trip.passengers > 1 && (
+          <Text style={row}><span style={label}>Passengers: </span>{trip.passengers}</Text>
+        )}
+        {amount && <Text style={{ ...row, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until you confirm): </span>{amount}</Text>}
+      </Section>
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Next steps</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
-          <li style={{ marginBottom: '6px' }}>
-            Go to the airline website and check that the booking is correctly under your name, using the
-            booking reference{newBookingRef ? <> <strong>{newBookingRef}</strong></> : null}.
-          </li>
           <li style={{ marginBottom: '10px' }}>
-            <strong>Within 48 hours</strong>, head back to the swappup app and confirm everything is in order.
-            Only at that point we will send the payment to {seller} and your purchase is finalised.
-            <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
-              <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
-                💡 Turn on push notifications so you do not forget the 48 hour window.{' '}
-                <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'underline', fontWeight: 600 }}>Update notification preferences</Link>.
-              </Text>
-            </Section>
+            <strong>If everything looks right:</strong> head back to the swappup app within{' '}
+            <strong>48 hours</strong> and confirm your booking. Only at that point we will release
+            the payment to {seller} and your purchase is finalised.
+          </li>
+          <li style={{ marginBottom: '6px' }}>
+            <strong>If something is wrong</strong> (wrong name, wrong flight, missing booking, etc.):
+            flag the issue from the same screen in the app. Your money stays safely with us until the
+            problem is resolved — no payment is released until you confirm.
           </li>
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
         <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>View purchase in app</Link>
       </Section>
-      <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Found an issue with the booking?</Heading>
-      <Text style={p}>
-        If something does not look right, you can flag the issue from the same screen. Your money stays
-        safely with us until you are happy.
-      </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
       </Text>
