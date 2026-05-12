@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
               sellerName: (sellerProfile?.full_name || '').split(' ')[0],
               totalPrice: fmt(purchase.total_price),
               trip,
+              bookingRef: purchase.original_booking_ref,
+              airlineLogin: sellerProfile?.email,
               purchaseId: purchase.id,
             },
           },
