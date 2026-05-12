@@ -96,7 +96,7 @@ export const template = {
       passengers: 2,
     },
     bookingRef: 'XYZ123',
-    bookingName: 'Alex Johnson, Sam Johnson',
+    bookingName: 'Alex Johnson',
     purchaseId: 'abc-123',
   },
 } satisfies TemplateEntry
