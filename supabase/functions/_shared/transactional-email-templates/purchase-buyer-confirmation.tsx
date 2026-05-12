@@ -20,15 +20,14 @@ const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, bookingRef
     ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: bookingName || trip.bookingName, escrowAmount: totalPrice }
     : undefined
   return (
-    <EmailLayout preview="You're booked! Here's everything about your trip">
+    <EmailLayout preview="Your swappup purchase is confirmed" transactional>
       <Text style={p}>{buyerName ? `Hi ${buyerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Thank you so much for buying with swappup — we couldn't be happier to have you on board.
-        Your seat is officially on its way ✈️
+        Thank you so much for your purchase with swappup — we're thrilled you chose us.
       </Text>
       <Text style={p}>
-        Your payment is safe with us and will only be sent to {seller} once your name is on the
-        booking. You're in great hands — we'll be with you every step of the way.
+        Your payment is safe with us and will only be sent to your ticket seller, {seller}, once
+        your name is on the booking.
       </Text>
       <TripCard trip={tripWithExtras} title="Your purchase details" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
@@ -38,14 +37,14 @@ const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, bookingRef
             <strong>{seller} has 24 hours</strong> to add your name to the airline booking.
           </li>
           <li style={{ marginBottom: '6px' }}>
-            We'll email you to double-check the updated booking matches your details.
+            As soon as {seller} confirms the change in the app, you'll get an email <strong>and a
+            push notification</strong> from us. Make sure push notifications are turned on so you
+            don't miss it.
           </li>
           <li style={{ marginBottom: '6px' }}>
-            Once you confirm, we release the payment to {seller} — and the seat is all yours.
-          </li>
-          <li>
-            If {seller} doesn't update the booking in time, you get a <strong>full automatic
-            refund</strong> — no forms, no waiting.
+            Within <strong>48 hours</strong>, log in to the airline using the booking reference and
+            your name and surname to check everything is correct, then confirm in the app. We'll
+            release the payment to {seller} and the seat is all yours.
           </li>
         </ol>
       </Text>
@@ -54,6 +53,13 @@ const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, bookingRef
       </Section>
       <Text style={small}>
         Opens swappup.com — works on mobile and desktop.
+      </Text>
+      <Text style={{ ...p, marginTop: '16px' }}>
+        If {seller} doesn't add your name to the booking within 24 hours, your payment is
+        automatically refunded in full — no forms, no waiting.
+      </Text>
+      <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
+        Warm regards,<br />The swappup team
       </Text>
       <Text style={small}>
         Reference: {purchaseId || '—'}
