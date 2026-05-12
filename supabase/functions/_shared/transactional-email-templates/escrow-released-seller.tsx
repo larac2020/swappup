@@ -14,33 +14,33 @@ interface Props {
 }
 
 const Email = ({ sellerName, buyerName, payoutAmount, trip, purchaseId, orderNumber }: Props) => {
-  const buyer = buyerName || 'the buyer'
+  const buyer = buyerName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
     ? { ...trip, escrowAmount: payoutAmount || trip.escrowAmount, orderNumber: order }
     : undefined
   return (
-    <EmailLayout preview="Payment released — your payout is on its way" accent="success" transactional>
+    <EmailLayout preview="Your sale is complete and your money is on its way" accent="success" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
       <Text style={p}>
-        Brilliant news — {buyer} has confirmed the ticket transfer. The escrow has been released
-        and your payout{payoutAmount ? <> of <strong>{payoutAmount}</strong></> : null} is now on its way.
+        Brilliant news! {buyer} has confirmed the ticket change and the sale is complete. Your money
+        {payoutAmount ? <> ({payoutAmount})</> : null} is now on its way to your account.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your sale details" />
+      <TripCard trip={tripWithExtras} title="Your booking" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What happens next</Heading>
       <Text style={p}>
-        Funds typically land in your connected payout account within <strong>2–5 business days</strong>,
-        depending on your bank. You can track the status any time from the Transactions screen in the app.
+        Your money usually lands in your bank account within <strong>2 to 5 business days</strong>,
+        depending on your bank. You can check on it any time from your sales in the app.
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=transactions`} style={button()}>View payout</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>View sale in app</Link>
       </Section>
-      <Text style={small} as="div">
-        This is a payment notification, not a tax invoice. For accounting purposes, download the
-        official receipt from your account under Transactions.
+      <Text style={small}>
+        This is a payment notification, not a tax invoice. For accounting purposes, you can download the
+        official receipt from the same screen.
       </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
-        Thanks for selling on swappup — have a great day,<br />The swappup team
+        Thanks for selling on swappup. Have a great day,<br />The swappup team
       </Text>
     </EmailLayout>
   )
@@ -50,7 +50,7 @@ export const template = {
   component: Email,
   subject: (data: Record<string, any>) => {
     const order = data?.orderNumber || (data?.purchaseId ? `SW-${String(data.purchaseId).slice(0, 8).toUpperCase()}` : undefined)
-    return order ? `Sale complete — your payout is on its way (Order ${order})` : 'Sale complete — your payout is on its way'
+    return order ? `Your sale is complete, your money is on its way (Order ${order})` : 'Your sale is complete, your money is on its way'
   },
   displayName: 'Seller payout released',
   previewData: {
