@@ -143,9 +143,10 @@ export default function Purchases() {
             const deadline = p.transfer_deadline ? new Date(p.transfer_deadline) : null;
             const isExpired = deadline && deadline < new Date();
             const isOpen = expandedId === p.id;
+            const isRoundTrip = !!listing?.return_date;
             const route =
               listing?.origin_city && listing?.destination_city
-                ? `${listing.origin_city} → ${listing.destination_city}`
+                ? `${listing.origin_city} ${isRoundTrip ? "↔" : "→"} ${listing.destination_city}`
                 : listing?.title || "Ticket";
 
             return (
@@ -195,21 +196,21 @@ export default function Purchases() {
                     <span className="text-muted-foreground">Route:</span>{" "}
                     <span className="font-medium text-foreground">
                       {listing?.origin_city || "—"}
-                      {listing?.origin_airport || listing?.origin_station ? ` (${listing.origin_airport || listing.origin_station})` : ""}
-                      {" → "}
+                      {listing?.origin_airport ? ` (${listing.origin_airport})` : ""}
+                      {` ${isRoundTrip ? "↔" : "→"} `}
                       {listing?.destination_city || "—"}
-                      {listing?.destination_airport || listing?.destination_station ? ` (${listing.destination_airport || listing.destination_station})` : ""}
+                      {listing?.destination_airport ? ` (${listing.destination_airport})` : ""}
                     </span>
                   </p>
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Airline / Operator:</span>{" "}
-                    <span className="font-medium text-foreground">{listing?.airline || listing?.operator || "—"}</span>
+                    <span className="text-muted-foreground">Airline:</span>{" "}
+                    <span className="font-medium text-foreground">{listing?.airline || "—"}</span>
                   </p>
-                  {(listing?.flight_number || listing?.train_number) && (
+                  {listing?.flight_number && (
                     <p className="text-sm">
-                      <span className="text-muted-foreground">Flight / Train #:</span>{" "}
-                      <span className="font-mono font-medium text-foreground">{listing?.flight_number || listing?.train_number}</span>
-                      <CopyButton value={listing?.flight_number || listing?.train_number} label="Flight number" />
+                      <span className="text-muted-foreground">Flight #:</span>{" "}
+                      <span className="font-mono font-medium text-foreground">{listing.flight_number}</span>
+                      <CopyButton value={listing.flight_number} label="Flight number" />
                     </p>
                   )}
                   <p className="text-sm">
@@ -217,14 +218,16 @@ export default function Purchases() {
                     <span className="font-medium text-foreground">
                       {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
                       {listing?.departure_time ? ` · ${listing.departure_time.slice(0, 5)}` : ""}
+                      {listing?.arrival_time ? ` → ${listing.arrival_time.slice(0, 5)}` : ""}
                     </span>
                   </p>
-                  {listing?.return_date && (
+                  {isRoundTrip && (
                     <p className="text-sm">
                       <span className="text-muted-foreground">Return:</span>{" "}
                       <span className="font-medium text-foreground">
                         {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
                         {listing?.return_departure_time ? ` · ${listing.return_departure_time.slice(0, 5)}` : ""}
+                        {listing?.return_arrival_time ? ` → ${listing.return_arrival_time.slice(0, 5)}` : ""}
                         {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
                       </span>
                     </p>
@@ -232,14 +235,7 @@ export default function Purchases() {
                   <p className="text-sm">
                     <span className="text-muted-foreground">Passengers:</span>{" "}
                     <span className="font-medium text-foreground">{p.quantity}</span>
-                    {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
                   </p>
-                  {p.seller?.full_name && (
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">Seller:</span>{" "}
-                      <span className="font-medium text-foreground">{p.seller.full_name}</span>
-                    </p>
-                  )}
                 </div>
 
                 {/* Price Breakdown + Receipt */}
