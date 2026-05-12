@@ -1,105 +1,73 @@
 ## Goal
 
-Restyle the booking-confirmation PDF (`downloadTicketPdf`) to match the swappup brand and add a personal greeting, support contact, and appropriate legal language. Apply the same brand polish to the receipt PDF for consistency.
+Send branded swappup emails at 7 key moments in the purchase lifecycle, in addition to the existing in-app notifications.
 
-## Brand mapping for print
+## Prerequisite: Email infrastructure
 
-PDFs print on white paper, so we adapt the dark-theme palette to a light, on-brand surface:
+The project has no email infrastructure yet (no domain configured, no email tables). Before any template work, we need to:
 
-```
-Background       white
-Ink              #0F1116  (charcoal, mirrors --foreground inverted)
-Muted ink        #6B7280
-Brand gold       #F4A929  (hsl 38 92% 55% — primary)
-Gold deep        #D98A0F  (hsl 28 90% 50% — accent end of brand gradient)
-Soft gold tint   #FEF3DC  (background for headers/banners)
-Success          #1FAD66
-Danger           #C0392B  (used only on disclaimer accent)
-Divider          #E6E6E6
-```
+1. Configure a sender email domain (e.g. `notify.swappup.com`) via the email setup dialog.
+2. Provision the email queue, suppression list, unsubscribe tokens, cron dispatcher.
+3. Scaffold the transactional email function `send-transactional-email` and the unsubscribe page.
 
-Typography stays in jsPDF built-ins: Helvetica bold for headings (proxy for Space Grotesk), Helvetica normal for body. Booking ref stays in Courier bold for monospace credibility.
+If you already have a preferred sender domain, share it; otherwise the dialog will guide selection. DNS verification can complete in the background — scaffolding and triggers can be wired in parallel.
 
-## Layout — Booking confirmation PDF
+## Email map (7 triggers)
 
-```
-┌─────────────────────────────────────────────────┐
-│  ▌swappup    Booking confirmation               │ ← gold left bar, brand wordmark
-│              Order #ABCD-1234 · 12 May 2026     │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  Hi {first name},                               │ ← greeting block
-│  Your purchase is confirmed. Use the booking    │
-│  credentials below to retrieve your ticket on   │
-│  the airline's website.                         │
-│                                                 │
-│  ┌─── Trip ────────────────────────────────┐    │
-│  │ London (LHR) → Warsaw (WAW)             │    │
-│  │ Wed, 24 Jun 2026 · 09:35                │    │
-│  │ Wizz Air · W6 1234 · 1 passenger        │    │
-│  │ Seller: Lara Cuttini                    │    │
-│  └─────────────────────────────────────────┘    │
-│                                                 │
-│  ┌─── Booking credentials ─────────────────┐    │ ← gold tint background
-│  │ Booking reference                       │    │
-│  │  ABC123                                 │    │ ← large mono
-│  │ Surname            Passenger            │    │
-│  │  BARBER             Mario Rossi         │    │
-│  └─────────────────────────────────────────┘    │
-│                                                 │
-│  Need help?                                     │ ← support box
-│  Email   support@swappup.com                    │
-│  Help    swappup.com/help                       │
-│  Reply within 24h on business days              │
-│                                                 │
-├─────────────────────────────────────────────────┤
-│  Disclaimer · swappup is a peer-to-peer market- │ ← legal footer (small grey)
-│  place. This document confirms your purchase    │
-│  on swappup; it is not a boarding pass and does │
-│  not grant boarding rights. The airline ticket  │
-│  is delivered by the seller via name change on  │
-│  the original booking. Keep this confirmation   │
-│  for your records.                              │
-│                                                 │
-│  Order ID · Generated dd-mm-yyyy hh:mm          │
-└─────────────────────────────────────────────────┘
-```
+| # | Event | Recipient | Template | Triggered in |
+|---|-------|-----------|----------|--------------|
+| 1a | Ticket bought (confirmation) | Buyer | `purchase-buyer-confirmation` | `stripe-purchase-webhook` (checkout.completed) |
+| 1b | Ticket sold (action required) | Seller | `purchase-seller-new-sale` | same webhook |
+| 2 | Reminder to start name change | Seller | `seller-action-reminder` | new cron `seller-action-reminders` (sent ~1h after purchase if no transfer yet) |
+| 3 | 4h before 24h deadline | Seller | `seller-deadline-warning` | same cron (when `transfer_deadline - now ≈ 4h` and not yet transferred) |
+| 4 | Name changed → buyer must verify | Buyer | `transfer-completed-buyer` | `TransferConfirmation.tsx` mutation |
+| 5 | Buyer confirmed → payout incoming | Seller | `escrow-released-seller` | `release-escrow` edge function |
+| 6 | Seller missed deadline (sorry) | Buyer | `transfer-expired-buyer` | `expire-transfers` → `cancel-escrow` |
+| 7 | Seller missed deadline (warning) | Seller | `transfer-expired-seller` | same path |
 
-## Implementation details (`src/components/account/purchaseHelpers.tsx`)
+Each template will be a React Email `.tsx` in `supabase/functions/_shared/transactional-email-templates/`, registered in `registry.ts`, brand-styled (charcoal + gold, white body background as required), and accept dynamic `templateData` (names, route, dates, booking ref, deadline, support links).
 
-- New `BRAND` color constants object at top of file (single source of truth).
-- New `header()`: 14mm gold bar at top, "swappup" wordmark in charcoal, subtitle in muted; right-aligned order ref + date.
-- New `section(doc, title, y)` helper that draws a small uppercase gold title with a 0.4mm gold underline (mimics the in-app section labels).
-- New `panel(doc, x, y, w, h, fill)` helper for tinted boxes with 1mm rounded corners (`doc.roundedRect`).
-- Greeting: derives first name from `profile.full_name?.split(" ")[0]` with fallback "there".
-- Trip panel: light-grey fill, replaces current label/value rows; keeps existing fields plus seller name and 1-line summary up top (route, date, airline+flight, pax).
-- Credentials panel: soft-gold fill, big Courier bold booking ref (24pt), surname + passenger side-by-side.
-- Support block: 3 lines (email, help URL, response time). Both `support@swappup.com` and `https://swappup.com/help` rendered as gold-coloured links via `doc.textWithLink()`.
-- Footer: thin gold rule, then small (8pt) grey disclaimer paragraph wrapped via `splitTextToSize`, then order ID + generated timestamp on the very last line.
-- Drop the yellow disclaimer banner at the top — replaced by the polished footer disclaimer.
-- Page-overflow guard: if `y > 270` after credentials, `doc.addPage()` and re-draw header before support/footer.
+## Code changes
 
-## Receipt PDF — same brand pass
+### New / scaffolded
+- `supabase/functions/_shared/transactional-email-templates/` — 7 new templates + updated `registry.ts`.
+- `supabase/functions/send-transactional-email/` (scaffolded by tool, not hand-written).
+- `supabase/functions/handle-email-unsubscribe/`, `handle-email-suppression/` (scaffolded).
+- `supabase/functions/seller-action-reminders/index.ts` — new cron-driven function that scans `purchases` for:
+  - status=`pending_transfer`, no transfer yet, ~1h since purchase, no reminder sent → send #2
+  - status=`pending_transfer`, `transfer_deadline` between now+3h30m and now+4h30m, no warning sent → send #3
+  - Idempotency via two new boolean columns on `purchases`: `seller_reminder_sent`, `seller_warning_sent` (added via migration). Also serves as the dedupe key.
+- New `pg_cron` job calling `seller-action-reminders` every 15 minutes.
+- `src/pages/EmailUnsubscribe.tsx` (or chosen path) wired into `App.tsx` router.
 
-Apply the same `header`, `section`, `panel`, `BRAND` helpers to `downloadReceiptPdf` so both documents look like one family. Add the same greeting and support block; keep payment details (currently the receipt's purpose) unchanged. Footer disclaimer for receipt: "Issued by swappup as proof of payment. Not a fiscal invoice. swappup is not the merchant of record for the underlying flight ticket."
+### Modified
+- `supabase/functions/stripe-purchase-webhook/index.ts` — after marking `pending_transfer`, fetch buyer + seller profiles (email, full_name) and listing route/date, invoke `send-transactional-email` twice with idempotency keys `purchase-buyer-${purchaseId}` and `purchase-seller-${purchaseId}`.
+- `src/components/listings/TransferConfirmation.tsx` — after the existing `send-notification` call, also invoke `send-transactional-email` with `transfer-completed-buyer` (idempotency `transfer-buyer-${purchaseId}`).
+- `supabase/functions/release-escrow/index.ts` — after `notifications.insert`, send `escrow-released-seller` (idempotency `escrow-released-${purchaseId}`).
+- `supabase/functions/cancel-escrow/index.ts` — when the cancellation reason is the expiry (`reason` includes `did not complete the name change in time`, or new flag `expired: true` from `expire-transfers`), send #6 to buyer and #7 to seller. Skip these two emails for buyer-initiated refunds.
+- `supabase/functions/expire-transfers/index.ts` — pass `{ expired: true }` along with the existing reason so cancel-escrow knows to send the negative pair.
 
-## Legal disclaimer — recommendation
+### Database
+- Migration: add `seller_reminder_sent boolean default false`, `seller_warning_sent boolean default false` on `purchases`.
+- Migration after cron setup: schedule `seller-action-reminders` every 15 min via `pg_cron` + `pg_net` (using anon key + project URL — added via insert tool, not migration tool).
 
-Yes, include a short disclaimer. Two reasons:
+## Brand & content
 
-1. **Liability clarity** — swappup is a P2P marketplace; the airline ticket is the seller's, transferred via name change. Without a disclaimer a buyer might present the PDF at the gate or treat swappup as the carrier.
-2. **Document classification** — clearly stating "not a boarding pass" and "not a fiscal invoice" prevents the confirmation/receipt being misused as either.
+All templates share a header (gold `#F4A929` accent, charcoal `#0F1116` text, white body), greet by first name, include the route (e.g. `LHR › CDG`), departure date, airline + flight number, and a primary CTA button to the relevant in-app screen (`/account/purchases?open=…` or `/account/listings?sale=…`). Footer: support email + help link + auto unsubscribe link (system-injected).
 
-Proposed wording (kept short, plain English, no legalese):
-
-> swappup is a peer-to-peer marketplace. This document confirms your purchase on swappup; it is not a boarding pass and does not grant boarding rights. Your airline ticket is provided by the seller via a name change on the original booking. For terms and consumer rights, see swappup.com/terms.
-
-For the receipt, append: "Issued as proof of payment. Not a fiscal invoice."
-
-We are **not** adding GDPR, refund-policy, or arbitration text to the PDF — those belong to Terms / Privacy pages already linked from the app, and bloating the PDF reduces readability.
+Tone:
+- Positive emails (#1a, #1b, #2, #4, #5): friendly, action-oriented.
+- Warning (#3): urgent but reassuring.
+- Negative (#6): apologetic, offers to find another listing on the same route.
+- Negative (#7): firm but non-punitive, reminds of the 24h rule for next time.
 
 ## Out of scope
+- No marketing emails, digests, or newsletters.
+- No SMS/push.
+- No changes to the in-app `notifications` system; emails are additive.
+- No template translation (EN only for v1; matches current PDF copy).
 
-- No new dependencies, no logo image embedding (wordmark stays as Helvetica bold). If you want a real logo PNG embedded later, that's a follow-up.
-- No i18n on the PDF text yet — strings stay in English, matching the existing helper.
-- No changes to the in-app expander UI.
+## Open questions
+1. Sender domain to use — `notify.swappup.com` OK?
+2. Support email to print in footer — `support@swappup.com`?
+3. For email #6, should we link the buyer to the search page pre-filtered on the same route? (Recommended yes.)
