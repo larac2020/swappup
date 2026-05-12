@@ -306,11 +306,11 @@ export default function Purchases() {
                     {isTransferConfirmed && (
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                        <p className="text-xs font-medium text-success">Name change confirmed — your ticket details:</p>
+                        <p className="text-xs font-medium text-success">Name change confirmed — your booking details:</p>
                       </div>
                     )}
                     {!isTransferConfirmed && (
-                      <p className="text-xs font-medium text-muted-foreground">Your ticket details</p>
+                      <p className="text-xs font-medium text-muted-foreground">Your booking details</p>
                     )}
                     <div className="space-y-1">
                       <p className="text-sm">
@@ -345,7 +345,7 @@ export default function Purchases() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Use these details to access your booking on the airline's website.
+                      This is a swappup booking confirmation — not your boarding pass. Use these credentials on the airline's website to retrieve your ticket and check in.
                     </p>
                     <div className="flex flex-row flex-wrap gap-2 pt-2">
                       {p.escrow_status !== "released" && (
@@ -359,9 +359,9 @@ export default function Purchases() {
                       )}
                       <Button
                         size="sm" variant="outline" className="gap-2"
-                        onClick={() => downloadTicketPdf(p, listing)}
+                        onClick={() => downloadTicketPdf(p, listing, p.seller)}
                       >
-                        <Download className="w-4 h-4" /> Download ticket PDF
+                        <Download className="w-4 h-4" /> Download confirmation PDF
                       </Button>
                       {canShare() && (
                         <Button
