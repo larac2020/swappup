@@ -220,36 +220,39 @@ export async function downloadTicketPdf(p: any, listing: any, seller?: any, prof
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   setText(doc, BRAND.ink);
-  const route = `${listing?.origin_city ?? "—"} › ${listing?.destination_city ?? "—"}`;
+  const isRoundTrip = !!listing?.return_date;
+  const sep = isRoundTrip ? "<>" : ">";
+  const route = `${listing?.origin_city ?? "—"} ${sep} ${listing?.destination_city ?? "—"}`;
   doc.text(route, 18, y + 14);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   setText(doc, BRAND.muted);
-  const airports = `${listing?.origin_airport || listing?.origin_station || "—"}  ›  ${listing?.destination_airport || listing?.destination_station || "—"}`;
+  const airports = `${listing?.origin_airport || "—"}  ${sep}  ${listing?.destination_airport || "—"}`;
   doc.text(airports, 18, y + 19);
 
   setText(doc, BRAND.ink);
   doc.setFontSize(10);
-  const dep = `${listing?.departure_date ? format(new Date(listing.departure_date), "EEE, dd MMM yyyy") : "—"}${listing?.departure_time ? ` · ${String(listing.departure_time).slice(0, 5)}` : ""}`;
+  const depDate = listing?.departure_date ? format(new Date(listing.departure_date), "EEE, dd MMM yyyy") : "—";
+  const depTime = listing?.departure_time ? String(listing.departure_time).slice(0, 5) : "";
+  const arrTime = listing?.arrival_time ? String(listing.arrival_time).slice(0, 5) : "";
+  const dep = `${depDate}${depTime ? ` · ${depTime}` : ""}${arrTime ? ` → ${arrTime}` : ""}`;
   doc.text(`Departure  ${dep}`, 18, y + 26);
 
   let tripCursor = y + 32;
-  if (listing?.return_date) {
-    const ret = `${format(new Date(listing.return_date), "EEE, dd MMM yyyy")}${listing?.return_departure_time ? ` · ${String(listing.return_departure_time).slice(0, 5)}` : ""}${listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}`;
+  if (isRoundTrip) {
+    const rDate = format(new Date(listing.return_date), "EEE, dd MMM yyyy");
+    const rDep = listing?.return_departure_time ? String(listing.return_departure_time).slice(0, 5) : "";
+    const rArr = listing?.return_arrival_time ? String(listing.return_arrival_time).slice(0, 5) : "";
+    const rFn = listing?.return_flight_number ? ` · ${listing.return_flight_number}` : "";
+    const ret = `${rDate}${rDep ? ` · ${rDep}` : ""}${rArr ? ` → ${rArr}` : ""}${rFn}`;
     doc.text(`Return     ${ret}`, 18, tripCursor);
     tripCursor += 6;
   }
-  const carrier = listing?.airline || listing?.operator || "—";
-  const flightNo = listing?.flight_number || listing?.train_number;
-  const carrierLine = `${carrier}${flightNo ? ` · ${flightNo}` : ""} · ${p.quantity} ${p.quantity === 1 ? "passenger" : "passengers"}${listing?.train_class ? ` · ${listing.train_class}` : ""}`;
+  const carrier = listing?.airline || "—";
+  const flightNo = listing?.flight_number;
+  const carrierLine = `${carrier}${flightNo ? ` · ${flightNo}` : ""} · ${p.quantity} ${p.quantity === 1 ? "passenger" : "passengers"}`;
   doc.text(carrierLine, 18, tripCursor);
-
-  if (seller?.full_name) {
-    setText(doc, BRAND.muted);
-    doc.setFontSize(9);
-    doc.text(`Seller: ${seller.full_name}`, 192, y + 6, { align: "right" });
-  }
 
   y += tripH + 6;
 
