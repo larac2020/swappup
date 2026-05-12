@@ -391,6 +391,7 @@ export type Database = {
           luggage_included: boolean | null
           meal_included: boolean | null
           name_change_fee: number | null
+          name_change_risk_acknowledged_at: string | null
           operator: string | null
           origin_airport: string | null
           origin_city: string
@@ -444,6 +445,7 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          name_change_risk_acknowledged_at?: string | null
           operator?: string | null
           origin_airport?: string | null
           origin_city: string
@@ -497,6 +499,7 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          name_change_risk_acknowledged_at?: string | null
           operator?: string | null
           origin_airport?: string | null
           origin_city?: string
