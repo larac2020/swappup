@@ -133,6 +133,9 @@ export default function Purchases() {
             const status = statusConfig[p.status] || statusConfig.pending;
             const isTransferConfirmed = p.status === "transfer_confirmed";
             const isPendingTransfer = p.status === "pending_transfer";
+            const isPending = p.status === "pending";
+            const isRefunded = p.status === "refunded";
+            const hasCredentials = !!(p.transfer_booking_ref || p.transfer_surname);
             const deadline = p.transfer_deadline ? new Date(p.transfer_deadline) : null;
             const isExpired = deadline && deadline < new Date();
             const isOpen = expandedId === p.id;
@@ -181,6 +184,54 @@ export default function Purchases() {
                 >
                   <div className="overflow-hidden">
                     <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
+                {/* Trip details — always visible */}
+                <div className="rounded-lg bg-secondary/40 p-3 space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Trip details</p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Route:</span>{" "}
+                    <span className="font-medium text-foreground">
+                      {listing?.origin_city || "—"}
+                      {listing?.origin_airport || listing?.origin_station ? ` (${listing.origin_airport || listing.origin_station})` : ""}
+                      {" → "}
+                      {listing?.destination_city || "—"}
+                      {listing?.destination_airport || listing?.destination_station ? ` (${listing.destination_airport || listing.destination_station})` : ""}
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Airline / Operator:</span>{" "}
+                    <span className="font-medium text-foreground">{listing?.airline || listing?.operator || "—"}</span>
+                  </p>
+                  {(listing?.flight_number || listing?.train_number) && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Flight / Train #:</span>{" "}
+                      <span className="font-mono font-medium text-foreground">{listing?.flight_number || listing?.train_number}</span>
+                      <CopyButton value={listing?.flight_number || listing?.train_number} label="Flight number" />
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Departure:</span>{" "}
+                    <span className="font-medium text-foreground">
+                      {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
+                      {listing?.departure_time ? ` · ${listing.departure_time.slice(0, 5)}` : ""}
+                    </span>
+                  </p>
+                  {listing?.return_date && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Return:</span>{" "}
+                      <span className="font-medium text-foreground">
+                        {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
+                        {listing?.return_departure_time ? ` · ${listing.return_departure_time.slice(0, 5)}` : ""}
+                        {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
+                      </span>
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Passengers:</span>{" "}
+                    <span className="font-medium text-foreground">{p.quantity}</span>
+                    {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
+                  </p>
+                </div>
+
                 {/* Price Breakdown + Receipt */}
                 <div className="flex flex-wrap items-center gap-2 px-1">
                   {p.name_change_fee > 0 && (
@@ -199,6 +250,26 @@ export default function Purchases() {
                     <FileText className="w-3.5 h-3.5" /> Receipt
                   </Button>
                 </div>
+
+                {/* Pending payment hint */}
+                {isPending && (
+                  <div className="rounded-lg bg-warning/10 p-3 flex items-start gap-2">
+                    <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+                    <p className="text-xs text-warning">
+                      Payment is processing. We'll notify you as soon as the seller starts the name-change transfer.
+                    </p>
+                  </div>
+                )}
+
+                {/* Refunded info */}
+                {isRefunded && (
+                  <div className="rounded-lg bg-muted/50 p-3 flex items-start gap-2">
+                    <RotateCcw className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      This purchase was refunded. The amount has been returned to your original payment method.
+                    </p>
+                  </div>
+                )}
 
                 {/* Pending Transfer Status */}
                 {isPendingTransfer && (
@@ -219,57 +290,19 @@ export default function Purchases() {
                   </div>
                 )}
 
-                {/* Transfer Confirmed — Show Ticket Details */}
-                {isTransferConfirmed && (
-                  <div className="rounded-lg bg-success/10 border border-success/30 p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                      <p className="text-xs font-medium text-success">Name change confirmed — your ticket details:</p>
-                    </div>
-                    <div className="space-y-1 pl-6 pb-2 border-b border-success/20">
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Route:</span>{" "}
-                        <span className="font-medium text-foreground">
-                          {listing?.origin_city} ({listing?.origin_airport || listing?.origin_station || "—"})
-                          {" → "}
-                          {listing?.destination_city} ({listing?.destination_airport || listing?.destination_station || "—"})
-                        </span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Airline / Operator:</span>{" "}
-                        <span className="font-medium text-foreground">{listing?.airline || listing?.operator || "—"}</span>
-                      </p>
-                      {(listing?.flight_number || listing?.train_number) && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground">Flight / Train #:</span>{" "}
-                          <span className="font-mono font-medium text-foreground">{listing?.flight_number || listing?.train_number}</span>
-                          <CopyButton value={listing?.flight_number || listing?.train_number} label="Flight number" />
-                        </p>
-                      )}
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Departure:</span>{" "}
-                        <span className="font-medium text-foreground">
-                          {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
-                          {listing?.departure_time ? ` · ${listing.departure_time.slice(0, 5)}` : ""}
-                        </span>
-                      </p>
-                      {listing?.return_date && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground">Return:</span>{" "}
-                          <span className="font-medium text-foreground">
-                            {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
-                            {listing?.return_departure_time ? ` · ${listing.return_departure_time.slice(0, 5)}` : ""}
-                            {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
-                          </span>
-                        </p>
-                      )}
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Passengers:</span>{" "}
-                        <span className="font-medium text-foreground">{p.quantity}</span>
-                        {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
-                      </p>
-                    </div>
-                    <div className="space-y-1 pl-6">
+                {/* Booking credentials — shown whenever transfer details exist (transfer_confirmed or completed) */}
+                {hasCredentials && (
+                  <div className={`rounded-lg p-3 space-y-2 ${isTransferConfirmed ? "bg-success/10 border border-success/30" : "bg-secondary/40"}`}>
+                    {isTransferConfirmed && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+                        <p className="text-xs font-medium text-success">Name change confirmed — your ticket details:</p>
+                      </div>
+                    )}
+                    {!isTransferConfirmed && (
+                      <p className="text-xs font-medium text-muted-foreground">Your ticket details</p>
+                    )}
+                    <div className="space-y-1">
                       <p className="text-sm">
                         <span className="text-muted-foreground">Booking Ref:</span>{" "}
                         <span className="font-mono font-bold text-foreground">{p.transfer_booking_ref}</span>
@@ -301,10 +334,10 @@ export default function Purchases() {
                         </p>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground pl-6">
+                    <p className="text-xs text-muted-foreground">
                       Use these details to access your booking on the airline's website.
                     </p>
-                    <div className="flex flex-row flex-wrap gap-2 pt-2 pl-6">
+                    <div className="flex flex-row flex-wrap gap-2 pt-2">
                       {p.escrow_status !== "released" && (
                         <Button
                           size="sm" variant="gold" className="gap-2"
