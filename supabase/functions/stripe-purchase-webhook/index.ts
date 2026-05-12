@@ -80,14 +80,20 @@ Deno.serve(async (req) => {
         origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ''}`,
         destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ''}`,
         departureDate: listing.departure_date,
+        departureTime: listing.departure_time || undefined,
+        returnDate: listing.return_date || undefined,
+        returnTime: listing.return_departure_time || undefined,
+        returnFlightNumber: listing.return_flight_number || undefined,
         airline: listing.airline,
         flightNumber: listing.flight_number,
+        passengers: purchase.quantity || 1,
       };
       const fmt = (n: number | string | null | undefined) =>
         n == null ? undefined : `€${Number(n).toFixed(2)}`;
       const deadline = purchase.transfer_deadline
         ? new Date(purchase.transfer_deadline).toUTCString()
         : undefined;
+      const orderNumber = `SW-${String(purchase.id).slice(0, 8).toUpperCase()}`;
 
       // Email 1a — buyer confirmation
       if (buyerProfile?.email || purchase.buyer_email) {
@@ -104,6 +110,7 @@ Deno.serve(async (req) => {
               bookingRef: purchase.original_booking_ref,
               bookingName: purchase.buyer_full_name || buyerProfile?.full_name,
               purchaseId: purchase.id,
+              orderNumber,
             },
           },
         }).catch((e) => console.error('email buyer-confirm failed', e));

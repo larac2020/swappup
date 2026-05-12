@@ -112,27 +112,54 @@ export interface TripDetails {
   origin?: string
   destination?: string
   departureDate?: string
+  departureTime?: string
+  returnDate?: string
+  returnTime?: string
+  returnFlightNumber?: string
   airline?: string
   flightNumber?: string
   bookingRef?: string
   bookingName?: string
   escrowAmount?: string
+  passengers?: number
+  orderNumber?: string
 }
 
 export const TripCard = ({ trip, title = 'Your purchase details' }: { trip?: TripDetails; title?: string }) => {
   if (!trip) return null
+  const fmtLeg = (date?: string, time?: string) => {
+    if (!date && !time) return ''
+    if (date && time) return `${date} at ${time}`
+    return date || time || ''
+  }
+  const isRoundTrip = !!(trip.returnDate || trip.returnTime)
   return (
     <Section style={card}>
       <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
         {title}
       </Text>
-      {trip.origin && trip.destination && (
-        <Text style={row}><span style={label}>Route: </span>{trip.origin} → {trip.destination}</Text>
+      {trip.orderNumber && (
+        <Text style={row}><span style={label}>Order number: </span>{trip.orderNumber}</Text>
       )}
-      {trip.departureDate && <Text style={row}><span style={label}>Departure: </span>{trip.departureDate}</Text>}
+      {trip.origin && trip.destination && (
+        <Text style={row}><span style={label}>Route: </span>{trip.origin} {isRoundTrip ? '⇄' : '→'} {trip.destination}</Text>
+      )}
+      {(trip.departureDate || trip.departureTime) && (
+        <Text style={row}><span style={label}>{isRoundTrip ? 'Outbound: ' : 'Departure: '}</span>{fmtLeg(trip.departureDate, trip.departureTime)}</Text>
+      )}
+      {isRoundTrip && (
+        <Text style={row}><span style={label}>Return: </span>{fmtLeg(trip.returnDate, trip.returnTime)}</Text>
+      )}
       {trip.airline && <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
+      {trip.passengers && trip.passengers > 1 && (
+        <Text style={row}><span style={label}>Passengers: </span>{trip.passengers}</Text>
+      )}
       {trip.bookingRef && <Text style={row}><span style={label}>Booking reference: </span>{trip.bookingRef}</Text>}
-      {trip.bookingName && <Text style={row}><span style={label}>New name on the booking: </span>{trip.bookingName}</Text>}
+      {trip.bookingName && (
+        <Text style={row}>
+          <span style={label}>{trip.passengers && trip.passengers > 1 ? 'New name(s) on the booking: ' : 'New name on the booking: '}</span>{trip.bookingName}
+        </Text>
+      )}
       {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until transfer): </span>{trip.escrowAmount}</Text>}
     </Section>
   )
