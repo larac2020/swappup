@@ -1603,6 +1603,11 @@ const translations = {
     sellerLiabilityConfirmCta: "Ho verificato il costo e accetto il rischio",
     sellerLiabilityConfirmed: "Accuratezza del costo confermata",
     sellToastFeeNotConfirmed: "Conferma di aver verificato il costo del cambio nominativo con il vettore prima di pubblicare.",
+    sellNoConfirmRiskTitle: "Importante: rischio cambio nominativo",
+    sellNoConfirmRiskBody: "Una volta eseguito il cambio nominativo con la compagnia per l'acquirente, il costo pagato alla compagnia NON è rimborsabile da swappup se l'acquirente non conferma la prenotazione entro la finestra di verifica di 48 ore. Le compagnie aeree non offrono una finestra di reversibilità gratuita — se ciò accade, il posto resta a nome dell'acquirente e potresti perdere il costo del cambio nominativo.",
+    sellNoConfirmRiskAck: "Ho compreso che il costo del cambio nominativo pagato alla compagnia non è rimborsabile da swappup se l'acquirente non conferma il trasferimento entro 48 ore.",
+    sellToastNoConfirmRiskNotAck: "Conferma il rischio del cambio nominativo prima di pubblicare l'annuncio.",
+    sellNoConfirmRiskReassurance: "Gli acquirenti che ripetutamente non confermano vengono esaminati e possono essere sospesi da swappup.",
 
     // Legal pages
     legalTermsTitle: "Termini di Servizio",
