@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
     }).eq("id", purchase_id);
 
     // Increment counters
-    const { data: sellerP } = await admin.from("profiles").select("user_id, transactions_sold").eq("id", purchase.seller_id).single();
-    const { data: buyerP } = await admin.from("profiles").select("user_id, transactions_bought").eq("id", purchase.buyer_id).single();
+    const { data: sellerP } = await admin.from("profiles").select("user_id, email, full_name, transactions_sold").eq("id", purchase.seller_id).single();
+    const { data: buyerP } = await admin.from("profiles").select("user_id, full_name, transactions_bought").eq("id", purchase.buyer_id).single();
     if (sellerP) await admin.from("profiles").update({ transactions_sold: (sellerP.transactions_sold ?? 0) + 1 }).eq("id", purchase.seller_id);
     if (buyerP) await admin.from("profiles").update({ transactions_bought: (buyerP.transactions_bought ?? 0) + 1 }).eq("id", purchase.buyer_id);
 
@@ -61,6 +61,33 @@ Deno.serve(async (req) => {
         type: "payout",
         listing_id: purchase.listing_id,
       });
+
+      // Email 5 — seller payout released
+      if (sellerP.email) {
+        const { data: listing } = await admin.from("listings")
+          .select("origin_city, origin_country, destination_city, destination_country, departure_date, airline, flight_number")
+          .eq("id", purchase.listing_id).single();
+        const payoutNet = Number(purchase.total_price || 0); // gross — fee breakdown handled elsewhere
+        await admin.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "escrow-released-seller",
+            recipientEmail: sellerP.email,
+            idempotencyKey: `payout-${purchase.id}`,
+            templateData: {
+              sellerName: (sellerP.full_name || "").split(" ")[0],
+              buyerName: (buyerP?.full_name || purchase.buyer_full_name || "").split(" ")[0],
+              payoutAmount: payoutNet ? `€${payoutNet.toFixed(2)}` : undefined,
+              trip: listing ? {
+                origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ""}`,
+                destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ""}`,
+                departureDate: listing.departure_date,
+                airline: listing.airline,
+                flightNumber: listing.flight_number,
+              } : undefined,
+            },
+          },
+        }).catch((e) => console.error("email payout failed", e));
+      }
     }
 
     return j({ ok: true });
