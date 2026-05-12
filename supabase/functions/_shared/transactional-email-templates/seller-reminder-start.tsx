@@ -2,14 +2,13 @@
 import * as React from 'npm:react@18.3.1'
 import { Heading, Text, Section, Link } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { EmailLayout, TripCard, TripDetails, h1, p, button, brand, card, row, label, APP_URL, PREFERENCES_URL } from './_layout.tsx'
+import { EmailLayout, TripDetails, h1, p, button, brand, card, row, label, APP_URL, PREFERENCES_URL } from './_layout.tsx'
 
 interface Props {
   sellerName?: string
   buyerName?: string
   buyerFullName?: string
   bookingRef?: string
-  nameChangeFee?: string
   totalPrice?: string
   trip?: TripDetails
   hoursLeft?: number
@@ -17,12 +16,16 @@ interface Props {
   orderNumber?: string
 }
 
-const Email = ({ sellerName, buyerName, buyerFullName, bookingRef, nameChangeFee, totalPrice, trip, hoursLeft, purchaseId, orderNumber }: Props) => {
+const Email = ({ sellerName, buyerName, buyerFullName, bookingRef, totalPrice, trip, hoursLeft, purchaseId, orderNumber }: Props) => {
   const buyer = buyerName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
-  const tripWithExtras: TripDetails | undefined = trip
-    ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: buyerFullName || trip.bookingName, escrowAmount: totalPrice || trip.escrowAmount, orderNumber: order }
-    : undefined
+  const isRoundTrip = !!(trip?.returnDate || trip?.returnTime)
+  const fmtLeg = (date?: string, time?: string) => {
+    if (!date && !time) return ''
+    if (date && time) return `${date} at ${time}`
+    return date || time || ''
+  }
+  const amount = totalPrice || trip?.escrowAmount
   return (
     <EmailLayout preview="A friendly nudge to update your booking" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
@@ -30,23 +33,46 @@ const Email = ({ sellerName, buyerName, buyerFullName, bookingRef, nameChangeFee
         Just a quick reminder. Your sale to {buyer} is waiting on the name change with the airline.
         You have around <strong>{hoursLeft ?? 23} hours left</strong> before the purchase is automatically refunded.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your sales details" />
-      <Section style={{ ...card, borderLeft: `3px solid ${brand.gold}` }}>
-        <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
-          Buyer details to use with the airline
-        </Text>
-        {buyerFullName && (
-          <Text style={row}><span style={label}>Full name: </span>{buyerFullName}</Text>
-        )}
-        {bookingRef && (
-          <Text style={row}><span style={label}>Original booking reference: </span>{bookingRef}</Text>
-        )}
-        {nameChangeFee && (
-          <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}` }}>
-            <span style={label}>Name change fee: </span>{nameChangeFee} (we hold this safely and pay it back to you once the sale is complete)
+      {trip && (
+        <Section style={card}>
+          <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            Your sales details
           </Text>
-        )}
-      </Section>
+          {order && (
+            <Text style={row}><span style={label}>Order number: </span>{order}</Text>
+          )}
+          {trip.origin && trip.destination && (
+            <Text style={row}><span style={label}>Route: </span>{trip.origin} {isRoundTrip ? '⇄' : '→'} {trip.destination}</Text>
+          )}
+          {(trip.departureDate || trip.departureTime) && (
+            <Text style={row}><span style={label}>{isRoundTrip ? 'Outbound: ' : 'Departure: '}</span>{fmtLeg(trip.departureDate, trip.departureTime)}</Text>
+          )}
+          {isRoundTrip && (
+            <Text style={row}><span style={label}>Return: </span>{fmtLeg(trip.returnDate, trip.returnTime)}</Text>
+          )}
+          {trip.airline && (
+            <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>
+          )}
+          {trip.passengers && trip.passengers > 1 && (
+            <Text style={row}><span style={label}>Passengers: </span>{trip.passengers}</Text>
+          )}
+          {amount && (
+            <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}>
+              <span style={label}>Amount paid: </span>{amount}
+            </Text>
+          )}
+
+          <Text style={{ margin: '16px 0 10px', paddingTop: '12px', borderTop: `1px solid ${brand.border}`, color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            Buyer details to use with the airline
+          </Text>
+          {buyerFullName && (
+            <Text style={row}><span style={label}>Full name: </span>{buyerFullName}</Text>
+          )}
+          {bookingRef && (
+            <Text style={row}><span style={label}>Original booking reference: </span>{bookingRef}</Text>
+          )}
+        </Section>
+      )}
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Unlock your payment</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
@@ -68,7 +94,7 @@ const Email = ({ sellerName, buyerName, buyerFullName, bookingRef, nameChangeFee
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>View sale in app</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Confirm the name change in the app</Link>
       </Section>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
@@ -89,7 +115,6 @@ export const template = {
     buyerName: 'Alex',
     buyerFullName: 'Alex Johnson',
     bookingRef: 'XYZ123',
-    nameChangeFee: '€45.00',
     totalPrice: '€124.50',
     hoursLeft: 23,
     purchaseId: 'abc-123',
