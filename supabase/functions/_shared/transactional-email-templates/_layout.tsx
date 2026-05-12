@@ -43,12 +43,12 @@ export const EmailLayout = ({ preview, children, accent = 'gold' }: LayoutProps)
         {/* Top gold accent stripe — mirrors the PDF header */}
         <div style={{ height: '4px', backgroundColor: accentColor, width: '100%' }} />
         <Container style={{ maxWidth: '560px', margin: '0 auto', padding: '0 0 32px' }}>
-          {/* Hero: charcoal block with left gold ribbon and lowercase wordmark */}
-          <Section style={{ backgroundColor: brand.charcoal, padding: '22px 28px 22px 24px', borderLeft: `4px solid ${accentColor}` }}>
-            <Text style={{ margin: 0, color: brand.bg, fontSize: '24px', fontWeight: 700, letterSpacing: '-0.5px', lineHeight: '28px' }}>
+          {/* Hero: white block with left gold ribbon and orange lowercase wordmark */}
+          <Section style={{ backgroundColor: brand.bg, padding: '24px 28px 20px 24px', borderLeft: `4px solid ${accentColor}` }}>
+            <Text style={{ margin: 0, color: brand.gold, fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', lineHeight: '30px' }}>
               swappup
             </Text>
-            <Text style={{ margin: '4px 0 0', color: brand.gold, fontSize: '10px', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+            <Text style={{ margin: '4px 0 0', color: brand.muted, fontSize: '10px', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
               Peer-to-peer flight marketplace
             </Text>
           </Section>
@@ -89,7 +89,7 @@ export const button = (color = brand.gold, fg = brand.charcoal) => ({
   padding: '12px 22px',
   borderRadius: '10px',
   textDecoration: 'none',
-  fontWeight: 600,
+  fontWeight: 700,
   fontSize: '14px',
 })
 
@@ -112,6 +112,9 @@ export interface TripDetails {
   departureDate?: string
   airline?: string
   flightNumber?: string
+  bookingRef?: string
+  airlineLogin?: string
+  escrowAmount?: string
 }
 
 export const TripCard = ({ trip }: { trip?: TripDetails }) => {
@@ -125,6 +128,9 @@ export const TripCard = ({ trip }: { trip?: TripDetails }) => {
       )}
       {trip.departureDate && <Text style={row}><span style={label}>Departure: </span>{trip.departureDate}</Text>}
       {trip.airline && <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
+      {trip.bookingRef && <Text style={row}><span style={label}>Booking reference: </span>{trip.bookingRef}</Text>}
+      {trip.airlineLogin && <Text style={row}><span style={label}>Airline login: </span>{trip.airlineLogin}</Text>}
+      {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Held in escrow: </span>{trip.escrowAmount}</Text>}
     </Section>
   )
 }
