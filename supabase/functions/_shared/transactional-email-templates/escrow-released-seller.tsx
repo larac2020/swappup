@@ -29,7 +29,11 @@ const Email = ({ sellerName, buyerName, payoutAmount, trip }: Props) => (
     <Section style={{ margin: '20px 0' }}>
       <Link href={`${APP_URL}/account?tab=transactions`} style={button()}>View payout</Link>
     </Section>
-    <Text style={small}>Thanks for selling on Swappup — list another ticket any time.</Text>
+    <Text style={small}>Thanks for selling on swappup — list another ticket any time.</Text>
+    <Text style={{ ...small, marginTop: '12px', fontStyle: 'italic' }}>
+      This is a payment notification, not a tax invoice. For accounting purposes, download the
+      official receipt from your account under Transactions.
+    </Text>
   </EmailLayout>
 )
 
