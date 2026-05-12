@@ -359,7 +359,7 @@ export default function Purchases() {
                       )}
                       <Button
                         size="sm" variant="outline" className="gap-2"
-                        onClick={() => downloadTicketPdf(p, listing, p.seller)}
+                        onClick={() => downloadTicketPdf(p, listing, p.seller, profile)}
                       >
                         <Download className="w-4 h-4" /> Download confirmation PDF
                       </Button>
