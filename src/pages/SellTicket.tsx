@@ -145,6 +145,7 @@ export default function SellTicket() {
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
+  const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
   const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
 
   // Flight schedule verification (Aviationstack via edge function)
@@ -592,6 +593,7 @@ export default function SellTicket() {
           ...listingData,
           seller_id: profile!.id,
           bumped_until: bumpedUntil,
+          name_change_risk_acknowledged_at: new Date().toISOString(),
         } as any);
         if (error) throw error;
       }
@@ -716,6 +718,15 @@ export default function SellTicket() {
       toast({
         title: t("sellToastListingBlocked"),
         description: t("sellToastBlockedVerify"),
+        variant: "destructive",
+      });
+      return;
+    }
+    // Mandatory name-change risk acknowledgement (skipped in edit mode — already accepted at creation).
+    if (!isEditMode && !nameChangeRiskAck) {
+      toast({
+        title: t("sellToastListingBlocked"),
+        description: t("sellToastNoConfirmRiskNotAck"),
         variant: "destructive",
       });
       return;
@@ -1421,12 +1432,34 @@ export default function SellTicket() {
               flightVerification != null &&
               (flightVerification.status === "mismatch" || flightVerification.status === "not_found");
             return (
+              <>
+                {!isEditMode && (
+                  <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">{t("sellNoConfirmRiskTitle")}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t("sellNoConfirmRiskBody")}</p>
+                        <p className="text-xs text-muted-foreground italic">{t("sellNoConfirmRiskReassurance")}</p>
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+                        checked={nameChangeRiskAck}
+                        onChange={(e) => setNameChangeRiskAck(e.target.checked)}
+                      />
+                      <span className="text-xs leading-relaxed">{t("sellNoConfirmRiskAck")}</span>
+                    </label>
+                  </div>
+                )}
               <Button
                 type="submit"
                 variant="gold"
                 size="xl"
                 className="w-full"
-                disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification}
+                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (!isEditMode && !nameChangeRiskAck)}
               >
                 {createListingMutation.isPending ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
@@ -1438,6 +1471,7 @@ export default function SellTicket() {
                   <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? t("sellSubmitUpdate") : t("sellHeaderCreate")}</>
                 )}
               </Button>
+              </>
             );
           })()}
         </form>

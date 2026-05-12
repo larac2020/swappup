@@ -1,73 +1,52 @@
-# Email template refinements — buyer purchase confirmation
+## Context: airline name-change reversal reality
 
-Scope: visual + copy refinements to `purchase-buyer-confirmation.tsx` and the shared `_layout.tsx`. No business-logic changes. Same tone/structure will be propagated to the other 6 templates in a follow-up if you approve.
+Quick research on the major airlines you operate with:
 
-## 1. Colors — orange-forward, white body
+- **Ryanair / easyJet / Wizz / low-cost carriers**: name changes are paid, treated as a brand-new ticket update. There is **no free "undo" window** — reverting to the original passenger means paying the same name-change fee again (or losing the ticket entirely on some fares).
+- **Legacy carriers (BA, Lufthansa, Air France, AA, Delta, Air Canada, Qantas)**: most do not allow true *name changes* at all, only *minor name corrections* (typos, marital surname). A full reversal usually requires ticket re-issue at full fare difference.
+- **24-hour DOT rule (US)**: only applies to *cancellations* of newly booked tickets, not to undoing name changes on resold tickets.
 
-Update `_layout.tsx`:
-- Replace the dark charcoal hero block with a **white hero** containing the `swappup` wordmark in **orange** (`#F4A929`). Keep the thin gold accent stripe at the very top and the gold left-ribbon for visual anchoring.
-- Tagline ("Peer-to-peer flight marketplace") in muted grey under the wordmark.
-- Body background stays white (already is).
-- "Need help?" panel stays as-is (orange accents on light surface — you confirmed this is fine).
-- CTA button: already orange (`brand.gold`). Confirm contrast by switching button text to **charcoal on orange** (current) and bumping weight to 700 for legibility.
+**Conclusion:** there is no realistic, free path to revert a name change. If the buyer fails to confirm within 48h after the seller has already executed the transfer, the seller has effectively spent the name-change fee on a ticket they no longer want under that name. Flyswap cannot recover that money from the airline.
 
-## 2. Missing booking details
+The only fair, sustainable policy is: **the seller assumes that risk, and we make it explicit before they list**. Flyswap remains a marketplace, not an insurer of airline policy.
 
-Add to `purchase-buyer-confirmation.tsx` props and render inside the trip/escrow card:
-- `bookingRef` — original PNR / booking reference
-- `airlineLoginEmail` — the email/account name the buyer must use to log into the airline reservation (the seller's account or the new account name once the name change is done)
-- `airlineLoginNote` — short helper line (e.g. "Use this name when checking in / managing the booking")
+## Proposed approach
 
-These will be passed through `templateData` from `stripe-purchase-webhook` (already has access to the listing + buyer profile). Wiring will be added in the same edit.
+Three coordinated changes:
 
-## 3. Tone of voice — consistent warmth
+### 1. Add a "buyer didn't confirm in 48h" email to the seller
 
-Rewrite the "What happens next" section so it reads like a continuation of the warm opening rather than a transactional list:
+New transactional template `transfer-buyer-no-confirm-seller.tsx`:
 
-Current (cold):
-> 1. The seller has 24 hours to complete the name change…
-> 2. You'll receive an email…
-> 3. Once you confirm, the payment is released…
+- Tone: factual, empathetic, not apologetic on Flyswap's behalf.
+- Explains: the buyer did not confirm the name change within the 48h verification window, so the sale has been cancelled and the buyer fully refunded.
+- Reminds the seller that, per the listing acknowledgement they accepted, the name-change fee they paid to the airline is **not recoverable by Flyswap** — the booking is now under the buyer's name on the airline side and the seller would need to deal with the airline directly if they want to revert it.
+- Includes the same standardized "ticket details" grey box used in the other seller emails (airline, booking ref, new name, route, original amount).
+- CTA: "Open the airline booking" (or "View sale in app").
+- Suggests next steps: contact the airline to attempt a goodwill reversal, or relist the ticket under the new buyer's name if the buyer agrees to release it (rare).
 
-Proposed (warm, same info):
-> Here's what happens from here — we'll guide you at every step.
->
-> Maria has 24 hours to update the booking with your name and share the new reference. As soon as she does, we'll email you to take a quick look and confirm everything matches. Once you give the green light, we release her payment — and your seat is officially yours.
->
-> If anything goes sideways, you're fully covered: no name change means an automatic refund, no questions asked.
+Triggered from the same backend job that already auto-cancels purchases when buyer 48h confirmation expires (alongside the existing buyer apology / refund flow).
 
-Same friendly register as the opening; no bullet wall.
+### 2. Add a disclaimer + mandatory acknowledgement at listing publication
 
-## 4. Greeting style
+In the sell flow (`SellTicket.tsx`), just before the publish button:
 
-Change `h1` usage on the greeting line only — render "Hi Alex," with the body `<Text>` style (regular weight, 14px, body color) instead of the bold 22px heading. Keep the bold heading reserved for actual section titles further down (or remove it entirely if the new prose flow doesn't need one).
+- A clearly visible warning box (gold/amber accent, in line with the brand) titled **"Important: name-change risk"**.
+- Body text: explains that once the seller executes the airline name change for a buyer, the fee paid to the airline is not refundable by Flyswap. If the buyer fails to verify within 48h and the sale is cancelled, the seller will have lost the name-change fee. Airlines do not offer a free reversal window.
+- A required checkbox: *"I understand that the name-change fee I pay to the airline is not refundable by Flyswap if the buyer fails to confirm the transfer within 48 hours."*
+- Publish button stays disabled until the box is checked.
+- Persist the acknowledgement on the listing row (new column `name_change_risk_acknowledged_at timestamptz`) so we have a per-listing audit trail and can quote it in disputes.
 
-## 5. "View purchase" CTA — deep-link behaviour
+Same disclaimer surfaced (read-only, as a reminder) inside the seller's existing post-sale email and the deadline-warning email — short one-liner under the "Confirm the name change" CTA, so the seller is reminded of the risk *before* they pay the airline.
 
-Current href: `https://swappup.com/account?tab=purchases`.
+### 3. Backend wiring
 
-Behaviour:
-- **Mobile (PWA installed):** opens the app at the Purchases tab via the existing route; if not installed, opens the responsive web app in the browser — same UX since Swappup is a web app, not a native iOS/Android binary today.
-- **Desktop:** opens swappup.com in the user's browser, lands on the Purchases tab. Fully functional.
+- Add `name_change_risk_acknowledged_at` to `listings` (migration).
+- The existing scheduled job that handles expired buyer confirmations triggers `send-transactional-email` with the new template `transfer-buyer-no-confirm-seller`, using an idempotency key like `buyer-no-confirm-seller-${purchaseId}`.
+- Register the new template in `registry.ts` and redeploy `send-transactional-email` and `preview-transactional-email`.
 
-Plan: keep the URL but add a small helper line under the button — *"Opens swappup.com — works on mobile and desktop."* — so the user knows what to expect. No native deep-link scheme needed (no native app exists). If/when a native app ships, we can layer a universal link on top without changing the email.
+## Open questions before I build
 
-## 6. Merge "Amount held in escrow" into the trip card
-
-Extend `TripCard` (or wrap with a small extension in this template) to render an "Amount held in escrow" row inside the same grey card as the flight details, styled like the other rows (muted label + value). Removes the floating standalone line.
-
-## Files affected
-
-- `supabase/functions/_shared/transactional-email-templates/_layout.tsx` — hero swap (white + orange wordmark), button weight, optional escrow row in `TripCard`.
-- `supabase/functions/_shared/transactional-email-templates/purchase-buyer-confirmation.tsx` — new props (`bookingRef`, `airlineLoginEmail`), rewritten copy, regular-weight greeting, escrow merged into card, helper line under CTA.
-- `supabase/functions/stripe-purchase-webhook/index.ts` — pass `bookingRef` and `airlineLoginEmail` in `templateData` for the buyer-confirmation send.
-- Redeploy `send-transactional-email` and `stripe-purchase-webhook`.
-- Regenerate `/mnt/documents/swappup-email-preview.html` so you can re-review before we propagate the same treatment to the other 6 templates.
-
-## Open question
-
-Confirm whether the "airline login" value should be:
-(a) the buyer's own full name (what they'll log in with after the name change), **or**
-(b) the seller's account email (what the buyer uses if the airline keeps the original account and only swaps the passenger name).
-
-Different airlines do this differently — your call on which to surface by default.
+1. Do you want to **block the seller from executing the name change** entirely once we know the buyer's confirmation deadline is risky (e.g. require the buyer to pre-confirm intent)? Or keep the current flow and rely purely on the disclaimer? Recommended: keep current flow + disclaimer.
+2. For the disclaimer copy, do you want me to also mention that Flyswap **will pursue repeat-offender buyers** (suspension after X no-confirms) so sellers feel the platform is actively protecting them? Recommended: yes, one short reassurance line.
+3. Should the seller email include a **template message they can copy/paste to the airline** to request a goodwill reversal? Low success rate but a nice touch.

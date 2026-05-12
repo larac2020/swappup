@@ -102,6 +102,9 @@ const Email = ({ sellerName, buyerName, buyerFullName, trip, bookingRef, deadlin
       <Section style={{ margin: '20px 0 8px' }}>
         <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Confirm the name change in the app</Link>
       </Section>
+      <Text style={{ fontSize: '12px', color: '#6b7280', lineHeight: '18px', margin: '6px 0 0', fontStyle: 'italic' }}>
+        Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer fails to confirm within 48 hours.
+      </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
       </Text>

@@ -791,6 +791,11 @@ const translations = {
     sellerLiabilityConfirmCta: "I've checked the fee and accept the risk",
     sellerLiabilityConfirmed: "Fee accuracy confirmed",
     sellToastFeeNotConfirmed: "Please confirm you've verified the name-change fee with the carrier before publishing.",
+    sellNoConfirmRiskTitle: "Important: name-change risk",
+    sellNoConfirmRiskBody: "Once you execute the airline name change for the buyer, the fee you pay the airline is NOT refundable by swappup if the buyer fails to confirm the booking within the 48-hour verification window. Airlines do not offer a free reversal window — if this happens, the seat stays under the buyer's name and you may lose the name-change fee.",
+    sellNoConfirmRiskAck: "I understand that the name-change fee I pay to the airline is not refundable by swappup if the buyer fails to confirm the transfer within 48 hours.",
+    sellToastNoConfirmRiskNotAck: "Please acknowledge the name-change risk before publishing your listing.",
+    sellNoConfirmRiskReassurance: "Buyers who repeatedly fail to confirm are reviewed and may be suspended from swappup.",
 
     // Legal pages
     legalTermsTitle: "Terms of Service",
@@ -1598,6 +1603,11 @@ const translations = {
     sellerLiabilityConfirmCta: "Ho verificato il costo e accetto il rischio",
     sellerLiabilityConfirmed: "Accuratezza del costo confermata",
     sellToastFeeNotConfirmed: "Conferma di aver verificato il costo del cambio nominativo con il vettore prima di pubblicare.",
+    sellNoConfirmRiskTitle: "Importante: rischio cambio nominativo",
+    sellNoConfirmRiskBody: "Una volta eseguito il cambio nominativo con la compagnia per l'acquirente, il costo pagato alla compagnia NON è rimborsabile da swappup se l'acquirente non conferma la prenotazione entro la finestra di verifica di 48 ore. Le compagnie aeree non offrono una finestra di reversibilità gratuita — se ciò accade, il posto resta a nome dell'acquirente e potresti perdere il costo del cambio nominativo.",
+    sellNoConfirmRiskAck: "Ho compreso che il costo del cambio nominativo pagato alla compagnia non è rimborsabile da swappup se l'acquirente non conferma il trasferimento entro 48 ore.",
+    sellToastNoConfirmRiskNotAck: "Conferma il rischio del cambio nominativo prima di pubblicare l'annuncio.",
+    sellNoConfirmRiskReassurance: "Gli acquirenti che ripetutamente non confermano vengono esaminati e possono essere sospesi da swappup.",
 
     // Legal pages
     legalTermsTitle: "Termini di Servizio",
