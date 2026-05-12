@@ -20,6 +20,7 @@ import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Unsubscribe from "./pages/Unsubscribe";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
