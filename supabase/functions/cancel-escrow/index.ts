@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
 
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
-    const { purchase_id, reason } = await req.json();
+    const { purchase_id, reason, cause } = await req.json();
     if (!purchase_id) return j({ error: "Missing purchase_id" }, 400);
 
     const { data: purchase } = await admin.from("purchases").select("*").eq("id", purchase_id).single();
@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
     const { data: listing } = await admin.from("listings")
       .select("ticket_count, is_active, title, origin_city, origin_country, destination_city, destination_country, departure_date, airline, flight_number")
       .eq("id", purchase.listing_id).single();
-    if (listing) {
+    // Only restore stock for seller-side failures. If the buyer failed to confirm AFTER the seller
+    // already executed the airline name change, the booking is now under the buyer's name on the
+    // airline side and the listing should NOT be re-activated.
+    if (listing && cause !== "buyer_no_confirm") {
       await admin.from("listings").update({
         ticket_count: (listing.ticket_count ?? 0) + (purchase.quantity ?? 1),
         is_active: true,
@@ -81,36 +84,74 @@ Deno.serve(async (req) => {
         flightNumber: listing.flight_number,
       };
 
-      // Email 6 — buyer apology
-      const buyerRecipient = buyerP?.email || purchase.buyer_email;
-      if (buyerRecipient) {
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "transfer-missed-buyer-apology",
-            recipientEmail: buyerRecipient,
-            idempotencyKey: `buyer-apology-${purchase.id}`,
-            templateData: {
-              buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
-              refundAmount: purchase.total_price ? `€${Number(purchase.total_price).toFixed(2)}` : undefined,
-              trip,
+      if (cause === "buyer_no_confirm") {
+        // Seller-side: dedicated email explaining that the buyer failed to confirm and that the
+        // name-change fee paid to the airline is not recoverable by swappup.
+        if (sellerP?.email) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transfer-buyer-no-confirm-seller",
+              recipientEmail: sellerP.email,
+              idempotencyKey: `seller-buyer-no-confirm-${purchase.id}`,
+              templateData: {
+                sellerName: (sellerP.full_name || "").split(" ")[0],
+                buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
+                nameChangeFee: purchase.name_change_fee ? `€${Number(purchase.name_change_fee).toFixed(2)}` : undefined,
+                purchaseId: purchase.id,
+                trip,
+              },
             },
-          },
-        }).catch((e) => console.error("email buyer apology failed", e));
-      }
+          }).catch((e) => console.error("email seller buyer-no-confirm failed", e));
+        }
+        // Buyer side: still receives the apology / refund email so they have a record.
+        const buyerRecipient = buyerP?.email || purchase.buyer_email;
+        if (buyerRecipient) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transfer-missed-buyer-apology",
+              recipientEmail: buyerRecipient,
+              idempotencyKey: `buyer-no-confirm-refund-${purchase.id}`,
+              templateData: {
+                buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
+                refundAmount: purchase.total_price ? `€${Number(purchase.total_price).toFixed(2)}` : undefined,
+                trip,
+              },
+            },
+          }).catch((e) => console.error("email buyer no-confirm refund failed", e));
+        }
+      } else {
+        // Default — seller missed the 24h transfer deadline.
+        // Email 6 — buyer apology
+        const buyerRecipient = buyerP?.email || purchase.buyer_email;
+        if (buyerRecipient) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transfer-missed-buyer-apology",
+              recipientEmail: buyerRecipient,
+              idempotencyKey: `buyer-apology-${purchase.id}`,
+              templateData: {
+                buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
+                refundAmount: purchase.total_price ? `€${Number(purchase.total_price).toFixed(2)}` : undefined,
+                trip,
+              },
+            },
+          }).catch((e) => console.error("email buyer apology failed", e));
+        }
 
-      // Email 7 — seller warning
-      if (sellerP?.email) {
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "transfer-missed-seller-warning",
-            recipientEmail: sellerP.email,
-            idempotencyKey: `seller-missed-${purchase.id}`,
-            templateData: {
-              sellerName: (sellerP.full_name || "").split(" ")[0],
-              trip,
+        // Email 7 — seller warning
+        if (sellerP?.email) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transfer-missed-seller-warning",
+              recipientEmail: sellerP.email,
+              idempotencyKey: `seller-missed-${purchase.id}`,
+              templateData: {
+                sellerName: (sellerP.full_name || "").split(" ")[0],
+                trip,
+              },
             },
-          },
-        }).catch((e) => console.error("email seller warning failed", e));
+          }).catch((e) => console.error("email seller warning failed", e));
+        }
       }
     }
 
