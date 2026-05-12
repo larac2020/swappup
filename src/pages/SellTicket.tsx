@@ -722,6 +722,15 @@ export default function SellTicket() {
       });
       return;
     }
+    // Mandatory name-change risk acknowledgement (skipped in edit mode — already accepted at creation).
+    if (!isEditMode && !nameChangeRiskAck) {
+      toast({
+        title: t("sellToastListingBlocked"),
+        description: t("sellToastNoConfirmRiskNotAck"),
+        variant: "destructive",
+      });
+      return;
+    }
     createListingMutation.mutate();
   };
 
