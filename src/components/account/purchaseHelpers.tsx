@@ -220,13 +220,13 @@ export async function downloadTicketPdf(p: any, listing: any, seller?: any, prof
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   setText(doc, BRAND.ink);
-  const route = `${listing?.origin_city ?? "—"} → ${listing?.destination_city ?? "—"}`;
+  const route = `${listing?.origin_city ?? "—"} › ${listing?.destination_city ?? "—"}`;
   doc.text(route, 18, y + 14);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   setText(doc, BRAND.muted);
-  const airports = `${listing?.origin_airport || listing?.origin_station || "—"}  →  ${listing?.destination_airport || listing?.destination_station || "—"}`;
+  const airports = `${listing?.origin_airport || listing?.origin_station || "—"}  ›  ${listing?.destination_airport || listing?.destination_station || "—"}`;
   doc.text(airports, 18, y + 19);
 
   setText(doc, BRAND.ink);
@@ -415,7 +415,7 @@ export async function shareTicket(p: any, listing: any) {
   if (typeof navigator === "undefined" || !("share" in navigator)) return;
   const route =
     listing?.origin_city && listing?.destination_city
-      ? `${listing.origin_city} → ${listing.destination_city}`
+      ? `${listing.origin_city} › ${listing.destination_city}`
       : listing?.title || "Ticket";
   const dateStr = listing?.departure_date
     ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy")
