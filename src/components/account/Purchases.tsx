@@ -77,7 +77,11 @@ export default function Purchases() {
   const { data: purchases, isLoading } = useQuery({
     queryKey: ["purchases", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("purchases").select("*, listings(*)").eq("buyer_id", profile!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*, listings(*), seller:profiles!purchases_seller_id_fkey(id, full_name, email)")
+        .eq("buyer_id", profile!.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -230,6 +234,12 @@ export default function Purchases() {
                     <span className="font-medium text-foreground">{p.quantity}</span>
                     {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
                   </p>
+                  {p.seller?.full_name && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Seller:</span>{" "}
+                      <span className="font-medium text-foreground">{p.seller.full_name}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Price Breakdown + Receipt */}
@@ -296,11 +306,11 @@ export default function Purchases() {
                     {isTransferConfirmed && (
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                        <p className="text-xs font-medium text-success">Name change confirmed — your ticket details:</p>
+                        <p className="text-xs font-medium text-success">Name change confirmed — your booking details:</p>
                       </div>
                     )}
                     {!isTransferConfirmed && (
-                      <p className="text-xs font-medium text-muted-foreground">Your ticket details</p>
+                      <p className="text-xs font-medium text-muted-foreground">Your booking details</p>
                     )}
                     <div className="space-y-1">
                       <p className="text-sm">
@@ -335,7 +345,7 @@ export default function Purchases() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Use these details to access your booking on the airline's website.
+                      This is a swappup booking confirmation — not your boarding pass. Use these credentials on the airline's website to retrieve your ticket and check in.
                     </p>
                     <div className="flex flex-row flex-wrap gap-2 pt-2">
                       {p.escrow_status !== "released" && (
@@ -349,9 +359,9 @@ export default function Purchases() {
                       )}
                       <Button
                         size="sm" variant="outline" className="gap-2"
-                        onClick={() => downloadTicketPdf(p, listing)}
+                        onClick={() => downloadTicketPdf(p, listing, p.seller)}
                       >
-                        <Download className="w-4 h-4" /> Download ticket PDF
+                        <Download className="w-4 h-4" /> Download confirmation PDF
                       </Button>
                       {canShare() && (
                         <Button
