@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
               totalPrice: fmt(purchase.total_price),
               trip,
               bookingRef: purchase.original_booking_ref,
-              airlineLogin: sellerProfile?.email,
+              bookingName: purchase.buyer_full_name || buyerProfile?.full_name,
               purchaseId: purchase.id,
             },
           },
