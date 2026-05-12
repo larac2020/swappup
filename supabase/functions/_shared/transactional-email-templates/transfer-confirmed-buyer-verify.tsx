@@ -16,7 +16,8 @@ interface Props {
 }
 
 const Email = ({ buyerName, sellerName, newBookingRef, surname, trip, purchaseId, orderNumber, totalPrice }: Props) => {
-  const seller = sellerName || 'your seller'
+  // Seller PII is intentionally hidden from the buyer.
+  const seller = 'your seller'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const fmtLeg = (date?: string, time?: string) => {
     if (!date && !time) return ''
