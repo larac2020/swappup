@@ -2,42 +2,99 @@
 import * as React from 'npm:react@18.3.1'
 import { Heading, Text, Section, Link } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { EmailLayout, TripCard, TripDetails, h1, p, button, brand, APP_URL } from './_layout.tsx'
+import { EmailLayout, TripDetails, h1, p, button, brand, card, row, label, APP_URL, PREFERENCES_URL } from './_layout.tsx'
 
 interface Props {
   sellerName?: string
   buyerName?: string
+  buyerFullName?: string
+  bookingRef?: string
+  totalPrice?: string
   trip?: TripDetails
   deadline?: string
   purchaseId?: string
   orderNumber?: string
 }
 
-const Email = ({ sellerName, buyerName, trip, deadline, purchaseId, orderNumber }: Props) => {
-  const buyer = buyerName || 'your buyer'
+const Email = ({ sellerName, buyerName, buyerFullName, bookingRef, totalPrice, trip, deadline, purchaseId, orderNumber }: Props) => {
+  const buyer = buyerName || buyerFullName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
-  const tripWithExtras: TripDetails | undefined = trip ? { ...trip, orderNumber: order } : undefined
+  const isRoundTrip = !!(trip?.returnDate || trip?.returnTime)
+  const fmtLeg = (date?: string, time?: string) => {
+    if (!date && !time) return ''
+    if (date && time) return `${date} at ${time}`
+    return date || time || ''
+  }
+  const amount = totalPrice || trip?.escrowAmount
   return (
-    <EmailLayout preview="Only 4 hours left to complete your sale" accent="danger" transactional>
+    <EmailLayout preview="Only 4 hours left to complete your sale" transactional>
       <Text style={p}>{sellerName ? `Hi ${sellerName},` : 'Hi there,'}</Text>
       <Text style={p}>
         Just a heads up. Your 24 hour window to update the booking with {buyer}'s name is almost over.
         After {deadline || 'the deadline'}, the purchase is <strong>automatically refunded</strong> and the sale is cancelled.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your booking" />
-      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>What to do right now</Heading>
+      {trip && (
+        <Section style={card}>
+          <Text style={{ margin: '0 0 10px', color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            Your sales details
+          </Text>
+          {order && (
+            <Text style={row}><span style={label}>Order number: </span>{order}</Text>
+          )}
+          {trip.origin && trip.destination && (
+            <Text style={row}><span style={label}>Route: </span>{trip.origin} {isRoundTrip ? '⇄' : '→'} {trip.destination}</Text>
+          )}
+          {(trip.departureDate || trip.departureTime) && (
+            <Text style={row}><span style={label}>{isRoundTrip ? 'Outbound: ' : 'Departure: '}</span>{fmtLeg(trip.departureDate, trip.departureTime)}</Text>
+          )}
+          {isRoundTrip && (
+            <Text style={row}><span style={label}>Return: </span>{fmtLeg(trip.returnDate, trip.returnTime)}</Text>
+          )}
+          {trip.airline && (
+            <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>
+          )}
+          {trip.passengers && trip.passengers > 1 && (
+            <Text style={row}><span style={label}>Passengers: </span>{trip.passengers}</Text>
+          )}
+          {amount && (
+            <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}>
+              <span style={label}>Amount paid: </span>{amount}
+            </Text>
+          )}
+
+          <Text style={{ margin: '16px 0 10px', paddingTop: '12px', borderTop: `1px solid ${brand.border}`, color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            Buyer details to use with the airline
+          </Text>
+          {buyerFullName && (
+            <Text style={row}><span style={label}>Full name: </span>{buyerFullName}</Text>
+          )}
+          {bookingRef && (
+            <Text style={row}><span style={label}>Original booking reference: </span>{bookingRef}</Text>
+          )}
+        </Section>
+      )}
+      <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Unlock your payment</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
           <li style={{ marginBottom: '6px' }}>
             Go to the airline website and <strong>update the booking</strong> with the buyer's name.
           </li>
-          <li style={{ marginBottom: '6px' }}>
-            Upload the new booking confirmation in the swappup app to complete the sale.
+          <li style={{ marginBottom: '10px' }}>
+            Upload the new booking confirmation in the swappup app to mark the change as done.
+          </li>
+          <li style={{ marginBottom: '10px' }}>
+            Once the buyer verifies everything looks good, your money is released. It usually arrives in your account within 2 to 5 business days.
+            <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
+              <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
+                💡 Turn on push notifications to know the moment the buyer confirms and your payment is on the way.{' '}
+                <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'underline', fontWeight: 600 }}>Update notification preferences</Link>.
+              </Text>
+            </Section>
           </li>
         </ol>
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button('#b1311f', '#ffffff')}>View sale in app</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Confirm the name change in the app</Link>
       </Section>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Already done it?</Heading>
       <Text style={p}>
@@ -60,6 +117,9 @@ export const template = {
   previewData: {
     sellerName: 'Maria',
     buyerName: 'Alex',
+    buyerFullName: 'Alex Johnson',
+    bookingRef: 'XYZ123',
+    totalPrice: '€124.50',
     deadline: '13 May 2026 14:30',
     purchaseId: 'abc-123',
     trip: {
