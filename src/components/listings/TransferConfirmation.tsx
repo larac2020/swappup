@@ -57,6 +57,9 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           escrow_status: "pending_release",
           seller_transferred: true,
           transfer_payment_proof_url: path,
+          // Buyer has 48h from this moment to verify the booking and release payment.
+          // After that the system will auto-cancel the sale and notify both parties.
+          escrow_deadline: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
         })
         .eq("id", purchase.id);
       if (error) throw error;
