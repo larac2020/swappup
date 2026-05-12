@@ -163,6 +163,48 @@ export default function Purchases() {
                       <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                       <p className="text-xs font-medium text-success">Name change confirmed — your ticket details:</p>
                     </div>
+                    <div className="space-y-1 pl-6 pb-2 border-b border-success/20">
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Route:</span>{" "}
+                        <span className="font-medium text-foreground">
+                          {listing?.origin_city} ({listing?.origin_airport || listing?.origin_station || "—"})
+                          {" → "}
+                          {listing?.destination_city} ({listing?.destination_airport || listing?.destination_station || "—"})
+                        </span>
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Airline / Operator:</span>{" "}
+                        <span className="font-medium text-foreground">{listing?.airline || listing?.operator || "—"}</span>
+                      </p>
+                      {(listing?.flight_number || listing?.train_number) && (
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Flight / Train #:</span>{" "}
+                          <span className="font-mono font-medium text-foreground">{listing?.flight_number || listing?.train_number}</span>
+                        </p>
+                      )}
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Departure:</span>{" "}
+                        <span className="font-medium text-foreground">
+                          {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
+                          {listing?.departure_time ? ` · ${listing.departure_time.slice(0, 5)}` : ""}
+                        </span>
+                      </p>
+                      {listing?.return_date && (
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Return:</span>{" "}
+                          <span className="font-medium text-foreground">
+                            {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
+                            {listing?.return_departure_time ? ` · ${listing.return_departure_time.slice(0, 5)}` : ""}
+                            {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
+                          </span>
+                        </p>
+                      )}
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Passengers:</span>{" "}
+                        <span className="font-medium text-foreground">{p.quantity}</span>
+                        {listing?.train_class ? <span className="text-muted-foreground"> · Class: <span className="text-foreground font-medium">{listing.train_class}</span></span> : null}
+                      </p>
+                    </div>
                     <div className="space-y-1 pl-6">
                       <p className="text-sm">
                         <span className="text-muted-foreground">Booking Ref:</span>{" "}
@@ -172,6 +214,25 @@ export default function Purchases() {
                         <span className="text-muted-foreground">Surname:</span>{" "}
                         <span className="font-bold text-foreground">{p.transfer_surname}</span>
                       </p>
+                      {p.buyer_full_name && (
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Passenger name on ticket:</span>{" "}
+                          <span className="font-bold text-foreground">{p.buyer_full_name}</span>
+                        </p>
+                      )}
+                      {p.transfer_payment_proof_url && (
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Payment proof:</span>{" "}
+                          <a
+                            href={p.transfer_payment_proof_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-primary underline underline-offset-4"
+                          >
+                            View receipt
+                          </a>
+                        </p>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground pl-6">
                       Use these details to access your booking on the airline's website.
