@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw, Download, FileText, Share2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
 import { useState, useEffect, useRef } from "react";
+import { CopyButton, downloadTicketPdf, downloadReceiptPdf, shareTicket, canShare } from "./purchaseHelpers";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
@@ -66,7 +67,7 @@ export default function Purchases() {
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id").eq("user_id", user!.id).single();
+      const { data, error } = await supabase.from("profiles").select("id, full_name, email").eq("user_id", user!.id).single();
       if (error) throw error;
       return data;
     },
@@ -180,14 +181,24 @@ export default function Purchases() {
                 >
                   <div className="overflow-hidden">
                     <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
-                {/* Price Breakdown */}
-                {p.name_change_fee > 0 && (
-                  <div className="text-xs text-muted-foreground flex items-center gap-3 px-1">
-                    <span>Ticket: {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
-                    <span>•</span>
-                    <span>Name change fee: {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
-                  </div>
-                )}
+                {/* Price Breakdown + Receipt */}
+                <div className="flex flex-wrap items-center gap-2 px-1">
+                  {p.name_change_fee > 0 && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-1 min-w-0">
+                      <span>Ticket: {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
+                      <span>•</span>
+                      <span>Name change fee: {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
+                    </div>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5 h-7 ml-auto text-xs"
+                    onClick={() => downloadReceiptPdf(p, listing, profile)}
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Receipt
+                  </Button>
+                </div>
 
                 {/* Pending Transfer Status */}
                 {isPendingTransfer && (
@@ -232,6 +243,7 @@ export default function Purchases() {
                         <p className="text-sm">
                           <span className="text-muted-foreground">Flight / Train #:</span>{" "}
                           <span className="font-mono font-medium text-foreground">{listing?.flight_number || listing?.train_number}</span>
+                          <CopyButton value={listing?.flight_number || listing?.train_number} label="Flight number" />
                         </p>
                       )}
                       <p className="text-sm">
@@ -261,15 +273,18 @@ export default function Purchases() {
                       <p className="text-sm">
                         <span className="text-muted-foreground">Booking Ref:</span>{" "}
                         <span className="font-mono font-bold text-foreground">{p.transfer_booking_ref}</span>
+                        <CopyButton value={p.transfer_booking_ref} label="Booking reference" />
                       </p>
                       <p className="text-sm">
                         <span className="text-muted-foreground">Surname:</span>{" "}
                         <span className="font-bold text-foreground">{p.transfer_surname}</span>
+                        <CopyButton value={p.transfer_surname} label="Surname" />
                       </p>
                       {p.buyer_full_name && (
                         <p className="text-sm">
                           <span className="text-muted-foreground">Passenger name on ticket:</span>{" "}
                           <span className="font-bold text-foreground">{p.buyer_full_name}</span>
+                          <CopyButton value={p.buyer_full_name} label="Passenger name" />
                         </p>
                       )}
                       {p.transfer_payment_proof_url && (
@@ -289,8 +304,8 @@ export default function Purchases() {
                     <p className="text-xs text-muted-foreground pl-6">
                       Use these details to access your booking on the airline's website.
                     </p>
-                    {p.escrow_status !== "released" && (
-                      <div className="flex flex-col sm:flex-row gap-2 pt-2 pl-6">
+                    <div className="flex flex-row flex-wrap gap-2 pt-2 pl-6">
+                      {p.escrow_status !== "released" && (
                         <Button
                           size="sm" variant="gold" className="gap-2"
                           disabled={releaseMutation.isPending}
@@ -298,6 +313,22 @@ export default function Purchases() {
                         >
                           <ShieldCheck className="w-4 h-4" /> Confirm everything is ok
                         </Button>
+                      )}
+                      <Button
+                        size="sm" variant="outline" className="gap-2"
+                        onClick={() => downloadTicketPdf(p, listing)}
+                      >
+                        <Download className="w-4 h-4" /> Download ticket PDF
+                      </Button>
+                      {canShare() && (
+                        <Button
+                          size="sm" variant="outline" className="gap-2"
+                          onClick={() => shareTicket(p, listing)}
+                        >
+                          <Share2 className="w-4 h-4" /> Share
+                        </Button>
+                      )}
+                      {p.escrow_status !== "released" && (
                         <Button
                           size="sm" variant="outline" className="gap-2"
                           disabled={cancelMutation.isPending}
@@ -308,8 +339,8 @@ export default function Purchases() {
                         >
                           <AlertTriangle className="w-4 h-4" /> Report a problem
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
 
