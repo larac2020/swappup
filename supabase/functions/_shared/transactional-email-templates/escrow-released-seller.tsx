@@ -17,7 +17,7 @@ const Email = ({ sellerName, buyerName, payoutAmount, trip, purchaseId, orderNum
   const buyer = buyerName || 'your buyer'
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
-    ? { ...trip, escrowAmount: payoutAmount || trip.escrowAmount, orderNumber: order }
+    ? { ...trip, escrowAmount: payoutAmount || trip.escrowAmount, escrowAmountLabel: "Amount you'll receive", orderNumber: order }
     : undefined
   return (
     <EmailLayout preview="Your sale is complete and your money is on its way" accent="success" transactional>
