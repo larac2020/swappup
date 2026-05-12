@@ -156,9 +156,7 @@ export const TripCard = ({ trip, title = 'Your purchase details' }: { trip?: Tri
       )}
       {trip.bookingRef && <Text style={row}><span style={label}>Booking reference: </span>{trip.bookingRef}</Text>}
       {trip.bookingName && (
-        <Text style={row}>
-          <span style={label}>{trip.passengers && trip.passengers > 1 ? 'New name(s) on the booking: ' : 'New name on the booking: '}</span>{trip.bookingName}
-        </Text>
+        <Text style={row}><span style={label}>New name on the booking: </span>{trip.bookingName}</Text>
       )}
       {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until transfer): </span>{trip.escrowAmount}</Text>}
     </Section>
