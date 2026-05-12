@@ -55,12 +55,6 @@ const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, orderNumbe
           </li>
         </ol>
       </Text>
-      <Section style={{ margin: '22px 0 6px' }}>
-        <Link href={`${APP_URL}/account?tab=purchases`} style={button()}>View my purchase</Link>
-      </Section>
-      <Text style={small}>
-        Opens swappup.com — works on mobile and desktop.
-      </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>Found an issue with the booking?</Heading>
       <Text style={p}>
         If something doesn't look right, or if {seller} doesn't update the booking with your name
