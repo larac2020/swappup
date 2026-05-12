@@ -31,9 +31,10 @@ interface LayoutProps {
   preview: string
   children: React.ReactNode
   accent?: 'gold' | 'danger' | 'success'
+  transactional?: boolean
 }
 
-export const EmailLayout = ({ preview, children, accent = 'gold' }: LayoutProps) => {
+export const EmailLayout = ({ preview, children, accent = 'gold', transactional = false }: LayoutProps) => {
   return (
     <Html lang="en" dir="ltr">
       <Head />
@@ -65,11 +66,13 @@ export const EmailLayout = ({ preview, children, accent = 'gold' }: LayoutProps)
           {/* Preferences + disclaimer */}
           <Section style={{ padding: '18px 28px 0' }}>
             <Hr style={{ borderColor: brand.border, borderWidth: '0.5px', margin: '0 0 12px' }} />
-            <Text style={{ margin: '0 0 8px', color: brand.muted, fontSize: '12px', lineHeight: '18px' }}>
-              <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'none', fontWeight: 600 }}>Manage email preferences</Link>
-              {' · '}
-              <Link href={`${APP_URL}/unsubscribe`} style={{ color: brand.muted, textDecoration: 'underline' }}>Unsubscribe</Link>
-            </Text>
+            {!transactional && (
+              <Text style={{ margin: '0 0 8px', color: brand.muted, fontSize: '12px', lineHeight: '18px' }}>
+                <Link href={PREFERENCES_URL} style={{ color: brand.goldDeep, textDecoration: 'none', fontWeight: 600 }}>Manage email preferences</Link>
+                {' · '}
+                <Link href={`${APP_URL}/unsubscribe`} style={{ color: brand.muted, textDecoration: 'underline' }}>Unsubscribe</Link>
+              </Text>
+            )}
             <Text style={{ margin: 0, color: brand.muted, fontSize: '11px', lineHeight: '16px' }}>
               This email confirms activity on your swappup account. It is not a boarding pass and does not grant boarding rights — your seat is added to the airline booking by the seller through a name change. See our{' '}
               <Link href={TERMS_URL} style={{ color: brand.muted, textDecoration: 'underline' }}>terms</Link>.
@@ -124,14 +127,12 @@ export const TripCard = ({ trip, title = 'Your purchase details' }: { trip?: Tri
         {title}
       </Text>
       {trip.origin && trip.destination && (
-        <Text style={row}>
-          {trip.origin} → {trip.destination}
-        </Text>
+        <Text style={row}><span style={label}>Route: </span>{trip.origin} → {trip.destination}</Text>
       )}
       {trip.departureDate && <Text style={row}><span style={label}>Departure: </span>{trip.departureDate}</Text>}
       {trip.airline && <Text style={row}><span style={label}>Airline: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
       {trip.bookingRef && <Text style={row}><span style={label}>Booking reference: </span>{trip.bookingRef}</Text>}
-      {trip.bookingName && <Text style={row}><span style={label}>Name on the booking: </span>{trip.bookingName}</Text>}
+      {trip.bookingName && <Text style={row}><span style={label}>New name on the booking: </span>{trip.bookingName}</Text>}
       {trip.escrowAmount && <Text style={{ ...row, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${brand.border}`, fontWeight: 600, color: brand.charcoal }}><span style={label}>Amount paid (held safely until transfer): </span>{trip.escrowAmount}</Text>}
     </Section>
   )
