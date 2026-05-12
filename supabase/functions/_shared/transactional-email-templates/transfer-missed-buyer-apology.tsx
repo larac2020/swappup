@@ -15,7 +15,7 @@ interface Props {
 const Email = ({ buyerName, trip, refundAmount, purchaseId, orderNumber }: Props) => {
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
-    ? { ...trip, escrowAmount: refundAmount || trip.escrowAmount, orderNumber: order }
+    ? { ...trip, escrowAmount: refundAmount || trip.escrowAmount, orderNumber: order, escrowAmountLabel: "Amount we'll refund" }
     : undefined
   return (
     <EmailLayout preview="We are sorry, your purchase has been refunded" accent="danger" transactional>
@@ -26,7 +26,7 @@ const Email = ({ buyerName, trip, refundAmount, purchaseId, orderNumber }: Props
         {refundAmount ? <> ({refundAmount})</> : null}. The refund usually appears in your account within
         <strong> 5 to 10 business days</strong>, depending on your bank.
       </Text>
-      <TripCard trip={tripWithExtras} title="Your purchase" />
+      <TripCard trip={tripWithExtras} title="Your ticket details" />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>Don't give up on the trip</Heading>
       <Text style={p}>
         There may be other sellers offering similar tickets on the same route. Tap below to browse alternatives.
