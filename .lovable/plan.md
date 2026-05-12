@@ -1,73 +1,73 @@
-## Goal
+# Email template refinements — buyer purchase confirmation
 
-Send branded swappup emails at 7 key moments in the purchase lifecycle, in addition to the existing in-app notifications.
+Scope: visual + copy refinements to `purchase-buyer-confirmation.tsx` and the shared `_layout.tsx`. No business-logic changes. Same tone/structure will be propagated to the other 6 templates in a follow-up if you approve.
 
-## Prerequisite: Email infrastructure
+## 1. Colors — orange-forward, white body
 
-The project has no email infrastructure yet (no domain configured, no email tables). Before any template work, we need to:
+Update `_layout.tsx`:
+- Replace the dark charcoal hero block with a **white hero** containing the `swappup` wordmark in **orange** (`#F4A929`). Keep the thin gold accent stripe at the very top and the gold left-ribbon for visual anchoring.
+- Tagline ("Peer-to-peer flight marketplace") in muted grey under the wordmark.
+- Body background stays white (already is).
+- "Need help?" panel stays as-is (orange accents on light surface — you confirmed this is fine).
+- CTA button: already orange (`brand.gold`). Confirm contrast by switching button text to **charcoal on orange** (current) and bumping weight to 700 for legibility.
 
-1. Configure a sender email domain (e.g. `notify.swappup.com`) via the email setup dialog.
-2. Provision the email queue, suppression list, unsubscribe tokens, cron dispatcher.
-3. Scaffold the transactional email function `send-transactional-email` and the unsubscribe page.
+## 2. Missing booking details
 
-If you already have a preferred sender domain, share it; otherwise the dialog will guide selection. DNS verification can complete in the background — scaffolding and triggers can be wired in parallel.
+Add to `purchase-buyer-confirmation.tsx` props and render inside the trip/escrow card:
+- `bookingRef` — original PNR / booking reference
+- `airlineLoginEmail` — the email/account name the buyer must use to log into the airline reservation (the seller's account or the new account name once the name change is done)
+- `airlineLoginNote` — short helper line (e.g. "Use this name when checking in / managing the booking")
 
-## Email map (7 triggers)
+These will be passed through `templateData` from `stripe-purchase-webhook` (already has access to the listing + buyer profile). Wiring will be added in the same edit.
 
-| # | Event | Recipient | Template | Triggered in |
-|---|-------|-----------|----------|--------------|
-| 1a | Ticket bought (confirmation) | Buyer | `purchase-buyer-confirmation` | `stripe-purchase-webhook` (checkout.completed) |
-| 1b | Ticket sold (action required) | Seller | `purchase-seller-new-sale` | same webhook |
-| 2 | Reminder to start name change | Seller | `seller-action-reminder` | new cron `seller-action-reminders` (sent ~1h after purchase if no transfer yet) |
-| 3 | 4h before 24h deadline | Seller | `seller-deadline-warning` | same cron (when `transfer_deadline - now ≈ 4h` and not yet transferred) |
-| 4 | Name changed → buyer must verify | Buyer | `transfer-completed-buyer` | `TransferConfirmation.tsx` mutation |
-| 5 | Buyer confirmed → payout incoming | Seller | `escrow-released-seller` | `release-escrow` edge function |
-| 6 | Seller missed deadline (sorry) | Buyer | `transfer-expired-buyer` | `expire-transfers` → `cancel-escrow` |
-| 7 | Seller missed deadline (warning) | Seller | `transfer-expired-seller` | same path |
+## 3. Tone of voice — consistent warmth
 
-Each template will be a React Email `.tsx` in `supabase/functions/_shared/transactional-email-templates/`, registered in `registry.ts`, brand-styled (charcoal + gold, white body background as required), and accept dynamic `templateData` (names, route, dates, booking ref, deadline, support links).
+Rewrite the "What happens next" section so it reads like a continuation of the warm opening rather than a transactional list:
 
-## Code changes
+Current (cold):
+> 1. The seller has 24 hours to complete the name change…
+> 2. You'll receive an email…
+> 3. Once you confirm, the payment is released…
 
-### New / scaffolded
-- `supabase/functions/_shared/transactional-email-templates/` — 7 new templates + updated `registry.ts`.
-- `supabase/functions/send-transactional-email/` (scaffolded by tool, not hand-written).
-- `supabase/functions/handle-email-unsubscribe/`, `handle-email-suppression/` (scaffolded).
-- `supabase/functions/seller-action-reminders/index.ts` — new cron-driven function that scans `purchases` for:
-  - status=`pending_transfer`, no transfer yet, ~1h since purchase, no reminder sent → send #2
-  - status=`pending_transfer`, `transfer_deadline` between now+3h30m and now+4h30m, no warning sent → send #3
-  - Idempotency via two new boolean columns on `purchases`: `seller_reminder_sent`, `seller_warning_sent` (added via migration). Also serves as the dedupe key.
-- New `pg_cron` job calling `seller-action-reminders` every 15 minutes.
-- `src/pages/EmailUnsubscribe.tsx` (or chosen path) wired into `App.tsx` router.
+Proposed (warm, same info):
+> Here's what happens from here — we'll guide you at every step.
+>
+> Maria has 24 hours to update the booking with your name and share the new reference. As soon as she does, we'll email you to take a quick look and confirm everything matches. Once you give the green light, we release her payment — and your seat is officially yours.
+>
+> If anything goes sideways, you're fully covered: no name change means an automatic refund, no questions asked.
 
-### Modified
-- `supabase/functions/stripe-purchase-webhook/index.ts` — after marking `pending_transfer`, fetch buyer + seller profiles (email, full_name) and listing route/date, invoke `send-transactional-email` twice with idempotency keys `purchase-buyer-${purchaseId}` and `purchase-seller-${purchaseId}`.
-- `src/components/listings/TransferConfirmation.tsx` — after the existing `send-notification` call, also invoke `send-transactional-email` with `transfer-completed-buyer` (idempotency `transfer-buyer-${purchaseId}`).
-- `supabase/functions/release-escrow/index.ts` — after `notifications.insert`, send `escrow-released-seller` (idempotency `escrow-released-${purchaseId}`).
-- `supabase/functions/cancel-escrow/index.ts` — when the cancellation reason is the expiry (`reason` includes `did not complete the name change in time`, or new flag `expired: true` from `expire-transfers`), send #6 to buyer and #7 to seller. Skip these two emails for buyer-initiated refunds.
-- `supabase/functions/expire-transfers/index.ts` — pass `{ expired: true }` along with the existing reason so cancel-escrow knows to send the negative pair.
+Same friendly register as the opening; no bullet wall.
 
-### Database
-- Migration: add `seller_reminder_sent boolean default false`, `seller_warning_sent boolean default false` on `purchases`.
-- Migration after cron setup: schedule `seller-action-reminders` every 15 min via `pg_cron` + `pg_net` (using anon key + project URL — added via insert tool, not migration tool).
+## 4. Greeting style
 
-## Brand & content
+Change `h1` usage on the greeting line only — render "Hi Alex," with the body `<Text>` style (regular weight, 14px, body color) instead of the bold 22px heading. Keep the bold heading reserved for actual section titles further down (or remove it entirely if the new prose flow doesn't need one).
 
-All templates share a header (gold `#F4A929` accent, charcoal `#0F1116` text, white body), greet by first name, include the route (e.g. `LHR › CDG`), departure date, airline + flight number, and a primary CTA button to the relevant in-app screen (`/account/purchases?open=…` or `/account/listings?sale=…`). Footer: support email + help link + auto unsubscribe link (system-injected).
+## 5. "View purchase" CTA — deep-link behaviour
 
-Tone:
-- Positive emails (#1a, #1b, #2, #4, #5): friendly, action-oriented.
-- Warning (#3): urgent but reassuring.
-- Negative (#6): apologetic, offers to find another listing on the same route.
-- Negative (#7): firm but non-punitive, reminds of the 24h rule for next time.
+Current href: `https://swappup.com/account?tab=purchases`.
 
-## Out of scope
-- No marketing emails, digests, or newsletters.
-- No SMS/push.
-- No changes to the in-app `notifications` system; emails are additive.
-- No template translation (EN only for v1; matches current PDF copy).
+Behaviour:
+- **Mobile (PWA installed):** opens the app at the Purchases tab via the existing route; if not installed, opens the responsive web app in the browser — same UX since Swappup is a web app, not a native iOS/Android binary today.
+- **Desktop:** opens swappup.com in the user's browser, lands on the Purchases tab. Fully functional.
 
-## Open questions
-1. Sender domain to use — `notify.swappup.com` OK?
-2. Support email to print in footer — `support@swappup.com`?
-3. For email #6, should we link the buyer to the search page pre-filtered on the same route? (Recommended yes.)
+Plan: keep the URL but add a small helper line under the button — *"Opens swappup.com — works on mobile and desktop."* — so the user knows what to expect. No native deep-link scheme needed (no native app exists). If/when a native app ships, we can layer a universal link on top without changing the email.
+
+## 6. Merge "Amount held in escrow" into the trip card
+
+Extend `TripCard` (or wrap with a small extension in this template) to render an "Amount held in escrow" row inside the same grey card as the flight details, styled like the other rows (muted label + value). Removes the floating standalone line.
+
+## Files affected
+
+- `supabase/functions/_shared/transactional-email-templates/_layout.tsx` — hero swap (white + orange wordmark), button weight, optional escrow row in `TripCard`.
+- `supabase/functions/_shared/transactional-email-templates/purchase-buyer-confirmation.tsx` — new props (`bookingRef`, `airlineLoginEmail`), rewritten copy, regular-weight greeting, escrow merged into card, helper line under CTA.
+- `supabase/functions/stripe-purchase-webhook/index.ts` — pass `bookingRef` and `airlineLoginEmail` in `templateData` for the buyer-confirmation send.
+- Redeploy `send-transactional-email` and `stripe-purchase-webhook`.
+- Regenerate `/mnt/documents/swappup-email-preview.html` so you can re-review before we propagate the same treatment to the other 6 templates.
+
+## Open question
+
+Confirm whether the "airline login" value should be:
+(a) the buyer's own full name (what they'll log in with after the name change), **or**
+(b) the seller's account email (what the buyer uses if the airline keeps the original account and only swaps the passenger name).
+
+Different airlines do this differently — your call on which to surface by default.
