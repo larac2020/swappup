@@ -791,6 +791,11 @@ const translations = {
     sellerLiabilityConfirmCta: "I've checked the fee and accept the risk",
     sellerLiabilityConfirmed: "Fee accuracy confirmed",
     sellToastFeeNotConfirmed: "Please confirm you've verified the name-change fee with the carrier before publishing.",
+    sellNoConfirmRiskTitle: "Important: name-change risk",
+    sellNoConfirmRiskBody: "Once you execute the airline name change for the buyer, the fee you pay the airline is NOT refundable by swappup if the buyer fails to confirm the booking within the 48-hour verification window. Airlines do not offer a free reversal window — if this happens, the seat stays under the buyer's name and you may lose the name-change fee.",
+    sellNoConfirmRiskAck: "I understand that the name-change fee I pay to the airline is not refundable by swappup if the buyer fails to confirm the transfer within 48 hours.",
+    sellToastNoConfirmRiskNotAck: "Please acknowledge the name-change risk before publishing your listing.",
+    sellNoConfirmRiskReassurance: "Buyers who repeatedly fail to confirm are reviewed and may be suspended from swappup.",
 
     // Legal pages
     legalTermsTitle: "Terms of Service",
