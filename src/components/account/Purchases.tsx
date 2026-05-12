@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
@@ -39,6 +39,29 @@ export default function Purchases() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportPurchaseId, setReportPurchaseId] = useState<string | null>(null);
   const SUPPORT_EMAIL = "support@swappup.com";
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialOpen = searchParams.get("open");
+  const [expandedId, setExpandedId] = useState<string | null>(initialOpen);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (initialOpen && cardRefs.current[initialOpen]) {
+      cardRefs.current[initialOpen]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialOpen]);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedId((cur) => {
+      const next = cur === id ? null : id;
+      const params = new URLSearchParams(searchParams);
+      if (next) params.set("open", next);
+      else params.delete("open");
+      setSearchParams(params, { replace: true });
+      return next;
+    });
+  };
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -111,23 +134,52 @@ export default function Purchases() {
             const isPendingTransfer = p.status === "pending_transfer";
             const deadline = p.transfer_deadline ? new Date(p.transfer_deadline) : null;
             const isExpired = deadline && deadline < new Date();
+            const isOpen = expandedId === p.id;
+            const route =
+              listing?.origin_city && listing?.destination_city
+                ? `${listing.origin_city} → ${listing.destination_city}`
+                : listing?.title || "Ticket";
 
             return (
-              <div key={p.id} className="glass rounded-2xl p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div
+                key={p.id}
+                ref={(el) => (cardRefs.current[p.id] = el)}
+                className="glass rounded-2xl overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(p.id)}
+                  aria-expanded={isOpen}
+                  aria-controls={`purchase-details-${p.id}`}
+                  className="w-full text-left p-4 flex items-center gap-3 hover:bg-foreground/5 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <Plane className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{listing?.title || "Ticket"}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(p.created_at), "MMM d, yyyy")}</p>
+                    <p className="font-medium truncate">{route}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {listing?.departure_date
+                        ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy")
+                        : format(new Date(p.created_at), "MMM d, yyyy")}
+                      {listing?.airline ? ` · ${listing.airline}` : ""}
+                    </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="font-semibold text-primary">{formatPrice(Number(p.total_price), cur, displayCurrency)}</p>
                     <Badge variant="outline" className={`text-xs ${status.className}`}>{status.label}</Badge>
                   </div>
-                </div>
+                  <ChevronDown
+                    className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
 
+                <div
+                  id={`purchase-details-${p.id}`}
+                  className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
                 {/* Price Breakdown */}
                 {p.name_change_fee > 0 && (
                   <div className="text-xs text-muted-foreground flex items-center gap-3 px-1">
@@ -278,6 +330,9 @@ export default function Purchases() {
                     💰 Payment held in escrow until transfer is confirmed
                   </p>
                 )}
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}
