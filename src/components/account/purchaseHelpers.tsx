@@ -209,7 +209,7 @@ export async function downloadTicketPdf(p: any, listing: any, seller?: any, prof
     doc,
     y,
     profile?.full_name,
-    "Your purchase is confirmed. Use the booking credentials below to retrieve your ticket on the airline's website and complete check-in.",
+    "Your purchase is confirmed. Important: you cannot access the ticket yet — the seller has 24 hours to update the airline booking with your name. As soon as that's done, we'll notify you and you'll be able to retrieve your ticket on the airline's website using the booking credentials below.",
   );
 
   /* Trip panel */
