@@ -100,7 +100,7 @@ const Email = ({ sellerName, buyerName, buyerFullName, trip, bookingRef, deadlin
         refunded to the buyer and the sale is cancelled. If something is blocking you, please get in touch with us as soon as possible.
       </Text>
       <Section style={{ margin: '20px 0 8px' }}>
-        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>View sale in app</Link>
+        <Link href={`${APP_URL}/account?tab=sales`} style={button()}>Confirm the name change in the app</Link>
       </Section>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         Have a great day,<br />The swappup team
