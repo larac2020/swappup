@@ -31,7 +31,7 @@ import {
 } from "@/data/flightData";
 import {
   trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
-  getStationsForCity, currencySymbol
+  getStationsForCity, currencySymbol, resolveOperatorName, resolveFareValue, resolveTrainType,
 } from "@/data/trainData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -60,6 +60,29 @@ const defaultInclusions: TicketInclusions = {
   carryOnIncluded: true,
   mealIncluded: false,
   speedyBoarding: false,
+};
+
+/** Train-specific inclusions (no luggage limits, different on-board services). */
+export interface TrainInclusions {
+  wifi: boolean;
+  powerOutlet: boolean;
+  seatReservation: boolean;
+  loungeAccess: boolean;
+  mealOnBoard: boolean;
+  bikeAllowed: boolean;
+  petAllowed: boolean;
+  quietCoach: boolean;
+}
+
+export const defaultTrainInclusions: TrainInclusions = {
+  wifi: false,
+  powerOutlet: false,
+  seatReservation: true,
+  loungeAccess: false,
+  mealOnBoard: false,
+  bikeAllowed: false,
+  petAllowed: false,
+  quietCoach: false,
 };
 
 interface BoostOption {
@@ -99,6 +122,8 @@ const getDefaultFormData = () => ({
   operator: "",
   trainNumber: "",
   trainClass: "",
+  trainType: "",
+  travelClass: "",
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
