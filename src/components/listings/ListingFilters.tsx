@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal, X, MapPin, Tag, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase, Navigation, Star, Globe } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin, Users, Loader2, Calendar as CalendarIcon, Plane as PlaneIcon, Luggage, UtensilsCrossed, Briefcase, Navigation, Star, Globe } from "lucide-react";
 import { format, addDays, subDays, startOfMonth, endOfMonth, addMonths, eachDayOfInterval, isSameDay, isSameMonth } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,17 +17,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { airlines, getUniqueCities, getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-const tripTags = [
-  { value: "city_trip", labelKey: "tagCityTrip" as const },
-  { value: "beach", labelKey: "tagBeach" as const },
-  { value: "winter_holiday", labelKey: "tagWinterHoliday" as const },
-  { value: "ski_trip", labelKey: "tagSkiTrip" as const },
-  { value: "adventure", labelKey: "tagAdventure" as const },
-  { value: "romantic", labelKey: "tagRomantic" as const },
-  { value: "family", labelKey: "tagFamily" as const },
-  { value: "business", labelKey: "tagBusiness" as const },
-];
 
 type FlexOption = "exact" | "+-1" | "+-3" | "month" | "any";
 
@@ -49,7 +38,6 @@ export interface FilterState {
   minPrice: number;
   maxPrice: number;
   ticketCount: number;
-  tags: string[];
   departureDateFrom?: string;
   departureDateTo?: string;
   flexOption: FlexOption;
@@ -68,7 +56,6 @@ export const defaultFilters: FilterState = {
   minPrice: 0,
   maxPrice: 2000,
   ticketCount: 0,
-  tags: [],
   departureDateFrom: undefined,
   departureDateTo: undefined,
   flexOption: "exact",
@@ -278,14 +265,6 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     localUpdate({ airlines: newAirlines });
   };
 
-  const toggleTag = (tag: string) => {
-    const current = (pendingFilters || filters).tags;
-    const newTags = current.includes(tag)
-      ? current.filter((t) => t !== tag)
-      : [...current, tag];
-    localUpdate({ tags: newTags });
-  };
-
   const clearFilters = () => {
     setFilters(defaultFilters);
     setPendingFilters(null);
@@ -309,8 +288,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
     (currentFilters.luggageIncluded ? 1 : 0) +
     (currentFilters.mealIncluded ? 1 : 0) +
     (currentFilters.carryOnIncluded ? 1 : 0) +
-    (currentFilters.directOnly ? 1 : 0) +
-    currentFilters.tags.length;
+    (currentFilters.directOnly ? 1 : 0);
 
   // Filtered lists for dropdowns with search
   const [fromCountrySearch, setFromCountrySearch] = useState("");
@@ -916,31 +894,6 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                 </div>
               </div>
 
-              {/* Tags */}
-              <div className="space-y-3">
-                <Label className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-primary" />
-                  {t("filterTripType")}
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {tripTags.map((tag) => (
-                    <Badge
-                      key={tag.value}
-                      variant="outline"
-                      className={cn(
-                        "cursor-pointer transition-all",
-                        currentFilters.tags.includes(tag.value)
-                          ? "bg-primary/20 border-primary text-primary"
-                          : "hover:border-primary/50"
-                      )}
-                      onClick={() => toggleTag(tag.value)}
-                    >
-                      {t(tag.labelKey)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
               {/* Search Button */}
               <Button className="w-full h-12 text-base font-semibold" onClick={handleSearchClick}>
                 <Search className="w-4 h-4 mr-2" />
@@ -1027,15 +980,6 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
           {filters.mealIncluded && (
             <Badge variant="secondary" className="gap-1">{t("filterMeal")}<X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ mealIncluded: undefined })} /></Badge>
           )}
-          {filters.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="gap-1">
-              {(() => { const found = tripTags.find((tt) => tt.value === tag); return found ? t(found.labelKey) : tag; })()}
-              <X className="w-3 h-3 cursor-pointer" onClick={() => {
-                const newTags = filters.tags.filter(t => t !== tag);
-                updateFilters({ tags: newTags });
-              }} />
-            </Badge>
-          ))}
         </div>
       )}
     </div>
