@@ -1482,6 +1482,7 @@ const translations = {
     sellFlightDates: "Date del Volo",
     sellTrainDates: "Date di Viaggio",
     sellTrainDetails: "Dettagli Treno",
+    trainTripTitle: "Viaggio in treno a {city}",
     sellSelectCountry: "Seleziona paese",
     sellSelectCity: "Seleziona città",
     sellSelectAirport: "Seleziona aeroporto",
