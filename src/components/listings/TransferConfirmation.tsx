@@ -99,7 +99,6 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
               idempotencyKey: `buyer-verify-${purchase.id}`,
               templateData: {
                 buyerName: (purchase.buyer_full_name || buyerProfile.full_name || "").split(" ")[0],
-                sellerName: (sellerProfile?.full_name || "").split(" ")[0],
                 newBookingRef: bookingRef.trim(),
                 surname: surname.trim(),
                 trip: listing ? {
