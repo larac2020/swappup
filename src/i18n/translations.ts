@@ -803,6 +803,9 @@ const translations = {
     sellNoConfirmRiskAck: "I understand that the name-change fee I pay to the airline is not refundable by swappup if the buyer fails to confirm the transfer within 48 hours.",
     sellToastNoConfirmRiskNotAck: "Please acknowledge the name-change risk before publishing your listing.",
     sellNoConfirmRiskReassurance: "Buyers who repeatedly fail to confirm are reviewed and may be suspended from swappup.",
+    sellNoConfirmRiskTitleTrain: "Important: name-change risk",
+    sellNoConfirmRiskBodyTrain: "Once you execute the name change with the rail operator for the buyer, the fee you pay the operator is NOT refundable by swappup if the buyer fails to confirm the booking within the 48-hour verification window. Rail operators typically don't offer a free reversal — if this happens, the seat stays under the buyer's name and you may lose the name-change fee.",
+    sellNoConfirmRiskAckTrain: "I understand that the name-change fee I pay to the rail operator is not refundable by swappup if the buyer fails to confirm the transfer within 48 hours.",
 
     // Legal pages
     legalTermsTitle: "Terms of Service",
