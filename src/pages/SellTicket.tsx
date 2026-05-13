@@ -1228,6 +1228,18 @@ export default function SellTicket() {
               {/* Outbound flight */}
               <div className="space-y-3 rounded-xl border border-border/50 p-3">
                 <p className="text-sm font-medium text-primary">Outbound flight</p>
+                <div className="space-y-2">
+                  <Label>{t("sellCabinClass")}</Label>
+                  <Select value={formData.travelClass} onValueChange={(v) => setFormData({ ...formData, travelClass: v })}>
+                    <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellCabinClassPlaceholder")} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="economy">{t("cabinEconomy")}</SelectItem>
+                      <SelectItem value="premium_economy">{t("cabinPremiumEconomy")}</SelectItem>
+                      <SelectItem value="business">{t("cabinBusiness")}</SelectItem>
+                      <SelectItem value="first">{t("cabinFirst")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{t("sellFlightNumber")}</Label>
