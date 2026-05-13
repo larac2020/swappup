@@ -1,6 +1,12 @@
 // Train operators with transferability rules and stations.
 // Used to gate listing creation for non-transferable fares and to compute
 // the additive name-change fee shown to buyers.
+//
+// IMPORTANT — most major European rail operators have moved to fully nominative
+// tickets (Trenitalia, Italo, Eurostar Standard, Renfe Promo, DB Sparpreis,
+// SBB Saver, ÖBB Sparschiene, PKP Promo, etc.). We mirror operators' published
+// 2024–2025 policies; flexible fares that still allow transfer keep
+// `transferable: "yes"`.
 
 export type TransferStatus = "yes" | "restricted" | "no";
 
@@ -8,7 +14,7 @@ export interface TrainFare {
   value: string;
   label: string;
   fee: number;
-  currency: "EUR" | "GBP" | "CHF";
+  currency: "EUR" | "GBP" | "CHF" | "PLN";
   transferable: TransferStatus;
   note?: string;
 }
@@ -17,6 +23,12 @@ export interface TrainOperator {
   name: string;
   country: string;
   fares: TrainFare[];
+  /** Train product types this operator runs (Frecciarossa, ICE, TGV, etc.) */
+  trainTypes: string[];
+  /** Default ticket currency for this operator. */
+  currency: "EUR" | "GBP" | "CHF" | "PLN";
+  /** Operator-specific train-number placeholder shown in the Sell form. */
+  trainNumberPlaceholder?: string;
   /** Public name-change policy URL for the buyer/seller warning. */
   policyUrl: string;
 }
@@ -25,72 +37,107 @@ export const trainOperators: TrainOperator[] = [
   {
     name: "Trenitalia",
     country: "Italy",
+    currency: "EUR",
+    trainTypes: ["Frecciarossa", "Frecciargento", "Frecciabianca", "Intercity", "Intercity Notte", "Regionale Veloce", "Regionale", "Eurocity"],
+    trainNumberPlaceholder: "e.g. FR 9612",
     policyUrl: "https://www.trenitalia.com",
     fares: [
-      { value: "base", label: "Base", fee: 8, currency: "EUR", transferable: "yes", note: "Name change allowed up to departure" },
-      { value: "executive", label: "Executive", fee: 15, currency: "EUR", transferable: "yes", note: "Premium fare, higher fee" },
+      { value: "base", label: "Base (Standard service)", fee: 0, currency: "EUR", transferable: "no", note: "Trenitalia tickets are nominative — name change is not allowed by the carrier" },
+      { value: "economy", label: "Economy (Standard service)", fee: 0, currency: "EUR", transferable: "no", note: "Trenitalia tickets are nominative — name change is not allowed by the carrier" },
+      { value: "super_economy", label: "Super Economy (Standard service)", fee: 0, currency: "EUR", transferable: "no", note: "Trenitalia tickets are nominative — name change is not allowed by the carrier" },
+      { value: "premium", label: "Premium service", fee: 0, currency: "EUR", transferable: "no", note: "Premium service tickets are nominative — name change is not allowed" },
+      { value: "business", label: "Business service", fee: 0, currency: "EUR", transferable: "no", note: "Business service tickets are nominative — name change is not allowed" },
+      { value: "executive", label: "Executive service", fee: 0, currency: "EUR", transferable: "no", note: "Executive service tickets are nominative — name change is not allowed" },
+      { value: "salottino", label: "Salottino", fee: 0, currency: "EUR", transferable: "no", note: "Salottino tickets are nominative" },
     ],
   },
   {
     name: "Italo",
     country: "Italy",
+    currency: "EUR",
+    trainTypes: ["Italo AGV", "Italo EVO"],
+    trainNumberPlaceholder: "e.g. 9912",
     policyUrl: "https://www.italotreno.it",
     fares: [
-      { value: "smart", label: "Smart", fee: 10, currency: "EUR", transferable: "yes", note: "Name change up to 3 days before departure" },
-      { value: "comfort", label: "Comfort", fee: 10, currency: "EUR", transferable: "yes" },
-      { value: "prima", label: "Prima", fee: 10, currency: "EUR", transferable: "yes" },
-      { value: "club", label: "Club Executive", fee: 10, currency: "EUR", transferable: "yes" },
+      { value: "smart", label: "Smart", fee: 0, currency: "EUR", transferable: "no", note: "Italo tickets are nominative — name change is not allowed by the carrier" },
+      { value: "comfort", label: "Comfort", fee: 0, currency: "EUR", transferable: "no", note: "Italo tickets are nominative — name change is not allowed by the carrier" },
+      { value: "prima", label: "Prima", fee: 0, currency: "EUR", transferable: "no", note: "Italo tickets are nominative — name change is not allowed by the carrier" },
+      { value: "club", label: "Club Executive", fee: 0, currency: "EUR", transferable: "no", note: "Italo tickets are nominative — name change is not allowed by the carrier" },
     ],
   },
   {
     name: "SNCF",
     country: "France",
+    currency: "EUR",
+    trainTypes: ["TGV INOUI", "TGV Ouigo", "Intercités", "TER"],
+    trainNumberPlaceholder: "e.g. 6201",
     policyUrl: "https://www.sncf-connect.com",
     fares: [
-      { value: "tgv_inoui", label: "TGV INOUI", fee: 19, currency: "EUR", transferable: "yes", note: "Name change with fee" },
-      { value: "ouigo", label: "Ouigo", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Ouigo tickets are nominative" },
+      { value: "tgv_inoui_loisir", label: "TGV INOUI — Loisir", fee: 19, currency: "EUR", transferable: "yes", note: "Name change allowed for a fee" },
+      { value: "tgv_inoui_pro", label: "TGV INOUI — Pro", fee: 0, currency: "EUR", transferable: "yes", note: "Pro tariff is fully flexible and transferable" },
+      { value: "intercites", label: "Intercités", fee: 5, currency: "EUR", transferable: "yes", note: "Name change up to 30 min before departure for a fee" },
+      { value: "ter", label: "TER (regional)", fee: 0, currency: "EUR", transferable: "yes", note: "TER regional tickets are typically not nominative" },
+      { value: "ouigo", label: "Ouigo", fee: 0, currency: "EUR", transferable: "no", note: "Ouigo tickets are nominative and not transferable" },
     ],
   },
   {
     name: "Deutsche Bahn",
     country: "Germany",
+    currency: "EUR",
+    trainTypes: ["ICE", "IC", "EC", "RE", "RB"],
+    trainNumberPlaceholder: "e.g. ICE 925",
     policyUrl: "https://www.bahn.com",
     fares: [
-      { value: "flexpreis", label: "Flexpreis", fee: 0, currency: "EUR", transferable: "yes", note: "Fully flexible, transferable" },
-      { value: "sparpreis", label: "Sparpreis", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Sparpreis is nominative" },
+      { value: "flexpreis", label: "Flexpreis", fee: 0, currency: "EUR", transferable: "yes", note: "Fully flexible — not bound to a person" },
+      { value: "sparpreis", label: "Sparpreis", fee: 0, currency: "EUR", transferable: "no", note: "Sparpreis is nominative and not transferable" },
+      { value: "super_sparpreis", label: "Super Sparpreis", fee: 0, currency: "EUR", transferable: "no", note: "Super Sparpreis is nominative and not transferable" },
     ],
   },
   {
     name: "Renfe",
     country: "Spain",
+    currency: "EUR",
+    trainTypes: ["AVE", "AVLO", "Avant", "Alvia", "Euromed", "Intercity"],
+    trainNumberPlaceholder: "e.g. AVE 03085",
     policyUrl: "https://www.renfe.com",
     fares: [
-      { value: "flexible", label: "Flexible (AVE)", fee: 20, currency: "EUR", transferable: "yes", note: "Name change with fee" },
-      { value: "promo", label: "Promo", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Promo fares are non-changeable" },
+      { value: "premium", label: "Prémium (AVE)", fee: 20, currency: "EUR", transferable: "yes", note: "Name change allowed for a fee" },
+      { value: "elige", label: "Elige (AVE)", fee: 20, currency: "EUR", transferable: "yes", note: "Name change allowed for a fee" },
+      { value: "basico", label: "Básico (AVE)", fee: 0, currency: "EUR", transferable: "no", note: "Básico fares are nominative and not transferable" },
+      { value: "avlo", label: "AVLO", fee: 0, currency: "EUR", transferable: "no", note: "AVLO low-cost tickets are nominative and not transferable" },
     ],
   },
   {
     name: "Eurostar",
     country: "United Kingdom",
+    currency: "GBP",
+    trainTypes: ["Eurostar e320", "Eurostar e300"],
+    trainNumberPlaceholder: "e.g. 9114",
     policyUrl: "https://www.eurostar.com",
     fares: [
-      { value: "premier", label: "Standard Premier", fee: 30, currency: "GBP", transferable: "yes", note: "Name change with fee" },
-      { value: "business", label: "Business Premier", fee: 30, currency: "GBP", transferable: "yes" },
-      { value: "standard", label: "Standard", fee: 0, currency: "GBP", transferable: "no", note: "Not transferable — Standard tickets are nominative" },
+      { value: "standard", label: "Eurostar Standard", fee: 0, currency: "GBP", transferable: "no", note: "Standard tickets are nominative — name change not allowed" },
+      { value: "plus", label: "Eurostar Plus", fee: 30, currency: "GBP", transferable: "yes", note: "Name change allowed for a fee" },
+      { value: "premier", label: "Eurostar Premier", fee: 30, currency: "GBP", transferable: "yes", note: "Name change allowed for a fee" },
     ],
   },
   {
     name: "ÖBB",
     country: "Austria",
+    currency: "EUR",
+    trainTypes: ["Railjet", "Nightjet", "ICE", "EC", "IC", "REX"],
+    trainNumberPlaceholder: "e.g. RJ 540",
     policyUrl: "https://www.oebb.at",
     fares: [
-      { value: "flex", label: "Flex (Railjet)", fee: 0, currency: "EUR", transferable: "yes", note: "Fully transferable" },
-      { value: "sparschiene", label: "Sparschiene", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Sparschiene is nominative" },
+      { value: "standard", label: "Standard (flexible)", fee: 0, currency: "EUR", transferable: "yes", note: "Standard ÖBB tickets are not nominative" },
+      { value: "sparschiene", label: "Sparschiene", fee: 0, currency: "EUR", transferable: "no", note: "Sparschiene is nominative and not transferable" },
     ],
   },
   {
     name: "NS",
     country: "Netherlands",
+    currency: "EUR",
+    trainTypes: ["Intercity Direct", "Intercity", "Sprinter"],
+    trainNumberPlaceholder: "e.g. 822",
     policyUrl: "https://www.ns.nl",
     fares: [
       { value: "standard", label: "Standard day ticket", fee: 0, currency: "EUR", transferable: "yes", note: "Day tickets are non-nominative and freely transferable" },
@@ -99,32 +146,38 @@ export const trainOperators: TrainOperator[] = [
   {
     name: "SBB",
     country: "Switzerland",
+    currency: "CHF",
+    trainTypes: ["IC", "IR", "RE", "S", "EC"],
+    trainNumberPlaceholder: "e.g. IC 5",
     policyUrl: "https://www.sbb.ch",
     fares: [
-      { value: "standard", label: "Standard", fee: 0, currency: "CHF", transferable: "yes", note: "Standard tickets are transferable" },
-      { value: "saver", label: "Saver / Supersaver", fee: 0, currency: "CHF", transferable: "no", note: "Not transferable — Saver tickets are nominative" },
-    ],
-  },
-  {
-    name: "Thalys",
-    country: "Belgium",
-    policyUrl: "https://www.thalys.com",
-    fares: [
-      { value: "comfort", label: "Comfort", fee: 25, currency: "EUR", transferable: "yes", note: "Name change with fee" },
-      { value: "premium", label: "Premium", fee: 25, currency: "EUR", transferable: "yes" },
-      { value: "standard", label: "Standard", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Standard tickets are nominative" },
+      { value: "standard", label: "Standard", fee: 0, currency: "CHF", transferable: "yes", note: "Standard SBB tickets are not nominative" },
+      { value: "saver", label: "Saver / Supersaver", fee: 0, currency: "CHF", transferable: "no", note: "Saver day passes are nominative and not transferable" },
     ],
   },
   {
     name: "PKP Intercity",
     country: "Poland",
+    currency: "PLN",
+    trainTypes: ["Express InterCity Premium (EIP)", "Express InterCity (EIC)", "InterCity (IC)", "TLK"],
+    trainNumberPlaceholder: "e.g. EIP 1300",
     policyUrl: "https://www.intercity.pl",
     fares: [
-      { value: "flexi", label: "Flexi", fee: 0, currency: "EUR", transferable: "yes", note: "Flexi fares are transferable" },
-      { value: "promo", label: "Promo", fee: 0, currency: "EUR", transferable: "no", note: "Not transferable — Promo fares are nominative" },
+      { value: "flexi", label: "Flexi", fee: 0, currency: "PLN", transferable: "yes", note: "Flexi fares are transferable" },
+      { value: "promo", label: "Promo", fee: 0, currency: "PLN", transferable: "no", note: "Promo fares are nominative and not transferable" },
     ],
   },
 ];
+
+// Thalys merged into Eurostar in October 2023. Keep the name as a deprecated
+// alias so historical PDFs and old listings still resolve correctly.
+export const operatorAliases: Record<string, string> = {
+  thalys: "Eurostar",
+  trenord: "Trenitalia",
+  "renfe sncf": "SNCF",
+  db: "Deutsche Bahn",
+  "deutsche bahn ag": "Deutsche Bahn",
+};
 
 // Major European train stations (city + station code).
 export interface TrainStation {
@@ -212,5 +265,54 @@ export function getOperatorFare(operator: string, fareValue: string): TrainFare 
 }
 
 export function currencySymbol(currency: string): string {
-  return currency === "GBP" ? "£" : currency === "CHF" ? "CHF " : "€";
+  switch (currency) {
+    case "GBP": return "£";
+    case "CHF": return "CHF ";
+    case "PLN": return "zł ";
+    case "USD": return "$";
+    default: return "€";
+  }
+}
+
+/**
+ * Resolve an operator name from free-form input (e.g. AI-extracted text).
+ * Handles operator aliases (Thalys → Eurostar) and case-insensitive matches.
+ */
+export function resolveOperatorName(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const norm = raw.trim().toLowerCase();
+  if (!norm) return undefined;
+  if (operatorAliases[norm]) return operatorAliases[norm];
+  const direct = trainOperators.find((o) => o.name.toLowerCase() === norm);
+  if (direct) return direct.name;
+  // Loose contains-match (e.g. "Trenitalia S.p.A." → "Trenitalia").
+  const loose = trainOperators.find((o) =>
+    norm.includes(o.name.toLowerCase()) || o.name.toLowerCase().includes(norm)
+  );
+  return loose?.name;
+}
+
+/**
+ * Resolve a fare value from a free-form fare label (case-insensitive,
+ * matches against both the canonical value and the human label).
+ */
+export function resolveFareValue(operatorName: string, raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const op = getOperator(operatorName);
+  if (!op) return undefined;
+  const norm = raw.trim().toLowerCase();
+  const direct = op.fares.find(
+    (f) => f.value.toLowerCase() === norm || f.label.toLowerCase() === norm,
+  );
+  if (direct) return direct.value;
+  return op.fares.find((f) => norm.includes(f.value.toLowerCase()) || norm.includes(f.label.toLowerCase()))?.value;
+}
+
+/** Resolve a printed train type to one of the operator's known types. */
+export function resolveTrainType(operatorName: string, raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const op = getOperator(operatorName);
+  if (!op) return raw;
+  const norm = raw.trim().toLowerCase();
+  return op.trainTypes.find((t) => t.toLowerCase() === norm || norm.includes(t.toLowerCase())) ?? raw;
 }

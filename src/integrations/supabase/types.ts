@@ -367,7 +367,7 @@ export type Database = {
       listings: {
         Row: {
           additional_notes: string | null
-          airline: string
+          airline: string | null
           arrival_time: string | null
           bumped_until: string | null
           carry_on_included: boolean | null
@@ -411,7 +411,10 @@ export type Database = {
           ticket_count: number
           title: string
           train_class: string | null
+          train_inclusions: Json | null
           train_number: string | null
+          train_type: string | null
+          travel_class: string | null
           updated_at: string
           voucher_confidence_score: number | null
           voucher_reference_code: string | null
@@ -421,7 +424,7 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
-          airline: string
+          airline?: string | null
           arrival_time?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
@@ -465,7 +468,10 @@ export type Database = {
           ticket_count?: number
           title: string
           train_class?: string | null
+          train_inclusions?: Json | null
           train_number?: string | null
+          train_type?: string | null
+          travel_class?: string | null
           updated_at?: string
           voucher_confidence_score?: number | null
           voucher_reference_code?: string | null
@@ -475,7 +481,7 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
-          airline?: string
+          airline?: string | null
           arrival_time?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
@@ -519,7 +525,10 @@ export type Database = {
           ticket_count?: number
           title?: string
           train_class?: string | null
+          train_inclusions?: Json | null
           train_number?: string | null
+          train_type?: string | null
+          travel_class?: string | null
           updated_at?: string
           voucher_confidence_score?: number | null
           voucher_reference_code?: string | null

@@ -13,7 +13,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are a travel ticket parser. The ticket may be a FLIGHT (airline boarding pass / flight booking) or a TRAIN (rail booking from Trenitalia, Italo, SNCF, Deutsche Bahn, Renfe, Eurostar, ÖBB, NS, SBB, Thalys, PKP Intercity, etc.). Extract the available information from the PDF booking confirmation and return it as a JSON object using the tool provided.
+    const systemPrompt = `You are a travel ticket parser. The ticket may be a FLIGHT (airline boarding pass / flight booking) or a TRAIN (rail booking from Trenitalia, Italo, SNCF, Deutsche Bahn, Renfe, Eurostar — which absorbed Thalys in 2023 — ÖBB, NS, SBB, PKP Intercity, etc.). Extract the available information from the PDF booking confirmation and return it as a JSON object using the tool provided.
 
 Important rules:
 - Set ticketKind to "flight" or "train" depending on what you see.
@@ -21,7 +21,25 @@ Important rules:
 - For dates, use ISO format: YYYY-MM-DD.
 - For times use HH:MM (24h).
 - For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, times, price, ticketCount.
-- For TRAINS: extract operator, trainNumber, origin/destination station names AND cities + countries, departure date + times, fare class if visible (Base, Executive, Smart, Comfort, Prima, Club, TGV INOUI, Ouigo, Flexpreis, Sparpreis, Flexible, Promo, Standard Premier, Business Premier, Standard, Flex, Sparschiene, Saver, Supersaver, Premium, Flexi), price and number of passengers.
+- For TRAINS: extract operator (NOT airline), trainNumber, origin/destination station names AND cities + countries, departure + arrival times for every leg, trainType, travelClass, fareClass, price and number of passengers. Do NOT populate the "airline" field for trains.
+
+TRAIN OPERATOR VOCABULARY (use these exact operator names):
+- Trenitalia (Italy): trainTypes Frecciarossa, Frecciargento, Frecciabianca, Intercity, Intercity Notte, Regionale Veloce, Regionale, Eurocity. Service levels: Standard, Premium, Business, Executive, Salottino. Flexibility tiers: Base, Economy, Super Economy.
+- Italo (Italy): trainTypes Italo AGV, Italo EVO. Fare classes: Smart, Comfort, Prima, Club Executive.
+- SNCF (France): trainTypes TGV INOUI, TGV Ouigo, Intercités, TER. Fare classes: TGV INOUI Loisir/Pro, Intercités, TER, Ouigo.
+- Deutsche Bahn (Germany): trainTypes ICE, IC, EC, RE, RB. Fare classes: Flexpreis, Sparpreis, Super Sparpreis.
+- Renfe (Spain): trainTypes AVE, AVLO, Avant, Alvia, Euromed, Intercity. Fare classes: Prémium, Elige, Básico, AVLO.
+- Eurostar (UK / cross-border, includes former Thalys): trainTypes Eurostar e320, Eurostar e300. Fare classes: Standard, Plus, Premier.
+- ÖBB (Austria): trainTypes Railjet, Nightjet, ICE, EC, IC, REX. Fare classes: Standard, Sparschiene.
+- NS (Netherlands): trainTypes Intercity Direct, Intercity, Sprinter. Fare class: Standard day ticket.
+- SBB (Switzerland): trainTypes IC, IR, RE, S, EC. Fare classes: Standard, Saver / Supersaver.
+- PKP Intercity (Poland): trainTypes EIP, EIC, IC, TLK. Fare classes: Flexi, Promo.
+
+If you see "Thalys", set operator to "Eurostar" (the brand merged in 2023).
+
+TRAIN TYPE & TRAVEL CLASS:
+- trainType MUST be one of the operator's listed product names if visible (e.g. "Frecciarossa", "ICE", "TGV INOUI"). Omit if you cannot tell.
+- travelClass MUST be exactly one of: "first", "second", "business", "executive", "premium", "standard". Map "1ª classe", "1st class", "Première", "Erste Klasse" → "first"; "2ª classe", "2nd class", "Seconde" → "second". For Trenitalia/Italo service levels, also map "Salottino"/"Executive"/"Club Executive" → "executive", "Business" → "business", "Premium"/"Prima" → "premium", "Standard"/"Smart"/"Comfort" → "standard".
 
 DATE EXTRACTION (CRITICAL — do NOT confuse with administrative dates):
 - "departureDate" MUST be the date the passenger physically TRAVELS / DEPARTS on the OUTBOUND leg (origin → destination).
@@ -42,7 +60,7 @@ TIME EXTRACTION:
 - "outboundArrivalTime" = HH:MM the passenger arrives at the destination on the OUTBOUND leg, if visible.
 - "inboundDepartureTime" / "inboundArrivalTime" = same but for the RETURN leg, only if a return exists.
 - Convert 12h times (e.g. "7:25 PM") to 24h ("19:25"). Strip seconds and timezone suffixes.
-- For TRAINS, "departureTime" must equal "outboundDepartureTime".
+- For TRAINS, also fill "departureTime" with the same value as "outboundDepartureTime" for backward compatibility, but ALWAYS populate the leg-specific fields when visible.
 
 PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
 - Return the TOTAL amount the buyer originally paid for ALL tickets in this booking, in numeric form, with no currency symbol and using a dot as decimal separator (e.g. 145.50, not "€145,50" or "145,50 EUR").
@@ -97,7 +115,9 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   ticketKind: { type: "string", enum: ["flight", "train"], description: "Whether this is a flight or train ticket" },
                   operator: { type: "string", description: "Train operator name (only for trains)" },
                   trainNumber: { type: "string", description: "Train number (only for trains)" },
-                  trainClass: { type: "string", description: "Fare class label as printed on the ticket (only for trains)" },
+                  trainClass: { type: "string", description: "Fare class as printed on the ticket — use one of the canonical values listed for the operator if possible (only for trains)" },
+                  trainType: { type: "string", description: "Train product type (Frecciarossa, ICE, TGV INOUI, AVE, etc.) — only for trains" },
+                  travelClass: { type: "string", enum: ["first", "second", "business", "executive", "premium", "standard"], description: "Travel/service class on the train (only for trains)" },
                   originStation: { type: "string", description: "Origin station name (only for trains)" },
                   destinationStation: { type: "string", description: "Destination station name (only for trains)" },
                   departureTime: { type: "string", description: "Outbound departure time HH:MM 24h (trains; mirrors outboundDepartureTime)" },

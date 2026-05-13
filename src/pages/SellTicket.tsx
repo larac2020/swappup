@@ -31,7 +31,7 @@ import {
 } from "@/data/flightData";
 import {
   trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
-  getStationsForCity, currencySymbol
+  getStationsForCity, currencySymbol, resolveOperatorName, resolveFareValue, resolveTrainType,
 } from "@/data/trainData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -60,6 +60,29 @@ const defaultInclusions: TicketInclusions = {
   carryOnIncluded: true,
   mealIncluded: false,
   speedyBoarding: false,
+};
+
+/** Train-specific inclusions (no luggage limits, different on-board services). */
+export interface TrainInclusions {
+  wifi: boolean;
+  powerOutlet: boolean;
+  seatReservation: boolean;
+  loungeAccess: boolean;
+  mealOnBoard: boolean;
+  bikeAllowed: boolean;
+  petAllowed: boolean;
+  quietCoach: boolean;
+}
+
+export const defaultTrainInclusions: TrainInclusions = {
+  wifi: false,
+  powerOutlet: false,
+  seatReservation: true,
+  loungeAccess: false,
+  mealOnBoard: false,
+  bikeAllowed: false,
+  petAllowed: false,
+  quietCoach: false,
 };
 
 interface BoostOption {
@@ -99,6 +122,8 @@ const getDefaultFormData = () => ({
   operator: "",
   trainNumber: "",
   trainClass: "",
+  trainType: "",
+  travelClass: "",
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
@@ -169,6 +194,9 @@ export default function SellTicket() {
   const [perTicketInclusions, setPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
   const [sameInclusions, setSameInclusions] = useState(true);
 
+  // Train-specific inclusions (used only when listingType === "train_ticket")
+  const [trainInclusions, setTrainInclusions] = useState<TrainInclusions>({ ...defaultTrainInclusions });
+
   const [formData, setFormData] = useState(getDefaultFormData());
 
   const ticketCount = parseInt(formData.ticketCount) || 1;
@@ -221,6 +249,8 @@ export default function SellTicket() {
         operator: (editListing as any).operator || "",
         trainNumber: (editListing as any).train_number || "",
         trainClass: (editListing as any).train_class || "",
+        trainType: (editListing as any).train_type || "",
+        travelClass: (editListing as any).travel_class || "",
         trainOriginStation: (editListing as any).origin_station || "",
         trainDestinationStation: (editListing as any).destination_station || "",
         departureTime: (editListing as any).departure_time || "",
@@ -237,6 +267,12 @@ export default function SellTicket() {
         speedyBoarding: editListing.speedy_boarding ?? false,
       };
       setSharedInclusions(shared);
+
+      // Hydrate train inclusions from existing listing if present.
+      const ti = (editListing as any).train_inclusions;
+      if (ti && typeof ti === "object") {
+        setTrainInclusions({ ...defaultTrainInclusions, ...ti });
+      }
 
       if (editListing.per_ticket_inclusions && Array.isArray(editListing.per_ticket_inclusions)) {
         setSameInclusions(false);
@@ -387,6 +423,18 @@ export default function SellTicket() {
         // Determine ticket kind from AI output (defaults to flight)
         const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
 
+        // Resolve operator + fare against our internal vocabulary (handles
+        // aliases like Thalys → Eurostar, free-form labels, etc.).
+        const resolvedOperator = isTrain ? resolveOperatorName(p.operator) ?? "" : "";
+        const resolvedFare = isTrain && resolvedOperator
+          ? (resolveFareValue(resolvedOperator, p.trainClass) ?? "")
+          : "";
+        const resolvedTrainType = isTrain && resolvedOperator
+          ? (resolveTrainType(resolvedOperator, p.trainType) ?? "")
+          : "";
+        const resolvedTravelClass: string =
+          typeof p.travelClass === "string" ? p.travelClass.toLowerCase() : "";
+
         // Strict ISO YYYY-MM-DD parsing built in UTC midnight to avoid TZ drift.
         // We deliberately reject any other format so the AI cannot smuggle in
         // ambiguous DD/MM/YYYY values (or a booking date masquerading as travel date).
@@ -455,6 +503,9 @@ export default function SellTicket() {
         // Outbound departure time — fall back to legacy `departureTime` field for trains.
         const outboundDepTime =
           normTime(p.outboundDepartureTime) || normTime(p.departureTime);
+        const outboundArrTime = normTime(p.outboundArrivalTime);
+        const inboundDepTime = normTime(p.inboundDepartureTime);
+        const inboundArrTime = normTime(p.inboundArrivalTime);
 
         setFormData((prev) => ({
           ...prev,
@@ -463,19 +514,27 @@ export default function SellTicket() {
           originCity: p.originCity || "",
           destinationCountry: p.destinationCountry || "",
           destinationCity: p.destinationCity || "",
-          airline: isTrain ? (p.operator || "") : (p.airline || ""),
+          airline: isTrain ? "" : (p.airline || ""),
           flightNumber: isTrain ? "" : (p.flightNumber || ""),
           originalPrice: p.originalPrice?.toString() || "",
+          currency: typeof p.priceCurrency === "string" && p.priceCurrency
+            ? p.priceCurrency.toUpperCase()
+            : prev.currency,
           departureDate: parsedDeparture,
           returnDate: parsedReturn,
           ticketCount: parsedCount,
           // Train-only fields
-          operator: isTrain ? (p.operator || "") : "",
+          operator: isTrain ? (resolvedOperator || p.operator || "") : "",
           trainNumber: isTrain ? (p.trainNumber || "") : "",
-          trainClass: isTrain ? (p.trainClass || "") : "",
+          trainClass: isTrain ? resolvedFare : "",
+          trainType: isTrain ? resolvedTrainType : "",
+          travelClass: isTrain ? resolvedTravelClass : "",
           trainOriginStation: isTrain ? (p.originStation || "") : "",
           trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
           departureTime: outboundDepTime,
+          arrivalTime: outboundArrTime,
+          returnDepartureTime: inboundDepTime,
+          returnArrivalTime: inboundArrTime,
         }));
 
         // Sync per-ticket array
@@ -537,14 +596,23 @@ export default function SellTicket() {
       if (isTrain) {
         const op = getOperator(formData.operator);
         const fare = op?.fares.find((f) => f.value === formData.trainClass);
-        listingData.airline = formData.operator; // store operator name in airline col for legacy compat
+        // We still write the operator into the legacy `airline` column for older
+        // queries/joins that key off it, but downstream UIs now read `operator`
+        // first (with `airline` only as a fallback).
+        listingData.airline = formData.operator;
         listingData.operator = formData.operator;
         listingData.train_number = formData.trainNumber || null;
         listingData.train_class = formData.trainClass || null;
+        listingData.train_type = formData.trainType || null;
+        listingData.travel_class = formData.travelClass || null;
+        listingData.train_inclusions = trainInclusions as any;
         listingData.origin_station = formData.trainOriginStation || null;
         listingData.destination_station = formData.trainDestinationStation || null;
         listingData.departure_time = formData.departureTime || null;
-        listingData.title = `${formData.destinationCity} Train Trip`;
+        listingData.arrival_time = formData.arrivalTime || null;
+        listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
+        listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
+        listingData.title = t("trainTripTitle", { city: formData.destinationCity });
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
         listingData.destination_city = formData.destinationCity;
@@ -553,6 +621,9 @@ export default function SellTicket() {
         listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
         listingData.ticket_count = ticketCount;
         listingData.stopovers = 0;
+        // Train fares can be in EUR/GBP/CHF/PLN — fall back to the operator's
+        // configured currency when the user didn't override it explicitly.
+        if (op?.currency) listingData.currency = op.currency;
         // Store name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = fare?.fee ?? 0;
       } else {
