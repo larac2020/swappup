@@ -770,8 +770,12 @@ export default function SellTicket() {
       });
       return;
     }
-    // Mandatory name-change risk acknowledgement (skipped in edit mode — already accepted at creation).
-    if (!isEditMode && !nameChangeRiskAck) {
+    // Mandatory name-change risk acknowledgement (only required when the box is shown).
+    const _isTrain = formData.listingType === "train_ticket";
+    const _isFlight = formData.listingType === "flight_ticket";
+    const _trainHasFee = _isTrain && trainTransferResult?.status === "allowed" && (trainTransferResult.fee ?? 0) > 0;
+    const _riskRequired = !isEditMode && (_isFlight || _trainHasFee);
+    if (_riskRequired && !nameChangeRiskAck) {
       toast({
         title: t("sellToastListingBlocked"),
         description: t("sellToastNoConfirmRiskNotAck"),
