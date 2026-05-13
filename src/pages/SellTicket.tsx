@@ -37,17 +37,6 @@ import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 
-const tripTags: { value: string; labelKey: TranslationKey }[] = [
-  { value: "city_trip", labelKey: "tagCityTrip" },
-  { value: "beach", labelKey: "tagBeach" },
-  { value: "winter_holiday", labelKey: "tagWinterHoliday" },
-  { value: "ski_trip", labelKey: "tagSkiTrip" },
-  { value: "adventure", labelKey: "tagAdventure" },
-  { value: "romantic", labelKey: "tagRomantic" },
-  { value: "family", labelKey: "tagFamily" },
-  { value: "business", labelKey: "tagBusiness" },
-];
-
 interface TicketInclusions {
   luggageIncluded: boolean;
   carryOnIncluded: boolean;
@@ -116,7 +105,6 @@ const getDefaultFormData = () => ({
   ticketCount: "1",
   stopovers: "0",
   additionalNotes: "",
-  selectedTags: [] as string[],
   boostHours: 0 as number, // 0 = no boost; otherwise 24 | 72 | 168
   // Train-only fields
   operator: "",
@@ -244,7 +232,6 @@ export default function SellTicket() {
         ticketCount: String(editListing.ticket_count),
         stopovers: String(editListing.stopovers ?? 0),
         additionalNotes: editListing.additional_notes || "",
-        selectedTags: (editListing.tags as string[]) || [],
         boostHours: 0,
         operator: (editListing as any).operator || "",
         trainNumber: (editListing as any).train_number || "",
@@ -590,7 +577,6 @@ export default function SellTicket() {
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
         currency: formData.currency || "EUR",
         additional_notes: formData.additionalNotes || null,
-        tags: formData.selectedTags as any,
       };
 
       if (isTrain) {
@@ -627,7 +613,7 @@ export default function SellTicket() {
         // Store name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = fare?.fee ?? 0;
       } else {
-        listingData.title = `${formData.destinationCity} ${formData.selectedTags.length > 0 ? t((tripTags.find((tg) => tg.value === formData.selectedTags[0])?.labelKey) || "tagCityTrip") : "Trip"}`;
+        listingData.title = `${formData.destinationCity} Trip`;
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
         listingData.destination_city = formData.destinationCity;
@@ -689,15 +675,6 @@ export default function SellTicket() {
       }
     },
   });
-
-  const toggleTag = (tag: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedTags: prev.selectedTags.includes(tag)
-        ? prev.selectedTags.filter((t) => t !== tag)
-        : [...prev.selectedTags, tag],
-    }));
-  };
 
   const priceError = formData.price && formData.originalPrice && parseFloat(formData.price) >= parseFloat(formData.originalPrice);
 
@@ -1383,23 +1360,6 @@ export default function SellTicket() {
                 </p>
               )}
               <SellerFeeBreakdown price={formData.price} currency={getCurrencySymbol(formData.currency)} />
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t("sellTripTypeHeader")}</h2>
-            <div className="flex flex-wrap gap-2">
-              {tripTags.map((tag) => (
-                <Badge
-                  key={tag.value}
-                  variant="outline"
-                  className={cn("cursor-pointer transition-all py-2 px-3", formData.selectedTags.includes(tag.value) ? "bg-primary/20 border-primary text-primary" : "hover:border-primary/50")}
-                  onClick={() => toggleTag(tag.value)}
-                >
-                  {t(tag.labelKey)}
-                </Badge>
-              ))}
             </div>
           </div>
 
