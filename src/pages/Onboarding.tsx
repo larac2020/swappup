@@ -63,13 +63,6 @@ const postalCodePatterns: Record<string, { regex: RegExp; hint: string }> = {
   "United States": { regex: /^\d{5}(-\d{4})?$/, hint: "e.g. 10001" },
 };
 
-const tripCategories = [
-  { value: "city_trip", label: "City Trip" }, { value: "beach", label: "Beach" },
-  { value: "winter_holiday", label: "Winter Holiday" }, { value: "ski_trip", label: "Ski Trip" },
-  { value: "adventure", label: "Adventure" }, { value: "romantic", label: "Romantic" },
-  { value: "family", label: "Family" }, { value: "business", label: "Business" },
-];
-
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [skippedSteps, setSkippedSteps] = useState<Set<Step>>(new Set());
@@ -112,7 +105,6 @@ export default function Onboarding() {
   const [favCity, setFavCity] = useState("");
   const [favCountry, setFavCountry] = useState("");
   const [defaultPax, setDefaultPax] = useState("1");
-  const [favCategories, setFavCategories] = useState<string[]>([]);
 
   const [saving, setSaving] = useState(false);
 
@@ -326,7 +318,7 @@ export default function Onboarding() {
       const { error } = await supabase.from("profiles").update({
         favorite_departure_city: favCity || null,
         default_pax: parseInt(defaultPax) || 1,
-        favorite_categories: favCategories.length > 0 ? favCategories : null,
+        favorite_categories: null,
       } as any).eq("user_id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -597,20 +589,6 @@ export default function Onboarding() {
                       {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "passenger" : "passengers"}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Favorite Categories</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {tripCategories.map((cat) => (
-                      <button key={cat.value} type="button"
-                        onClick={() => setFavCategories((prev) => prev.includes(cat.value) ? prev.filter((c) => c !== cat.value) : [...prev, cat.value])}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                          favCategories.includes(cat.value) ? "bg-primary text-primary-foreground border-primary" : "bg-secondary border-border/50 text-muted-foreground hover:border-primary/50"
-                        }`}>
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
