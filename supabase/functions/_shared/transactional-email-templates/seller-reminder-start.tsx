@@ -55,7 +55,7 @@ const dict = {
     unlock: 'Sblocca il tuo pagamento',
     s1Before: 'Vai sul sito della compagnia aerea e ', s1Bold: 'aggiorna la prenotazione', s1After: ' con il nome dell\'acquirente.',
     s2: 'Carica la nuova conferma di prenotazione nell\'app swappup per segnalare il cambio come fatto.',
-    s3: 'Una volta che l\'acquirente verifica che sia tutto in ordine, i tuoi soldi vengono sbloccati. Di solito arrivano sul tuo conto entro 2-5 giorni lavorativi.',
+    s3: 'Una volta che l\'acquirente verifica che sia tutto in ordine, il bonifico viene sbloccato. Di solito arriva sul tuo conto entro 2-5 giorni lavorativi.',
     pushTip: '💡 Attiva le notifiche push per sapere subito quando l\'acquirente conferma e il pagamento è in arrivo.',
     updatePrefs: 'Aggiorna le preferenze di notifica',
     cta: 'Conferma il cambio nome in app',
