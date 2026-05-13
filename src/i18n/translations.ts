@@ -669,7 +669,7 @@ const translations = {
     sellFlightDates: "Flight Dates",
     sellTrainDates: "Travel Dates",
     sellTrainDetails: "Train Details",
-    trainTripTitle: "{{city}} Train Trip",
+    trainTripTitle: "{city} Train Trip",
     sellSelectCountry: "Select country",
     sellSelectCity: "Select city",
     sellSelectAirport: "Select airport",
