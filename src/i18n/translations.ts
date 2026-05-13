@@ -1625,6 +1625,9 @@ const translations = {
     sellNoConfirmRiskAck: "Ho compreso che il costo del cambio nominativo pagato alla compagnia non è rimborsabile da swappup se l'acquirente non conferma il trasferimento entro 48 ore.",
     sellToastNoConfirmRiskNotAck: "Conferma il rischio del cambio nominativo prima di pubblicare l'annuncio.",
     sellNoConfirmRiskReassurance: "Gli acquirenti che ripetutamente non confermano vengono esaminati e possono essere sospesi da swappup.",
+    sellNoConfirmRiskTitleTrain: "Importante: rischio cambio nominativo",
+    sellNoConfirmRiskBodyTrain: "Una volta eseguito il cambio nominativo con l'operatore ferroviario per l'acquirente, il costo pagato all'operatore NON è rimborsabile da swappup se l'acquirente non conferma la prenotazione entro la finestra di verifica di 48 ore. Gli operatori ferroviari di solito non offrono una finestra di reversibilità gratuita — se ciò accade, il posto resta a nome dell'acquirente e potresti perdere il costo del cambio nominativo.",
+    sellNoConfirmRiskAckTrain: "Ho compreso che il costo del cambio nominativo pagato all'operatore ferroviario non è rimborsabile da swappup se l'acquirente non conferma il trasferimento entro 48 ore.",
 
     // Legal pages
     legalTermsTitle: "Termini di Servizio",
