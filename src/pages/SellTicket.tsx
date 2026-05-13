@@ -423,6 +423,18 @@ export default function SellTicket() {
         // Determine ticket kind from AI output (defaults to flight)
         const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
 
+        // Resolve operator + fare against our internal vocabulary (handles
+        // aliases like Thalys → Eurostar, free-form labels, etc.).
+        const resolvedOperator = isTrain ? resolveOperatorName(p.operator) ?? "" : "";
+        const resolvedFare = isTrain && resolvedOperator
+          ? (resolveFareValue(resolvedOperator, p.trainClass) ?? "")
+          : "";
+        const resolvedTrainType = isTrain && resolvedOperator
+          ? (resolveTrainType(resolvedOperator, p.trainType) ?? "")
+          : "";
+        const resolvedTravelClass: string =
+          typeof p.travelClass === "string" ? p.travelClass.toLowerCase() : "";
+
         // Strict ISO YYYY-MM-DD parsing built in UTC midnight to avoid TZ drift.
         // We deliberately reject any other format so the AI cannot smuggle in
         // ambiguous DD/MM/YYYY values (or a booking date masquerading as travel date).
@@ -491,6 +503,9 @@ export default function SellTicket() {
         // Outbound departure time — fall back to legacy `departureTime` field for trains.
         const outboundDepTime =
           normTime(p.outboundDepartureTime) || normTime(p.departureTime);
+        const outboundArrTime = normTime(p.outboundArrivalTime);
+        const inboundDepTime = normTime(p.inboundDepartureTime);
+        const inboundArrTime = normTime(p.inboundArrivalTime);
 
         setFormData((prev) => ({
           ...prev,
@@ -499,19 +514,27 @@ export default function SellTicket() {
           originCity: p.originCity || "",
           destinationCountry: p.destinationCountry || "",
           destinationCity: p.destinationCity || "",
-          airline: isTrain ? (p.operator || "") : (p.airline || ""),
+          airline: isTrain ? "" : (p.airline || ""),
           flightNumber: isTrain ? "" : (p.flightNumber || ""),
           originalPrice: p.originalPrice?.toString() || "",
+          currency: typeof p.priceCurrency === "string" && p.priceCurrency
+            ? p.priceCurrency.toUpperCase()
+            : prev.currency,
           departureDate: parsedDeparture,
           returnDate: parsedReturn,
           ticketCount: parsedCount,
           // Train-only fields
-          operator: isTrain ? (p.operator || "") : "",
+          operator: isTrain ? (resolvedOperator || p.operator || "") : "",
           trainNumber: isTrain ? (p.trainNumber || "") : "",
-          trainClass: isTrain ? (p.trainClass || "") : "",
+          trainClass: isTrain ? resolvedFare : "",
+          trainType: isTrain ? resolvedTrainType : "",
+          travelClass: isTrain ? resolvedTravelClass : "",
           trainOriginStation: isTrain ? (p.originStation || "") : "",
           trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
           departureTime: outboundDepTime,
+          arrivalTime: outboundArrTime,
+          returnDepartureTime: inboundDepTime,
+          returnArrivalTime: inboundArrTime,
         }));
 
         // Sync per-ticket array
