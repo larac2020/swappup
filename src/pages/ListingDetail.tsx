@@ -436,6 +436,21 @@ export default function ListingDetail() {
                   <div><p className="text-sm text-muted-foreground">Flight Number</p><p className="font-medium">{listing.flight_number}</p></div>
                 </div>
               )}
+              {!isTrain && (listing as any).travel_class && (
+                <div className="flex items-start gap-3">
+                  <Plane className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("sellCabinClass")}</p>
+                    <p className="font-medium">{
+                      (() => {
+                        const v = (listing as any).travel_class as string;
+                        const key = v === "premium_economy" ? "cabinPremiumEconomy" : v === "business" ? "cabinBusiness" : v === "first" ? "cabinFirst" : "cabinEconomy";
+                        return t(key as any);
+                      })()
+                    }</p>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-primary mt-0.5" />
                 <div><p className="text-sm text-muted-foreground">Stopovers</p><p className="font-medium">{listing.stopovers === 0 ? "Direct flight" : `${listing.stopovers} stop(s)`}</p></div>
