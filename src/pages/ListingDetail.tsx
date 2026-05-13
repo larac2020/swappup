@@ -24,12 +24,6 @@ import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
 import { TrainFront } from "lucide-react";
 
-const tagLabels: Record<string, string> = {
-  city_trip: "City Trip", beach: "Beach", winter_holiday: "Winter Holiday",
-  ski_trip: "Ski Trip", adventure: "Adventure", romantic: "Romantic",
-  family: "Family", business: "Business",
-};
-
 export default function ListingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -388,16 +382,6 @@ export default function ListingDetail() {
         <div className="px-4 py-6 space-y-6 -mt-4 relative z-10">
           {/* Route Header with airport codes */}
           <div className="space-y-3">
-            {listing.tags && listing.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {listing.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-                    {tagLabels[tag] || tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
             <div className="flex items-center gap-3 text-xl">
               <div className="text-center">
                 <span className="font-display font-bold">{listing.origin_city}</span>

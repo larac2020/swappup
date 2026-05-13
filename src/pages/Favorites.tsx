@@ -63,7 +63,6 @@ export default function Favorites() {
                   airline={l.airline}
                   ticketCount={l.ticket_count}
                   imageUrl={l.destination_image_url ?? undefined}
-                  tags={l.tags as string[] ?? []}
                   listingType={(l as any).listing_type ?? "flight_ticket"}
                   creditType={(l as any).credit_type}
                   creditValue={(l as any).credit_value ? Number((l as any).credit_value) : undefined}

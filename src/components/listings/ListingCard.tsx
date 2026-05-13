@@ -27,7 +27,6 @@ interface ListingCardProps {
   airline: string;
   ticketCount: number;
   imageUrl?: string;
-  tags?: string[];
   listingType?: string;
   creditType?: string;
   creditValue?: number;
@@ -38,21 +37,6 @@ interface ListingCardProps {
   originAirport?: string;
   destinationAirport?: string;
 }
-
-const tagColors: Record<string, string> = {
-  city_trip: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  beach: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-  winter_holiday: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-  ski_trip: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-  adventure: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  romantic: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-  family: "bg-green-500/20 text-green-300 border-green-500/30",
-  business: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-};
-
-const formatTag = (tag: string) => {
-  return tag.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-};
 
 export function ListingCard({
   id,
@@ -67,7 +51,6 @@ export function ListingCard({
   airline,
   ticketCount,
   imageUrl,
-  tags = [],
   listingType = "flight_ticket",
   creditType,
   creditValue,
@@ -265,21 +248,6 @@ export function ListingCard({
                 </div>
                 <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{carrierLabel}</span>
               </div>
-
-              {/* Tags row */}
-              {tags.length > 0 && (
-                <div className="flex gap-1.5 flex-wrap">
-                  {tags.slice(0, 3).map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className={cn("text-xs border", tagColors[tag] || "bg-secondary")}
-                    >
-                      {formatTag(tag)}
-                    </Badge>
-                  ))}
-                </div>
-              )}
 
               {/* Details + Buyer Protection */}
               <div className="flex items-center justify-between text-sm text-muted-foreground">

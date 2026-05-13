@@ -184,24 +184,6 @@ export default function Home() {
     enabled: !!profile?.favorite_departure_city,
   });
 
-  // Favorite tags
-  const { data: favTagListings = [], isLoading: loadingFavTags } = useQuery({
-    queryKey: ["favTagListings", profile?.favorite_categories],
-    queryFn: async () => {
-      const tags = profile!.favorite_categories!;
-      const { data, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("is_active", true)
-        .overlaps("tags", tags)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profile?.favorite_categories && profile.favorite_categories.length > 0,
-  });
-
   // Latest deals
   const { data: latestDeals = [], isLoading: loadingLatest } = useQuery({
     queryKey: ["recommendations"],
@@ -443,15 +425,6 @@ export default function Home() {
           fromFavCity,
           loadingFavCity,
           `/browse?origin=${encodeURIComponent(profile.favorite_departure_city)}`
-        )}
-
-        {/* Favorite Categories */}
-        {profile?.favorite_categories && profile.favorite_categories.length > 0 && renderSection(
-          t("homeForYou"),
-          <Heart className="w-4 h-4 text-primary" />,
-          favTagListings,
-          loadingFavTags,
-          "/browse"
         )}
 
         {/* Under €100 */}
