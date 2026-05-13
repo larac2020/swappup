@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { normalizeLocale } from '../_shared/transactional-email-templates/i18n.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -133,6 +134,24 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // 1b. Resolve recipient locale from their profile (unless caller already
+  // provided one explicitly in templateData.locale). Falls back to 'en'.
+  if (templateData.locale === undefined || templateData.locale === null || templateData.locale === '') {
+    try {
+      const { data: localeProfile } = await supabase
+        .from('profiles')
+        .select('preferred_language')
+        .eq('email', effectiveRecipient.toLowerCase())
+        .maybeSingle()
+      templateData.locale = normalizeLocale(localeProfile?.preferred_language)
+    } catch (e) {
+      console.warn('Locale lookup failed, defaulting to en', { error: e })
+      templateData.locale = 'en'
+    }
+  } else {
+    templateData.locale = normalizeLocale(templateData.locale)
+  }
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase

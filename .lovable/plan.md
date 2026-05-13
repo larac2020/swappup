@@ -1,65 +1,56 @@
-# Plan: per-recipient localized emails (EN + IT)
+# Finish email localization + add EN/IT preview toggle
 
-The app currently picks language client-side from `localStorage`. To send emails in the right language we need to (1) persist that preference server-side, (2) make every email template render in EN or IT, and (3) resolve the recipient's language at send time.
+## 1. Translate the remaining 5 transactional templates
 
-## 1. Persist user language preference
+Apply the same `dict + t(loc, dict, key, vars)` pattern already used in the 4 translated templates to:
 
-- New migration: add `preferred_language text not null default 'en' check (preferred_language in ('en','it'))` to `public.profiles`.
-- Update `src/i18n/LanguageContext.tsx`: when an authenticated user changes language, also write it to `profiles.preferred_language`. On login, hydrate `localStorage` from the profile so the choice follows the account across devices.
-- New users: copy the current `localStorage` value into the profile on first auth.
-
-## 2. Translate the 9 transactional templates
-
-Files in `supabase/functions/_shared/transactional-email-templates/`:
-- `_layout.tsx` (chrome: "Need help?", footer disclaimer, "Manage email preferences", "Unsubscribe")
-- `purchase-buyer-confirmation.tsx`
-- `purchase-seller-action-required.tsx`
-- `seller-reminder-start.tsx`
-- `seller-deadline-warning.tsx`
 - `transfer-confirmed-buyer-verify.tsx`
 - `transfer-missed-buyer-apology.tsx`
 - `transfer-missed-seller-warning.tsx`
 - `transfer-buyer-no-confirm-seller.tsx`
 - `escrow-released-seller.tsx`
 
-Approach:
-- Add a tiny in-file translation helper in `_shared/transactional-email-templates/i18n.ts` exporting `type Locale = 'en' | 'it'` and a `t(locale, dict)` helper. Each template defines a local `dict = { en: {...}, it: {...} }` object — kept inside the template file so copy + translation live together.
-- Every component accepts a `locale?: Locale` prop (default `'en'`).
-- `_layout.tsx`'s `EmailLayout`, `TripCard`, and the shared `TripDetails` labels (e.g. `escrowAmountLabel`, "Your purchase details", "Order number", "Route", "Departure", "Return", "Airline", "Passengers", "Booking reference", "New name on the booking", "Amount paid…") become locale-aware.
-- `subject` becomes a function of `data` (already supported by the registry) so the email subject is also translated based on `data.locale`.
-- Each template's `previewData` includes both `locale: 'en'` and we add a sibling preview entry for `it` so the dashboard preview can show both — done by extending `registry.ts`'s `TemplateEntry` to optionally accept `previewVariants?: Record<string, Record<string, any>>`. Non-breaking.
+Each template will:
+- Accept an optional `locale: 'en' | 'it'` prop (default `'en'`)
+- Define a local `dict = { en: {...}, it: {...} }`
+- Replace all hardcoded English strings (subject, preview, headings, body, CTAs) with `t(loc, dict, key, vars)`
+- Convert `subject` from a static string into a function `(data) => t(normalizeLocale(data.locale), dict, 'subject', vars)` in the registered `template` export
+- Pass `locale` into `<EmailLayout>` so shared chrome (footer, trip card, support links) renders in the right language
 
-## 3. Resolve recipient language at send time
+## 2. Wire automatic locale lookup on send
 
 In `supabase/functions/send-transactional-email/index.ts`:
-- After resolving `effectiveRecipient`, look up `profiles.preferred_language` for that email (case-insensitive). Fall back to `templateData.locale` if provided by the caller, then to `'en'`.
-- Inject the resolved `locale` into `templateData` before rendering and before calling the `subject` function.
 
-No call-site changes required — the function infers the locale automatically. Callers (escrow flow, expire-transfers, cancel-escrow, seller-reminders, etc.) keep working unchanged.
+- Before rendering the template, look up the recipient's `preferred_language` in `profiles` by `recipientEmail` (using the service role client).
+- If found, inject it into `templateData.locale` (only if the caller didn't already pass an explicit `locale`).
+- Use `normalizeLocale()` from the shared `i18n.ts` helper to coerce values.
+- Fall back to `'en'` when no profile match or no preference is set.
+- Pass the resolved locale into both the React render and the `subject` function.
 
-## 4. Auth emails (signup, magic-link, recovery, invite, email-change, reauthentication)
+This means every existing call site (`stripe-purchase-webhook`, `seller-reminders`, `expire-transfers`, `release-escrow`, `cancel-escrow`, etc.) automatically sends in the recipient's language with no code changes.
 
-Auth emails are currently the Lovable defaults — no custom templates exist yet.
+## 3. Add EN/IT toggle to the email preview pane
 
-- Scaffold the 6 auth templates via the email setup tool.
-- Apply the same brand styling already used by the transactional templates (gold/charcoal, swappup wordmark, white body).
-- Auth hook only knows the recipient email; it cannot pass `templateData`. So inside `auth-email-hook` we will look up `profiles.preferred_language` by recipient email (same helper as transactional) and pass `locale` as a prop to the React Email component.
-- Each of the 6 templates ships an EN + IT dict in the same file, identical pattern to transactional templates.
-- Subjects are also localized (the auth-email-hook builds the subject string from a per-template `subject(locale)` helper exported by each template).
+Update `supabase/functions/preview-transactional-email/index.ts`:
+- Already accepts a `locale` query/body param — confirm it's threaded into both `templateData.locale` and the `subject` function.
 
-## 5. Deploy
+Update the Cloud preview UI (the section the user is viewing under Cloud → Emails):
+- Locate the preview component that calls `preview-transactional-email`.
+- Add a small EN / IT segmented toggle above the rendered preview.
+- Default to `en`; on change, re-invoke the preview function with the selected locale and re-render.
+- Persist the selection in component state only (no DB write).
 
-- Migration applied automatically.
-- Redeploy `send-transactional-email`, `preview-transactional-email`, and `auth-email-hook`.
+Note: this UI lives in the Lovable Cloud preview shell, not in the user's app code. If it turns out the preview UI isn't editable from the project (it's a platform surface), the fallback is to expose the toggle by making `preview-transactional-email` honor `?locale=it` so it can be tested via direct URL — and document that for the user.
 
-## Out of scope
-- Adding more languages beyond EN/IT (architecture allows it; just not populated).
-- Translating Stripe receipt emails (Stripe-managed, not ours).
-- Re-translating `src/i18n/translations.ts` (in-app copy already translated).
+## 4. Deploy
 
-## Technical notes (for reference)
+Deploy edge functions:
+- `send-transactional-email`
+- `preview-transactional-email`
 
-- Translation lives in template files, not a central JSON, to keep each email's copy + layout co-located and reviewable in one diff. A small `i18n.ts` helper is the only shared piece.
-- `subject` already supports `(data) => string` in the registry — no schema change needed for that.
-- The `display_from_root` / sender domain config and unsubscribe footer are unchanged.
-- `preferred_language` defaults to `'en'` so existing rows stay safe; new IT users who switch language in the UI will be persisted on their next language change.
+## Technical notes
+
+- No DB migration needed — `preferred_language` column already exists on `profiles`.
+- No new dependencies.
+- `subject` becoming a function is already supported by `TemplateEntry` (`string | ((data) => string)`).
+- All translations will mirror the tone/structure of the 4 already-translated templates for consistency.
