@@ -194,6 +194,9 @@ export default function SellTicket() {
   const [perTicketInclusions, setPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
   const [sameInclusions, setSameInclusions] = useState(true);
 
+  // Train-specific inclusions (used only when listingType === "train_ticket")
+  const [trainInclusions, setTrainInclusions] = useState<TrainInclusions>({ ...defaultTrainInclusions });
+
   const [formData, setFormData] = useState(getDefaultFormData());
 
   const ticketCount = parseInt(formData.ticketCount) || 1;
@@ -264,6 +267,12 @@ export default function SellTicket() {
         speedyBoarding: editListing.speedy_boarding ?? false,
       };
       setSharedInclusions(shared);
+
+      // Hydrate train inclusions from existing listing if present.
+      const ti = (editListing as any).train_inclusions;
+      if (ti && typeof ti === "object") {
+        setTrainInclusions({ ...defaultTrainInclusions, ...ti });
+      }
 
       if (editListing.per_ticket_inclusions && Array.isArray(editListing.per_ticket_inclusions)) {
         setSameInclusions(false);
