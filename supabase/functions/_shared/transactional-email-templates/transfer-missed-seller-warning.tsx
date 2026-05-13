@@ -37,7 +37,7 @@ const dict = {
     intro2: '. L\'acquirente è stato rimborsato per intero e il tuo annuncio è stato ripubblicato quando possibile.',
     tripTitle: 'Prenotazione annullata',
     nextTime: 'Per la prossima volta',
-    nextTimeBody: 'Appena ricevi una vendita, hai 24 ore per aggiornare la prenotazione con la compagnia aerea e caricare la nuova conferma. Prima inizi, più la vendita fila liscia e più velocemente ricevi i tuoi soldi.',
+    nextTimeBody: 'Appena ricevi una vendita, hai 24 ore per aggiornare la prenotazione con la compagnia aerea e caricare la nuova conferma. Prima inizi, più la vendita fila liscia e più velocemente ricevi il pagamento.',
     cta: 'Vedi vendita in app',
     note: 'Scadenze mancate ripetutamente possono influire sulla tua reputazione e sulla possibilità di pubblicare annunci. Se qualcosa ti ha impedito di completare in tempo, scrivici e cercheremo di aiutarti.',
     sign: 'Buona giornata,', team: 'Il team swappup',
