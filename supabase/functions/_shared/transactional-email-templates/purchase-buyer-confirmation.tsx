@@ -7,7 +7,6 @@ import { Locale, normalizeLocale, t } from './i18n.ts'
 
 interface Props {
   buyerName?: string
-  sellerName?: string
   totalPrice?: string
   trip?: TripDetails
   purchaseId?: string
@@ -64,7 +63,7 @@ const dict = {
   },
 } as const
 
-const Email = ({ buyerName, sellerName, totalPrice, trip, purchaseId, orderNumber, bookingRef, bookingName, locale }: Props) => {
+const Email = ({ buyerName, totalPrice, trip, purchaseId, orderNumber, bookingRef, bookingName, locale }: Props) => {
   const loc = normalizeLocale(locale)
   // Seller PII is intentionally hidden from the buyer; always use a generic label.
   const seller = t(loc, dict, 'seller')
@@ -116,7 +115,6 @@ export const template = {
   previewData: {
     locale: 'en',
     buyerName: 'Alex',
-    sellerName: 'Maria',
     totalPrice: '€124.50',
     trip: {
       origin: 'London (LGW)', destination: 'Rome (FCO)',
