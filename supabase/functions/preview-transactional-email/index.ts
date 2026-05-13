@@ -46,14 +46,21 @@ Deno.serve(async (req) => {
     errorMessage?: string
   }> = []
 
+  // Render each template in both English and Italian so the user can
+  // preview both languages directly from the Cloud → Emails view.
+  const locales: Array<{ code: 'en' | 'it'; label: string }> = [
+    { code: 'en', label: 'EN' },
+    { code: 'it', label: 'IT' },
+  ]
+
   for (const name of templateNames) {
     const entry = TEMPLATES[name]
-    const displayName = entry.displayName || name
+    const baseDisplayName = entry.displayName || name
 
     if (!entry.previewData) {
       results.push({
         templateName: name,
-        displayName,
+        displayName: baseDisplayName,
         subject: '',
         html: '',
         status: 'preview_data_required',
@@ -61,35 +68,40 @@ Deno.serve(async (req) => {
       continue
     }
 
-    try {
-      const html = await renderAsync(
-        React.createElement(entry.component, entry.previewData)
-      )
-      const resolvedSubject =
-        typeof entry.subject === 'function'
-          ? entry.subject(entry.previewData)
-          : entry.subject
+    for (const { code, label } of locales) {
+      const localizedData = { ...entry.previewData, locale: code }
+      const variantName = `${name}__${code}`
+      const variantDisplay = `${baseDisplayName} (${label})`
+      try {
+        const html = await renderAsync(
+          React.createElement(entry.component, localizedData)
+        )
+        const resolvedSubject =
+          typeof entry.subject === 'function'
+            ? entry.subject(localizedData)
+            : entry.subject
 
-      results.push({
-        templateName: name,
-        displayName,
-        subject: resolvedSubject,
-        html,
-        status: 'ready',
-      })
-    } catch (err) {
-      console.error('Failed to render template for preview', {
-        template: name,
-        error: err,
-      })
-      results.push({
-        templateName: name,
-        displayName,
-        subject: '',
-        html: '',
-        status: 'render_failed',
-        errorMessage: err instanceof Error ? err.message : String(err),
-      })
+        results.push({
+          templateName: variantName,
+          displayName: variantDisplay,
+          subject: resolvedSubject,
+          html,
+          status: 'ready',
+        })
+      } catch (err) {
+        console.error('Failed to render template for preview', {
+          template: variantName,
+          error: err,
+        })
+        results.push({
+          templateName: variantName,
+          displayName: variantDisplay,
+          subject: '',
+          html: '',
+          status: 'render_failed',
+          errorMessage: err instanceof Error ? err.message : String(err),
+        })
+      }
     }
   }
 
