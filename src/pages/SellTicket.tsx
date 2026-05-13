@@ -770,8 +770,12 @@ export default function SellTicket() {
       });
       return;
     }
-    // Mandatory name-change risk acknowledgement (skipped in edit mode — already accepted at creation).
-    if (!isEditMode && !nameChangeRiskAck) {
+    // Mandatory name-change risk acknowledgement (only required when the box is shown).
+    const _isTrain = formData.listingType === "train_ticket";
+    const _isFlight = formData.listingType === "flight_ticket";
+    const _trainHasFee = _isTrain && trainTransferResult?.status === "allowed" && (trainTransferResult.fee ?? 0) > 0;
+    const _riskRequired = !isEditMode && (_isFlight || _trainHasFee);
+    if (_riskRequired && !nameChangeRiskAck) {
       toast({
         title: t("sellToastListingBlocked"),
         description: t("sellToastNoConfirmRiskNotAck"),
@@ -1474,15 +1478,20 @@ export default function SellTicket() {
               formData.listingType === "flight_ticket" &&
               flightVerification != null &&
               (flightVerification.status === "mismatch" || flightVerification.status === "not_found");
+            const isTrain = formData.listingType === "train_ticket";
+            const isFlight = formData.listingType === "flight_ticket";
+            // Show the name-change risk box only when there's actually a name-change fee at stake.
+            const trainHasFee = isTrain && trainTransferResult?.status === "allowed" && (trainTransferResult.fee ?? 0) > 0;
+            const showRiskBox = !isEditMode && (isFlight || trainHasFee);
             return (
               <>
-                {!isEditMode && (
+                {showRiskBox && (
                   <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 space-y-3">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold">{t("sellNoConfirmRiskTitle")}</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{t("sellNoConfirmRiskBody")}</p>
+                        <p className="text-sm font-semibold">{t(isTrain ? "sellNoConfirmRiskTitleTrain" : "sellNoConfirmRiskTitle")}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t(isTrain ? "sellNoConfirmRiskBodyTrain" : "sellNoConfirmRiskBody")}</p>
                         <p className="text-xs text-muted-foreground italic">{t("sellNoConfirmRiskReassurance")}</p>
                       </div>
                     </div>
@@ -1493,7 +1502,7 @@ export default function SellTicket() {
                         checked={nameChangeRiskAck}
                         onChange={(e) => setNameChangeRiskAck(e.target.checked)}
                       />
-                      <span className="text-xs leading-relaxed">{t("sellNoConfirmRiskAck")}</span>
+                      <span className="text-xs leading-relaxed">{t(isTrain ? "sellNoConfirmRiskAckTrain" : "sellNoConfirmRiskAck")}</span>
                     </label>
                   </div>
                 )}
@@ -1502,7 +1511,7 @@ export default function SellTicket() {
                 variant="gold"
                 size="xl"
                 className="w-full"
-                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (!isEditMode && !nameChangeRiskAck)}
+                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck)}
               >
                 {createListingMutation.isPending ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
