@@ -104,7 +104,6 @@ Deno.serve(async (req) => {
             idempotencyKey: `buyer-confirm-${purchase.id}`,
             templateData: {
               buyerName: (purchase.buyer_full_name || buyerProfile?.full_name || '').split(' ')[0],
-              sellerName: (sellerProfile?.full_name || '').split(' ')[0],
               totalPrice: fmt(purchase.total_price),
               trip,
               bookingRef: purchase.original_booking_ref,
