@@ -13,19 +13,7 @@ import {
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
-import type { TranslationKey } from "@/i18n/translations";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
-
-const tripCategories: { value: string; labelKey: TranslationKey }[] = [
-  { value: "city_trip", labelKey: "tagCityTrip" },
-  { value: "beach", labelKey: "tagBeach" },
-  { value: "winter_holiday", labelKey: "tagWinterHoliday" },
-  { value: "ski_trip", labelKey: "tagSkiTrip" },
-  { value: "adventure", labelKey: "tagAdventure" },
-  { value: "romantic", labelKey: "tagRomantic" },
-  { value: "family", labelKey: "tagFamily" },
-  { value: "business", labelKey: "tagBusiness" },
-];
 
 export default function Preferences() {
   const navigate = useNavigate();
@@ -53,7 +41,6 @@ export default function Preferences() {
   const [favCountry, setFavCountry] = useState("");
   const [favCity, setFavCity] = useState("");
   const [defaultPax, setDefaultPax] = useState("1");
-  const [favCategories, setFavCategories] = useState<string[]>([]);
   const [preferredCurrency, setPreferredCurrency] = useState("EUR");
   const [saving, setSaving] = useState(false);
 
@@ -79,7 +66,6 @@ export default function Preferences() {
       }
       if (profile.favorite_departure_city) setFavCity(profile.favorite_departure_city);
       if (profile.default_pax) setDefaultPax(String(profile.default_pax));
-      if (profile.favorite_categories) setFavCategories(profile.favorite_categories);
       if ((profile as any).preferred_currency) setPreferredCurrency((profile as any).preferred_currency);
     }
   }, [profile, countries]);
@@ -94,7 +80,7 @@ export default function Preferences() {
           favorite_departure_city: favCity || null,
           favorite_departure_country: favCountry || null,
           default_pax: parseInt(defaultPax) || 1,
-          favorite_categories: favCategories.length > 0 ? favCategories : null,
+          favorite_categories: null,
           preferred_currency: preferredCurrency || "EUR",
         } as any)
         .eq("user_id", user.id);
@@ -172,27 +158,6 @@ export default function Preferences() {
           <p className="text-xs text-muted-foreground">All listing prices will be shown in this currency.</p>
         </div>
 
-        <div className="space-y-1.5">
-          <Label>{t("preferencesFavCategories")}</Label>
-          <div className="flex flex-wrap gap-2">
-            {tripCategories.map((cat) => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setFavCategories((prev) =>
-                  prev.includes(cat.value) ? prev.filter((c) => c !== cat.value) : [...prev, cat.value]
-                )}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  favCategories.includes(cat.value)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary border-border/50 text-muted-foreground hover:border-primary/50"
-                }`}
-              >
-                {t(cat.labelKey)}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       <Button variant="gold" className="w-full" onClick={handleSave} disabled={saving}>

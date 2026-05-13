@@ -61,7 +61,6 @@ export default function Browse() {
           minPrice: params.minPrice ?? filters.minPrice,
           maxPrice: params.maxPrice ?? filters.maxPrice,
           ticketCount: params.ticketCount ?? filters.ticketCount,
-          tags: params.tags?.length > 0 ? params.tags : filters.tags,
           airlines: params.airlines?.length > 0 ? params.airlines : filters.airlines,
           mealIncluded: params.mealIncluded ?? filters.mealIncluded,
           luggageIncluded: params.luggageIncluded ?? filters.luggageIncluded,
@@ -188,11 +187,6 @@ export default function Browse() {
           // 4+ = minimum
           if (listing.ticket_count < filters.ticketCount) return false;
         }
-      }
-
-      if (filters.tags.length > 0) {
-        const hasMatchingTag = filters.tags.some((tag) => listing.tags?.includes(tag as any));
-        if (!hasMatchingTag) return false;
       }
 
       // Dates - only filter if explicitly set
@@ -425,7 +419,6 @@ export default function Browse() {
                   airline={listing.airline}
                   ticketCount={listing.ticket_count}
                   imageUrl={listing.destination_image_url ?? undefined}
-                  tags={listing.tags as string[] ?? []}
                   listingType={(listing as any).listing_type ?? "flight_ticket"}
                   creditType={(listing as any).credit_type}
                   creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
@@ -466,7 +459,6 @@ export default function Browse() {
                           airline={listing.airline}
                           ticketCount={listing.ticket_count}
                           imageUrl={listing.destination_image_url ?? undefined}
-                          tags={listing.tags as string[] ?? []}
                           listingType={(listing as any).listing_type ?? "flight_ticket"}
                           creditType={(listing as any).credit_type}
                           creditValue={(listing as any).credit_value ? Number((listing as any).credit_value) : undefined}
