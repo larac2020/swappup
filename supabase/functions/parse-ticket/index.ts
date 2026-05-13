@@ -20,7 +20,7 @@ Important rules:
 - For country names, use full names like "United Kingdom", "United States", "United Arab Emirates".
 - For dates, use ISO format: YYYY-MM-DD.
 - For times use HH:MM (24h).
-- For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, times, price, ticketCount.
+- For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, times, price, ticketCount, and travelClass (cabin class).
 - For TRAINS: extract operator (NOT airline), trainNumber, origin/destination station names AND cities + countries, departure + arrival times for every leg, trainType, travelClass, fareClass, price and number of passengers. Do NOT populate the "airline" field for trains.
 
 TRAIN OPERATOR VOCABULARY (use these exact operator names):
@@ -39,7 +39,8 @@ If you see "Thalys", set operator to "Eurostar" (the brand merged in 2023).
 
 TRAIN TYPE & TRAVEL CLASS:
 - trainType MUST be one of the operator's listed product names if visible (e.g. "Frecciarossa", "ICE", "TGV INOUI"). Omit if you cannot tell.
-- travelClass MUST be exactly one of: "first", "second", "business", "executive", "premium", "standard". Map "1ª classe", "1st class", "Première", "Erste Klasse" → "first"; "2ª classe", "2nd class", "Seconde" → "second". For Trenitalia/Italo service levels, also map "Salottino"/"Executive"/"Club Executive" → "executive", "Business" → "business", "Premium"/"Prima" → "premium", "Standard"/"Smart"/"Comfort" → "standard".
+- travelClass for TRAINS MUST be exactly one of: "first", "second", "business", "executive", "premium", "standard". Map "1ª classe", "1st class", "Première", "Erste Klasse" → "first"; "2ª classe", "2nd class", "Seconde" → "second". For Trenitalia/Italo service levels, also map "Salottino"/"Executive"/"Club Executive" → "executive", "Business" → "business", "Premium"/"Prima" → "premium", "Standard"/"Smart"/"Comfort" → "standard".
+- travelClass for FLIGHTS MUST be exactly one of: "economy", "premium_economy", "business", "first". Map "Economy"/"Coach"/"Main Cabin"/"Y" → "economy"; "Premium Economy"/"Premium Select"/"W" → "premium_economy"; "Business"/"Club"/"J"/"C" → "business"; "First"/"La Première"/"Suites"/"F" → "first".
 
 DATE EXTRACTION (CRITICAL — do NOT confuse with administrative dates):
 - "departureDate" MUST be the date the passenger physically TRAVELS / DEPARTS on the OUTBOUND leg (origin → destination).
@@ -117,7 +118,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   trainNumber: { type: "string", description: "Train number (only for trains)" },
                   trainClass: { type: "string", description: "Fare class as printed on the ticket — use one of the canonical values listed for the operator if possible (only for trains)" },
                   trainType: { type: "string", description: "Train product type (Frecciarossa, ICE, TGV INOUI, AVE, etc.) — only for trains" },
-                  travelClass: { type: "string", enum: ["first", "second", "business", "executive", "premium", "standard"], description: "Travel/service class on the train (only for trains)" },
+                  travelClass: { type: "string", description: "Cabin/travel class. For TRAINS use one of: first, second, business, executive, premium, standard. For FLIGHTS use one of: economy, premium_economy, business, first." },
                   originStation: { type: "string", description: "Origin station name (only for trains)" },
                   destinationStation: { type: "string", description: "Destination station name (only for trains)" },
                   departureTime: { type: "string", description: "Outbound departure time HH:MM 24h (trains; mirrors outboundDepartureTime)" },
