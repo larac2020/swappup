@@ -35,7 +35,6 @@ import {
 } from "@/data/trainData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
-import type { TranslationKey } from "@/i18n/translations";
 
 interface TicketInclusions {
   luggageIncluded: boolean;
