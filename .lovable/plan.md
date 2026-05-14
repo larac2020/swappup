@@ -1,19 +1,31 @@
-## Add "Delete listing" action to My Listings
+## Problem
 
-Currently sellers can only toggle a listing active/inactive. There's no way to permanently remove it. I'll add a Delete action.
+The "Forgot password" form runs `supabase.auth.resetPasswordForEmail(...)` with the correct redirect (`/reset-password`), and the route exists. But no email ever reaches the user.
 
-### UI changes (`src/pages/MyListings.tsx`)
-- Add a **Delete** button to the actions row of each listing card (next to View / Edit / Boost / Active toggle), styled in destructive red with a `Trash2` icon.
-- Clicking it opens a confirmation `AlertDialog` ("Delete listing? This action cannot be undone.") with Cancel / Delete buttons.
-- On confirm, run a `deleteMutation` that calls `supabase.from("listings").delete().eq("id", id)`, then invalidates `myListings` and shows a success toast.
-- Block deletion (and show a clear toast) when the listing has an open sale — i.e. it appears in `pendingSales` with status `pending_transfer` or `transfer_confirmed`. Sellers should resolve those first.
+Diagnosis:
+- `notify.swappup.com` is verified for sending.
+- The project has **no `auth-email-hook` edge function** (checked `supabase/functions/`).
+- `email_send_log` has zero rows — no auth email has ever been sent.
 
-### i18n (`src/i18n/translations.ts`)
-- Add new keys in EN + IT: `myListingsDelete`, `deleteListingTitle`, `deleteListingDesc`, `deleteListingConfirm`, `deleteListingCancel`, `deleteListingSuccess`, `deleteListingBlockedSale`.
+Without the auth email hook, Supabase has nowhere to deliver auth emails on this project, so password reset, signup confirmation, and magic-link emails are silently dropped.
 
-### Database / RLS
-- No migration needed. The existing policy "Sellers can delete their own listings" already permits this via `seller_id` → `profiles` → `auth.uid()`.
+## Fix
 
-### Out of scope
-- No soft-delete column or archive view — delete is permanent (the existing inactive toggle already covers "hide without deleting").
-- No cascade cleanup of `favorites` / `cart_items` / `listing_views` rows; those reference `listing_id` without FKs and will simply orphan (consistent with current behavior).
+1. Scaffold the Lovable auth email templates (creates `supabase/functions/_shared/email-templates/*` and `supabase/functions/auth-email-hook/`).
+2. Apply Swappup branding to the templates: dark charcoal + gold accents, white email body, the existing logo from `public/`, "Swappup" wording, EN copy with a translatable layout. Match the recovery email CTA to "Reset your password".
+3. Deploy `auth-email-hook` so Supabase routes recovery / signup / magic-link / email-change events through it and the queue.
+4. Smoke-test by triggering "Forgot password" from the auth screen and verifying a row lands in `email_send_log` with `status = sent`.
+
+## Small frontend hardening (`src/pages/ResetPassword.tsx`)
+
+Two minor robustness fixes while we're touching the flow:
+
+- The current "fallback to existing session" branch (lines 50-57) treats any pre-existing session as a valid recovery context. If a user is already signed in on the device and clicks the reset link, this could let them update the wrong account. Replace it with: only accept `PASSWORD_RECOVERY` event or an explicit recovery token in the URL — otherwise show "invalid link".
+- After a successful `updateUser({ password })`, sign the user out and send them to `/` with a toast asking them to sign in with the new password (matches the toast copy and is the standard UX).
+
+No DB or RLS changes are needed.
+
+## Out of scope
+
+- Transactional (non-auth) emails — not requested.
+- Switching providers — Lovable Emails is the right path here since the domain is already delegated.
