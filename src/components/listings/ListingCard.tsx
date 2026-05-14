@@ -120,7 +120,7 @@ export function ListingCard({
       queryClient.invalidateQueries({ queryKey: ["watchlist"] });
       queryClient.invalidateQueries({ queryKey: ["favoritesCount"] });
       toast({
-        title: isFavorited ? "Removed from favorites" : "Added to favorites",
+        title: isFavorited ? "Removed from watchlist" : "Added to watchlist",
       });
     },
   });

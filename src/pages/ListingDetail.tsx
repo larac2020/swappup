@@ -122,7 +122,7 @@ export default function ListingDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["isFavorited", myProfile?.id, id] });
       queryClient.invalidateQueries({ queryKey: ["watchlist"] });
-      toast({ title: isFavorited ? "Removed from favorites" : "Added to favorites" });
+      toast({ title: isFavorited ? "Removed from watchlist" : "Added to watchlist" });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
