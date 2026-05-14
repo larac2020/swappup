@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, Trash2, Plane, TrainFront, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
+import { ShoppingCart, Trash2, Plane, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getAirlineData } from "@/data/flightData";
-import { getOperatorFare } from "@/data/trainData";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice, convertAmount } from "@/lib/currency";
 
@@ -55,13 +54,7 @@ export default function Cart() {
   const computeFee = (listing: any): number => {
     if (!listing) return 0;
     if (listing.name_change_fee != null) return Number(listing.name_change_fee);
-    if (listing.listing_type === "train_ticket" && listing.operator && listing.train_class) {
-      return getOperatorFare(listing.operator, listing.train_class)?.fee ?? 0;
-    }
-    if (listing.listing_type !== "train_ticket") {
-      return getAirlineData(listing.airline)?.nameChangeFee ?? 0;
-    }
-    return 0;
+    return getAirlineData(listing.airline)?.nameChangeFee ?? 0;
   };
 
   const subtotal = cartItems.reduce((sum, item) => {
@@ -118,8 +111,8 @@ export default function Cart() {
           {cartItems.map((item) => {
             const listing = item.listings as any;
             if (!listing) return null;
-            const isTrain = listing.listing_type === "train_ticket";
-            const carrier = isTrain ? (listing.operator || listing.airline) : listing.airline;
+            if (listing.listing_type === "train_ticket") return null;
+            const carrier = listing.airline;
             const fee = computeFee(listing);
             return (
               <div key={item.id} className="glass rounded-2xl p-4 space-y-3">
@@ -134,9 +127,7 @@ export default function Cart() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{listing.origin_city}</span>
-                          {isTrain
-                            ? <TrainFront className="w-4 h-4 text-primary" />
-                            : <Plane className="w-4 h-4 text-primary rotate-90" />}
+                          <Plane className="w-4 h-4 text-primary rotate-90" />
                           <span className="font-semibold">{listing.destination_city}</span>
                         </div>
                         <p className="text-sm text-muted-foreground">{carrier}</p>
