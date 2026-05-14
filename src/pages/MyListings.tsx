@@ -13,6 +13,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +32,7 @@ import {
   Ticket, Plus, Loader2, Search, Eye, Heart, Rocket,
   Plane, Calendar, Users, Pencil, ToggleLeft, ToggleRight,
   Sparkles, Clock, Flame, CreditCard, AlertTriangle, CheckCircle2,
-  ArrowRightLeft
+  ArrowRightLeft, Trash2
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import TransferConfirmation from "@/components/listings/TransferConfirmation";
@@ -56,6 +66,8 @@ export default function MyListings() {
   const [selectedBoostOption, setSelectedBoostOption] = useState<BoostOption | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<string | null>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -149,6 +161,32 @@ export default function MyListings() {
       toast({ title: t("boostUpdated") });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("listings").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myListings"] });
+      setDeleteDialogOpen(false);
+      setListingToDelete(null);
+      toast({ title: t("deleteListingSuccess") });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleRequestDelete = (id: string) => {
+    const hasOpenSale = pendingSales.some((s: any) => s.listing_id === id);
+    if (hasOpenSale) {
+      toast({ title: t("deleteListingBlockedSale"), variant: "destructive" });
+      return;
+    }
+    setListingToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
   const boostMutation = useMutation({
     mutationFn: async ({ id, hours }: { id: string; hours: number }) => {
@@ -308,6 +346,14 @@ export default function MyListings() {
           >
             {l.is_active ? <ToggleRight className="w-4 h-4 text-success" /> : <ToggleLeft className="w-4 h-4" />}
             {l.is_active ? t("myListingsActive") : t("myListingsInactive")}
+          </button>
+          <div className="w-px bg-border/50" />
+          <button
+            onClick={() => handleRequestDelete(l.id)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t("myListingsDelete")}
           </button>
         </div>
       </div>
@@ -599,6 +645,30 @@ export default function MyListings() {
         onOpenChange={setTransferDialogOpen}
         purchase={selectedSale}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteListingTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteListingDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {t("deleteListingCancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (listingToDelete) deleteMutation.mutate(listingToDelete);
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t("deleteListingConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
