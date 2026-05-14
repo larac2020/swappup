@@ -13,12 +13,14 @@ type Prefs = {
   push_enabled: boolean;
   reminder_emails: boolean;
   marketing_emails: boolean;
+  watchlist_emails: boolean;
 };
 
 const DEFAULTS: Prefs = {
   push_enabled: false,
   reminder_emails: true,
   marketing_emails: false,
+  watchlist_emails: true,
 };
 
 export default function NotificationSettings() {
@@ -42,7 +44,7 @@ export default function NotificationSettings() {
     (async () => {
       const { data } = await supabase
         .from("notification_preferences")
-        .select("push_enabled, reminder_emails, marketing_emails")
+        .select("push_enabled, reminder_emails, marketing_emails, watchlist_emails")
         .eq("user_id", user.id)
         .maybeSingle();
       if (data) setPrefs(data as Prefs);
@@ -82,7 +84,7 @@ export default function NotificationSettings() {
     setUnsubLoading(true);
     try {
       // Best-effort: turn off optional categories locally
-      await update({ reminder_emails: false, marketing_emails: false });
+      await update({ reminder_emails: false, marketing_emails: false, watchlist_emails: false });
       toast.success("Email preferences updated");
     } finally {
       setUnsubLoading(false);
@@ -163,6 +165,18 @@ export default function NotificationSettings() {
                 <Switch
                   checked={prefs.reminder_emails}
                   onCheckedChange={(v) => update({ reminder_emails: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4">
+                <div className="flex-1 pr-3">
+                  <Label className="font-medium">Watchlist alerts</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Daily digest with price drops and removal alerts (with similar suggestions) for listings you're tracking
+                  </p>
+                </div>
+                <Switch
+                  checked={prefs.watchlist_emails}
+                  onCheckedChange={(v) => update({ watchlist_emails: v })}
                 />
               </div>
               <div className="flex items-center justify-between p-4">
