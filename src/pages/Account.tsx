@@ -20,7 +20,7 @@ import PaymentMethods from "@/components/account/PaymentMethods";
 import IDVerification from "@/components/account/IDVerification";
 import NotificationSettings from "@/components/account/NotificationSettings";
 import Purchases from "@/components/account/Purchases";
-import FavoritesList from "@/components/account/FavoritesList";
+import WatchlistList from "@/components/account/WatchlistList";
 import TransactionHistory from "@/components/account/TransactionHistory";
 import Preferences from "@/components/account/Preferences";
 import PrivacyData from "@/components/account/PrivacyData";
@@ -33,7 +33,8 @@ const sectionComponents: Record<string, React.ComponentType> = {
   preferences: Preferences,
   notifications: NotificationSettings,
   purchases: Purchases,
-  favorites: FavoritesList,
+  watchlist: WatchlistList,
+  favorites: WatchlistList,
   transactions: TransactionHistory,
   privacy: PrivacyData,
 };
@@ -88,7 +89,7 @@ export default function Account() {
     { icon: Sparkles, label: t("accountPersonalization"), path: "preferences", description: t("accountPersonalizationDesc"), required: false, complete: true },
     { icon: Bell, label: t("accountNotifications"), path: "notifications", description: t("accountNotificationsDesc"), required: false, complete: true },
     { icon: ShoppingBag, label: t("accountPurchases"), path: "purchases", description: t("accountPurchasesDesc"), required: false, complete: true },
-    { icon: Heart, label: t("accountFavorites"), path: "favorites", description: t("accountFavoritesDesc"), required: false, complete: true },
+    { icon: Heart, label: t("accountFavorites"), path: "watchlist", description: t("accountFavoritesDesc"), required: false, complete: true },
     { icon: FileText, label: t("accountTransactions"), path: "transactions", description: t("accountTransactionsDesc"), required: false, complete: true },
     { icon: Shield, label: t("accountPrivacy"), path: "privacy", description: t("accountPrivacyDesc"), required: false, complete: true },
   ];

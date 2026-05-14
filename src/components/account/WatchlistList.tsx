@@ -7,16 +7,16 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
 
-export default function FavoritesList() {
+export default function WatchlistList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
   const displayCurrency = useDisplayCurrency();
 
-  const { data: favorites, isLoading } = useQuery({
-    queryKey: ["favorites", user?.id],
+  const { data: watchlistItems, isLoading } = useQuery({
+    queryKey: ["watchlist", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("favorites").select("*, listings(*)").eq("user_id", user!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("watchlist").select("*, listings(*)").eq("user_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -35,14 +35,14 @@ export default function FavoritesList() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : !favorites?.length ? (
+      ) : !watchlistItems?.length ? (
         <div className="glass rounded-2xl p-8 text-center space-y-3">
           <Heart className="w-12 h-12 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">{t("favoritesEmpty")}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {favorites.map((f) => {
+          {watchlistItems.map((f) => {
             const listing = f.listings as any;
             return (
               <button key={f.id} onClick={() => listing?.id && navigate(`/listing/${listing.id}`)} className="w-full glass rounded-2xl p-4 text-left hover:bg-secondary/50 transition-colors">

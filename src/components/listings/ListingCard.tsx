@@ -90,7 +90,7 @@ export function ListingCard({
     queryKey: ["isFavorited", profile?.id, id],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("favorites")
+        .from("watchlist")
         .select("*", { count: "exact", head: true })
         .eq("user_id", profile!.id)
         .eq("listing_id", id);
@@ -105,19 +105,19 @@ export function ListingCard({
       if (!profile?.id) return;
       if (isFavorited) {
         await supabase
-          .from("favorites")
+          .from("watchlist")
           .delete()
           .eq("user_id", profile.id)
           .eq("listing_id", id);
       } else {
         await supabase
-          .from("favorites")
+          .from("watchlist")
           .insert({ user_id: profile.id, listing_id: id });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["isFavorited", profile?.id, id] });
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist"] });
       queryClient.invalidateQueries({ queryKey: ["favoritesCount"] });
       toast({
         title: isFavorited ? "Removed from favorites" : "Added to favorites",

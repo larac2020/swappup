@@ -98,7 +98,7 @@ export default function ListingDetail() {
     queryKey: ["isFavorited", myProfile?.id, id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("favorites")
+        .from("watchlist")
         .select("id")
         .eq("user_id", myProfile!.id)
         .eq("listing_id", id!)
@@ -112,16 +112,16 @@ export default function ListingDetail() {
   const toggleFavoriteMutation = useMutation({
     mutationFn: async () => {
       if (isFavorited) {
-        const { error } = await supabase.from("favorites").delete().eq("user_id", myProfile!.id).eq("listing_id", listing!.id);
+        const { error } = await supabase.from("watchlist").delete().eq("user_id", myProfile!.id).eq("listing_id", listing!.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("favorites").insert({ user_id: myProfile!.id, listing_id: listing!.id });
+        const { error } = await supabase.from("watchlist").insert({ user_id: myProfile!.id, listing_id: listing!.id });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["isFavorited", myProfile?.id, id] });
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist"] });
       toast({ title: isFavorited ? "Removed from favorites" : "Added to favorites" });
     },
     onError: (error: any) => {
