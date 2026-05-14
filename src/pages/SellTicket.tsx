@@ -315,7 +315,6 @@ export default function SellTicket() {
     setFlightVerification(null);
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
-    setTrainTransferResult(null);
     setTicketUploaded(false);
   };
 
@@ -400,18 +399,8 @@ export default function SellTicket() {
 
       if (data?.parsed) {
         const p = data.parsed;
-        // Determine ticket kind from AI output (defaults to flight)
-        const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
-
-        // Resolve operator + fare against our internal vocabulary (handles
-        // aliases like Thalys → Eurostar, free-form labels, etc.).
-        const resolvedOperator = isTrain ? resolveOperatorName(p.operator) ?? "" : "";
-        const resolvedFare = isTrain && resolvedOperator
-          ? (resolveFareValue(resolvedOperator, p.trainClass) ?? "")
-          : "";
-        const resolvedTrainType = isTrain && resolvedOperator
-          ? (resolveTrainType(resolvedOperator, p.trainType) ?? "")
-          : "";
+        // Flights only — ignore any train hints from the parser.
+        const isTrain = false;
         const resolvedTravelClass: string =
           typeof p.travelClass === "string" ? p.travelClass.toLowerCase() : "";
 
