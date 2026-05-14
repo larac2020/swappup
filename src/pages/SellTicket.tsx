@@ -17,11 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  Ticket, TrainFront, CheckCircle2, Clock
+  CheckCircle2
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
-import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
-import TrainForm from "@/components/listings/TrainForm";
 import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -29,10 +27,6 @@ import {
   getCountries, getCitiesByCountry, getAirportCodesForCity,
   airlines, CityData
 } from "@/data/flightData";
-import {
-  trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
-  getStationsForCity, currencySymbol, resolveOperatorName, resolveFareValue, resolveTrainType,
-} from "@/data/trainData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 
