@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters, FilterState, defaultFilters } from "@/components/listings/ListingFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search, TrainFront } from "lucide-react";
+import { Loader2, MapPin, Calendar as CalendarIcon, Plane, Package, ArrowUpDown, Sparkles, Search } from "lucide-react";
 import { addDays, subDays, startOfMonth, endOfMonth, format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -19,15 +19,10 @@ export default function Browse() {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const initialDestination = searchParams.get("destination") || "";
-  const initialType = searchParams.get("type") || "all";
-
   const [searchQuery, setSearchQuery] = useState("");
   const [aiSearchQuery, setAiSearchQuery] = useState("");
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date_soon");
-  const [listingTypeFilter, setListingTypeFilter] = useState<"all" | "flights" | "trains">(
-    initialType === "trains" ? "trains" : initialType === "flights" ? "flights" : "all"
-  );
   const [aiAppliedFilters, setAiAppliedFilters] = useState<FilterState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
@@ -135,11 +130,9 @@ export default function Browse() {
     const dateRange = getDateRange(filters);
 
     return listings.filter((listing) => {
-      // Listing type filter — only flight + train listings exist now.
+      // Flights only — hide train tickets and travel credits.
       const lt = (listing as any).listing_type || "flight_ticket";
-      if (lt === "travel_credit") return false; // Credits removed from UI
-      if (listingTypeFilter === "flights" && lt !== "flight_ticket") return false;
-      if (listingTypeFilter === "trains" && lt !== "train_ticket") return false;
+      if (lt !== "flight_ticket") return false;
 
       // Text search (optional)
       if (searchQuery) {
@@ -206,7 +199,7 @@ export default function Browse() {
 
       return true;
     });
-  }, [listings, searchQuery, filters, listingTypeFilter]);
+  }, [listings, searchQuery, filters]);
 
   const sortedListings = useMemo(() => {
     const sorted = [...filteredListings];
@@ -320,26 +313,6 @@ export default function Browse() {
         <div>
           <h1 className="text-2xl font-display font-bold">{t("browseFindDeals")}</h1>
           <p className="text-muted-foreground">{t("browseSubtitle")}</p>
-        </div>
-
-        {/* Listing Type Tabs */}
-        <div className="flex gap-2">
-          {[
-            { value: "all" as const, label: t("browseAll"), icon: <Search className="w-3.5 h-3.5" /> },
-            { value: "flights" as const, label: t("browseFlights"), icon: <Plane className="w-3.5 h-3.5 -rotate-45" /> },
-            { value: "trains" as const, label: t("browseTrains"), icon: <TrainFront className="w-3.5 h-3.5" /> },
-          ].map((tab) => (
-            <Button
-              key={tab.value}
-              variant={listingTypeFilter === tab.value ? "default" : "outline"}
-              size="sm"
-              className="gap-1.5"
-              onClick={() => setListingTypeFilter(tab.value)}
-            >
-              {tab.icon}
-              {tab.label}
-            </Button>
-          ))}
         </div>
 
         {/* AI Natural Language Search */}
