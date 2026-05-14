@@ -47,16 +47,9 @@ export default function ResetPassword() {
       return () => subscription.unsubscribe();
     }
 
-    // Supabase may have already processed the hash and created a session
-    // Check if there's an existing session (recovery was already processed)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // There's a session — likely the recovery token was already exchanged
-        setStatus("ready");
-      }
-    });
-
-    // Give extra time for Supabase to process, then show invalid
+    // Give Supabase time to fire PASSWORD_RECOVERY; otherwise mark invalid.
+    // We intentionally do NOT accept a pre-existing session as proof of
+    // recovery — that could let a logged-in user update the wrong account.
     const timeout = setTimeout(() => {
       setStatus((prev) => (prev === "loading" ? "invalid" : prev));
     }, 5000);
@@ -78,7 +71,9 @@ export default function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: "Password updated", description: "You can now sign in with your new password." });
-      navigate("/home");
+      // Sign out the recovery session so the user signs in with the new password.
+      await supabase.auth.signOut();
+      navigate("/");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
