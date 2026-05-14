@@ -774,13 +774,7 @@ export default function SellTicket() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate("/");
-                }
-              }}
+              onClick={() => navigate(editId ? "/my-listings" : "/")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
