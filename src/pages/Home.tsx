@@ -1,23 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront, AlertCircle, Tag } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, AlertCircle, Tag } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-type ListingTypeFilter = "all" | "flight_ticket" | "train_ticket";
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [typeFilter, setTypeFilter] = useState<ListingTypeFilter>("all");
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
@@ -216,17 +211,9 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
-  // Filter listings client-side based on the selected type filter.
-  const applyTypeFilter = (rows: any[]): any[] => {
-    if (typeFilter === "all") {
-      // Hide travel credits everywhere; show only flights and trains.
-      return rows.filter((r) => {
-        const t = r.listing_type || "flight_ticket";
-        return t === "flight_ticket" || t === "train_ticket";
-      });
-    }
-    return rows.filter((r) => (r.listing_type || "flight_ticket") === typeFilter);
-  };
+  // Flights only — hide trains and travel credits everywhere.
+  const applyTypeFilter = (rows: any[]): any[] =>
+    rows.filter((r) => (r.listing_type || "flight_ticket") === "flight_ticket");
 
   const renderSection = (
     title: string,
@@ -363,28 +350,6 @@ export default function Home() {
               })}
             </div>
           )}
-          <div className="glass rounded-xl p-1 flex gap-1">
-            {([
-              { value: "all" as const, label: t("browseAll"), icon: <Sparkles className="w-3.5 h-3.5" /> },
-              { value: "flight_ticket" as const, label: t("browseFlights"), icon: <Plane className="w-3.5 h-3.5 -rotate-45" /> },
-              { value: "train_ticket" as const, label: t("browseTrains"), icon: <TrainFront className="w-3.5 h-3.5" /> },
-            ]).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setTypeFilter(opt.value)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all",
-                  typeFilter === opt.value
-                    ? "bg-primary text-primary-foreground shadow-glow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Recent Searches */}

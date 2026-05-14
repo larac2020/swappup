@@ -18,11 +18,9 @@ import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge
 import PurchaseDialog from "@/components/listings/PurchaseDialog";
 import { ReportSellerDialog } from "@/components/listings/ReportSellerDialog";
 import { getAirlineData } from "@/data/flightData";
-import { getOperatorFare, getPrimaryStationCode, getPrimaryStationName } from "@/data/trainData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
-import { TrainFront } from "lucide-react";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -174,28 +172,18 @@ export default function ListingDetail() {
   const sellerName = seller?.full_name || "Seller";
   const sellerInitials = sellerName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
-  const isTrain = (listing as any).listing_type === "train_ticket";
-  const operatorName = (listing as any).operator || listing.airline;
-  const carrierLabel = isTrain ? operatorName : listing.airline;
+  const isTrain = false;
+  const carrierLabel = listing.airline;
   const savedOriginAirport = (listing as any).origin_airport as string | null | undefined;
   const savedDestAirport = (listing as any).destination_airport as string | null | undefined;
-  const originCode = isTrain
-    ? getPrimaryStationCode(listing.origin_city)
-    : (savedOriginAirport || getPrimaryAirportCode(listing.origin_city));
-  const destCode = isTrain
-    ? getPrimaryStationCode(listing.destination_city)
-    : (savedDestAirport || getPrimaryAirportCode(listing.destination_city));
-  const originAirportName = isTrain
-    ? getPrimaryStationName(listing.origin_city)
-    : (getAirportNameByCode(savedOriginAirport) || getPrimaryAirportName(listing.origin_city));
-  const destAirportName = isTrain
-    ? getPrimaryStationName(listing.destination_city)
-    : (getAirportNameByCode(savedDestAirport) || getPrimaryAirportName(listing.destination_city));
+  const originCode = savedOriginAirport || getPrimaryAirportCode(listing.origin_city);
+  const destCode = savedDestAirport || getPrimaryAirportCode(listing.destination_city);
+  const originAirportName = getAirportNameByCode(savedOriginAirport) || getPrimaryAirportName(listing.origin_city);
+  const destAirportName = getAirportNameByCode(savedDestAirport) || getPrimaryAirportName(listing.destination_city);
 
   // Calculate name change fee from operator/airline data
   let nameChangeFee = 0;
   if (listing.name_change_fee != null) nameChangeFee = Number(listing.name_change_fee);
-  else if (isTrain && (listing as any).train_class) nameChangeFee = getOperatorFare(operatorName, (listing as any).train_class)?.fee ?? 0;
   else nameChangeFee = getAirlineData(listing.airline)?.nameChangeFee || 0;
   const ticketPrice = Number(listing.price);
   const totalPrice = ticketPrice + nameChangeFee;
@@ -395,7 +383,7 @@ export default function ListingDetail() {
               <div className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary" />
                 <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-primary/30" />
-                {isTrain ? <TrainFront className="w-5 h-5" /> : <Plane className="w-5 h-5 -rotate-45" />}
+                <Plane className="w-5 h-5 -rotate-45" />
                 <div className="w-12 h-0.5 bg-gradient-to-l from-primary to-primary/30" />
                 <div className="w-2 h-2 rounded-full bg-primary" />
               </div>

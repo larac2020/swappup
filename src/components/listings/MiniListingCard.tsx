@@ -1,7 +1,6 @@
-import { Plane, TrainFront } from "lucide-react";
+import { Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryAirportCode } from "@/data/flightData";
-import { getPrimaryStationCode } from "@/data/trainData";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
 
@@ -42,15 +41,9 @@ export function MiniListingCard({
 }: MiniListingCardProps) {
   const navigate = useNavigate();
   const displayCurrency = useDisplayCurrency();
-  const isTrain = listingType === "train_ticket";
-  const originCode = isTrain
-    ? getPrimaryStationCode(originCity) || originCity.slice(0, 3).toUpperCase()
-    : (originAirport || getPrimaryAirportCode(originCity) || originCity.slice(0, 3).toUpperCase());
-  const destCode = isTrain
-    ? getPrimaryStationCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase()
-    : (destinationAirport || getPrimaryAirportCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase());
-  const carrierLabel = isTrain ? (operator || airline) : airline;
-  const RouteIcon = isTrain ? TrainFront : Plane;
+  const originCode = originAirport || getPrimaryAirportCode(originCity) || originCity.slice(0, 3).toUpperCase();
+  const destCode = destinationAirport || getPrimaryAirportCode(destinationCity) || destinationCity.slice(0, 3).toUpperCase();
+  const carrierLabel = airline;
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -78,7 +71,7 @@ export function MiniListingCard({
         <div className="p-2.5 space-y-1">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-primary">{originCode}</span>
-            <RouteIcon className={isTrain ? "w-3 h-3 text-primary flex-shrink-0" : "w-3 h-3 text-primary -rotate-45 flex-shrink-0"} />
+            <Plane className="w-3 h-3 text-primary -rotate-45 flex-shrink-0" />
             <span className="text-xs font-bold text-primary">{destCode}</span>
           </div>
           <p className="text-xs text-muted-foreground truncate">{formatDate(departureDate)} · {carrierLabel}</p>

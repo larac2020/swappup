@@ -17,11 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  Ticket, TrainFront, CheckCircle2, Clock
+  CheckCircle2
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
-import TrainTransferabilityCheck, { TrainTransferabilityResult } from "@/components/listings/TrainTransferabilityCheck";
-import TrainForm from "@/components/listings/TrainForm";
 import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -29,10 +27,6 @@ import {
   getCountries, getCitiesByCountry, getAirportCodesForCity,
   airlines, CityData
 } from "@/data/flightData";
-import {
-  trainOperators, getOperator, getTrainCountries, getTrainCitiesByCountry,
-  getStationsForCity, currencySymbol, resolveOperatorName, resolveFareValue, resolveTrainType,
-} from "@/data/trainData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -158,7 +152,7 @@ export default function SellTicket() {
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
   const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
-  const [trainTransferResult, setTrainTransferResult] = useState<TrainTransferabilityResult | null>(null);
+  const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
   // Flight schedule verification (Aviationstack via edge function)
   const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
@@ -321,7 +315,6 @@ export default function SellTicket() {
     setFlightVerification(null);
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
-    setTrainTransferResult(null);
     setTicketUploaded(false);
   };
 
@@ -406,18 +399,8 @@ export default function SellTicket() {
 
       if (data?.parsed) {
         const p = data.parsed;
-        // Determine ticket kind from AI output (defaults to flight)
-        const isTrain = p.ticketKind === "train" || !!p.operator || !!p.trainNumber || !!p.originStation;
-
-        // Resolve operator + fare against our internal vocabulary (handles
-        // aliases like Thalys → Eurostar, free-form labels, etc.).
-        const resolvedOperator = isTrain ? resolveOperatorName(p.operator) ?? "" : "";
-        const resolvedFare = isTrain && resolvedOperator
-          ? (resolveFareValue(resolvedOperator, p.trainClass) ?? "")
-          : "";
-        const resolvedTrainType = isTrain && resolvedOperator
-          ? (resolveTrainType(resolvedOperator, p.trainType) ?? "")
-          : "";
+        // Flights only — ignore any train hints from the parser.
+        const isTrain = false;
         const resolvedTravelClass: string =
           typeof p.travelClass === "string" ? p.travelClass.toLowerCase() : "";
 
@@ -500,8 +483,8 @@ export default function SellTicket() {
           originCity: p.originCity || "",
           destinationCountry: p.destinationCountry || "",
           destinationCity: p.destinationCity || "",
-          airline: isTrain ? "" : (p.airline || ""),
-          flightNumber: isTrain ? "" : (p.flightNumber || ""),
+          airline: p.airline || "",
+          flightNumber: p.flightNumber || "",
           originalPrice: p.originalPrice?.toString() || "",
           currency: typeof p.priceCurrency === "string" && p.priceCurrency
             ? p.priceCurrency.toUpperCase()
@@ -509,14 +492,7 @@ export default function SellTicket() {
           departureDate: parsedDeparture,
           returnDate: parsedReturn,
           ticketCount: parsedCount,
-          // Train-only fields
-          operator: isTrain ? (resolvedOperator || p.operator || "") : "",
-          trainNumber: isTrain ? (p.trainNumber || "") : "",
-          trainClass: isTrain ? resolvedFare : "",
-          trainType: isTrain ? resolvedTrainType : "",
-          travelClass: isTrain ? resolvedTravelClass : (resolvedTravelClass || ""),
-          trainOriginStation: isTrain ? (p.originStation || "") : "",
-          trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
+          travelClass: resolvedTravelClass || "",
           departureTime: outboundDepTime,
           arrivalTime: outboundArrTime,
           returnDepartureTime: inboundDepTime,
@@ -567,10 +543,8 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const isTrain = formData.listingType === "train_ticket";
-
       const listingData: Record<string, any> = {
-        listing_type: formData.listingType,
+        listing_type: "flight_ticket",
         airline: formData.airline,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
@@ -578,40 +552,7 @@ export default function SellTicket() {
         additional_notes: formData.additionalNotes || null,
       };
 
-      if (isTrain) {
-        const op = getOperator(formData.operator);
-        const fare = op?.fares.find((f) => f.value === formData.trainClass);
-        // We still write the operator into the legacy `airline` column for older
-        // queries/joins that key off it, but downstream UIs now read `operator`
-        // first (with `airline` only as a fallback).
-        listingData.airline = formData.operator;
-        listingData.operator = formData.operator;
-        listingData.train_number = formData.trainNumber || null;
-        listingData.train_class = formData.trainClass || null;
-        listingData.train_type = formData.trainType || null;
-        listingData.travel_class = formData.travelClass || null;
-        listingData.train_inclusions = trainInclusions as any;
-        listingData.origin_station = formData.trainOriginStation || null;
-        listingData.destination_station = formData.trainDestinationStation || null;
-        listingData.departure_time = formData.departureTime || null;
-        listingData.arrival_time = formData.arrivalTime || null;
-        listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
-        listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
-        listingData.title = t("trainTripTitle", { city: formData.destinationCity });
-        listingData.origin_city = formData.originCity;
-        listingData.origin_country = formData.originCountry;
-        listingData.destination_city = formData.destinationCity;
-        listingData.destination_country = formData.destinationCountry;
-        listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
-        listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
-        listingData.ticket_count = ticketCount;
-        listingData.stopovers = 0;
-        // Train fares can be in EUR/GBP/CHF/PLN — fall back to the operator's
-        // configured currency when the user didn't override it explicitly.
-        if (op?.currency) listingData.currency = op.currency;
-        // Store name-change fee SEPARATELY (additive at checkout)
-        listingData.name_change_fee = fare?.fee ?? 0;
-      } else {
+      {
         listingData.title = `${formData.destinationCity} Trip`;
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
@@ -887,40 +828,7 @@ export default function SellTicket() {
 
         {(isEditMode || allSectionsComplete || !gateProfile) && (
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
-          {/* Listing Type Selector */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t("sellWhatSelling")}</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, listingType: "flight_ticket" })}
-                className={cn(
-                  "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "flight_ticket"
-                    ? "border-primary bg-primary/10"
-                    : "border-transparent hover:border-primary/30"
-                )}
-              >
-                <Ticket className={cn("w-6 h-6", formData.listingType === "flight_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("flightTicket")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, listingType: "train_ticket" })}
-                className={cn(
-                  "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "train_ticket"
-                    ? "border-primary bg-primary/10"
-                    : "border-transparent hover:border-primary/30"
-                )}
-              >
-                <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("trainTicket")}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Upload Ticket — REQUIRED for both flights & trains */}
+          {/* Upload Ticket — REQUIRED */}
           {!isEditMode && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -957,20 +865,6 @@ export default function SellTicket() {
                 )}
               </label>
             </div>
-          )}
-
-          {/* TRAIN TICKET FORM */}
-          {formData.listingType === "train_ticket" && (
-            <TrainForm
-              formData={formData}
-              setFormData={setFormData}
-              isReturn={isReturn}
-              setIsReturn={setIsReturn}
-              priceError={!!priceError}
-              today={minDepartureDate}
-              onTransferResult={setTrainTransferResult}
-              transferResult={trainTransferResult}
-            />
           )}
 
           {/* FLIGHT TICKET FORM */}
