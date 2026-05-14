@@ -483,8 +483,8 @@ export default function SellTicket() {
           originCity: p.originCity || "",
           destinationCountry: p.destinationCountry || "",
           destinationCity: p.destinationCity || "",
-          airline: isTrain ? "" : (p.airline || ""),
-          flightNumber: isTrain ? "" : (p.flightNumber || ""),
+          airline: p.airline || "",
+          flightNumber: p.flightNumber || "",
           originalPrice: p.originalPrice?.toString() || "",
           currency: typeof p.priceCurrency === "string" && p.priceCurrency
             ? p.priceCurrency.toUpperCase()
@@ -492,14 +492,7 @@ export default function SellTicket() {
           departureDate: parsedDeparture,
           returnDate: parsedReturn,
           ticketCount: parsedCount,
-          // Train-only fields
-          operator: isTrain ? (resolvedOperator || p.operator || "") : "",
-          trainNumber: isTrain ? (p.trainNumber || "") : "",
-          trainClass: isTrain ? resolvedFare : "",
-          trainType: isTrain ? resolvedTrainType : "",
-          travelClass: isTrain ? resolvedTravelClass : (resolvedTravelClass || ""),
-          trainOriginStation: isTrain ? (p.originStation || "") : "",
-          trainDestinationStation: isTrain ? (p.destinationStation || "") : "",
+          travelClass: resolvedTravelClass || "",
           departureTime: outboundDepTime,
           arrivalTime: outboundArrTime,
           returnDepartureTime: inboundDepTime,
