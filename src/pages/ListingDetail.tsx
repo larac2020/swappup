@@ -203,7 +203,7 @@ export default function ListingDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
           <div className="absolute top-4 left-4 right-4 flex justify-between">
-            <Button variant="glass" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <Button variant="glass" size="icon" onClick={() => navigate("/listings")} className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             {myProfile?.id !== listing.seller_id && (
