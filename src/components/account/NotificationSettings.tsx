@@ -181,9 +181,9 @@ export default function NotificationSettings() {
               </div>
               <div className="flex items-center justify-between p-4">
                 <div className="flex-1 pr-3">
-                  <Label className="font-medium">Product updates & tips</Label>
+                  <Label className="font-medium">Product updates & offers</Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Occasional product news and travel-deal tips
+                    Occasional product news and travel-deal offers
                   </p>
                 </div>
                 <Switch
