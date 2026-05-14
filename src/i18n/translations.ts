@@ -191,6 +191,13 @@ const translations = {
     myListingsBoosted: "Boosted",
     myListingsViews: "{count} view{plural}",
     myListingsFavs: "{count} favorite{plural}",
+    myListingsDelete: "Delete",
+    deleteListingTitle: "Delete listing?",
+    deleteListingDesc: "This action cannot be undone. Your listing will be permanently removed.",
+    deleteListingConfirm: "Delete",
+    deleteListingCancel: "Cancel",
+    deleteListingSuccess: "Listing deleted",
+    deleteListingBlockedSale: "You can't delete a listing with an ongoing sale. Resolve the pending transfer first.",
 
     // Boost
     boostTitle: "Boost Your Listing",
@@ -1013,6 +1020,13 @@ const translations = {
     myListingsBoosted: "In Evidenza",
     myListingsViews: "{count} visualizzazion{plural}",
     myListingsFavs: "{count} preferit{plural}",
+    myListingsDelete: "Elimina",
+    deleteListingTitle: "Eliminare l'annuncio?",
+    deleteListingDesc: "Questa azione non può essere annullata. L'annuncio sarà rimosso definitivamente.",
+    deleteListingConfirm: "Elimina",
+    deleteListingCancel: "Annulla",
+    deleteListingSuccess: "Annuncio eliminato",
+    deleteListingBlockedSale: "Non puoi eliminare un annuncio con una vendita in corso. Risolvi prima il trasferimento in sospeso.",
 
     // Boost
     boostTitle: "Promuovi il Tuo Annuncio",
