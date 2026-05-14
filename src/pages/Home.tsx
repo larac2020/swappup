@@ -48,7 +48,7 @@ export default function Home() {
     queryKey: ["favoritesCount", profile?.id],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("favorites")
+        .from("watchlist")
         .select("*", { count: "exact", head: true })
         .eq("user_id", profile!.id);
       if (error) throw error;
@@ -136,7 +136,7 @@ export default function Home() {
     queryKey: ["popularListings"],
     queryFn: async () => {
       const { data: favs, error: favErr } = await supabase
-        .from("favorites")
+        .from("watchlist")
         .select("listing_id");
       if (favErr) throw favErr;
 
@@ -311,7 +311,7 @@ export default function Home() {
                 <p className="text-base font-bold">{profile?.transactions_bought ?? 0}</p>
                 <p className="text-[10px] text-muted-foreground">{t("homePurchases")}</p>
               </button>
-              <button onClick={() => navigate("/account/favorites")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
+              <button onClick={() => navigate("/account/watchlist")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <Heart className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{favoritesCount}</p>
                 <p className="text-[10px] text-muted-foreground">{t("homeFavorites")}</p>

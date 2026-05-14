@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Heart, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-export default function Favorites() {
+export default function Watchlist() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
@@ -21,10 +21,10 @@ export default function Favorites() {
     enabled: !!user?.id,
   });
 
-  const { data: favorites = [], isLoading } = useQuery({
-    queryKey: ["favorites", profile?.id],
+  const { data: watchlistItems = [], isLoading } = useQuery({
+    queryKey: ["watchlist", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("favorites").select("*, listings(*)").eq("user_id", profile!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("watchlist").select("*, listings(*)").eq("user_id", profile!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -43,9 +43,9 @@ export default function Favorites() {
           <div className="flex justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : favorites.length > 0 ? (
+        ) : watchlistItems.length > 0 ? (
           <div className="space-y-4">
-            {favorites.map((fav: any) => {
+            {watchlistItems.map((fav: any) => {
               const l = fav.listings;
               if (!l) return null;
               return (

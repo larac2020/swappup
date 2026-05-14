@@ -33,3 +33,5 @@ project_id = "oiarehtqhgwkiunsarmz"
     verify_jwt = false
   [functions.verify-voucher]
     verify_jwt = false
+  [functions.watchlist-digest]
+    verify_jwt = false

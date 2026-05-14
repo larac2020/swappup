@@ -218,35 +218,6 @@ export type Database = {
         }
         Relationships: []
       }
-      favorites: {
-        Row: {
-          created_at: string
-          id: string
-          listing_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          listing_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          listing_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "favorites_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "listings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flight_verifications: {
         Row: {
           airline_iata: string
@@ -605,6 +576,7 @@ export type Database = {
           reminder_emails: boolean
           updated_at: string
           user_id: string
+          watchlist_emails: boolean
         }
         Insert: {
           created_at?: string
@@ -613,6 +585,7 @@ export type Database = {
           reminder_emails?: boolean
           updated_at?: string
           user_id: string
+          watchlist_emails?: boolean
         }
         Update: {
           created_at?: string
@@ -621,6 +594,7 @@ export type Database = {
           reminder_emails?: boolean
           updated_at?: string
           user_id?: string
+          watchlist_emails?: boolean
         }
         Relationships: []
       }
@@ -958,6 +932,41 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      watchlist: {
+        Row: {
+          created_at: string
+          id: string
+          last_notified_price: number | null
+          listing_id: string
+          notified_unavailable_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_notified_price?: number | null
+          listing_id: string
+          notified_unavailable_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_notified_price?: number | null
+          listing_id?: string
+          notified_unavailable_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

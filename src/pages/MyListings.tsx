@@ -122,7 +122,7 @@ export default function MyListings() {
       const counts: Record<string, number> = {};
       for (const lid of listingIds) {
         const { count, error } = await supabase
-          .from("favorites")
+          .from("watchlist")
           .select("*", { count: "exact", head: true })
           .eq("listing_id", lid);
         if (!error) counts[lid] = count ?? 0;

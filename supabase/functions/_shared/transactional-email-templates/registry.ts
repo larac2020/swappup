@@ -18,6 +18,7 @@ import { template as escrowReleasedSeller } from './escrow-released-seller.tsx'
 import { template as transferMissedBuyerApology } from './transfer-missed-buyer-apology.tsx'
 import { template as transferMissedSellerWarning } from './transfer-missed-seller-warning.tsx'
 import { template as transferBuyerNoConfirmSeller } from './transfer-buyer-no-confirm-seller.tsx'
+import { template as watchlistDigest } from './watchlist-digest.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'purchase-buyer-confirmation': purchaseBuyerConfirmation,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'transfer-missed-buyer-apology': transferMissedBuyerApology,
   'transfer-missed-seller-warning': transferMissedSellerWarning,
   'transfer-buyer-no-confirm-seller': transferBuyerNoConfirmSeller,
+  'watchlist-digest': watchlistDigest,
 }

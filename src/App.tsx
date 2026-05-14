@@ -12,7 +12,7 @@ import Cart from "./pages/Cart";
 import Account from "./pages/Account";
 import ListingDetail from "./pages/ListingDetail";
 import SellTicket from "./pages/SellTicket";
-import Favorites from "./pages/Favorites";
+import Watchlist from "./pages/Watchlist";
 import ResetPassword from "./pages/ResetPassword";
 import MyListings from "./pages/MyListings";
 import Support from "./pages/Support";
@@ -83,7 +83,8 @@ const App = () => (
             <Route path="/listing/:id" element={<ProtectedRoute><ListingDetail /></ProtectedRoute>} />
             <Route path="/sell" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
             <Route path="/listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
-            <Route path="/favorites" element={<Navigate to="/account/favorites" replace />} />
+            <Route path="/favorites" element={<Navigate to="/account/watchlist" replace />} />
+            <Route path="/watchlist" element={<Navigate to="/account/watchlist" replace />} />
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
