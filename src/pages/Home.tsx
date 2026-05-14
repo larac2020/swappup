@@ -6,18 +6,15 @@ import { MiniListingCard } from "@/components/listings/MiniListingCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, TrainFront, AlertCircle, Tag } from "lucide-react";
+import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, AlertCircle, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-type ListingTypeFilter = "all" | "flight_ticket" | "train_ticket";
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [typeFilter, setTypeFilter] = useState<ListingTypeFilter>("all");
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
@@ -216,17 +213,9 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
-  // Filter listings client-side based on the selected type filter.
-  const applyTypeFilter = (rows: any[]): any[] => {
-    if (typeFilter === "all") {
-      // Hide travel credits everywhere; show only flights and trains.
-      return rows.filter((r) => {
-        const t = r.listing_type || "flight_ticket";
-        return t === "flight_ticket" || t === "train_ticket";
-      });
-    }
-    return rows.filter((r) => (r.listing_type || "flight_ticket") === typeFilter);
-  };
+  // Flights only — hide trains and travel credits everywhere.
+  const applyTypeFilter = (rows: any[]): any[] =>
+    rows.filter((r) => (r.listing_type || "flight_ticket") === "flight_ticket");
 
   const renderSection = (
     title: string,
