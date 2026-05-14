@@ -124,6 +124,32 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
+  // Best-effort: also turn off the in-app watchlist_emails toggle for the matching profile
+  // so the preference centre stays in sync with the suppression list.
+  try {
+    const lowered = tokenRecord.email.toLowerCase()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .ilike('email', lowered)
+      .maybeSingle()
+    if (profile?.user_id) {
+      await supabase
+        .from('notification_preferences')
+        .upsert(
+          {
+            user_id: profile.user_id,
+            watchlist_emails: false,
+            marketing_emails: false,
+            reminder_emails: false,
+          },
+          { onConflict: 'user_id' },
+        )
+    }
+  } catch (e) {
+    console.error('Failed to mirror unsubscribe to notification_preferences', e)
+  }
+
   console.log('Email unsubscribed', { email: tokenRecord.email })
 
   return jsonResponse({ success: true })
