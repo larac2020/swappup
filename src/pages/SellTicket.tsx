@@ -543,10 +543,8 @@ export default function SellTicket() {
       const inclusions = sameInclusions ? sharedInclusions : sharedInclusions;
       const perTicketData = sameInclusions ? null : perTicketInclusions;
 
-      const isTrain = formData.listingType === "train_ticket";
-
       const listingData: Record<string, any> = {
-        listing_type: formData.listingType,
+        listing_type: "flight_ticket",
         airline: formData.airline,
         price: parseFloat(formData.price),
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
@@ -554,40 +552,7 @@ export default function SellTicket() {
         additional_notes: formData.additionalNotes || null,
       };
 
-      if (isTrain) {
-        const op = getOperator(formData.operator);
-        const fare = op?.fares.find((f) => f.value === formData.trainClass);
-        // We still write the operator into the legacy `airline` column for older
-        // queries/joins that key off it, but downstream UIs now read `operator`
-        // first (with `airline` only as a fallback).
-        listingData.airline = formData.operator;
-        listingData.operator = formData.operator;
-        listingData.train_number = formData.trainNumber || null;
-        listingData.train_class = formData.trainClass || null;
-        listingData.train_type = formData.trainType || null;
-        listingData.travel_class = formData.travelClass || null;
-        listingData.train_inclusions = trainInclusions as any;
-        listingData.origin_station = formData.trainOriginStation || null;
-        listingData.destination_station = formData.trainDestinationStation || null;
-        listingData.departure_time = formData.departureTime || null;
-        listingData.arrival_time = formData.arrivalTime || null;
-        listingData.return_departure_time = isReturn ? (formData.returnDepartureTime || null) : null;
-        listingData.return_arrival_time = isReturn ? (formData.returnArrivalTime || null) : null;
-        listingData.title = t("trainTripTitle", { city: formData.destinationCity });
-        listingData.origin_city = formData.originCity;
-        listingData.origin_country = formData.originCountry;
-        listingData.destination_city = formData.destinationCity;
-        listingData.destination_country = formData.destinationCountry;
-        listingData.departure_date = formData.departureDate!.toISOString().split("T")[0];
-        listingData.return_date = isReturn && formData.returnDate ? formData.returnDate.toISOString().split("T")[0] : null;
-        listingData.ticket_count = ticketCount;
-        listingData.stopovers = 0;
-        // Train fares can be in EUR/GBP/CHF/PLN — fall back to the operator's
-        // configured currency when the user didn't override it explicitly.
-        if (op?.currency) listingData.currency = op.currency;
-        // Store name-change fee SEPARATELY (additive at checkout)
-        listingData.name_change_fee = fare?.fee ?? 0;
-      } else {
+      {
         listingData.title = `${formData.destinationCity} Trip`;
         listingData.origin_city = formData.originCity;
         listingData.origin_country = formData.originCountry;
