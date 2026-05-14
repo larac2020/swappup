@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MiniListingCard } from "@/components/listings/MiniListingCard";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, AlertCircle, Tag } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
 
