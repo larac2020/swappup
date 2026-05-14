@@ -828,40 +828,7 @@ export default function SellTicket() {
 
         {(isEditMode || allSectionsComplete || !gateProfile) && (
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
-          {/* Listing Type Selector */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t("sellWhatSelling")}</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, listingType: "flight_ticket" })}
-                className={cn(
-                  "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "flight_ticket"
-                    ? "border-primary bg-primary/10"
-                    : "border-transparent hover:border-primary/30"
-                )}
-              >
-                <Ticket className={cn("w-6 h-6", formData.listingType === "flight_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "flight_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("flightTicket")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, listingType: "train_ticket" })}
-                className={cn(
-                  "glass rounded-2xl p-4 flex flex-col items-center gap-2 transition-all border-2",
-                  formData.listingType === "train_ticket"
-                    ? "border-primary bg-primary/10"
-                    : "border-transparent hover:border-primary/30"
-                )}
-              >
-                <TrainFront className={cn("w-6 h-6", formData.listingType === "train_ticket" ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", formData.listingType === "train_ticket" ? "text-foreground" : "text-muted-foreground")}>{t("trainTicket")}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Upload Ticket — REQUIRED for both flights & trains */}
+          {/* Upload Ticket — REQUIRED */}
           {!isEditMode && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -898,20 +865,6 @@ export default function SellTicket() {
                 )}
               </label>
             </div>
-          )}
-
-          {/* TRAIN TICKET FORM */}
-          {formData.listingType === "train_ticket" && (
-            <TrainForm
-              formData={formData}
-              setFormData={setFormData}
-              isReturn={isReturn}
-              setIsReturn={setIsReturn}
-              priceError={!!priceError}
-              today={minDepartureDate}
-              onTransferResult={setTrainTransferResult}
-              transferResult={trainTransferResult}
-            />
           )}
 
           {/* FLIGHT TICKET FORM */}
