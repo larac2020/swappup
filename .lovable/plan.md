@@ -1,35 +1,19 @@
-## Goal
-Remove trains as a sellable/browsable ticket type. Swappup becomes flights-only again. Keep DB columns intact (no destructive migration) so any existing train rows don't break, but hide them from UI and block creation.
+## Add "Delete listing" action to My Listings
 
-## Changes
+Currently sellers can only toggle a listing active/inactive. There's no way to permanently remove it. I'll add a Delete action.
 
-### Sell flow (`src/pages/SellTicket.tsx`)
-- Remove the flight/train type toggle UI entirely; hard-code `listingType: "flight_ticket"`.
-- Strip train-only branches: train inclusions, `TrainForm`, `TrainTransferabilityCheck`, train submit/edit logic, train translations usage.
-- Remove `TrainFront` icon import and `isTrain` checks.
+### UI changes (`src/pages/MyListings.tsx`)
+- Add a **Delete** button to the actions row of each listing card (next to View / Edit / Boost / Active toggle), styled in destructive red with a `Trash2` icon.
+- Clicking it opens a confirmation `AlertDialog` ("Delete listing? This action cannot be undone.") with Cancel / Delete buttons.
+- On confirm, run a `deleteMutation` that calls `supabase.from("listings").delete().eq("id", id)`, then invalidates `myListings` and shows a success toast.
+- Block deletion (and show a clear toast) when the listing has an open sale — i.e. it appears in `pendingSales` with status `pending_transfer` or `transfer_confirmed`. Sellers should resolve those first.
 
-### Browse (`src/pages/Browse.tsx`)
-- Remove the flights/trains tab switcher; default to flights only.
-- Filter out any `listing_type === "train_ticket"` rows defensively.
+### i18n (`src/i18n/translations.ts`)
+- Add new keys in EN + IT: `myListingsDelete`, `deleteListingTitle`, `deleteListingDesc`, `deleteListingConfirm`, `deleteListingCancel`, `deleteListingSuccess`, `deleteListingBlockedSale`.
 
-### Home (`src/pages/Home.tsx`)
-- Remove train filter chip and `ListingTypeFilter` train option; show flights only.
+### Database / RLS
+- No migration needed. The existing policy "Sellers can delete their own listings" already permits this via `seller_id` → `profiles` → `auth.uid()`.
 
-### Other surfaces
-- `Cart.tsx`, `ListingDetail.tsx`, `ListingCard.tsx`, `MiniListingCard.tsx`: remove `isTrain` branches, render flight layout only. Keep prop compatibility but ignore train type.
-- `MyListings`, `Favorites`: verify no train-specific UI; filter out train rows if rendered.
-
-### Cleanup
-- Delete `src/components/listings/TrainForm.tsx`, `src/components/listings/TrainTransferabilityCheck.tsx`, `src/data/trainData.ts`.
-- Remove the `parse-ticket` edge function's train schema branch — return flight-only parsing.
-- Remove train-related translation keys from `src/i18n/translations.ts` (cabin class, train types, train inclusions, train ticket label, browseTrains, etc.) that are no longer referenced.
-- Leave DB columns (`train_*`, `operator`, `origin_station`, etc.) and the `listing_type` enum value `train_ticket` in place — no migration needed. Existing train rows simply won't be displayed or creatable.
-
-### Memory
-- Update `mem://index.md` core to drop the train-marketplace mention; remove/refresh related memory files referencing trains.
-
-## Out of scope
-- No DB schema changes (non-destructive choice).
-- No legal copy edits beyond removing obvious train mentions if trivially scoped.
-
-Confirm and I'll implement.
+### Out of scope
+- No soft-delete column or archive view — delete is permanent (the existing inactive toggle already covers "hide without deleting").
+- No cascade cleanup of `favorites` / `cart_items` / `listing_views` rows; those reference `listing_id` without FKs and will simply orphan (consistent with current behavior).
