@@ -1,10 +1,9 @@
-import { Calendar, Plane, Users, Heart, ShoppingCart, Shield, TrainFront } from "lucide-react";
+import { Calendar, Plane, Users, Heart, ShoppingCart, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPrimaryAirportCode, getPrimaryAirportName } from "@/data/flightData";
-import { getPrimaryStationCode, getPrimaryStationName } from "@/data/trainData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -67,15 +66,9 @@ export function ListingCard({
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const displayCurrency = useDisplayCurrency();
-  const isTrain = listingType === "train_ticket";
-  const originCode = isTrain
-    ? getPrimaryStationCode(originCity)
-    : (originAirport || getPrimaryAirportCode(originCity));
-  const destCode = isTrain
-    ? getPrimaryStationCode(destinationCity)
-    : (destinationAirport || getPrimaryAirportCode(destinationCity));
-  const carrierLabel = isTrain ? (operator || airline) : airline;
-  const RouteIcon = isTrain ? TrainFront : Plane;
+  const originCode = originAirport || getPrimaryAirportCode(originCity);
+  const destCode = destinationAirport || getPrimaryAirportCode(destinationCity);
+  const carrierLabel = airline;
 
   // Get profile
   const { data: profile } = useQuery({
@@ -238,7 +231,7 @@ export function ListingCard({
                     )}
                     <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
                   </div>
-                  <RouteIcon className={isTrain ? "w-4 h-4 text-primary flex-shrink-0" : "w-4 h-4 text-primary -rotate-45 flex-shrink-0"} />
+                  <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
                   <div className="text-center min-w-0">
                     {destCode && (
                       <span className="text-xs font-bold text-primary">{destCode}</span>
