@@ -771,7 +771,17 @@ export default function SellTicket() {
       <div className="min-h-screen">
         <div className="sticky top-0 z-50 glass-strong border-b border-border/50">
           <div className="flex items-center gap-4 px-4 h-14">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/");
+                }
+              }}
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="font-semibold">{editId ? t("sellHeaderEdit") : t("sellHeaderCreate")}</h1>
