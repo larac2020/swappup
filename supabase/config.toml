@@ -1,46 +1,35 @@
 project_id = "oiarehtqhgwkiunsarmz"
 
-[functions.parse-ticket]
-verify_jwt = false
-
-[functions.create-setup-intent]
-verify_jwt = false
-
-[functions.verify-id]
-verify_jwt = false
-
-[functions.ai-search]
-verify_jwt = false
-
-[functions.check-fraud]
-verify_jwt = false
-
-[functions.verify-voucher]
-verify_jwt = false
-
-[functions.get-name-change-fee]
-verify_jwt = false
-
-[functions.stripe-purchase-webhook]
-verify_jwt = false
-
-[functions.expire-transfers]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
-
-[functions.send-transactional-email]
-verify_jwt = true
-
-[functions.preview-transactional-email]
-verify_jwt = false
-
-[functions.handle-email-unsubscribe]
-verify_jwt = false
-
-[functions.handle-email-suppression]
-verify_jwt = false
-
-[functions.seller-reminders]
-verify_jwt = false
+[functions]
+  [functions.ai-search]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-fraud]
+    verify_jwt = false
+  [functions.create-setup-intent]
+    verify_jwt = false
+  [functions.expire-transfers]
+    verify_jwt = false
+  [functions.get-name-change-fee]
+    verify_jwt = false
+  [functions.handle-email-suppression]
+    verify_jwt = false
+  [functions.handle-email-unsubscribe]
+    verify_jwt = false
+  [functions.parse-ticket]
+    verify_jwt = false
+  [functions.preview-transactional-email]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.seller-reminders]
+    verify_jwt = false
+  [functions.send-transactional-email]
+    verify_jwt = true
+  [functions.stripe-purchase-webhook]
+    verify_jwt = false
+  [functions.verify-id]
+    verify_jwt = false
+  [functions.verify-voucher]
+    verify_jwt = false
