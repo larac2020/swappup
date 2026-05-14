@@ -352,28 +352,6 @@ export default function Home() {
               })}
             </div>
           )}
-          <div className="glass rounded-xl p-1 flex gap-1">
-            {([
-              { value: "all" as const, label: t("browseAll"), icon: <Sparkles className="w-3.5 h-3.5" /> },
-              { value: "flight_ticket" as const, label: t("browseFlights"), icon: <Plane className="w-3.5 h-3.5 -rotate-45" /> },
-              { value: "train_ticket" as const, label: t("browseTrains"), icon: <TrainFront className="w-3.5 h-3.5" /> },
-            ]).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setTypeFilter(opt.value)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all",
-                  typeFilter === opt.value
-                    ? "bg-primary text-primary-foreground shadow-glow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Recent Searches */}
