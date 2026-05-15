@@ -681,7 +681,7 @@ export default function SellTicket() {
         toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
         return;
       }
-      if (!isEditMode && flightTransferBlocked) {
+      if (flightTransferBlocked) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastBlockedFlight"),
