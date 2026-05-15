@@ -611,6 +611,8 @@ export default function SellTicket() {
         toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
         toast({ title: t("sellToastPriceCap"), description: t("sellToastPriceCapDesc"), variant: "destructive" });
+      } else if (msg.includes("NOT_TRANSFERABLE")) {
+        toast({ title: t("sellToastListingBlocked"), description: t("sellToastBlockedFlight"), variant: "destructive" });
       } else {
         toast({ title: t("error"), description: msg, variant: "destructive" });
       }
