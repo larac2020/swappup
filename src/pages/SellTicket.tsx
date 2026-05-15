@@ -611,6 +611,8 @@ export default function SellTicket() {
         toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
         toast({ title: t("sellToastPriceCap"), description: t("sellToastPriceCapDesc"), variant: "destructive" });
+      } else if (msg.includes("NOT_TRANSFERABLE")) {
+        toast({ title: t("sellToastListingBlocked"), description: t("sellToastBlockedFlight"), variant: "destructive" });
       } else {
         toast({ title: t("error"), description: msg, variant: "destructive" });
       }
@@ -681,7 +683,7 @@ export default function SellTicket() {
         toast({ title: t("sellMissingFields"), description: t("sellToastMissingFlight"), variant: "destructive" });
         return;
       }
-      if (!isEditMode && flightTransferBlocked) {
+      if (flightTransferBlocked) {
         toast({
           title: t("sellToastListingBlocked"),
           description: t("sellToastBlockedFlight"),
@@ -774,7 +776,7 @@ export default function SellTicket() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(editId ? "/my-listings" : "/")}
+              onClick={() => navigate(editId ? "/listings" : "/home")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

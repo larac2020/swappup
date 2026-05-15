@@ -38,7 +38,7 @@ export function NotificationBell() {
 
   const handleNotificationClick = (notif: any) => {
     if (!notif.read) markReadMutation.mutate(notif.id);
-    if (notif.listing_id) { setOpen(false); navigate("/listings"); }
+    if (notif.listing_id) { setOpen(false); navigate(`/listing/${notif.listing_id}`); }
   };
 
   const formatTime = (date: string) => {
