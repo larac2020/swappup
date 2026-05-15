@@ -774,7 +774,7 @@ export default function SellTicket() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(editId ? "/my-listings" : "/")}
+              onClick={() => navigate(editId ? "/listings" : "/home")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
