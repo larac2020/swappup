@@ -829,6 +829,34 @@ const translations = {
 
     // Account extra
     accountVersion: "SwappUp v1.0.0",
+
+    // Product tour
+    tourWelcomeTitle: "Welcome to Swappup ✈️",
+    tourWelcomeBody: "Take a 30-second tour to learn how to find, list and swap tickets.",
+    tourStatsTitle: "Your activity at a glance",
+    tourStatsBody: "Track your listings, sales, purchases and saved flights right from home.",
+    tourBellTitle: "Stay in the loop",
+    tourBellBody: "Get notified about price drops, offers and transfer deadlines. Tap Next to enable push notifications.",
+    tourSellTitle: "List a ticket in seconds",
+    tourSellBody: "Can't use your flight? Upload your booking — we'll extract the details automatically.",
+    tourSearchTitle: "Find your next flight",
+    tourSearchBody: "Browse, filter, or use AI search to discover deals in plain English.",
+    tourListingsTitle: "Manage your listings",
+    tourListingsBody: "Edit, bump, or pause your active listings any time.",
+    tourAccountTitle: "Complete your profile",
+    tourAccountBody: "Finish account setup and ID verification to unlock buying & selling.",
+    tourFinish: "Got it",
+    tourDoneTitle: "You're all set",
+    tourDoneBody: "Happy swapping!",
+    tourPermsTitle: "A couple of quick preferences",
+    tourPermsDesc: "Both are optional and you can change them any time in your account.",
+    tourPermsMarketingTitle: "Product updates & offers",
+    tourPermsMarketingDesc: "Occasional emails about new features, tips, and exclusive deals.",
+    tourPermsLocationTitle: "Use my location",
+    tourPermsLocationDesc: "Show flights and deals near you. Your browser will ask for permission.",
+    tourPermsSkip: "Not now",
+    tourPermsFinish: "Save & start exploring",
+    replayTour: "Replay product tour",
   },
   it: {
     // Common
@@ -1658,6 +1686,34 @@ const translations = {
 
     // Account extra
     accountVersion: "SwappUp v1.0.0",
+
+    // Product tour
+    tourWelcomeTitle: "Benvenuto su Swappup ✈️",
+    tourWelcomeBody: "Fai un tour di 30 secondi per scoprire come trovare, pubblicare e scambiare biglietti.",
+    tourStatsTitle: "La tua attività a colpo d'occhio",
+    tourStatsBody: "Controlla annunci, vendite, acquisti e voli salvati direttamente dalla home.",
+    tourBellTitle: "Resta aggiornato",
+    tourBellBody: "Ricevi notifiche su cali di prezzo, offerte e scadenze di trasferimento. Tocca Avanti per attivare le notifiche push.",
+    tourSellTitle: "Pubblica un biglietto in pochi secondi",
+    tourSellBody: "Non puoi usare il tuo volo? Carica la prenotazione: estraiamo i dettagli per te.",
+    tourSearchTitle: "Trova il tuo prossimo volo",
+    tourSearchBody: "Sfoglia, filtra o usa la ricerca AI per scoprire offerte in linguaggio naturale.",
+    tourListingsTitle: "Gestisci i tuoi annunci",
+    tourListingsBody: "Modifica, rilancia o metti in pausa i tuoi annunci attivi quando vuoi.",
+    tourAccountTitle: "Completa il tuo profilo",
+    tourAccountBody: "Termina la configurazione e la verifica ID per sbloccare acquisto e vendita.",
+    tourFinish: "Ho capito",
+    tourDoneTitle: "Tutto pronto",
+    tourDoneBody: "Buoni scambi!",
+    tourPermsTitle: "Due preferenze rapide",
+    tourPermsDesc: "Entrambe sono facoltative e puoi cambiarle quando vuoi dal tuo account.",
+    tourPermsMarketingTitle: "Aggiornamenti prodotto e offerte",
+    tourPermsMarketingDesc: "Email occasionali su nuove funzioni, consigli e offerte esclusive.",
+    tourPermsLocationTitle: "Usa la mia posizione",
+    tourPermsLocationDesc: "Mostra voli e offerte vicino a te. Il browser ti chiederà l'autorizzazione.",
+    tourPermsSkip: "Non ora",
+    tourPermsFinish: "Salva e inizia",
+    replayTour: "Rivedi il tour del prodotto",
   },
 } as const;
 

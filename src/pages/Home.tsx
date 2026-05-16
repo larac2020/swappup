@@ -286,8 +286,8 @@ export default function Home() {
                 <h1 className="text-xl font-display font-bold">{firstName} ✈️</h1>
               </div>
               <div className="flex items-center gap-2">
-                <NotificationBell />
-                <Button variant="gold" size="sm" onClick={() => navigate("/sell")}>
+                <span data-tour="bell"><NotificationBell /></span>
+                <Button data-tour="sell-btn" variant="gold" size="sm" onClick={() => navigate("/sell")}>
                   <Plus className="w-4 h-4" />
                   {t("sell")}
                 </Button>
@@ -295,7 +295,7 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-2">
+            <div data-tour="stats" className="grid grid-cols-4 gap-2">
               <button onClick={() => navigate("/listings")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <Ticket className="w-4 h-4 text-primary mx-auto mb-0.5" />
                 <p className="text-base font-bold">{myListingsCount}</p>

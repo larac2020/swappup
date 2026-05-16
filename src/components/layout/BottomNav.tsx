@@ -9,12 +9,12 @@ interface NavItem {
   path: string;
 }
 
-const navItems: NavItem[] = [
-  { icon: Home, labelKey: "navHome", path: "/home" },
-  { icon: Search, labelKey: "navSearch", path: "/browse" },
-  { icon: ShoppingCart, labelKey: "navCart", path: "/cart" },
-  { icon: Ticket, labelKey: "navListings", path: "/listings" },
-  { icon: User, labelKey: "navAccount", path: "/account" },
+const navItems: (NavItem & { tour?: string })[] = [
+  { icon: Home, labelKey: "navHome", path: "/home", tour: "nav-home" },
+  { icon: Search, labelKey: "navSearch", path: "/browse", tour: "nav-search" },
+  { icon: ShoppingCart, labelKey: "navCart", path: "/cart", tour: "nav-cart" },
+  { icon: Ticket, labelKey: "navListings", path: "/listings", tour: "nav-listings" },
+  { icon: User, labelKey: "navAccount", path: "/account", tour: "nav-account" },
 ];
 
 export function BottomNav() {
@@ -32,6 +32,7 @@ export function BottomNav() {
           return (
             <button
               key={item.path}
+              data-tour={item.tour}
               onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-xl transition-all duration-200",
