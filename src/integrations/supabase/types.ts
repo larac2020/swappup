@@ -663,6 +663,7 @@ export type Database = {
           privacy_accepted_version: string | null
           terms_accepted_at: string | null
           terms_accepted_version: string | null
+          tour_completed_at: string | null
           transactions_bought: number | null
           transactions_sold: number | null
           updated_at: string
@@ -694,6 +695,7 @@ export type Database = {
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null
           terms_accepted_version?: string | null
+          tour_completed_at?: string | null
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string
@@ -725,6 +727,7 @@ export type Database = {
           privacy_accepted_version?: string | null
           terms_accepted_at?: string | null
           terms_accepted_version?: string | null
+          tour_completed_at?: string | null
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string
