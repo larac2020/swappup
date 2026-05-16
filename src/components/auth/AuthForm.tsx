@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,42 +23,9 @@ export function AuthForm() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
-  const [checkingEmail, setCheckingEmail] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
-
-  // Check if email exists on blur (signup mode only)
-  const checkEmailExists = useCallback(async (emailToCheck: string) => {
-    if (!emailToCheck || mode !== "signup") return;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailToCheck)) return;
-
-    setCheckingEmail(true);
-    try {
-      // Attempt signup with a dummy password to check if user exists
-      // Supabase returns a specific error for existing users
-      const { data, error } = await supabase.auth.signUp({
-        email: emailToCheck,
-        password: "check_only_dummy_pw_123!",
-        options: { emailRedirectTo: "https://dummy.test" },
-      });
-      
-      // If user already exists, Supabase returns the user with identities = []
-      if (data?.user && data.user.identities && data.user.identities.length === 0) {
-        setEmailExists(true);
-      } else if (error && (error.message?.includes("already registered") || (error as any).code === "user_already_exists")) {
-        setEmailExists(true);
-      } else {
-        setEmailExists(false);
-        // Clean up the dummy signup - it won't be verified so it's harmless
-      }
-    } catch {
-      setEmailExists(false);
-    } finally {
-      setCheckingEmail(false);
-    }
-  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,13 +159,9 @@ export function AuthForm() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailExists(null); }}
-                onBlur={() => mode === "signup" && checkEmailExists(email)}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 required
               />
-              {checkingEmail && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-              )}
             </div>
 
             {/* Email exists prompt */}
