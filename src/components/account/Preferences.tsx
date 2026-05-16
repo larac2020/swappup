@@ -163,6 +163,14 @@ export default function Preferences() {
       <Button variant="gold" className="w-full" onClick={handleSave} disabled={saving}>
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("preferencesSave")}
       </Button>
+
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => window.dispatchEvent(new Event("swappup:replay-tour"))}
+      >
+        {t("replayTour")}
+      </Button>
     </div>
   );
 }
