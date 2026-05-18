@@ -7,6 +7,10 @@ project_id = "oiarehtqhgwkiunsarmz"
     verify_jwt = false
   [functions.check-fraud]
     verify_jwt = true
+  [functions.check-boost-expiry]
+    verify_jwt = true
+  [functions.refresh-airline-fees]
+    verify_jwt = true
   [functions.create-setup-intent]
     verify_jwt = false
   [functions.expire-transfers]
