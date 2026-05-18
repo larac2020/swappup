@@ -212,6 +212,29 @@ export function AuthForm() {
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-5">
+          {needsVerification && mode !== "forgot" && (
+            <div className="rounded-xl bg-warning/10 border border-warning/30 p-4 space-y-3 animate-fade-in">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Verify your email to continue</p>
+                  <p className="text-xs text-muted-foreground">
+                    We sent a verification link to <span className="text-foreground">{email}</span>. You need to confirm it before you can sign in or buy and sell on swappup.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="gold"
+                size="sm"
+                className="w-full"
+                onClick={handleResendVerification}
+                disabled={resending}
+              >
+                {resending ? "Sending..." : "Resend verification email"}
+              </Button>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
