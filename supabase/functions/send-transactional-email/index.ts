@@ -3,6 +3,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { normalizeLocale } from '../_shared/transactional-email-templates/i18n.ts'
+import { requireServiceRole } from '../_shared/require-service-role.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -48,6 +49,15 @@ Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
+  }
+
+  // Only service_role callers (other edge functions) may send emails.
+  const unauthorized = await requireServiceRole(req)
+  if (unauthorized) {
+    return new Response(unauthorized.body, {
+      status: unauthorized.status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
