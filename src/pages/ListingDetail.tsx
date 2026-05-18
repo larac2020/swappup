@@ -81,13 +81,11 @@ export default function ListingDetail() {
   const { data: seller } = useQuery({
     queryKey: ["seller", listing?.seller_id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", listing!.seller_id)
-        .single();
+      const { data, error } = await supabase.rpc("get_public_profiles", {
+        _profile_ids: [listing!.seller_id],
+      });
       if (error) throw error;
-      return data;
+      return data?.[0] ?? null;
     },
     enabled: !!listing?.seller_id,
   });
