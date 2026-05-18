@@ -41,9 +41,42 @@ export default function TransactionHistory() {
   const { data: transactions, isLoading } = useQuery({
     queryKey: ["transactions", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("purchases").select("*, listings(*)").or(`buyer_id.eq.${profile!.id},seller_id.eq.${profile!.id}`).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      // Buyer side: full purchase row via RLS.
+      const { data: bought, error: bErr } = await supabase
+        .from("purchases")
+        .select("*, listings(*)")
+        .eq("buyer_id", profile!.id)
+        .order("created_at", { ascending: false });
+      if (bErr) throw bErr;
+
+      // Seller side: PII-masked rows via SECURITY DEFINER RPC.
+      const { data: sold, error: sErr } = await supabase.rpc("get_seller_purchases", {
+        _statuses: null,
+      });
+      if (sErr) throw sErr;
+
+      const soldRows = (sold ?? []) as any[];
+      const listingIds = Array.from(new Set(soldRows.map((r) => r.listing_id).filter(Boolean)));
+      let listingsById = new Map<string, any>();
+      if (listingIds.length > 0) {
+        const { data: listingRows } = await supabase
+          .from("listings")
+          .select("*")
+          .in("id", listingIds);
+        listingsById = new Map((listingRows ?? []).map((l: any) => [l.id, l]));
+      }
+      const soldEnriched = soldRows.map((r) => ({ ...r, listings: listingsById.get(r.listing_id) ?? null }));
+
+      const all = [...(bought ?? []), ...soldEnriched];
+      // Dedup by id and sort newest first.
+      const seen = new Set<string>();
+      const merged = all.filter((tx) => {
+        if (seen.has(tx.id)) return false;
+        seen.add(tx.id);
+        return true;
+      });
+      merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return merged;
     },
     enabled: !!profile?.id,
   });
