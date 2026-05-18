@@ -102,6 +102,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cart_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       data_consent: {
@@ -333,6 +340,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       listings: {
@@ -513,6 +527,13 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -832,6 +853,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchases_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
@@ -843,6 +871,13 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -875,6 +910,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -973,6 +1015,45 @@ export type Database = {
       }
     }
     Views: {
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          transactions_bought: number | null
+          transactions_sold: number | null
+          user_id: string | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          transactions_bought?: number | null
+          transactions_sold?: number | null
+          user_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          transactions_bought?: number | null
+          transactions_sold?: number | null
+          user_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Relationships: []
+      }
       purchases_seller_view: {
         Row: {
           buyer_confirmed: boolean | null
@@ -1052,6 +1133,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchases_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
@@ -1065,6 +1153,118 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_purchases: {
+        Row: {
+          buyer_confirmed: boolean | null
+          buyer_id: string | null
+          created_at: string | null
+          escrow_deadline: string | null
+          escrow_status: string | null
+          id: string | null
+          listing_id: string | null
+          name_change_fee: number | null
+          quantity: number | null
+          seller_deadline_warning_sent: boolean | null
+          seller_id: string | null
+          seller_late_warning_sent: boolean | null
+          seller_reminder_sent: boolean | null
+          seller_transferred: boolean | null
+          status: string | null
+          total_price: number | null
+          transfer_booking_ref: string | null
+          transfer_confirmed_at: string | null
+          transfer_deadline: string | null
+          transfer_surname: string | null
+        }
+        Insert: {
+          buyer_confirmed?: boolean | null
+          buyer_id?: string | null
+          created_at?: string | null
+          escrow_deadline?: string | null
+          escrow_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          name_change_fee?: number | null
+          quantity?: number | null
+          seller_deadline_warning_sent?: boolean | null
+          seller_id?: string | null
+          seller_late_warning_sent?: boolean | null
+          seller_reminder_sent?: boolean | null
+          seller_transferred?: boolean | null
+          status?: string | null
+          total_price?: number | null
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
+        }
+        Update: {
+          buyer_confirmed?: boolean | null
+          buyer_id?: string | null
+          created_at?: string | null
+          escrow_deadline?: string | null
+          escrow_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          name_change_fee?: number | null
+          quantity?: number | null
+          seller_deadline_warning_sent?: boolean | null
+          seller_id?: string | null
+          seller_late_warning_sent?: boolean | null
+          seller_reminder_sent?: boolean | null
+          seller_transferred?: boolean | null
+          status?: string | null
+          total_price?: number | null
+          transfer_booking_ref?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_deadline?: string | null
+          transfer_surname?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -1076,6 +1276,13 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_listing_view_counts: {
+        Args: { _listing_ids: string[] }
+        Returns: {
+          listing_id: string
+          view_count: number
+        }[]
       }
       move_to_dlq: {
         Args: {
