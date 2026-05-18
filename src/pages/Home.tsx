@@ -198,15 +198,24 @@ export default function Home() {
   const { data: pendingSales = [] } = useQuery({
     queryKey: ["pendingSellerTransfers", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("purchases")
-        .select("id, listing_id, transfer_deadline, listings(title, origin_city, destination_city)")
-        .eq("seller_id", profile!.id)
-        .eq("seller_transferred", false)
-        .in("status", ["paid", "pending_transfer"])
-        .order("created_at", { ascending: false });
+      const { data: sales, error } = await supabase.rpc("get_seller_purchases", {
+        _statuses: ["paid", "pending_transfer"],
+      });
       if (error) throw error;
-      return data ?? [];
+      const rows = ((sales ?? []) as any[]).filter((r) => r.seller_transferred === false);
+      if (rows.length === 0) return rows;
+      const ids = Array.from(new Set(rows.map((r) => r.listing_id).filter(Boolean)));
+      const { data: listingRows } = await supabase
+        .from("listings")
+        .select("id, title, origin_city, destination_city")
+        .in("id", ids);
+      const byId = new Map((listingRows ?? []).map((l: any) => [l.id, l]));
+      return rows.map((r) => ({
+        id: r.id,
+        listing_id: r.listing_id,
+        transfer_deadline: r.transfer_deadline,
+        listings: byId.get(r.listing_id) ?? null,
+      }));
     },
     enabled: !!profile?.id,
   });

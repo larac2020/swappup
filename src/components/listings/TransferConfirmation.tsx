@@ -47,72 +47,16 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
       setUploading(false);
       if (upErr) throw upErr;
 
-      const { error } = await supabase
-        .from("purchases")
-        .update({
-          transfer_booking_ref: bookingRef.trim(),
-          transfer_surname: surname.trim(),
-          transfer_confirmed_at: new Date().toISOString(),
-          status: "transfer_confirmed",
-          escrow_status: "pending_release",
-          seller_transferred: true,
-          transfer_payment_proof_url: path,
-          // Buyer has 48h from this moment to verify the booking and release payment.
-          // After that the system will auto-cancel the sale and notify both parties.
-          escrow_deadline: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        })
-        .eq("id", purchase.id);
+      // Update + notifications run server-side so buyer PII never reaches the seller's client.
+      const { error } = await supabase.functions.invoke("confirm-transfer", {
+        body: {
+          purchase_id: purchase.id,
+          booking_ref: bookingRef.trim(),
+          surname: surname.trim(),
+          proof_path: path,
+        },
+      });
       if (error) throw error;
-
-      // Notify buyer
-      const { data: buyerProfile } = await supabase
-        .from("profiles")
-        .select("user_id, email, full_name")
-        .eq("id", purchase.buyer_id)
-        .single();
-
-      if (buyerProfile) {
-        await supabase.functions.invoke("send-notification", {
-          body: {
-            user_id: buyerProfile.user_id,
-            title: "Transfer confirmed — please verify your ticket",
-            message: `The seller has confirmed the name change and uploaded a payment proof. Booking ref: ${bookingRef.trim()}. Surname: ${surname.trim()}. Open your purchases to verify and release payment.`,
-            type: "transfer_confirmed",
-            listing_id: purchase.listing_id,
-          },
-        });
-
-        // Email 4 — buyer verification needed
-        const recipient = buyerProfile.email || purchase.buyer_email;
-        if (recipient) {
-          const { data: listing } = await supabase
-            .from("listings")
-            .select("origin_city, origin_country, destination_city, destination_country, departure_date, airline, flight_number")
-            .eq("id", purchase.listing_id)
-            .single();
-          const { data: sellerProfile } = await supabase
-            .from("profiles").select("full_name").eq("id", purchase.seller_id).single();
-          await supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "transfer-confirmed-buyer-verify",
-              recipientEmail: recipient,
-              idempotencyKey: `buyer-verify-${purchase.id}`,
-              templateData: {
-                buyerName: (purchase.buyer_full_name || buyerProfile.full_name || "").split(" ")[0],
-                newBookingRef: bookingRef.trim(),
-                surname: surname.trim(),
-                trip: listing ? {
-                  origin: `${listing.origin_city}${listing.origin_country ? `, ${listing.origin_country}` : ""}`,
-                  destination: `${listing.destination_city}${listing.destination_country ? `, ${listing.destination_country}` : ""}`,
-                  departureDate: listing.departure_date,
-                  airline: listing.airline,
-                  flightNumber: listing.flight_number,
-                } : undefined,
-              },
-            },
-          }).catch((e) => console.error("email buyer-verify failed", e));
-        }
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mySales"] });

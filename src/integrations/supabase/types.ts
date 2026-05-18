@@ -1077,6 +1077,51 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_listing_view_counts: {
+        Args: { _listing_ids: string[] }
+        Returns: {
+          listing_id: string
+          view_count: number
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _profile_ids: string[] }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          id: string
+          transactions_bought: number
+          transactions_sold: number
+          user_id: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
+        }[]
+      }
+      get_seller_purchases: {
+        Args: { _statuses?: string[] }
+        Returns: {
+          buyer_confirmed: boolean
+          buyer_id: string
+          created_at: string
+          escrow_deadline: string
+          escrow_status: string
+          id: string
+          listing_id: string
+          name_change_fee: number
+          quantity: number
+          seller_deadline_warning_sent: boolean
+          seller_id: string
+          seller_late_warning_sent: boolean
+          seller_reminder_sent: boolean
+          seller_transferred: boolean
+          status: string
+          total_price: number
+          transfer_booking_ref: string
+          transfer_confirmed_at: string
+          transfer_deadline: string
+          transfer_surname: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

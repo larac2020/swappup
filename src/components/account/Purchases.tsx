@@ -79,11 +79,20 @@ export default function Purchases() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchases")
-        .select("*, listings(*), seller:profiles!purchases_seller_id_fkey(id, full_name, email)")
+        .select("*, listings(*)")
         .eq("buyer_id", profile!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      const rows = (data ?? []) as any[];
+      if (rows.length === 0) return rows;
+      // Enrich with seller's public profile (safe fields only).
+      const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id).filter(Boolean)));
+      if (sellerIds.length === 0) return rows;
+      const { data: sellers } = await supabase.rpc("get_public_profiles", {
+        _profile_ids: sellerIds,
+      });
+      const byId = new Map(((sellers ?? []) as any[]).map((s) => [s.id, s]));
+      return rows.map((r) => ({ ...r, seller: byId.get(r.seller_id) ?? null }));
     },
     enabled: !!profile?.id,
   });
