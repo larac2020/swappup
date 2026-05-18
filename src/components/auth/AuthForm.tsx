@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Check } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
