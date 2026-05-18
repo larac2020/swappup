@@ -49,8 +49,16 @@ export function AuthForm() {
           toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
           return;
         }
-        if (password.length < 6) {
-          toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+        if (password.length < 8) {
+          toast({ title: "Password too short", description: "Password must be at least 8 characters.", variant: "destructive" });
+          return;
+        }
+        if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+          toast({
+            title: "Password too weak",
+            description: "Password must contain at least one letter, one number, and one special character.",
+            variant: "destructive",
+          });
           return;
         }
         if (!legalAccepted) {
@@ -62,7 +70,7 @@ export function AuthForm() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth`,
           },
         });
 
@@ -74,12 +82,19 @@ export function AuthForm() {
           throw error;
         }
 
-        // Check if email confirmation is needed
+        // Ensure a fresh signup always goes through the onboarding flow
+        localStorage.removeItem("flyswap_onboarding_complete");
+
+        // Email verification is required — no session is returned until confirmed
         if (data?.user && !data.session) {
           toast({
-            title: "Verify your email",
-            description: "We've sent a verification link to your email. Please check your inbox.",
+            title: "Check your inbox",
+            description: "We've sent a verification link to your email. Click it to activate your account.",
           });
+          // Reset form back to login mode so they can sign in after verifying
+          setMode("login");
+          setPassword("");
+          setConfirmPassword("");
         } else {
           toast({
             title: "Account created!",
