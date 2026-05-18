@@ -457,21 +457,7 @@ export function AuthForm() {
                   Sign in
                 </button>
               </>
-            ) : mode === "login" ? (
-              <>
-                Don't have an account?{" "}
-                <button type="button" onClick={() => { setMode("signup"); setEmailExists(null); }} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                  Sign up
-                </button>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <button type="button" onClick={() => setMode("login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                  Sign in
-                </button>
-              </>
-            )}
+            ) : null}
           </p>
         </div>
 
