@@ -234,7 +234,7 @@ export function AuthForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                   required
-                  minLength={6}
+                  minLength={mode === "signup" ? 8 : 6}
                 />
                 <button
                   type="button"
@@ -244,6 +244,11 @@ export function AuthForm() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {mode === "signup" && (
+                <p className="text-xs text-muted-foreground">
+                  At least 8 characters, including a letter, a number, and a special character.
+                </p>
+              )}
             </div>
           )}
 
