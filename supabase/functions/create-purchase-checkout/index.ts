@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const { data: u } = await userClient.auth.getUser();
     if (!u.user) return j({ error: "Unauthorized" }, 401);
 
-    const { listing_id, full_name, email, name_change_fee } = await req.json();
+    const { listing_id, full_name, email } = await req.json();
     if (!listing_id || !full_name || !email) return j({ error: "Missing fields" }, 400);
 
     const admin = createClient(
@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
     if ((listing.ticket_count ?? 0) < 1) return j({ error: "Out of stock" }, 400);
 
     const ticketPrice = Number(listing.price);
-    const fee = Number(name_change_fee || 0);
+    // Use the server-side listing fee — never trust client input
+    const fee = Math.max(0, Number((listing as any).name_change_fee ?? 0));
     const total = ticketPrice + fee;
     const currency = String((listing as any).currency || "EUR").toLowerCase();
     const transferDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();

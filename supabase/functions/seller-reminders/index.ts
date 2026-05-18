@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { requireServiceRole } from "../_shared/require-service-role.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,8 @@ const corsHeaders = {
 //  #3: when 4h or less remain until transfer_deadline (seller_deadline_warning_sent)
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const unauthorized = await requireServiceRole(req);
+  if (unauthorized) return unauthorized;
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
