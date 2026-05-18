@@ -107,6 +107,16 @@ export function AuthForm() {
             setEmailExists(true);
             return;
           }
+          const code = (error as any).code;
+          const lower = (error.message || "").toLowerCase();
+          if (code === "weak_password" || lower.includes("weak") || lower.includes("password should")) {
+            toast({
+              title: "Password requirements not met",
+              description: "Password must be at least 8 characters and include a letter, a number, and a special character.",
+              variant: "destructive",
+            });
+            return;
+          }
           throw error;
         }
 
