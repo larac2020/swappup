@@ -39,7 +39,7 @@ export function AuthForm() {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth` },
+        options: { emailRedirectTo: `${window.location.origin}/` },
       });
       if (error) throw error;
       toast({
@@ -98,7 +98,7 @@ export function AuthForm() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
+            emailRedirectTo: `${window.location.origin}/`,
           },
         });
 
