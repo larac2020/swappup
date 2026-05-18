@@ -25,6 +25,7 @@ export function AuthForm() {
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [resending, setResending] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -45,6 +46,7 @@ export function AuthForm() {
         title: "Verification email sent",
         description: `We've sent a new verification link to ${email}.`,
       });
+      setNeedsVerification(true);
     } catch (error: any) {
       toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
     } finally {
@@ -55,6 +57,7 @@ export function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setNeedsVerification(false);
 
     try {
       if (mode === "forgot") {
@@ -145,7 +148,27 @@ export function AuthForm() {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          const msg = (error.message || "").toLowerCase();
+          if (
+            msg.includes("email not confirmed") ||
+            msg.includes("not verified") ||
+            (error as any).code === "email_not_confirmed"
+          ) {
+            // Defensive: ensure no partial session is kept
+            await supabase.auth.signOut();
+            setNeedsVerification(true);
+            return;
+          }
+          throw error;
+        }
+        // Belt-and-braces: if somehow a session exists without a confirmed email, block it.
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user && !userData.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setNeedsVerification(true);
+          return;
+        }
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in.",
