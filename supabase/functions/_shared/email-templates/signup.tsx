@@ -36,7 +36,7 @@ export const SignupEmail = ({
         <Text style={text}>
           Thanks for signing up for{' '}
           <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
+            <strong>swappup</strong>
           </Link>
           !
         </Text>
@@ -50,6 +50,13 @@ export const SignupEmail = ({
         <Button style={button} href={confirmationUrl}>
           Verify Email
         </Button>
+        <Text style={text}>
+          If the button above doesn't work, copy and paste this link into your browser:
+          <br />
+          <Link href={confirmationUrl} style={link}>
+            {confirmationUrl}
+          </Link>
+        </Text>
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
