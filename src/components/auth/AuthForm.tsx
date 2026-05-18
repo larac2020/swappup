@@ -24,8 +24,33 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
+  const [resending, setResending] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast({ title: "Enter your email", description: "Please enter your email above first.", variant: "destructive" });
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
+      if (error) throw error;
+      toast({
+        title: "Verification email sent",
+        description: `We've sent a new verification link to ${email}.`,
+      });
+    } catch (error: any) {
+      toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -389,6 +414,20 @@ export function AuthForm() {
             )}
           </p>
         </div>
+
+        {/* Resend verification email */}
+        {mode !== "forgot" && (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-60"
+            >
+              {resending ? "Sending..." : "Didn't get the email? Resend verification link"}
+            </button>
+          </div>
+        )}
 
         {/* Terms */}
         <p className="text-center text-xs text-muted-foreground">
