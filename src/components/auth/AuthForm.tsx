@@ -220,6 +220,30 @@ export function AuthForm() {
           </p>
         </div>
 
+        {/* Mode tabs (hidden in forgot mode) */}
+        {mode !== "forgot" && (
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-secondary/50 border border-border/50">
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setEmailExists(null); setNeedsVerification(false); }}
+              className={`h-10 rounded-lg text-sm font-medium transition-colors ${
+                mode === "login" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("signup"); setEmailExists(null); setNeedsVerification(false); }}
+              className={`h-10 rounded-lg text-sm font-medium transition-colors ${
+                mode === "signup" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
+
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-5">
           {needsVerification && mode !== "forgot" && (
@@ -433,21 +457,7 @@ export function AuthForm() {
                   Sign in
                 </button>
               </>
-            ) : mode === "login" ? (
-              <>
-                Don't have an account?{" "}
-                <button type="button" onClick={() => { setMode("signup"); setEmailExists(null); }} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                  Sign up
-                </button>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <button type="button" onClick={() => setMode("login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                  Sign in
-                </button>
-              </>
-            )}
+            ) : null}
           </p>
         </div>
 
