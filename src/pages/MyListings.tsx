@@ -103,12 +103,14 @@ export default function MyListings() {
     queryKey: ["listingViewCounts", listingIds],
     queryFn: async () => {
       const counts: Record<string, number> = {};
-      for (const lid of listingIds) {
-        const { count, error } = await supabase
-          .from("listing_views")
-          .select("*", { count: "exact", head: true })
-          .eq("listing_id", lid);
-        if (!error) counts[lid] = count ?? 0;
+      if (listingIds.length === 0) return counts;
+      const { data, error } = await supabase.rpc("get_listing_view_counts", {
+        _listing_ids: listingIds,
+      });
+      if (!error && data) {
+        for (const row of data as Array<{ listing_id: string; view_count: number }>) {
+          counts[row.listing_id] = Number(row.view_count) ?? 0;
+        }
       }
       return counts;
     },
@@ -136,14 +138,19 @@ export default function MyListings() {
   const { data: pendingSales = [] } = useQuery({
     queryKey: ["mySales", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("purchases")
-        .select("*, listings(*)")
-        .eq("seller_id", profile!.id)
-        .in("status", ["pending_transfer", "transfer_confirmed"])
-        .order("created_at", { ascending: false });
+      const { data: sales, error } = await supabase.rpc("get_seller_purchases", {
+        _statuses: ["pending_transfer", "transfer_confirmed"],
+      });
       if (error) throw error;
-      return data;
+      const rows = (sales ?? []) as any[];
+      if (rows.length === 0) return rows;
+      const ids = Array.from(new Set(rows.map((r) => r.listing_id).filter(Boolean)));
+      const { data: listingRows } = await supabase
+        .from("listings")
+        .select("*")
+        .in("id", ids);
+      const byId = new Map((listingRows ?? []).map((l: any) => [l.id, l]));
+      return rows.map((r) => ({ ...r, listings: byId.get(r.listing_id) ?? null }));
     },
     enabled: !!profile?.id,
   });
