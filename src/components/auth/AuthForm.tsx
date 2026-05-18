@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Check } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -55,7 +55,7 @@ export function AuthForm() {
         }
         if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
           toast({
-            title: "Password too weak",
+            title: "Password requirements not met",
             description: "Password must contain at least one letter, one number, and one special character.",
             variant: "destructive",
           });
@@ -245,9 +245,24 @@ export function AuthForm() {
                 </button>
               </div>
               {mode === "signup" && (
-                <p className="text-xs text-muted-foreground">
-                  At least 8 characters, including a letter, a number, and a special character.
-                </p>
+                <ul className="space-y-1 pt-1">
+                  {[
+                    { label: "At least 8 characters", ok: password.length >= 8 },
+                    { label: "Contains a letter", ok: /[A-Za-z]/.test(password) },
+                    { label: "Contains a number", ok: /\d/.test(password) },
+                    { label: "Contains a special character", ok: /[^A-Za-z0-9]/.test(password) },
+                  ].map((r) => (
+                    <li
+                      key={r.label}
+                      className={`flex items-center gap-2 text-xs transition-colors ${
+                        r.ok ? "text-success" : "text-muted-foreground"
+                      }`}
+                    >
+                      <Check className={`w-3 h-3 ${r.ok ? "opacity-100" : "opacity-40"}`} />
+                      {r.label}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           )}
