@@ -260,6 +260,7 @@ export default function Home() {
                 originCity={listing.origin_city}
                 destinationCity={listing.destination_city}
                 departureDate={listing.departure_date}
+                returnDate={(listing as any).return_date ?? undefined}
                 price={Number(listing.price)}
                 originalPrice={listing.original_price ? Number(listing.original_price) : undefined}
                 airline={listing.airline}
