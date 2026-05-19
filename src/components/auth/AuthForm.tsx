@@ -11,6 +11,7 @@ import { lovable } from "@/integrations/lovable/index";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
+import { PasswordChecklist, allCriteriaMet } from "@/components/auth/PasswordChecklist";
 
 type AuthMode = "login" | "signup" | "forgot";
 
@@ -81,16 +82,8 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
           return;
         }
-        if (password.length < 8) {
-          toast({ title: "Password too short", description: "Password must be at least 8 characters.", variant: "destructive" });
-          return;
-        }
-        if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-          toast({
-            title: "Password requirements not met",
-            description: "Password must contain at least one letter, one number, and one special character.",
-            variant: "destructive",
-          });
+        if (!allCriteriaMet(password)) {
+          // Criteria are shown inline in the live checklist — no toast needed.
           return;
         }
         if (!legalAccepted) {
@@ -109,16 +102,6 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
         if (error) {
           if (error.message?.includes("already registered") || (error as any).code === "user_already_exists") {
             setEmailExists(true);
-            return;
-          }
-          const code = (error as any).code;
-          const lower = (error.message || "").toLowerCase();
-          if (code === "weak_password" || lower.includes("weak") || lower.includes("password should")) {
-            toast({
-              title: "Password requirements not met",
-              description: "Password must be at least 8 characters and include a letter, a number, and a special character.",
-              variant: "destructive",
-            });
             return;
           }
           throw error;
@@ -353,6 +336,9 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {mode === "signup" && (
+                <PasswordChecklist password={password} className="pt-1" />
+              )}
             </div>
           )}
 
@@ -408,7 +394,11 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
             variant="gold"
             size="lg"
             className="w-full"
-            disabled={loading || (mode === "signup" && (emailExists === true || !legalAccepted))}
+            disabled={
+              loading ||
+              (mode === "signup" &&
+                (emailExists === true || !legalAccepted || !allCriteriaMet(password)))
+            }
           >
             {loading ? (
               <>
