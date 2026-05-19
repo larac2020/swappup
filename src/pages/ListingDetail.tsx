@@ -107,6 +107,23 @@ export default function ListingDetail() {
     enabled: !!myProfile?.id && !!id,
   });
 
+  // Last-verified timestamp for the airline name-change fee (must be before any early return)
+  const { data: feeMeta } = useQuery({
+    queryKey: ["airline-fee-meta", listing?.airline],
+    queryFn: async () => {
+      if (!listing?.airline) return null;
+      const { data } = await supabase
+        .from("airline_change_fees")
+        .select("last_verified_at, source_url")
+        .ilike("airline_name", listing.airline)
+        .order("last_verified_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!listing?.airline,
+  });
+
   const toggleFavoriteMutation = useMutation({
     mutationFn: async () => {
       if (isFavorited) {
@@ -187,23 +204,6 @@ export default function ListingDetail() {
   const totalPrice = ticketPrice + nameChangeFee;
   const listingCurrency = (listing as any).currency || "EUR";
   const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
-
-  // Last-verified timestamp for the airline name-change fee
-  const { data: feeMeta } = useQuery({
-    queryKey: ["airline-fee-meta", listing.airline],
-    queryFn: async () => {
-      if (!listing.airline) return null;
-      const { data } = await supabase
-        .from("airline_change_fees")
-        .select("last_verified_at, source_url")
-        .ilike("airline_name", listing.airline)
-        .order("last_verified_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!listing.airline && nameChangeFee > 0,
-  });
 
   const formatVerified = (iso?: string | null) => {
     if (!iso) return null;
