@@ -112,7 +112,7 @@ export default function Landing() {
       {/* Value */}
       <section className="border-t border-border/50 bg-secondary/20">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="grid items-center gap-12 md:grid-cols-2">
+          <div className="grid items-start gap-12 md:grid-cols-2">
             <div className="space-y-5">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{c.sellTitle}</h2>
               <p className="text-muted-foreground leading-relaxed">{c.sellBody}</p>
