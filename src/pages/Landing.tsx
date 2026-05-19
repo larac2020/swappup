@@ -109,7 +109,7 @@ export default function Landing() {
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Search by route, date or destination — even in natural language.</span>
+                  <span>Search by route, date or destination — or just describe the trip you have in mind.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
