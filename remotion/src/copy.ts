@@ -75,7 +75,7 @@ export const copy = {
     s5b_paid: "Payment successful",
     s5b_note: "Held in escrow — released to the seller only after the ticket transfer",
     s6_eyebrow: "Ticket purchased",
-    s6_title: "Ticket purchased!",
+    s6_title: "Get ready to travel!",
     s6_screen: "Swappup",
     s6_sub: "",
     s6_notif: "Payment complete · ticket on its way",
