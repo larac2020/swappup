@@ -125,6 +125,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
             </div>
             <FeeRow label={c.s3_fee_listing} value={c.s3_fee_listing_value} />
             <FeeRow label={c.s3_fee_platform} value={c.s3_fee_platform_value} negative />
+            <FeeRow label={c.s3_fee_namechange} value={c.s3_fee_namechange_value} info />
             <div style={{ height: 1, background: theme.border, margin: "2px 0" }} />
             <FeeRow label={c.s3_fee_payout} value={c.s3_fee_payout_value} bold />
           </div>
@@ -156,10 +157,10 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
   );
 };
 
-const FeeRow: React.FC<{ label: string; value: string; bold?: boolean; negative?: boolean }> = ({ label, value, bold, negative }) => (
+const FeeRow: React.FC<{ label: string; value: string; bold?: boolean; negative?: boolean; info?: boolean }> = ({ label, value, bold, negative, info }) => (
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
     <span style={{ fontSize: bold ? 12 : 10, color: bold ? theme.text : theme.muted, fontWeight: bold ? 700 : 500 }}>{label}</span>
-    <span style={{ fontSize: bold ? 13 : 11, color: bold ? theme.primary : negative ? "#ef4444" : theme.text, fontWeight: bold ? 800 : 700 }}>{value}</span>
+    <span style={{ fontSize: bold ? 13 : 11, color: bold ? theme.primary : negative ? "#ef4444" : info ? theme.muted : theme.text, fontWeight: bold ? 800 : 700, fontStyle: info ? "italic" : "normal" }}>{value}</span>
   </div>
 );
 
