@@ -1,17 +1,31 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowRight, ShieldCheck, Wallet, Sparkles, BadgeCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Wallet, Sparkles, BadgeCheck, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { landingContent, marketingMeta } from "@/i18n/marketingContent";
 import { PhoneMock } from "@/components/marketing/PhoneMock";
+import { useRef, useState } from "react";
 
 export default function Landing() {
   const { locale } = useLanguage();
   const c = landingContent[locale];
   const meta = marketingMeta.landing;
   const icons = [Sparkles, ShieldCheck, BadgeCheck, Wallet];
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play();
+      setIsPlaying(true);
+    } else {
+      v.pause();
+      setIsPlaying(false);
+    }
+  };
   return (
     <MarketingLayout>
       <Helmet>
@@ -67,18 +81,30 @@ export default function Landing() {
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{c.demoTitle}</h2>
             <p className="text-muted-foreground">{c.demoSubtitle}</p>
           </div>
-          <div className="mt-10 overflow-hidden rounded-3xl border border-border/50 bg-background shadow-2xl shadow-primary/10">
+          <div className="relative mt-10 overflow-hidden rounded-3xl border border-border/50 bg-background shadow-2xl shadow-primary/10">
             <video
+              ref={videoRef}
               key={locale}
-              className="block w-full"
+              className="block w-full cursor-pointer"
               autoPlay
               muted
               loop
               playsInline
               preload="metadata"
+              onClick={togglePlay}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
             >
               <source src={`/videos/swappup-demo-${locale}.mp4`} type="video/mp4" />
             </video>
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={isPlaying ? "Pause video" : "Play video"}
+              className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur-sm ring-1 ring-border/60 transition hover:bg-background"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-0.5" />}
+            </button>
           </div>
         </div>
       </section>
