@@ -64,7 +64,10 @@ Deno.serve(async (req) => {
       escrow_deadline: transferDeadline,
       original_booking_ref: listing.flight_number || null,
     }).select().single();
-    if (pErr) return j({ error: pErr.message }, 400);
+    if (pErr) {
+      console.error("purchase insert error", pErr);
+      return j({ error: "Could not create purchase" }, 400);
+    }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2025-08-27.basil",
@@ -93,7 +96,7 @@ Deno.serve(async (req) => {
     return j({ url: session.url, purchase_id: purchase.id });
   } catch (e) {
     console.error(e);
-    return j({ error: (e as Error).message }, 500);
+    return j({ error: "An unexpected error occurred" }, 500);
   }
 });
 

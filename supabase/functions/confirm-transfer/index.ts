@@ -121,7 +121,8 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   } catch (e) {
     console.error("confirm-transfer error", e);
-    return json({ error: (e as Error).message }, 500);
+    console.error("confirm-transfer error", e);
+    return json({ error: "An unexpected error occurred" }, 500);
   }
 });
 

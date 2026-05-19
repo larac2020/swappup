@@ -157,7 +157,8 @@ Deno.serve(async (req) => {
 
     return j({ ok: true });
   } catch (e) {
-    return j({ error: (e as Error).message }, 500);
+    console.error("cancel-escrow error", e);
+    return j({ error: "An unexpected error occurred" }, 500);
   }
 });
 

@@ -106,7 +106,8 @@ Deno.serve(async (req) => {
     );
   } catch (e) {
     console.error("report-name-change-fee error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }), {
+    console.error("report-name-change-fee error", e);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
