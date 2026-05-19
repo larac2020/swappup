@@ -1,4 +1,4 @@
-import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon, Info } from "lucide-react";
+import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Calendar as CalendarIcon, Info, Search, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ScreenKind = "browse" | "sell";
@@ -12,23 +12,27 @@ interface PhoneMockProps {
 
 const browseCopy = {
   en: {
-    title: "Search",
-    aiPlaceholder: "Weekend trip from London",
-    chips: ["Any date", "Direct", "Carry-on"],
+    title: "Find Deals",
+    subtitle: "Discover amazing deals from other travelers",
+    aiHeader: "AI Search",
+    aiPlaceholder: "Weekend beach trip in July",
+    chips: ["Route", "Dates", "Airline", "Bags"],
+    viewCta: "View Listing",
     cards: [
-      { from: "LGW", to: "BCN", date: "Sat 6 Jun", airline: "easyJet", price: "£68", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
-      { from: "LGW", to: "LIS", date: "Fri 5 Jun", airline: "Vueling", price: "£54", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
-      { from: "STN", to: "BUD", date: "Sat 6 Jun", airline: "Ryanair", price: "£39", image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=600&auto=format&fit=crop" },
+      { fromCity: "London", fromCode: "LGW", toCity: "Barcelona", toCode: "BCN", date: "Sat 6 Jun", pax: 1, airline: "easyJet", price: "£68", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
+      { fromCity: "London", fromCode: "LGW", toCity: "Lisbon", toCode: "LIS", date: "Fri 5 Jun", pax: 2, airline: "Vueling", price: "£54", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
     ],
   },
   it: {
-    title: "Cerca",
-    aiPlaceholder: "Weekend da Milano",
-    chips: ["Qualsiasi data", "Diretto", "Bagaglio a mano"],
+    title: "Trova Offerte",
+    subtitle: "Scopri offerte incredibili da altri viaggiatori",
+    aiHeader: "Ricerca AI",
+    aiPlaceholder: "Weekend al mare a luglio",
+    chips: ["Tratta", "Date", "Compagnia", "Bagagli"],
+    viewCta: "Vedi annuncio",
     cards: [
-      { from: "MXP", to: "BCN", date: "Sab 6 giu", airline: "Vueling", price: "€72", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
-      { from: "LIN", to: "LIS", date: "Ven 5 giu", airline: "ITA Airways", price: "€89", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
-      { from: "BGY", to: "BUD", date: "Sab 6 giu", airline: "Ryanair", price: "€44", image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=600&auto=format&fit=crop" },
+      { fromCity: "Milano", fromCode: "MXP", toCity: "Barcellona", toCode: "BCN", date: "Sab 6 giu", pax: 1, airline: "Vueling", price: "€72", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
+      { fromCity: "Milano", fromCode: "LIN", toCity: "Lisbona", toCode: "LIS", date: "Ven 5 giu", pax: 2, airline: "ITA Airways", price: "€89", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
     ],
   },
 } as const;
@@ -125,42 +129,90 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
   const c = browseCopy[locale];
   return (
     <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
-      <div className="flex items-center justify-between pb-3">
-        <span className="text-sm font-semibold">{c.title}</span>
-        <Bell className="h-4 w-4 text-muted-foreground" />
+      {/* Page title — matches real Browse */}
+      <div className="pb-2">
+        <h3 className="text-sm font-bold leading-tight">{c.title}</h3>
+        <p className="text-[10px] text-muted-foreground leading-tight">{c.subtitle}</p>
       </div>
-      <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-xs">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
-        <span className="truncate text-foreground">{c.aiPlaceholder}</span>
+
+      {/* AI Search card — mirrors real "glass" AI Search block */}
+      <div className="rounded-xl border border-border/60 bg-secondary/40 p-2 space-y-1.5 backdrop-blur">
+        <div className="flex items-center gap-1">
+          <Sparkles className="h-3 w-3 text-primary" />
+          <span className="text-[10px] font-semibold">{c.aiHeader}</span>
+        </div>
+        <div className="flex gap-1">
+          <div className="flex-1 truncate rounded-md border border-border/60 bg-background/60 px-2 py-1 text-[10px] text-muted-foreground">
+            {c.aiPlaceholder}
+          </div>
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Search className="h-3 w-3" />
+          </div>
+        </div>
       </div>
-      <div className="mt-2 flex gap-1.5 overflow-hidden">
+
+      {/* Filter chips */}
+      <div className="mt-2 flex gap-1 overflow-hidden">
         {c.chips.map((chip) => (
-          <span key={chip} className="whitespace-nowrap rounded-full border border-border/60 bg-secondary/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+          <span
+            key={chip}
+            className="whitespace-nowrap rounded-full border border-border/60 bg-secondary/40 px-1.5 py-0.5 text-[9px] text-muted-foreground"
+          >
             {chip}
           </span>
         ))}
       </div>
-      <div className="mt-3 space-y-2 overflow-hidden">
+
+      {/* Listing cards — mirror real ListingCard layout */}
+      <div className="mt-2.5 space-y-2 overflow-hidden">
         {c.cards.map((card, i) => (
           <div
             key={i}
             className="overflow-hidden rounded-xl border border-border/60 bg-secondary/30 backdrop-blur"
           >
-            <div className="relative h-16 w-full overflow-hidden">
-              <img src={card.image} alt={card.to} className="h-full w-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 to-transparent" />
-              <div className="absolute right-1.5 top-1.5 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-semibold text-primary backdrop-blur">
+            <div className="relative h-14 w-full overflow-hidden">
+              <img src={card.image} alt={card.toCity} className="h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent" />
+              {/* Price badge top-right */}
+              <div className="absolute right-1.5 top-1.5 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold text-primary backdrop-blur">
                 {card.price}
               </div>
-              <Heart className="absolute bottom-1.5 right-1.5 h-3 w-3 text-white drop-shadow" />
-            </div>
-            <div className="px-2.5 py-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-medium">
-                <span>{card.from}</span>
-                <Plane className="h-3 w-3 text-primary" />
-                <span>{card.to}</span>
+              {/* Favorite bottom-right */}
+              <div className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-md bg-background/85 backdrop-blur">
+                <Heart className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
-              <div className="text-[10px] text-muted-foreground truncate">{card.date} · {card.airline}</div>
+            </div>
+            <div className="space-y-1 p-2">
+              {/* Cities with airport codes */}
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="min-w-0 flex-1 text-center">
+                  <div className="truncate text-[11px] font-semibold leading-tight">{card.fromCity}</div>
+                  <div className="text-[8.5px] font-bold tracking-wide text-primary">{card.fromCode}</div>
+                </div>
+                <span className="shrink-0 text-[11px] font-bold text-primary">→</span>
+                <div className="min-w-0 flex-1 text-center">
+                  <div className="truncate text-[11px] font-semibold leading-tight">{card.toCity}</div>
+                  <div className="text-[8.5px] font-bold tracking-wide text-primary">{card.toCode}</div>
+                </div>
+              </div>
+              {/* Date · pax · airline */}
+              <div className="flex items-center justify-between gap-1.5 text-[9px] text-muted-foreground">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex items-center gap-0.5">
+                    <CalendarIcon className="h-2.5 w-2.5" />
+                    {card.date}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Users className="h-2.5 w-2.5" />
+                    {card.pax}
+                  </span>
+                </div>
+                <span className="truncate text-right">{card.airline}</span>
+              </div>
+              {/* View Listing CTA */}
+              <div className="rounded-md bg-primary py-1 text-center text-[10px] font-semibold text-primary-foreground">
+                {c.viewCta}
+              </div>
             </div>
           </div>
         ))}
