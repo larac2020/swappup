@@ -14,8 +14,12 @@ import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
 
 type AuthMode = "login" | "signup" | "forgot";
 
-export function AuthForm() {
-  const [mode, setMode] = useState<AuthMode>("login");
+interface AuthFormProps {
+  initialMode?: "login" | "signup";
+}
+
+export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -392,9 +396,9 @@ export function AuthForm() {
               />
               <span className="leading-relaxed">
                 I have read and accept the{" "}
-                <Link to="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</Link>
+                <Link to="/terms-and-conditions" target="_blank" className="text-primary hover:underline">Terms of Service</Link>
                 {" "}and{" "}
-                <Link to="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>
+                <Link to="/privacy-policy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>
               </span>
             </label>
           )}
