@@ -29,6 +29,7 @@ serve(async (req) => {
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) {
+      await syncProfileFlag(user.id, false);
       return new Response(JSON.stringify({ hasPaymentMethod: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -42,8 +43,11 @@ serve(async (req) => {
       limit: 1,
     });
 
+    const hasPaymentMethod = paymentMethods.data.length > 0;
+    await syncProfileFlag(user.id, hasPaymentMethod);
+
     return new Response(
-      JSON.stringify({ hasPaymentMethod: paymentMethods.data.length > 0 }),
+      JSON.stringify({ hasPaymentMethod }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
@@ -55,3 +59,18 @@ serve(async (req) => {
     });
   }
 });
+
+async function syncProfileFlag(userId: string, hasPaymentMethod: boolean) {
+  try {
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    await admin
+      .from("profiles")
+      .update({ has_payment_method: hasPaymentMethod })
+      .eq("user_id", userId);
+  } catch (e) {
+    console.error("syncProfileFlag failed", e);
+  }
+}
