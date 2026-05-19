@@ -93,7 +93,7 @@ export default function Landing() {
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Buyer payments are held safely until the airline confirms the ticket is in their name.</span>
+                  <span>Buyer payments are held safely until the buyer confirms the ticket is in their name.</span>
                 </li>
               </ul>
             </div>

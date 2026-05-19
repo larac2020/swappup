@@ -72,7 +72,7 @@ const sections: Section[] = [
       },
       {
         q: "What happens to my money before I receive the ticket?",
-        a: "Your payment is held safely by Swappup. The seller is only paid once the airline confirms the name change into your name. If the transfer doesn't happen on time, you are refunded automatically.",
+        a: "Your payment is held safely by Swappup. The seller is only paid once you confirm the ticket has been transferred into your name. If the transfer doesn't happen on time, you are refunded automatically.",
       },
       {
         q: "What if the seller doesn't transfer the ticket?",
@@ -118,7 +118,7 @@ const sections: Section[] = [
       },
       {
         q: "What if I change my mind after buying?",
-        a: "Because tickets are tied to flight dates, all sales are final once the airline confirms the name change. Before that point, your payment is held safely and refundable if the transfer doesn't go through.",
+        a: "Because tickets are tied to flight dates, all sales are final once you confirm the ticket is in your name. Before that point, your payment is held safely and refundable if the transfer doesn't go through.",
       },
     ],
   },
