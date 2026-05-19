@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { landingContent, marketingMeta } from "@/i18n/marketingContent";
 import { PhoneMock } from "@/components/marketing/PhoneMock";
 import { useRef, useState } from "react";
+import swappupLogo from "@/assets/swappup-logo.png";
 
 export default function Landing() {
   const { locale } = useLanguage();
@@ -48,6 +49,13 @@ export default function Landing() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
           <div className="mx-auto max-w-3xl text-center space-y-6">
+            <div className="flex justify-center">
+              <img
+                src={swappupLogo}
+                alt="Swappup"
+                className="h-16 w-auto sm:h-20 md:h-24"
+              />
+            </div>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               {c.heroTitle1} <span className="text-primary">{c.heroTitle2}</span>
             </h1>
