@@ -1,4 +1,4 @@
-import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon } from "lucide-react";
+import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ScreenKind = "browse" | "sell";
@@ -45,7 +45,10 @@ const sellCopy = {
     toCountry: "Spain",
     toCity: "Barcelona (BCN)",
     dateHeader: "Flight date",
-    date: "Sat 6 Jun · 09:25",
+    dateLabel: "Date",
+    timeLabel: "Time",
+    date: "Sat 6 Jun",
+    time: "09:25",
     airlineHeader: "Airline & flight",
     airlineLabel: "Airline",
     airline: "easyJet",
@@ -57,6 +60,8 @@ const sellCopy = {
     listingLabel: "Listing price",
     listingPrice: "£89",
     publish: "Continue",
+    feeTitle: "Name-change fee",
+    feeBody: "easyJet allows transfers. The buyer pays £25 directly to the airline at checkout.",
   },
   it: {
     title: "Vendi il tuo biglietto",
@@ -69,7 +74,10 @@ const sellCopy = {
     toCountry: "Spagna",
     toCity: "Barcellona (BCN)",
     dateHeader: "Data del volo",
-    date: "Sab 6 giu · 09:25",
+    dateLabel: "Data",
+    timeLabel: "Ora",
+    date: "Sab 6 giu",
+    time: "09:25",
     airlineHeader: "Compagnia e volo",
     airlineLabel: "Compagnia",
     airline: "Vueling",
@@ -81,6 +89,8 @@ const sellCopy = {
     listingLabel: "Prezzo di vendita",
     listingPrice: "€95",
     publish: "Continua",
+    feeTitle: "Costo cambio nome",
+    feeBody: "Vueling consente il trasferimento. L'acquirente paga €55 direttamente alla compagnia al checkout.",
   },
 } as const;
 
@@ -211,10 +221,13 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
           </div>
         </div>
 
-        {/* Date */}
+        {/* Date + Time (one-way) */}
         <SectionHeader icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader} />
         <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
-          <Field value={c.date} />
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.dateLabel} value={c.date} />
+            <Field label={c.timeLabel} value={c.time} />
+          </div>
         </div>
 
         {/* Airline & flight */}
@@ -223,6 +236,15 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.airlineLabel} value={c.airline} />
             <Field label={c.flightLabel} value={c.flightNo} />
+          </div>
+        </div>
+
+        {/* Name-change fee notice (transferability check) */}
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-2 flex gap-1.5">
+          <Info className="h-3 w-3 shrink-0 text-primary mt-[1px]" />
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-semibold text-foreground">{c.feeTitle}</div>
+            <div className="text-[9.5px] leading-snug text-muted-foreground">{c.feeBody}</div>
           </div>
         </div>
 
