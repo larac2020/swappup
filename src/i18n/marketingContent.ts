@@ -40,8 +40,8 @@ export const marketingMeta = {
 
 export const landingContent = {
   en: {
-    heroTitle1: "Don't cancel your flight.",
-    heroTitle2: "Swap it.",
+    heroTitle1: "Don't miss out on your flight ticket.",
+    heroTitle2: "Swappup it.",
     heroSubtitle:
       "Plans changed? List your ticket for free and get your money back. Need a seat? Grab one from someone who can't fly anymore — usually for less than the airline charges.",
     ctaGetStarted: "Get started",
@@ -78,8 +78,8 @@ export const landingContent = {
     finalLogin: "Login",
   },
   it: {
-    heroTitle1: "Non cancellare il tuo volo.",
-    heroTitle2: "Scambialo.",
+    heroTitle1: "Non perdere il tuo biglietto aereo.",
+    heroTitle2: "Swappalo.",
     heroSubtitle:
       "Hai cambiato programma? Metti in vendita il tuo biglietto gratis e riprenditi i tuoi soldi. Cerchi un posto? Prendine uno da chi non può più volare — di solito spendi meno che con la compagnia aerea.",
     ctaGetStarted: "Inizia ora",
