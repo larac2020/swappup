@@ -56,8 +56,9 @@ export default function About() {
 
           <h2>How we keep it safe</h2>
           <p>
-            Every user is ID-verified. Every purchase is held in escrow until the
-            airline name change is confirmed. Sellers have a strict 24-hour deadline
+            Every user is ID-verified. Every payment is held safely by Swappup
+            until the airline confirms the ticket is in the buyer&apos;s name.
+            Sellers have a strict 24-hour deadline
             to complete the transfer, and buyers are refunded automatically if they
             don&apos;t. Our anti-fraud system blocks self-dealing and unrealistic
             prices before they ever reach the marketplace.
