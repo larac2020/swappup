@@ -73,7 +73,7 @@ export default function ResetPassword() {
       toast({ title: "Password updated", description: "You can now sign in with your new password." });
       // Sign out the recovery session so the user signs in with the new password.
       await supabase.auth.signOut();
-      navigate("/");
+      navigate("/login");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
@@ -94,7 +94,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">Invalid or expired reset link.</p>
-          <Button variant="gold" onClick={() => navigate("/")}>Back to Sign In</Button>
+          <Button variant="gold" onClick={() => navigate("/login")}>Back to Sign In</Button>
         </div>
       </div>
     );

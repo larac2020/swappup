@@ -63,7 +63,7 @@ export default function PrivacyData() {
       const { error } = await supabase.functions.invoke("delete-account", { body: { userId: user!.id } });
       if (error) throw error;
     },
-    onSuccess: async () => { toast.success(t("privacyDeleteSuccess")); await signOut(); navigate("/"); },
+    onSuccess: async () => { toast.success(t("privacyDeleteSuccess")); await signOut(); navigate("/login"); },
     onError: () => toast.error(t("privacyDeleteFailed")),
   });
 
