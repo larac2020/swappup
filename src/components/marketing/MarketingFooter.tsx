@@ -25,6 +25,11 @@ export function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
+                  FAQ &amp; Help
+                </Link>
+              </li>
+              <li>
                 <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-foreground transition-colors">
                   Terms &amp; Conditions
                 </Link>
