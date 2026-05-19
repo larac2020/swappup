@@ -14,13 +14,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
-import { getCurrencySymbol } from "@/lib/currency";
+import { formatPrice } from "@/lib/currency";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 export default function Faq() {
   const { locale } = useLanguage();
   const c = faqContent[locale];
   const meta = marketingMeta.faq;
   const location = useLocation();
+  const displayCurrency = useDisplayCurrency();
 
   // Smooth-scroll to anchor (e.g. /faq#supported-airlines) after content renders.
   useEffect(() => {
@@ -214,16 +216,23 @@ export default function Faq() {
                 </li>
               )}
               {transferable.map((a) => {
-                const fee = a.fee_max ?? a.fee_amount ?? 0;
-                const sym = getCurrencySymbol(a.currency || "EUR");
+                const fee = Number(a.fee_max ?? a.fee_amount ?? 0);
+                const nativeCurrency = (a.currency || "EUR").toUpperCase();
+                const display = formatPrice(fee, nativeCurrency, displayCurrency, { decimals: 0 });
+                const showNative = nativeCurrency !== displayCurrency && fee > 0;
                 return (
                   <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
                     <span className="flex items-center gap-2 text-sm font-medium">
                       <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                       {a.airline_name}
                     </span>
-                    <span className="text-right text-sm font-semibold tabular-nums">
-                      {sym}{Number(fee).toFixed(2)} {(a.currency || "EUR").toUpperCase()}
+                    <span className="text-right text-sm font-semibold tabular-nums leading-tight">
+                      <span className="block">{display}</span>
+                      {showNative && (
+                        <span className="block text-[11px] font-normal text-muted-foreground">
+                          {formatPrice(fee, nativeCurrency, nativeCurrency, { decimals: 0 })}
+                        </span>
+                      )}
                     </span>
                     <span className="text-right text-xs text-muted-foreground tabular-nums">
                       {formatVerified(a)}
@@ -242,8 +251,8 @@ export default function Faq() {
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
-              ? "Le tariffe indicate sono per persona, per volo, e sono soggette alle policy ufficiali della compagnia aerea. Se noti una discrepanza, segnalala dalla pagina di pubblicazione: riverifichiamo automaticamente la fonte ufficiale."
-              : "Fees shown are per person, per flight, and follow the airline's official policy. If you spot a discrepancy, flag it from the listing page — we automatically re-verify against the airline's source."}
+              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione: riverifichiamo automaticamente la fonte ufficiale.`
+              : `Fees are per person, per flight, taken from the airline's official policy. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page — we automatically re-verify against the airline's source.`}
           </p>
         </section>
       </section>
