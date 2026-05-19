@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/currency";
 
 export default function Faq() {
@@ -48,7 +48,6 @@ export default function Faq() {
   });
 
   const transferable = (supportedAirlines ?? []).filter((a) => a.is_transferable);
-  const nonTransferable = (supportedAirlines ?? []).filter((a) => !a.is_transferable);
 
   const formatVerified = (a: { last_verified_at?: string | null; updated_at?: string | null }) => {
     const verified = a.last_verified_at ?? a.updated_at;
@@ -196,17 +195,13 @@ export default function Faq() {
               </h2>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {locale === "it"
-                  ? "Qui sotto trovi due elenchi: le compagnie che permettono il cambio nome (con la tariffa ufficiale, verificata sul sito della compagnia) e quelle che non lo consentono. Su Swappup puoi pubblicare biglietti solo delle compagnie del primo elenco."
-                  : "Below you'll find two lists: airlines that allow name changes (with their official fee, verified against the airline's policy page) and airlines that don't. On Swappup you can only list tickets from the first group."}
+                  ? "Su Swappup puoi pubblicare biglietti solo delle compagnie elencate qui sotto, perché sono le uniche che consentono il trasferimento del nominativo. La tariffa di cambio nome è verificata sul sito ufficiale della compagnia ed è inclusa in trasparenza al momento dell'acquisto."
+                  : "On Swappup you can list tickets only from the airlines below — they are the ones that allow name transfers. The name-change fee is verified against the airline's official policy page and shown transparently at checkout."}
               </p>
             </div>
           </div>
 
-          {/* Allowed airlines */}
-          <h3 className="mt-8 text-base font-semibold text-foreground">
-            {locale === "it" ? "Compagnie che permettono il cambio nome" : "Airlines that allow name changes"}
-          </h3>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-border/50">
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
             <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
               <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
@@ -244,38 +239,6 @@ export default function Faq() {
             </ul>
           </div>
 
-          {/* Non-transferable airlines */}
-          <h3 className="mt-8 text-base font-semibold text-foreground">
-            {locale === "it" ? "Compagnie che non permettono il cambio nome" : "Airlines that don't allow name changes"}
-          </h3>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-border/50">
-            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
-              <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
-              <span className="text-right">{locale === "it" ? "Verificata il" : "Verified on"}</span>
-            </div>
-            <ul className="divide-y divide-border/50">
-              {nonTransferable.map((a) => (
-                <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
-                    {a.airline_name}
-                  </span>
-                  <span className="text-right text-sm font-medium text-muted-foreground tabular-nums">
-                    {locale === "it" ? "N/D" : "N/A"}
-                  </span>
-                  <span className="text-right text-xs text-muted-foreground tabular-nums">
-                    {formatVerified(a)}
-                  </span>
-                </li>
-              ))}
-              {supportedAirlines && nonTransferable.length === 0 && (
-                <li className="px-4 py-6 text-sm text-muted-foreground">
-                  {locale === "it" ? "Nessuna compagnia in questo elenco." : "No airlines in this list."}
-                </li>
-              )}
-            </ul>
-          </div>
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
