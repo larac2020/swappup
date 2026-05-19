@@ -84,14 +84,14 @@ export const landingContent = {
     heroTitle1: "Non perdere il tuo biglietto aereo.",
     heroTitle2: "Swappalo.",
     heroSubtitle:
-      "Hai cambiato programma? Metti in vendita il tuo biglietto gratis e riprenditi i tuoi soldi. Cerchi un posto? Prendine uno da chi non può più volare — di solito spendi meno che con la compagnia aerea.",
+      "Hai cambiato programma? Metti in vendita il tuo biglietto gratis e ricopri le spese.\nCerchi un nuovo viaggio? Compra un biglietto da chi non può più volare, a meno del prezzo originale.",
     ctaGetStarted: "Inizia ora",
     ctaHaveAccount: "Ho già un account",
     browseCaption: "Sfoglia e cerca con l'AI i posti messi in vendita da viaggiatori veri.",
     sellCaption: "Fai una foto al tuo biglietto — al resto pensiamo noi.",
     demoEyebrow: "Guarda com'è facile",
-    demoTitle: "Dall'upload all'incasso, in meno di un minuto.",
-    demoSubtitle: "Carica il tuo biglietto, lasciaci compilare i dettagli e pubblica. Gli acquirenti lo trovano con la ricerca smart — tu vieni pagato appena il cambio nome va a buon fine.",
+    demoTitle: "Dall'upload alla vendita, in meno di un minuto.",
+    demoSubtitle: "Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click. In cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.",
     sellTitle: "Trasforma i biglietti inutilizzati in denaro",
     sellBody:
       "La maggior parte delle compagnie aeree non rimborsa il biglietto se cambi programma. Swappup ti aiuta a recuperare quei soldi — qualcun altro prende il tuo posto e tu ti porti a casa il valore del biglietto.",

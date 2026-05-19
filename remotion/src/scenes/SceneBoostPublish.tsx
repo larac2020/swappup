@@ -13,6 +13,9 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
   const pressScale = tapped ? interpolate(tapScale, [0, 0.5, 1], [1, 0.93, 1]) : 1;
   const toggleOn = toggle > 0.4;
 
+  const feeReveal = spring({ frame: frame - 50, fps, config: { damping: 18 } });
+  const feeY = interpolate(feeReveal, [0, 1], [12, 0]);
+
   return (
     <SceneLayout
       left={
@@ -68,7 +71,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
           </div>
 
           {/* Boost pricing options — appear when toggle on, first auto-selected */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, opacity: optsReveal }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, opacity: optsReveal }}>
             {c.s3_boost_options.map((opt, i) => {
               const selected = i === 0;
               const reveal = spring({ frame: frame - 30 - i * 5, fps, config: { damping: 18 } });
@@ -76,8 +79,8 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                 <div
                   key={i}
                   style={{
-                    padding: "10px 12px",
-                    borderRadius: 12,
+                    padding: "8px 12px",
+                    borderRadius: 10,
                     border: selected ? `2px solid ${theme.primary}` : `1px solid ${theme.border}`,
                     background: selected ? `${theme.primary}15` : theme.surface,
                     display: "flex",
@@ -92,14 +95,39 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                     {selected && (
                       <span style={{ width: 14, height: 14, borderRadius: 999, background: theme.primary, color: "#000", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900 }}>✓</span>
                     )}
-                    <span style={{ fontSize: 12, fontWeight: selected ? 700 : 600, color: selected ? theme.primary : theme.text }}>
+                    <span style={{ fontSize: 11, fontWeight: selected ? 700 : 600, color: selected ? theme.primary : theme.text }}>
                       🔥 {opt.label}
                     </span>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: selected ? theme.primary : theme.muted }}>{opt.price}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: selected ? theme.primary : theme.muted }}>{opt.price}</span>
                 </div>
               );
             })}
+          </div>
+
+          {/* Payout breakdown */}
+          <div
+            style={{
+              marginTop: 10,
+              opacity: feeReveal,
+              transform: `translateY(${feeY}px)`,
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: `1px solid ${theme.border}`,
+              background: theme.surface,
+              display: "flex",
+              flexDirection: "column",
+              gap: 5,
+            }}
+          >
+            <div style={{ fontSize: 10, color: theme.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>
+              {c.s3_fee_title}
+            </div>
+            <FeeRow label={c.s3_fee_listing} value={c.s3_fee_listing_value} />
+            <FeeRow label={c.s3_fee_namechange} value={c.s3_fee_namechange_value} negative />
+            <FeeRow label={c.s3_fee_platform} value={c.s3_fee_platform_value} negative />
+            <div style={{ height: 1, background: theme.border, margin: "2px 0" }} />
+            <FeeRow label={c.s3_fee_payout} value={c.s3_fee_payout_value} bold />
           </div>
 
           <div style={{ flex: 1 }} />
@@ -128,6 +156,13 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
     />
   );
 };
+
+const FeeRow: React.FC<{ label: string; value: string; bold?: boolean; negative?: boolean }> = ({ label, value, bold, negative }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+    <span style={{ fontSize: bold ? 12 : 10, color: bold ? theme.text : theme.muted, fontWeight: bold ? 700 : 500 }}>{label}</span>
+    <span style={{ fontSize: bold ? 13 : 11, color: bold ? theme.primary : negative ? "#ef4444" : theme.text, fontWeight: bold ? 800 : 700 }}>{value}</span>
+  </div>
+);
 
 const Cursor: React.FC<{ frame: number }> = ({ frame }) => {
   // Move to toggle, then to publish button
