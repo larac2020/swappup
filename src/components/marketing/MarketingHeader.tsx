@@ -13,11 +13,7 @@ export function MarketingHeader() {
           <img src={swappupLogo} alt="Swappup" className="h-9 w-auto" />
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            About
-          </Link>
-        </nav>
+        <nav className="hidden items-center gap-6 md:flex" aria-hidden="true" />
 
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
