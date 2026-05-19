@@ -1,4 +1,4 @@
-import { Calendar, Users, Heart, ShoppingCart } from "lucide-react";
+import { Calendar, Users, Heart, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -261,15 +261,14 @@ export function ListingCard({
             </>
           )}
 
-          {/* Add to Cart CTA */}
+          {/* View Listing CTA */}
           <Button
             size="sm"
             className="w-full gap-2 h-8 text-xs"
-            onClick={handleAddToCart}
-            disabled={addToCart.isPending}
+            onClick={(e) => { e.stopPropagation(); navigate(`/listing/${id}`); }}
           >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            {t("cardAddToCart")}
+            <Eye className="w-3.5 h-3.5" />
+            {t("cardViewListing")}
           </Button>
         </div>
       </div>
