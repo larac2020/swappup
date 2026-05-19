@@ -31,16 +31,12 @@ export default function Landing() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
           <div className="mx-auto max-w-3xl text-center space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-secondary/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Peer-to-peer flight ticket marketplace
-            </div>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               Don&apos;t cancel your flight. <span className="text-primary">Swap it.</span>
             </h1>
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Plans changed? List your ticket and recover its value. Need a seat? Buy one
-              from a real traveller, often well below the airline&apos;s price.
+              Plans changed? List your ticket for free and recover its value. Need a seat?
+              Buy one from a real traveller, often well below the airline&apos;s price.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
               <Button asChild variant="gold" size="lg" className="min-w-44">
