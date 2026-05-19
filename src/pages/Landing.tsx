@@ -17,7 +17,7 @@ export default function Landing() {
         <meta property="og:title" content="Swappup — Buy & resell unused flight tickets" />
         <meta
           property="og:description"
-          content="Recover value from unused flights and buy seats from real travellers. Secure escrow, ID-verified users."
+          content="Recover value from unused flights and buy seats from real travellers. Payments held safely until the ticket is in your name. ID-verified users."
         />
         <meta property="og:url" content="https://swappup.com/" />
         <meta property="og:type" content="website" />
@@ -93,7 +93,7 @@ export default function Landing() {
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Funds held in escrow until the airline name change is done.</span>
+                  <span>Buyer payments are held safely until the airline confirms the ticket is in their name.</span>
                 </li>
               </ul>
             </div>
@@ -143,8 +143,8 @@ export default function Landing() {
               },
               {
                 icon: ShieldCheck,
-                title: "Secure escrow",
-                body: "Buyer funds are held until the ticket is officially in your name.",
+                title: "Protected payments",
+                body: "Buyer payments are held safely and only released once the ticket is officially in their name.",
               },
               {
                 icon: BadgeCheck,
