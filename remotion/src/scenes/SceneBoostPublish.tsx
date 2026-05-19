@@ -46,7 +46,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                 height: 22,
                 borderRadius: 999,
                 background: `${theme.bg}`,
-                border: `1px solid ${interpolate(toggle, [0, 1], [theme.border, theme.primary] as any) || theme.primary}`,
+                border: `1px solid ${toggle > 0.4 ? theme.primary : theme.border}`,
                 position: "relative",
                 transition: "none",
               }}
@@ -58,7 +58,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                   left: interpolate(toggle, [0, 1], [2, 18]),
                   width: 16,
                   height: 16,
-                  background: interpolate(toggle, [0, 1], [theme.muted, theme.primary] as any) as string || theme.primary,
+                  background: toggle > 0.4 ? theme.primary : theme.muted,
                   borderRadius: 999,
                 }}
               />
