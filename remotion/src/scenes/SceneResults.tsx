@@ -1,4 +1,4 @@
-import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { useCurrentFrame, useVideoConfig, spring, interpolate, Img } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
 import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
@@ -44,9 +44,8 @@ export const SceneResults: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
                       overflow: "hidden",
                     }}
                   >
-                    <img
+                    <Img
                       src={card.image}
-                      alt=""
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%)" }} />
