@@ -51,6 +51,30 @@ export const SceneAutofill: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
           </div>
           <div style={{ flex: 1 }} />
           {(() => {
+            const note = spring({ frame: frame - 22, fps, config: { damping: 18 } });
+            return (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: `${theme.primary}12`,
+                  border: `1px solid ${theme.primary}40`,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "flex-start",
+                  opacity: note,
+                  transform: `translateY(${interpolate(note, [0, 1], [8, 0])}px)`,
+                }}
+              >
+                <span style={{ fontSize: 13, lineHeight: 1 }}>ℹ️</span>
+                <span style={{ fontSize: 10.5, lineHeight: 1.35, color: theme.text, fontWeight: 500 }}>
+                  {c.s2_note}
+                </span>
+              </div>
+            );
+          })()}
+          {(() => {
             const cta = spring({ frame: frame - 30, fps, config: { damping: 18 } });
             return (
               <div
