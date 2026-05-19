@@ -11,7 +11,9 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingHeader />
       <main className="flex-1">{children}</main>
-      <MarketingFooter />
+      <div className="hidden md:block">
+        <MarketingFooter />
+      </div>
     </div>
   );
 }
