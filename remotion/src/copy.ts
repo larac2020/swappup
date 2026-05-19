@@ -19,6 +19,7 @@ export const copy = {
     s2_title: "Verify the details and set your sale price",
     s2_screen: "Sell Your Ticket",
     s2_cta: "Next",
+    s2_note: "Name change fee for easyJet: £25 — paid by the buyer to the airline at checkout.",
     s2_fields: [
       { label: "From", value: "London (LGW)" },
       { label: "To", value: "Barcelona (BCN)" },
@@ -43,6 +44,8 @@ export const copy = {
     s3_fee_listing_value: "£89.00",
     s3_fee_platform: "Swappup fee (20%)",
     s3_fee_platform_value: "-£17.80",
+    s3_fee_namechange: "Name change fee (paid by buyer)",
+    s3_fee_namechange_value: "£25.00",
     s3_fee_payout: "You receive",
     s3_fee_payout_value: "£71.20",
     s4_eyebrow: "Search for your next adventure",
@@ -97,6 +100,7 @@ export const copy = {
     s2_title: "Verifica i dettagli e scegli il prezzo di vendita",
     s2_screen: "Vendi il tuo biglietto",
     s2_cta: "Avanti",
+    s2_note: "Costo cambio nome Vueling: €55 — pagato dall'acquirente alla compagnia al checkout.",
     s2_fields: [
       { label: "Da", value: "Milano (MXP)" },
       { label: "A", value: "Barcellona (BCN)" },
@@ -121,6 +125,8 @@ export const copy = {
     s3_fee_listing_value: "€95,00",
     s3_fee_platform: "Commissione Swappup (20%)",
     s3_fee_platform_value: "-€19,00",
+    s3_fee_namechange: "Cambio nome (pagato dall'acquirente)",
+    s3_fee_namechange_value: "€55,00",
     s3_fee_payout: "Ricevi",
     s3_fee_payout_value: "€76,00",
     s4_eyebrow: "Cerca la tua prossima avventura",
