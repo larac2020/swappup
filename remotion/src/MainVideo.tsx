@@ -9,11 +9,11 @@ import { SceneAutofill } from "./scenes/SceneAutofill";
 import { SceneBoostPublish } from "./scenes/SceneBoostPublish";
 import { SceneAISearch } from "./scenes/SceneAISearch";
 import { SceneResults } from "./scenes/SceneResults";
+import { SceneCheckout } from "./scenes/SceneCheckout";
 import { ScenePayout } from "./scenes/ScenePayout";
 import { SceneOutro } from "./scenes/SceneOutro";
 
-// ~22s @ 30fps = 654 frames, with 6 transitions of 12 frames overlap = -72
-// Scene totals: 90+108+126+90+108+108+96 = 726, minus 72 = 654
+// Scene totals: 90+108+126+90+108+108+108+96 = 834, minus 7*12 = 750
 const TR = 12;
 
 export const MainVideo: React.FC<{ locale: Locale }> = ({ locale }) => {
@@ -40,6 +40,10 @@ export const MainVideo: React.FC<{ locale: Locale }> = ({ locale }) => {
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
         <TransitionSeries.Sequence durationInFrames={108}>
           <SceneResults c={c} />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
+        <TransitionSeries.Sequence durationInFrames={108}>
+          <SceneCheckout c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
         <TransitionSeries.Sequence durationInFrames={108}>
