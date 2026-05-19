@@ -88,9 +88,29 @@ export const SceneCheckout: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
               {c.s5b_summary}
             </div>
             <Row label={c.s5b_ticket} value={c.s5b_ticket_value} />
-            <Row label={c.s5b_fee} value={c.s5b_fee_value} />
             <div style={{ height: 1, background: theme.border, margin: "2px 0" }} />
             <Row label={c.s5b_total} value={c.s5b_total_value} bold />
+          </div>
+
+          {/* Escrow note */}
+          <div
+            style={{
+              opacity: sumSpring,
+              transform: `translateY(${sumY}px)`,
+              marginTop: 10,
+              padding: "10px 12px",
+              borderRadius: 12,
+              background: `${theme.primary}10`,
+              border: `1px solid ${theme.primary}40`,
+              display: "flex",
+              gap: 8,
+              alignItems: "flex-start",
+            }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1.2 }}>🔒</span>
+            <span style={{ fontSize: 10, color: theme.text, lineHeight: 1.4, fontWeight: 500 }}>
+              {c.s5b_note}
+            </span>
           </div>
 
           <div style={{ flex: 1 }} />
