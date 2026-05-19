@@ -56,7 +56,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error creating setup intent:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("create-setup-intent error", error);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

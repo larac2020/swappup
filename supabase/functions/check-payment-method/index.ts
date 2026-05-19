@@ -48,7 +48,8 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("check-payment-method error:", error);
-    return new Response(JSON.stringify({ error: error.message, hasPaymentMethod: false }), {
+    console.error("check-payment-method error", error);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred", hasPaymentMethod: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
