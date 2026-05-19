@@ -251,8 +251,8 @@ export default function Faq() {
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
-              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione: riverifichiamo automaticamente la fonte ufficiale.`
-              : `Fees are per person, per flight, taken from the airline's official policy. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page — we automatically re-verify against the airline's source.`}
+              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Verifichiamo automaticamente le pagine ufficiali ogni poche ore. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
+              : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify each airline's official page every few hours. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
           </p>
         </section>
       </section>

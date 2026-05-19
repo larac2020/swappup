@@ -8,32 +8,113 @@ const corsHeaders = {
 
 const STALE_DAYS = 14;
 const BATCH_SIZE = 5;
-const FIRECRAWL = "https://api.firecrawl.dev/v2/search";
+const FIRECRAWL_SEARCH = "https://api.firecrawl.dev/v2/search";
+const FIRECRAWL_SCRAPE = "https://api.firecrawl.dev/v2/scrape";
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-async function liveLookup(airline: string, routeType: string): Promise<any | null> {
+// Canonical official sources per airline. Used first; falls back to web search.
+const AIRLINE_SOURCES: Record<string, string> = {
+  ryanair: "https://www.ryanair.com/gb/en/useful-info/help-centre/faq-overview/Fees",
+  easyjet: "https://www.easyjet.com/en/help/booking-and-changes/change-name-on-booking",
+  wizzair: "https://wizzair.com/en-gb/information-and-services/travel-information/travel-conditions/general-conditions-of-carriage",
+  vueling: "https://www.vueling.com/en/customer-services/before-you-fly/changes-to-your-booking",
+  volotea: "https://www.volotea.com/en/faqs/changes-bookings/",
+  air_europa: "https://www.aireuropa.com/gb/en/aea/general-information/customer-service/change-or-cancel-a-flight.html",
+  iberia: "https://www.iberia.com/gb/manage/changes-cancellations/",
+  ita_airways: "https://www.ita-airways.com/en_en/fly-ita/before-the-flight/changes-and-cancellations.html",
+  tap_air_portugal: "https://www.flytap.com/en-gb/booking/manage-booking",
+  eurowings: "https://www.eurowings.com/en/booking/general-conditions-of-carriage.html",
+  aer_lingus: "https://www.aerlingus.com/help/help/your-booking/change-flight/",
+  pegasus: "https://www.flypgs.com/en/help/general-rules",
+  sunexpress: "https://www.sunexpress.com/en/customer-service/booking-and-pricing/",
+  play: "https://www.flyplay.com/en/customer-service/before-you-fly/changes-to-your-booking",
+  british_airways: "https://www.britishairways.com/en-gb/information/help-and-contacts/faqs/changing-your-booking",
+  norwegian: "https://www.norwegian.com/uk/travel-info/booking/change-flight/",
+  icelandair: "https://www.icelandair.com/support/booking/changes-and-cancellation/",
+  airasia: "https://support.airasia.com/s/article/Add-on-Booking-Fees",
+  jetstar: "https://www.jetstar.com/au/en/help/articles/change-name-on-booking",
+  scoot: "https://www.flyscoot.com/en/plan/help/faqs",
+  cebu_pacific: "https://www.cebupacificair.com/help/manage-booking/change-flight",
+  indigo: "https://www.goindigo.in/information/booking-and-cancellation.html",
+  flydubai: "https://www.flydubai.com/en/help-and-contact/changes-to-my-booking",
+  delta: "https://www.delta.com/us/en/change-cancel/overview",
+  united: "https://www.united.com/ual/en/us/fly/help/changes.html",
+  american_airlines: "https://www.aa.com/i18n/travel-info/changing-your-trip.jsp",
+  swiss: "https://www.swiss.com/us/en/prepare/rebooking-refund",
+};
+
+// Sanity bounds (in EUR-equivalent). Anything outside this is rejected.
+const MIN_FEE_EUR = 0;
+const MAX_FEE_EUR = 500;
+// Rough FX for sanity-check only (mirrors src/lib/currency.ts rates per 1 EUR).
+const FX_PER_EUR: Record<string, number> = {
+  EUR: 1, GBP: 0.85, USD: 1.08, CHF: 0.95, NOK: 11.5, ISK: 150, MYR: 5.1,
+  AUD: 1.65, SGD: 1.45, PHP: 62, INR: 92,
+};
+
+function toEur(amount: number, currency: string): number {
+  const rate = FX_PER_EUR[currency?.toUpperCase()] ?? 1;
+  return amount / rate;
+}
+
+async function scrapeCanonical(url: string): Promise<{ markdown: string; url: string } | null> {
+  const FIRECRAWL_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!FIRECRAWL_KEY) return null;
+  try {
+    const res = await fetch(FIRECRAWL_SCRAPE, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const md = data?.data?.markdown || data?.markdown || "";
+    if (!md || md.length < 200) return null;
+    return { markdown: md.slice(0, 12000), url };
+  } catch {
+    return null;
+  }
+}
+
+async function liveLookup(airline: string, routeType: string, airlineCode: string): Promise<any | null> {
   const FIRECRAWL_KEY = Deno.env.get("FIRECRAWL_API_KEY");
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!FIRECRAWL_KEY || !LOVABLE_API_KEY) return null;
 
-  const sres = await fetch(FIRECRAWL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `${airline} name change correction fee official policy`,
-      limit: 3,
-      scrapeOptions: { formats: ["markdown"] },
-    }),
-  });
-  if (!sres.ok) return null;
-  const sdata = await sres.json();
-  const results = sdata?.data?.web ?? sdata?.data ?? [];
-  const corpus = (Array.isArray(results) ? results : [])
-    .slice(0, 3)
-    .map((r: any) => `# ${r.title || ""}\nURL: ${r.url}\n\n${(r.markdown || "").slice(0, 6000)}`)
-    .join("\n\n---\n\n");
-  const sourceUrl = (Array.isArray(results) && results[0]?.url) || null;
-  if (!corpus) return null;
+  let corpus = "";
+  let sourceUrl: string | null = null;
+
+  // 1) Try the canonical official source first.
+  const canonical = AIRLINE_SOURCES[airlineCode];
+  if (canonical) {
+    const scraped = await scrapeCanonical(canonical);
+    if (scraped) {
+      corpus = `# Official ${airline}\nURL: ${scraped.url}\n\n${scraped.markdown}`;
+      sourceUrl = scraped.url;
+    }
+  }
+
+  // 2) Fallback: web search across top results.
+  if (!corpus) {
+    const sres = await fetch(FIRECRAWL_SEARCH, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `${airline} name change correction fee official policy`,
+        limit: 3,
+        scrapeOptions: { formats: ["markdown"] },
+      }),
+    });
+    if (!sres.ok) return null;
+    const sdata = await sres.json();
+    const results = sdata?.data?.web ?? sdata?.data ?? [];
+    corpus = (Array.isArray(results) ? results : [])
+      .slice(0, 3)
+      .map((r: any) => `# ${r.title || ""}\nURL: ${r.url}\n\n${(r.markdown || "").slice(0, 6000)}`)
+      .join("\n\n---\n\n");
+    sourceUrl = (Array.isArray(results) && results[0]?.url) || null;
+    if (!corpus) return null;
+  }
 
   const ai = await fetch(AI_URL, {
     method: "POST",
@@ -106,28 +187,125 @@ Deno.serve(async (req) => {
   const results: any[] = [];
   for (const r of rows ?? []) {
     try {
-      const live = await liveLookup(r.airline_name, r.route_type);
+      const live = await liveLookup(r.airline_name, r.route_type, r.airline_code);
       if (!live) {
         results.push({ airline_code: r.airline_code, status: "skip" });
         continue;
       }
-      const upsertRow = {
-        airline_code: r.airline_code,
-        airline_name: r.airline_name,
-        route_type: r.route_type,
-        fee_amount: Number(live.fee_max ?? live.fee_amount) || 0,
-        fee_max: live.fee_max ?? null,
-        currency: live.currency || "EUR",
-        is_transferable: live.is_transferable !== false,
-        confidence: live.confidence || "medium",
-        source_url: live.source_url || null,
-        notes: live.notes || null,
-        last_verified_at: new Date().toISOString(),
-      };
-      await supabase
+
+      // Read existing live row to compare against the proposal.
+      const { data: existing } = await supabase
         .from("airline_change_fees")
-        .upsert(upsertRow, { onConflict: "airline_code,route_type" });
-      results.push({ airline_code: r.airline_code, status: "updated", is_transferable: upsertRow.is_transferable });
+        .select("fee_amount, currency, is_transferable")
+        .eq("airline_code", r.airline_code)
+        .eq("route_type", r.route_type)
+        .maybeSingle();
+
+      const proposedFee = Number(live.fee_max ?? live.fee_amount) || 0;
+      const proposedCurrency = (live.currency || existing?.currency || "EUR").toUpperCase();
+      const proposedXfer = live.is_transferable !== false;
+      const confidence = live.confidence || "medium";
+
+      // Sanity bounds check (in EUR equivalent).
+      const feeEur = toEur(proposedFee, proposedCurrency);
+      const outOfBounds = feeEur < MIN_FEE_EUR || feeEur > MAX_FEE_EUR;
+
+      // Confidence gate.
+      const lowConfidence = confidence === "low";
+
+      // Large delta vs current live value.
+      let largeDelta = false;
+      if (existing && existing.fee_amount != null && existing.currency) {
+        const currentEur = toEur(Number(existing.fee_amount), existing.currency);
+        const deltaEur = Math.abs(feeEur - currentEur);
+        const ratio = currentEur > 0 ? deltaEur / currentEur : (feeEur > 0 ? 1 : 0);
+        if (deltaEur > 50 || ratio > 0.4) largeDelta = true;
+      }
+
+      const quarantineReason = outOfBounds ? "out_of_bounds"
+        : lowConfidence ? "low_confidence"
+        : largeDelta ? "large_delta"
+        : null;
+
+      const nowIso = new Date().toISOString();
+
+      if (quarantineReason) {
+        // Don't overwrite live row. Bump last_verified_at, log to history (rejected),
+        // and enqueue for review.
+        await supabase
+          .from("airline_change_fees")
+          .update({ last_verified_at: nowIso })
+          .eq("airline_code", r.airline_code)
+          .eq("route_type", r.route_type);
+
+        await supabase.from("airline_fee_review_queue").insert({
+          airline_code: r.airline_code,
+          airline_name: r.airline_name,
+          route_type: r.route_type,
+          current_fee: existing?.fee_amount ?? null,
+          current_currency: existing?.currency ?? null,
+          current_is_transferable: existing?.is_transferable ?? null,
+          proposed_fee: proposedFee,
+          proposed_currency: proposedCurrency,
+          proposed_is_transferable: proposedXfer,
+          reason: quarantineReason,
+          source_url: live.source_url || null,
+          confidence,
+          notes: live.notes || null,
+        });
+
+        await supabase.from("airline_change_fee_history").insert({
+          airline_code: r.airline_code,
+          route_type: r.route_type,
+          previous_fee: existing?.fee_amount ?? null,
+          new_fee: proposedFee,
+          previous_currency: existing?.currency ?? null,
+          new_currency: proposedCurrency,
+          previous_is_transferable: existing?.is_transferable ?? null,
+          new_is_transferable: proposedXfer,
+          source_url: live.source_url || null,
+          confidence,
+          accepted: false,
+          rejection_reason: quarantineReason,
+          notes: live.notes || null,
+        });
+
+        results.push({ airline_code: r.airline_code, status: "quarantined", reason: quarantineReason });
+      } else {
+        const upsertRow = {
+          airline_code: r.airline_code,
+          airline_name: r.airline_name,
+          route_type: r.route_type,
+          fee_amount: proposedFee,
+          fee_max: live.fee_max ?? null,
+          currency: proposedCurrency,
+          is_transferable: proposedXfer,
+          confidence,
+          source_url: live.source_url || null,
+          notes: live.notes || null,
+          last_verified_at: nowIso,
+        };
+        await supabase
+          .from("airline_change_fees")
+          .upsert(upsertRow, { onConflict: "airline_code,route_type" });
+
+        await supabase.from("airline_change_fee_history").insert({
+          airline_code: r.airline_code,
+          route_type: r.route_type,
+          previous_fee: existing?.fee_amount ?? null,
+          new_fee: proposedFee,
+          previous_currency: existing?.currency ?? null,
+          new_currency: proposedCurrency,
+          previous_is_transferable: existing?.is_transferable ?? null,
+          new_is_transferable: proposedXfer,
+          source_url: live.source_url || null,
+          confidence,
+          accepted: true,
+          notes: live.notes || null,
+        });
+
+        results.push({ airline_code: r.airline_code, status: "updated", is_transferable: proposedXfer });
+      }
       await new Promise((res) => setTimeout(res, 500));
     } catch (e) {
       results.push({ airline_code: r.airline_code, status: "error", error: e instanceof Error ? e.message : String(e) });
