@@ -1,4 +1,4 @@
-import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon, Clock, Info } from "lucide-react";
+import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ScreenKind = "browse" | "sell";
