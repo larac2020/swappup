@@ -2,6 +2,7 @@ import { Home, Search, ShoppingCart, User, Ticket } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { LanguageToggle } from "./LanguageToggle";
 
 interface NavItem {
   icon: React.ElementType;
@@ -24,6 +25,9 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-strong border-t border-border/50 pb-safe">
+      <div className="flex justify-center pt-2">
+        <LanguageToggle />
+      </div>
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
