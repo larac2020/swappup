@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  CheckCircle2
+  CheckCircle2, HelpCircle, ChevronLeft, ChevronRight
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
@@ -29,6 +29,7 @@ import {
 } from "@/data/flightData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Link } from "react-router-dom";
 
 interface TicketInclusions {
   luggageIncluded: boolean;
@@ -139,6 +140,10 @@ export default function SellTicket() {
   const isPaymentComplete = typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true";
   const allSectionsComplete = isProfileComplete && isAddressComplete && isVerified && isPaymentComplete;
   const isEditMode = !!editId;
+
+  // Wizard (3-step) mode is enabled only when creating a new listing.
+  const wizard = !isEditMode;
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
