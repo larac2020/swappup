@@ -1,4 +1,4 @@
-import { Calendar, Users, Heart, Eye } from "lucide-react";
+import { Calendar, Users, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -264,10 +264,9 @@ export function ListingCard({
           {/* View Listing CTA */}
           <Button
             size="sm"
-            className="w-full gap-2 h-8 text-xs"
+            className="w-full h-8 text-xs"
             onClick={(e) => { e.stopPropagation(); navigate(`/listing/${id}`); }}
           >
-            <Eye className="w-3.5 h-3.5" />
             {t("cardViewListing")}
           </Button>
         </div>
