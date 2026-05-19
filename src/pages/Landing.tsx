@@ -11,13 +11,13 @@ export default function Landing() {
         <title>Swappup — Buy & resell unused flight tickets</title>
         <meta
           name="description"
-          content="Swappup is the peer-to-peer marketplace where travellers recover the value of unused flight tickets and buy seats from real people, securely."
+          content="Swappup is where travellers resell flights they can't use and find seats from people whose plans changed — safely and ID-checked."
         />
         <link rel="canonical" href="https://swappup.com/" />
         <meta property="og:title" content="Swappup — Buy & resell unused flight tickets" />
         <meta
           property="og:description"
-          content="Recover value from unused flights and buy seats from real travellers. Payments held safely until the ticket is in your name. ID-verified users."
+          content="Get money back for flights you can't take, or grab a seat someone else can't use. Payments held safely until the ticket is in your name."
         />
         <meta property="og:url" content="https://swappup.com/" />
         <meta property="og:type" content="website" />
@@ -35,8 +35,8 @@ export default function Landing() {
               Don&apos;t cancel your flight. <span className="text-primary">Swap it.</span>
             </h1>
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Plans changed? List your ticket for free and recover its value. Need a seat?
-              Buy one from a real traveller, often well below the airline&apos;s price.
+              Plans changed? List your ticket for free and get your money back. Need a seat?
+              Grab one from someone who can&apos;t fly anymore — usually for less than the airline charges.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
               <Button asChild variant="gold" size="lg" className="min-w-44">
@@ -78,46 +78,45 @@ export default function Landing() {
                 Turn unused tickets into cash
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Airlines rarely refund non-flexible fares. Swappup gives that money a
-                second life — your ticket becomes someone else&apos;s trip, and you
-                walk away with the value back in your wallet.
+                Most airlines won&apos;t refund your ticket if your plans change. Swappup helps
+                you get that money back — someone else takes your seat, and you walk away with
+                cash in your pocket.
               </p>
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Set your own price and stay in control of the deal.</span>
+                  <span>You pick the price. You&apos;re in charge.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Sell to ID-verified travellers — no anonymous resellers.</span>
+                  <span>Only sell to people who&apos;ve shown us a real ID — no anonymous buyers.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Buyer payments are held safely until the buyer confirms the ticket is in their name.</span>
+                  <span>We hold the buyer&apos;s money safely until they confirm the ticket is in their name.</span>
                 </li>
               </ul>
             </div>
             <div className="space-y-5">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Find seats real people aren&apos;t using
+                Find seats other travellers can&apos;t use
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Browse last-minute flights from travellers whose plans fell through.
-                Often cheaper than the airline&apos;s live price, always with the same
-                seat, the same flight, the same airline.
+                Browse flights from travellers whose plans fell through. Often cheaper than
+                booking direct — same seat, same flight, same airline.
               </p>
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Search by route, date or destination — or just describe the trip you have in mind.</span>
+                  <span>Search by route, date or destination — or just tell us where you fancy going.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Transferability checked automatically before you buy.</span>
+                  <span>We check the ticket can actually be transferred before you pay.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Money back if the transfer doesn&apos;t complete in 24 hours.</span>
+                  <span>If the ticket isn&apos;t in your name within 24 hours, you get your money back.</span>
                 </li>
               </ul>
             </div>
@@ -139,22 +138,22 @@ export default function Landing() {
               {
                 icon: Sparkles,
                 title: "Effortless listing",
-                body: "Snap your e-ticket. Our AI fills in the flight details for you.",
+                body: "Snap a photo of your ticket — we fill in the flight details for you.",
               },
               {
                 icon: ShieldCheck,
                 title: "Protected payments",
-                body: "Buyer payments are held safely and only released once the ticket is officially in their name.",
+                body: "We hold the buyer's money and only pass it on once the ticket is properly in their name.",
               },
               {
                 icon: BadgeCheck,
                 title: "ID-verified users",
-                body: "Every seller and buyer is verified against an official ID document.",
+                body: "Everyone on Swappup checks in with a real ID before buying or selling.",
               },
               {
                 icon: Wallet,
                 title: "Real value recovered",
-                body: "Travellers recover money that airlines would otherwise keep.",
+                body: "Get back the money the airline would otherwise pocket.",
               },
             ].map(({ icon: Icon, title, body }) => (
               <div
@@ -179,7 +178,7 @@ export default function Landing() {
             Ready to swap your next flight?
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Free to join. List or browse in minutes.
+            Free to join. Takes a minute to list a ticket or find one.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild variant="gold" size="lg" className="min-w-48">
