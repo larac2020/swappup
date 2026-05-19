@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import swappupLogo from "@/assets/swappup-logo.png";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { footerContent } from "@/i18n/marketingContent";
 
 export function MarketingFooter() {
   const year = new Date().getFullYear();
+  const { locale } = useLanguage();
+  const c = footerContent[locale];
   return (
     <footer className="border-t border-border/50 bg-background/60">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -11,32 +15,30 @@ export function MarketingFooter() {
             <Link to="/" className="inline-flex items-center gap-2">
               <img src={swappupLogo} alt="Swappup" className="h-10 w-auto" />
             </Link>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              The peer-to-peer marketplace to buy and resell unused flight tickets.
-            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">{c.tagline}</p>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Company</h3>
+            <h3 className="text-sm font-semibold text-foreground">{c.company}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About us
+                  {c.about}
                 </Link>
               </li>
               <li>
                 <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
-                  FAQ &amp; Help
+                  {c.faq}
                 </Link>
               </li>
               <li>
                 <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Terms &amp; Conditions
+                  {c.terms}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy-policy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Privacy Policy
+                  {c.privacy}
                 </Link>
               </li>
             </ul>
@@ -46,18 +48,18 @@ export function MarketingFooter() {
             <h3 className="text-sm font-semibold text-foreground">Swappup Ltd</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
               {/* TODO: replace with real registered address */}
-              Registered office address
+              {c.registeredOffice}
               <br />
-              London, United Kingdom
+              {c.addressLine}
               <br />
-              Company No. 00000000
+              {c.companyNo}
             </address>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-border/50 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <p>© {year} Swappup Ltd. All rights reserved.</p>
-          <p>Made for travellers whose plans change.</p>
+          <p>{c.rights(year)}</p>
+          <p>{c.madeFor}</p>
         </div>
       </div>
     </footer>
