@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plane, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { PasswordChecklist } from "@/components/auth/PasswordChecklist";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -124,12 +125,13 @@ export default function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <PasswordChecklist password={password} className="pt-1" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -143,12 +145,12 @@ export default function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
           </div>
           <Button type="submit" variant="gold" size="lg" className="w-full" disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</> : "Update Password"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Resetting...</> : "Reset Password"}
           </Button>
         </form>
       </div>
