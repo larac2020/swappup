@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowRight, ShieldCheck, Wallet, Sparkles, BadgeCheck, Play, Pause } from "lucide-react";
+import { ArrowRight, ShieldCheck, Wallet, Sparkles, BadgeCheck, Play, Pause, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
