@@ -90,8 +90,8 @@ export const landingContent = {
     browseCaption: "Cerca il tuo prossimo viaggio, descrivendolo con l'IA.",
     sellCaption: "Carica il tuo biglietto, scegli il prezzo e pubblicalo.",
     demoEyebrow: "Guarda com'è facile",
-    demoTitle: "Dall'upload alla vendita, in meno di un minuto.",
-    demoSubtitle: "Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click. In cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.",
+    demoTitle: "Vendere o comprare un biglietto non è mai stato così semplice.",
+    demoSubtitle: "Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click.\nIn cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.",
     sellTitle: "Trasforma i biglietti inutilizzati in denaro",
     sellBody:
       "La maggior parte delle compagnie aeree non rimborsa il biglietto se cambi programma. Swappup ti aiuta a recuperare quei soldi — qualcun altro prende il tuo posto e tu ti porti a casa il valore del biglietto.",
