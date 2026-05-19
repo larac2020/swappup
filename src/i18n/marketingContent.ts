@@ -49,7 +49,7 @@ export const landingContent = {
     browseCaption: "Browse and AI-search seats from real travellers.",
     sellCaption: "Snap your ticket — we fill in the rest.",
     demoEyebrow: "See it in action",
-    demoTitle: "From upload to payout, in under a minute.",
+    demoTitle: "From upload to payout, in a few clicks.",
     demoSubtitle: "Upload your ticket, let us auto-fill the details, and publish. Buyers find it through smart search — you get paid the moment the name change clears.",
     sellTitle: "Turn unused tickets into cash",
     sellBody:
