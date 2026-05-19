@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Locale } from "@/i18n/translations";
+import { Link } from "react-router-dom";
+import { APP_VERSION, APP_BUILD, COMPANY_NAME, COMPANY_REG_OFFICE, COMPANY_NO } from "@/lib/appVersion";
 
 // Sub-page components
 import PersonalInfo from "@/components/account/PersonalInfo";
@@ -273,7 +275,19 @@ export default function Account() {
           {t("accountSignOut")}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">{t("accountVersion")}</p>
+        {/* About / company details */}
+        <div className="pt-2 pb-6 text-center text-xs text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground/80">{COMPANY_NAME}</p>
+          <p>{t("aboutRegisteredOffice")}: {COMPANY_REG_OFFICE}</p>
+          <p>{t("aboutCompanyNo")} {COMPANY_NO}</p>
+          <p>{t("aboutVersion")} {APP_VERSION} · {t("aboutBuild")} {APP_BUILD}</p>
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <Link to="/terms-and-conditions" className="underline-offset-2 hover:underline">{t("legalTerms" as any) || "Terms"}</Link>
+            <span aria-hidden="true">·</span>
+            <Link to="/privacy-policy" className="underline-offset-2 hover:underline">{t("legalPrivacy" as any) || "Privacy"}</Link>
+          </div>
+          <p className="pt-1">© {new Date().getFullYear()} {COMPANY_NAME}. {t("aboutRights")}</p>
+        </div>
       </div>
     </AppLayout>
   );

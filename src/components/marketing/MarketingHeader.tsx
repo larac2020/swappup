@@ -97,6 +97,9 @@ export function MarketingHeader() {
                   <Link to="/faq" className="rounded-md px-3 py-2 hover:bg-secondary">{c.faq}</Link>
                 </SheetClose>
                 <SheetClose asChild>
+                  <Link to="/support" className="rounded-md px-3 py-2 hover:bg-secondary">{c.support}</Link>
+                </SheetClose>
+                <SheetClose asChild>
                   <Link to="/terms-and-conditions" className="rounded-md px-3 py-2 hover:bg-secondary">{c.terms}</Link>
                 </SheetClose>
                 <SheetClose asChild>

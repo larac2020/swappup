@@ -361,6 +361,6 @@ export const footerContent = {
 } as const;
 
 export const headerContent = {
-  en: { openApp: "Open app", login: "Login", signup: "Sign up", languageLabel: "Language", menu: "Menu", about: "About", faq: "Help & FAQ", terms: "Terms", privacy: "Privacy" },
-  it: { openApp: "Apri l'app", login: "Accedi", signup: "Registrati", languageLabel: "Lingua", menu: "Menu", about: "Chi siamo", faq: "Aiuto e FAQ", terms: "Termini", privacy: "Privacy" },
+  en: { openApp: "Open app", login: "Login", signup: "Sign up", languageLabel: "Language", menu: "Menu", about: "About", faq: "Help & FAQ", terms: "Terms", privacy: "Privacy", support: "Support" },
+  it: { openApp: "Apri l'app", login: "Accedi", signup: "Registrati", languageLabel: "Lingua", menu: "Menu", about: "Chi siamo", faq: "Aiuto e FAQ", terms: "Termini", privacy: "Privacy", support: "Supporto" },
 } as const;
