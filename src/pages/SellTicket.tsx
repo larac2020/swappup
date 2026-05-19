@@ -1373,10 +1373,40 @@ export default function SellTicket() {
               className="bg-secondary/50 min-h-24"
             />
           </div>
+
+          {/* Step 2 nav */}
+          {wizard && (
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" size="lg" className="flex-1" onClick={() => setStep(1)}>
+                <ChevronLeft className="w-4 h-4" />
+                {locale === "it" ? "Indietro" : "Back"}
+              </Button>
+              <Button
+                type="button"
+                variant="gold"
+                size="lg"
+                className="flex-1"
+                disabled={
+                  !formData.originCity ||
+                  !formData.destinationCity ||
+                  !formData.airline ||
+                  !formData.departureDate ||
+                  !formData.price ||
+                  !!priceError ||
+                  (flightVerification != null && (flightVerification.status === "mismatch" || flightVerification.status === "not_found"))
+                }
+                onClick={() => setStep(3)}
+              >
+                {locale === "it" ? "Continua" : "Continue"}
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
             </>
           )}
 
           {/* Bump Listing */}
+          {(!wizard || step === 3) && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -1456,8 +1486,9 @@ export default function SellTicket() {
               );
             })()}
           </div>
+          )}
 
-          {(() => {
+          {(!wizard || step === 3) && (() => {
             const blockedByVerification =
               formData.listingType === "flight_ticket" &&
               flightVerification != null &&
@@ -1490,11 +1521,18 @@ export default function SellTicket() {
                     </label>
                   </div>
                 )}
+              <div className="flex gap-3">
+                {wizard && (
+                  <Button type="button" variant="outline" size="xl" className="flex-1" onClick={() => setStep(2)}>
+                    <ChevronLeft className="w-5 h-5" />
+                    {locale === "it" ? "Indietro" : "Back"}
+                  </Button>
+                )}
               <Button
                 type="submit"
                 variant="gold"
                 size="xl"
-                className="w-full"
+                className={wizard ? "flex-1" : "w-full"}
                   disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck)}
               >
                 {createListingMutation.isPending ? (
@@ -1507,6 +1545,7 @@ export default function SellTicket() {
                   <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? t("sellSubmitUpdate") : t("sellHeaderCreate")}</>
                 )}
               </Button>
+              </div>
               </>
             );
           })()}
