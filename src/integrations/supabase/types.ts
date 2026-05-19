@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      airline_change_fee_history: {
+        Row: {
+          accepted: boolean
+          airline_code: string
+          confidence: string | null
+          id: string
+          new_currency: string | null
+          new_fee: number | null
+          new_is_transferable: boolean | null
+          notes: string | null
+          previous_currency: string | null
+          previous_fee: number | null
+          previous_is_transferable: boolean | null
+          rejection_reason: string | null
+          route_type: string
+          run_at: string
+          source_url: string | null
+        }
+        Insert: {
+          accepted?: boolean
+          airline_code: string
+          confidence?: string | null
+          id?: string
+          new_currency?: string | null
+          new_fee?: number | null
+          new_is_transferable?: boolean | null
+          notes?: string | null
+          previous_currency?: string | null
+          previous_fee?: number | null
+          previous_is_transferable?: boolean | null
+          rejection_reason?: string | null
+          route_type?: string
+          run_at?: string
+          source_url?: string | null
+        }
+        Update: {
+          accepted?: boolean
+          airline_code?: string
+          confidence?: string | null
+          id?: string
+          new_currency?: string | null
+          new_fee?: number | null
+          new_is_transferable?: boolean | null
+          notes?: string | null
+          previous_currency?: string | null
+          previous_fee?: number | null
+          previous_is_transferable?: boolean | null
+          rejection_reason?: string | null
+          route_type?: string
+          run_at?: string
+          source_url?: string | null
+        }
+        Relationships: []
+      }
       airline_change_fees: {
         Row: {
           airline_code: string
@@ -62,6 +116,69 @@ export type Database = {
           route_type?: string
           source_url?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      airline_fee_review_queue: {
+        Row: {
+          airline_code: string
+          airline_name: string | null
+          confidence: string | null
+          created_at: string
+          current_currency: string | null
+          current_fee: number | null
+          current_is_transferable: boolean | null
+          id: string
+          notes: string | null
+          proposed_currency: string | null
+          proposed_fee: number
+          proposed_is_transferable: boolean | null
+          reason: string
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          route_type: string
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          airline_code: string
+          airline_name?: string | null
+          confidence?: string | null
+          created_at?: string
+          current_currency?: string | null
+          current_fee?: number | null
+          current_is_transferable?: boolean | null
+          id?: string
+          notes?: string | null
+          proposed_currency?: string | null
+          proposed_fee: number
+          proposed_is_transferable?: boolean | null
+          reason: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          route_type?: string
+          source_url?: string | null
+          status?: string
+        }
+        Update: {
+          airline_code?: string
+          airline_name?: string | null
+          confidence?: string | null
+          created_at?: string
+          current_currency?: string | null
+          current_fee?: number | null
+          current_is_transferable?: boolean | null
+          id?: string
+          notes?: string | null
+          proposed_currency?: string | null
+          proposed_fee?: number
+          proposed_is_transferable?: boolean | null
+          reason?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          route_type?: string
+          source_url?: string | null
+          status?: string
         }
         Relationships: []
       }
