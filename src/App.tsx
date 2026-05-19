@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Unsubscribe from "./pages/Unsubscribe";
+import Landing from "./pages/Landing";
+import About from "./pages/About";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
 
 const queryClient = new QueryClient();
@@ -37,7 +39,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -74,7 +76,17 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<PublicRoute><Auth /></PublicRoute>} />
+            {/* Public marketing site */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/terms-and-conditions" element={<Terms />} />
+            <Route path="/privacy-policy" element={<Privacy />} />
+            {/* Legacy legal URLs */}
+            <Route path="/terms" element={<Navigate to="/terms-and-conditions" replace />} />
+            <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+            {/* Auth routes */}
+            <Route path="/login" element={<PublicRoute><Auth initialMode="login" /></PublicRoute>} />
+            <Route path="/sign-up" element={<PublicRoute><Auth initialMode="signup" /></PublicRoute>} />
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
@@ -88,8 +100,6 @@ const App = () => (
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
