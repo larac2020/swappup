@@ -770,6 +770,7 @@ export type Database = {
           favorite_departure_city: string | null
           favorite_departure_country: string | null
           full_name: string | null
+          has_payment_method: boolean
           id: string
           id_document_url: string | null
           phone: string | null
@@ -802,6 +803,7 @@ export type Database = {
           favorite_departure_city?: string | null
           favorite_departure_country?: string | null
           full_name?: string | null
+          has_payment_method?: boolean
           id?: string
           id_document_url?: string | null
           phone?: string | null
@@ -834,6 +836,7 @@ export type Database = {
           favorite_departure_city?: string | null
           favorite_departure_country?: string | null
           full_name?: string | null
+          has_payment_method?: boolean
           id?: string
           id_document_url?: string | null
           phone?: string | null
