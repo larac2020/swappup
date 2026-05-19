@@ -1,58 +1,44 @@
-## Goal
-Lock down the `purchases` table so no client (buyer or seller) can insert or modify rows directly — all mutations must flow through service-role edge functions. Fix the four related `purchases` / endpoint findings from the latest scan in one pass.
+## Current state
 
-## Approach: Forbid all client modification
+The scanner finding is **already partially addressed** — `get-name-change-fee` has both:
+- `verify_jwt = true` in `supabase/config.toml`
+- An in-function `auth.getUser()` check that returns 401 without a valid session
 
-We will **not** try to restrict fields per-role. Postgres RLS cannot limit columns on UPDATE, and field-level triggers add complexity without benefit because every legitimate state change already has a dedicated edge function (`stripe-purchase-webhook`, `confirm-transfer`, `release-escrow`, `cancel-escrow`, `expire-transfers`). Service-role calls bypass RLS, so locking clients out fully is safe.
+Anonymous attackers can no longer hit this endpoint. The remaining risk is an **authenticated** user spamming `force_refresh: true` to burn Firecrawl + Lovable AI credits. The scanner's own remediation note (#3) recommends rate-limiting `force_refresh` per airline as the next layer.
 
-## Changes
+## Recommended fix (best practice, defense in depth)
 
-### 1. Migration: lock down `purchases` RLS
-- Drop the existing `"Users can create purchases"` INSERT policy (it targets `public` and lets clients craft arbitrary rows).
-- Add explicit deny policies for authenticated users:
-  ```sql
-  CREATE POLICY "No client inserts on purchases"
-    ON public.purchases FOR INSERT TO authenticated WITH CHECK (false);
-  CREATE POLICY "No client updates on purchases"
-    ON public.purchases FOR UPDATE TO authenticated USING (false);
-  CREATE POLICY "No client deletes on purchases"
-    ON public.purchases FOR DELETE TO authenticated USING (false);
-  ```
-- Keep existing buyer/seller SELECT policies untouched.
-- Service role bypasses RLS, so `create-purchase-checkout` and all state-change functions continue working.
+Three small, layered changes:
 
-### 2. Edge function: `get-name-change-fee`
-- Add `verify_jwt = true` in `supabase/config.toml`.
-- Add `await userClient.auth.getUser()` check at top of handler.
-- (Optional follow-up, not in this plan) Rate-limit `force_refresh` per airline.
+### 1. Server-side cooldown on `force_refresh` (primary fix)
 
-### 3. Edge functions: scrub raw error messages
-In the 10 listed functions, replace `(e as Error).message` in catch blocks with a generic `"An unexpected error occurred"` and keep `console.error(e)` for server-side logging. Known validation errors (e.g. `"Missing fields"`, `"Listing unavailable"`) stay as-is since they're intentional user feedback.
+In `liveLookup` flow, before calling Firecrawl, check the cached row's `last_verified_at`. If a refresh happened in the last **60 minutes**, ignore `force_refresh` and return the cached value with a `refresh_throttled: true` flag. This caps live lookups at ~1/hour per airline+route globally, regardless of who calls it.
 
-Files: `create-purchase-checkout`, `release-escrow`, `confirm-transfer`, `cancel-escrow`, `export-user-data`, `delete-account`, `create-setup-intent`, `check-payment-method`, `verify-flight`, `report-name-change-fee`.
+No new table needed — the existing `airline_change_fees.last_verified_at` column is the rate-limit source of truth.
 
-### 4. Ignore the false positive
-`flight_verifications_no_select_policy` is informational only — no client policy means no client access, which is correct. Mark as ignored with reason.
+### 2. Per-user rate limit on the endpoint (cheap secondary layer)
 
-## Verification
-1. Re-run Lovable security scan — expect `purchases_*` and `get_name_change_fee_unauth` cleared.
-2. Run `supabase--linter` — confirm no new warnings.
-3. Manual check from the browser console while logged in:
-   ```js
-   await supabase.from('purchases').update({status:'completed'}).eq('id', anyId)
-   // → expect 0 rows affected / permission denied
-   await supabase.from('purchases').insert({...})
-   // → expect RLS violation
-   ```
-4. Smoke test: complete a purchase end-to-end (checkout → webhook → transfer confirm → escrow release) to confirm service-role paths still work.
+Add a lightweight per-user throttle: max **10 calls / minute / user** to the function, tracked in a new `edge_function_rate_limits` table (`user_id`, `function_name`, `window_start`, `count`) or reuse an existing pattern if one exists. Returns 429 on excess. Protects against an attacker who tries to rotate airlines.
 
-## External review options (for your reference, not in scope)
-- **`pgrls` / `pgTAP`** — write SQL assertions like "role authenticated cannot UPDATE purchases" that run in CI on every migration.
-- **`pg_permissions` extension** — diff actual privileges against an expected manifest.
-- **Third-party pen test** — Cure53, Trail of Bits, or NCC Group for a formal review if you're handling significant payment volume.
-- **Supabase's own advisor** + this scanner cover ~90% of common RLS mistakes; the remaining gap is business-logic flaws that need human review.
+### 3. Restrict `force_refresh` to staff (optional, strongest)
 
-## Out of scope
-- Column-level RLS via triggers (rejected — edge functions already enforce this).
-- Rate-limiting `get-name-change-fee` (separate follow-up).
-- Changes to other tables — this plan only touches `purchases` policies and the listed edge functions.
+`force_refresh` is really an admin / data-curation feature. We could gate it behind a `has_role(auth.uid(), 'admin')` check and let normal users only consume the cache (which auto-refreshes at 30-day staleness anyway). This eliminates the abuse surface entirely.
+
+## What I recommend you pick
+
+- **Minimum viable:** Step 1 only. One-file change, eliminates 99% of the credit-burn risk with no schema work.
+- **Recommended:** Steps 1 + 3. Cleanest — regular users can never trigger paid calls on demand, and the 30-day staleness check handles legitimate refresh needs automatically.
+- **Belt-and-suspenders:** All three. Worth it only if the function will get more endpoints / public-ish surfaces later.
+
+## Also worth doing while we're here
+
+- Mark the `get_name_change_fee_unauth` scanner finding as **fixed** (the auth gate is already in place; the finding is stale).
+- Update `@security-memory` to note the cooldown + role gate as the accepted pattern for paid-API edge functions, so the scanner doesn't re-flag this.
+
+## Technical notes
+
+- The cooldown check belongs **before** the Firecrawl fetch in `liveLookup` (or inline in the handler before calling it) so no paid call fires when throttled.
+- 429 responses should include `Retry-After` header for good client behavior.
+- If we add the rate-limit table, use a `SECURITY DEFINER` RPC `consume_rate_limit(_fn text, _limit int, _window_seconds int)` returning boolean — keeps RLS simple and the logic reusable across other paid-API functions (`verify-id`, `verify-voucher`, `verify-flight`, `parse-ticket`, `ai-search`).
+
+Tell me which option (1, 1+3, or all three) you want and I'll implement it.
