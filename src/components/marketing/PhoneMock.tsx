@@ -1,4 +1,4 @@
-import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon } from "lucide-react";
+import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon, Clock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ScreenKind = "browse" | "sell";
@@ -45,7 +45,10 @@ const sellCopy = {
     toCountry: "Spain",
     toCity: "Barcelona (BCN)",
     dateHeader: "Flight date",
-    date: "Sat 6 Jun · 09:25",
+    dateLabel: "Date",
+    timeLabel: "Time",
+    date: "Sat 6 Jun",
+    time: "09:25",
     airlineHeader: "Airline & flight",
     airlineLabel: "Airline",
     airline: "easyJet",
@@ -57,6 +60,8 @@ const sellCopy = {
     listingLabel: "Listing price",
     listingPrice: "£89",
     publish: "Continue",
+    feeTitle: "Name-change fee",
+    feeBody: "easyJet allows transfers. The buyer pays £25 directly to the airline at checkout.",
   },
   it: {
     title: "Vendi il tuo biglietto",
@@ -69,7 +74,10 @@ const sellCopy = {
     toCountry: "Spagna",
     toCity: "Barcellona (BCN)",
     dateHeader: "Data del volo",
-    date: "Sab 6 giu · 09:25",
+    dateLabel: "Data",
+    timeLabel: "Ora",
+    date: "Sab 6 giu",
+    time: "09:25",
     airlineHeader: "Compagnia e volo",
     airlineLabel: "Compagnia",
     airline: "Vueling",
@@ -81,6 +89,8 @@ const sellCopy = {
     listingLabel: "Prezzo di vendita",
     listingPrice: "€95",
     publish: "Continua",
+    feeTitle: "Costo cambio nome",
+    feeBody: "Vueling consente il trasferimento. L'acquirente paga €55 direttamente alla compagnia al checkout.",
   },
 } as const;
 
