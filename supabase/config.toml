@@ -16,7 +16,7 @@ project_id = "oiarehtqhgwkiunsarmz"
   [functions.expire-transfers]
     verify_jwt = true
   [functions.get-name-change-fee]
-    verify_jwt = false
+    verify_jwt = true
   [functions.handle-email-suppression]
     verify_jwt = false
   [functions.handle-email-unsubscribe]
