@@ -185,7 +185,7 @@ export const faqContent = {
       "Everything you need to know about pricing, protection and using Swappup — for both first-time visitors and existing travellers.",
     stillNeedHelp: {
       h2: "Still need help?",
-      bodyBefore: "Signed-in users can reach our team from the in-app Support page. New here? ",
+      bodyBefore: "Email us anytime at support@swappup.com. New here? ",
       linkText: "Create an account",
       bodyAfter: " to get started.",
     },
@@ -237,7 +237,7 @@ export const faqContent = {
       {
         title: "Account & support",
         items: [
-          { q: "How do I contact support?", a: "Signed-in users can reach our team from the Support page inside the app. We typically reply within one business day." },
+          { q: "How do I contact support?", a: "Email us at support@swappup.com and we'll typically reply within one business day." },
           { q: "How is my data handled?", a: "privacy_link" },
           { q: "How do I close my account?", a: "From Account → Privacy & Data, you can permanently delete your account and personal data at any time." },
         ],
@@ -260,7 +260,7 @@ export const faqContent = {
       "Tutto quello che devi sapere su prezzi, protezione e su come usare Swappup — sia se sei nuovo, sia se sei già un viaggiatore della community.",
     stillNeedHelp: {
       h2: "Ti serve ancora aiuto?",
-      bodyBefore: "Se hai un account puoi contattare il nostro team dalla pagina Supporto nell'app. Sei nuovo qui? ",
+      bodyBefore: "Scrivici in qualsiasi momento a support@swappup.com. Sei nuovo qui? ",
       linkText: "Crea un account",
       bodyAfter: " per iniziare.",
     },
@@ -312,7 +312,7 @@ export const faqContent = {
       {
         title: "Account e supporto",
         items: [
-          { q: "Come contatto il supporto?", a: "Gli utenti registrati possono contattare il nostro team dalla pagina Supporto all'interno dell'app. Di solito rispondiamo entro un giorno lavorativo." },
+          { q: "Come contatto il supporto?", a: "Scrivici a support@swappup.com e di solito rispondiamo entro un giorno lavorativo." },
           { q: "Come vengono gestiti i miei dati?", a: "privacy_link" },
           { q: "Come chiudo il mio account?", a: "Da Account → Privacy e Dati puoi eliminare in modo permanente il tuo account e i tuoi dati personali in qualsiasi momento." },
         ],

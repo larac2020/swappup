@@ -39,7 +39,7 @@ export default function Faq() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("airline_change_fees")
-        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type")
+        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, updated_at")
         .eq("is_transferable", true)
         .eq("route_type", "international")
         .order("airline_name", { ascending: true });
@@ -47,6 +47,24 @@ export default function Faq() {
       return data || [];
     },
   });
+
+  const linkifyEmail = (text: string): React.ReactNode => {
+    const re = /support@swappup\.com/g;
+    const parts = text.split(re);
+    if (parts.length === 1) return text;
+    const nodes: React.ReactNode[] = [];
+    parts.forEach((p, i) => {
+      nodes.push(p);
+      if (i < parts.length - 1) {
+        nodes.push(
+          <a key={i} href="mailto:support@swappup.com" className="text-primary underline">
+            support@swappup.com
+          </a>,
+        );
+      }
+    });
+    return <>{nodes}</>;
+  };
 
   const renderAnswer = (raw: string): React.ReactNode => {
     if (raw === "signup_link") {
@@ -69,7 +87,7 @@ export default function Faq() {
         </>
       );
     }
-    return raw;
+    return linkifyEmail(raw);
   };
 
   const answerText = (raw: string): string => {
@@ -147,7 +165,7 @@ export default function Faq() {
         <div className="mt-16 rounded-2xl border border-border/50 bg-secondary/30 p-6 text-center">
           <h2 className="text-lg font-semibold">{c.stillNeedHelp.h2}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {c.stillNeedHelp.bodyBefore}
+            {linkifyEmail(c.stillNeedHelp.bodyBefore)}
             <Link to="/sign-up" className="text-primary underline">{c.stillNeedHelp.linkText}</Link>
             {c.stillNeedHelp.bodyAfter}
           </p>
@@ -174,8 +192,8 @@ export default function Faq() {
           <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
             <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
-              <span className="text-right">{locale === "it" ? "Tariffa" : "Fee"}</span>
-              <span className="text-right">{locale === "it" ? "Valuta" : "Currency"}</span>
+              <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
+              <span className="text-right">{locale === "it" ? "Verificata il" : "Verified on"}</span>
             </div>
             <ul className="divide-y divide-border/50">
               {!supportedAirlines && (
@@ -186,6 +204,14 @@ export default function Faq() {
               {supportedAirlines?.map((a) => {
                 const fee = a.fee_max ?? a.fee_amount ?? 0;
                 const sym = getCurrencySymbol(a.currency || "EUR");
+                const verified = a.last_verified_at ?? a.updated_at;
+                const verifiedLabel = verified
+                  ? new Date(verified).toLocaleDateString(locale === "it" ? "it-IT" : "en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—";
                 return (
                   <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
                     <span className="flex items-center gap-2 text-sm font-medium">
@@ -193,10 +219,10 @@ export default function Faq() {
                       {a.airline_name}
                     </span>
                     <span className="text-right text-sm font-semibold tabular-nums">
-                      {sym}{Number(fee).toFixed(2)}
+                      {sym}{Number(fee).toFixed(2)} {(a.currency || "EUR").toUpperCase()}
                     </span>
-                    <span className="text-right text-xs text-muted-foreground">
-                      {(a.currency || "EUR").toUpperCase()}
+                    <span className="text-right text-xs text-muted-foreground tabular-nums">
+                      {verifiedLabel}
                     </span>
                   </li>
                 );
