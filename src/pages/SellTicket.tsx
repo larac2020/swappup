@@ -1213,19 +1213,6 @@ export default function SellTicket() {
                 </div>
               </div>
 
-              {/* Transferability Check */}
-              {formData.airline && (
-                <TransferabilityCheck
-                  airline={formData.airline}
-                  fareType={formData.fareType || "standard"}
-                  onResult={(r) => {
-                    setFlightTransferBlocked(r.blocking);
-                    setFlightTransferFee(r.fee);
-                    setFlightFeeAcknowledged(r.acknowledged);
-                  }}
-                />
-              )}
-
               {/* Outbound flight */}
               <div className="space-y-3 rounded-xl border border-border/50 p-3">
                 <p className="text-sm font-medium text-primary">Outbound flight</p>
