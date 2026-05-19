@@ -95,7 +95,7 @@ export default function Landing() {
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             >
-              <source src={`/videos/swappup-demo-${locale}.mp4?v=2`} type="video/mp4" />
+              <source src={`/videos/swappup-demo-${locale}.mp4?v=3`} type="video/mp4" />
             </video>
             <button
               type="button"

@@ -135,3 +135,9 @@ export const Pill: React.FC<{ children: React.ReactNode; bg?: string; color?: st
     {children}
   </span>
 );
+
+export const ScreenHeader: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ fontSize: 15, fontWeight: 700, color: theme.text, marginBottom: 14, textAlign: "center" }}>
+    {title}
+  </div>
+);

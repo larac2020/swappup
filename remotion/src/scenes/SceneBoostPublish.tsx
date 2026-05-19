@@ -1,15 +1,17 @@
 import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
-import { Phone, Eyebrow, Heading, SceneLayout } from "./Shared";
+import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
 
 export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const toggle = spring({ frame: frame - 15, fps, config: { damping: 14, stiffness: 200 } });
-  const tapScale = spring({ frame: frame - 45, fps, config: { damping: 8, stiffness: 220 } });
-  const tapped = frame > 45;
+  const toggle = spring({ frame: frame - 18, fps, config: { damping: 14, stiffness: 200 } });
+  const optsReveal = spring({ frame: frame - 28, fps, config: { damping: 18 } });
+  const tapScale = spring({ frame: frame - 75, fps, config: { damping: 8, stiffness: 220 } });
+  const tapped = frame > 75;
   const pressScale = tapped ? interpolate(tapScale, [0, 0.5, 1], [1, 0.93, 1]) : 1;
+  const toggleOn = toggle > 0.4;
 
   return (
     <SceneLayout
@@ -21,7 +23,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
       }
       right={
         <Phone>
-          <div style={{ fontSize: 13, fontWeight: 600, color: theme.muted, marginBottom: 14 }}>Swappup / Sell</div>
+          <ScreenHeader title={c.s3_screen} />
 
           {/* Boost toggle */}
           <div
@@ -29,11 +31,11 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              padding: "14px 14px",
+              padding: "12px 14px",
               border: `1px solid ${theme.border}`,
               background: theme.surface,
               borderRadius: 14,
-              marginBottom: 14,
+              marginBottom: 10,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -46,7 +48,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                 height: 22,
                 borderRadius: 999,
                 background: `${theme.bg}`,
-                border: `1px solid ${toggle > 0.4 ? theme.primary : theme.border}`,
+                border: `1px solid ${toggleOn ? theme.primary : theme.border}`,
                 position: "relative",
                 transition: "none",
               }}
@@ -58,11 +60,46 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
                   left: interpolate(toggle, [0, 1], [2, 18]),
                   width: 16,
                   height: 16,
-                  background: toggle > 0.4 ? theme.primary : theme.muted,
+                  background: toggleOn ? theme.primary : theme.muted,
                   borderRadius: 999,
                 }}
               />
             </div>
+          </div>
+
+          {/* Boost pricing options — appear when toggle on, first auto-selected */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, opacity: optsReveal }}>
+            {c.s3_boost_options.map((opt, i) => {
+              const selected = i === 0;
+              const reveal = spring({ frame: frame - 30 - i * 5, fps, config: { damping: 18 } });
+              return (
+                <div
+                  key={i}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: selected ? `2px solid ${theme.primary}` : `1px solid ${theme.border}`,
+                    background: selected ? `${theme.primary}15` : theme.surface,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    opacity: reveal,
+                    transform: `translateY(${interpolate(reveal, [0, 1], [8, 0])}px)`,
+                    boxShadow: selected ? `0 6px 18px ${theme.primary}30` : "none",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {selected && (
+                      <span style={{ width: 14, height: 14, borderRadius: 999, background: theme.primary, color: "#000", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900 }}>✓</span>
+                    )}
+                    <span style={{ fontSize: 12, fontWeight: selected ? 700 : 600, color: selected ? theme.primary : theme.text }}>
+                      🔥 {opt.label}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: selected ? theme.primary : theme.muted }}>{opt.price}</span>
+                </div>
+              );
+            })}
           </div>
 
           <div style={{ flex: 1 }} />
@@ -93,19 +130,26 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
 };
 
 const Cursor: React.FC<{ frame: number }> = ({ frame }) => {
+  // Move to toggle, then to publish button
   const startX = 50;
-  const startY = 100;
-  const midX = 240;
-  const midY = 90;
+  const startY = 120;
+  const midX = 280;
+  const midY = 100;
   const endX = 160;
-  const endY = 540;
+  const endY = 590;
+  const t1End = 25;
+  const t2Start = 55;
+  const t2End = 75;
   let x = startX, y = startY;
-  if (frame < 20) {
-    const t = frame / 20;
+  if (frame < t1End) {
+    const t = frame / t1End;
     x = interpolate(t, [0, 1], [startX, midX]);
     y = interpolate(t, [0, 1], [startY, midY]);
-  } else if (frame < 45) {
-    const t = (frame - 20) / 25;
+  } else if (frame < t2Start) {
+    x = midX;
+    y = midY;
+  } else if (frame < t2End) {
+    const t = (frame - t2Start) / (t2End - t2Start);
     x = interpolate(t, [0, 1], [midX, endX]);
     y = interpolate(t, [0, 1], [midY, endY]);
   } else {

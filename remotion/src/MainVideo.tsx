@@ -12,9 +12,9 @@ import { SceneResults } from "./scenes/SceneResults";
 import { ScenePayout } from "./scenes/ScenePayout";
 import { SceneOutro } from "./scenes/SceneOutro";
 
-// 15s @ 30fps = 450 frames, with 6 transitions of 8 frames overlap = -48
-// Scene durations total: 60+72+72+60+72+72+90 = 498, minus 48 overlaps = 450
-const TR = 8;
+// ~22s @ 30fps = 654 frames, with 6 transitions of 12 frames overlap = -72
+// Scene totals: 90+108+126+90+108+108+96 = 726, minus 72 = 654
+const TR = 12;
 
 export const MainVideo: React.FC<{ locale: Locale }> = ({ locale }) => {
   const c = copy[locale];
@@ -22,31 +22,31 @@ export const MainVideo: React.FC<{ locale: Locale }> = ({ locale }) => {
     <AbsoluteFill style={{ background: theme.bg, fontFamily: inter, color: theme.text }}>
       <BackgroundLayer />
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={60}>
+        <TransitionSeries.Sequence durationInFrames={90}>
           <SceneUpload c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={72}>
+        <TransitionSeries.Sequence durationInFrames={108}>
           <SceneAutofill c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={72}>
+        <TransitionSeries.Sequence durationInFrames={126}>
           <SceneBoostPublish c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={60}>
+        <TransitionSeries.Sequence durationInFrames={90}>
           <SceneAISearch c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={72}>
+        <TransitionSeries.Sequence durationInFrames={108}>
           <SceneResults c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={72}>
+        <TransitionSeries.Sequence durationInFrames={108}>
           <ScenePayout c={c} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TR })} />
-        <TransitionSeries.Sequence durationInFrames={90}>
+        <TransitionSeries.Sequence durationInFrames={96}>
           <SceneOutro c={c} />
         </TransitionSeries.Sequence>
       </TransitionSeries>

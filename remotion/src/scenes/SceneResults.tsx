@@ -1,7 +1,7 @@
-import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { useCurrentFrame, useVideoConfig, spring, interpolate, Img } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
-import { Phone, Eyebrow, Heading, SceneLayout } from "./Shared";
+import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
 
 export const SceneResults: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
   const frame = useCurrentFrame();
@@ -17,9 +17,7 @@ export const SceneResults: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
       }
       right={
         <Phone>
-          <div style={{ fontSize: 13, fontWeight: 600, color: theme.muted, marginBottom: 12 }}>
-            Swappup / Browse
-          </div>
+          <ScreenHeader title={c.s5_screen} />
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {c.s5_cards.map((card, i) => {
               const s = spring({ frame: frame - 6 - i * 8, fps, config: { damping: 16 } });
@@ -38,37 +36,29 @@ export const SceneResults: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
                     flexDirection: "column",
                   }}
                 >
-                  {/* Image placeholder */}
+                  {/* Destination image */}
                   <div
                     style={{
-                      height: 84,
-                      background: `linear-gradient(135deg, hsl(${card.hue}, 65%, 45%), hsl(${card.hue + 30}, 70%, 35%))`,
+                      height: 90,
                       position: "relative",
-                      display: "flex",
-                      alignItems: "flex-end",
-                      padding: 8,
+                      overflow: "hidden",
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: 9,
-                        fontWeight: 700,
-                        color: "#fff",
-                        background: "rgba(0,0,0,0.45)",
-                        padding: "2px 7px",
-                        borderRadius: 999,
-                        letterSpacing: 0.4,
-                      }}
-                    >
-                      {card.city}
-                    </span>
+                    <Img
+                      src={card.image}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%)" }} />
+                    <div style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.55)", color: theme.primary, fontWeight: 800, fontSize: 12, padding: "3px 8px", borderRadius: 8 }}>
+                      {card.price}
+                    </div>
                   </div>
-                  <div style={{ padding: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ padding: "8px 10px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: theme.text }}>{card.route}</span>
                       <span style={{ fontSize: 10, color: theme.muted }}>{card.date}</span>
                     </div>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: theme.primary }}>{card.price}</span>
+                    <span style={{ fontSize: 9, color: theme.muted, whiteSpace: "nowrap" }}>{card.airline}</span>
                   </div>
                 </div>
               );

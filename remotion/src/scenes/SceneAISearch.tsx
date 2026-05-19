@@ -1,7 +1,7 @@
 import { useCurrentFrame, useVideoConfig, spring } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
-import { Phone, Eyebrow, Heading, SceneLayout } from "./Shared";
+import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
 
 export const SceneAISearch: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
   const frame = useCurrentFrame();
@@ -22,7 +22,7 @@ export const SceneAISearch: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
       }
       right={
         <Phone>
-          <div style={{ fontSize: 13, fontWeight: 600, color: theme.muted, marginBottom: 14 }}>Swappup / Browse</div>
+          <ScreenHeader title={c.s4_screen} />
           <div
             style={{
               border: `2px solid ${theme.primary}`,
