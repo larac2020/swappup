@@ -1,96 +1,51 @@
 ## Goal
 
-Turn `swappup.com` from an auth-walled app entry into a public marketing site, while keeping the existing app fully gated behind authentication.
+Replace the small hand-maintained European list in `src/data/flightData.ts` with a global dataset covering every airport that has scheduled commercial passenger flights. No UI changes — every screen that uses cities (Sell, Onboarding, Preferences, Browse filters, listing cards, lookups) automatically picks up the new data through the existing helpers.
 
-## New public routes
+## Approach
 
-| Route | Page | Notes |
-|---|---|---|
-| `/` | Marketing homepage | Hero, screens, value props, footer |
-| `/about` | About Swappup | Mission, vision, what it does, for whom |
-| `/terms-and-conditions` | Terms | Reuses existing `LegalPage` (markdown) |
-| `/privacy-policy` | Privacy | Reuses existing `LegalPage` (markdown) |
-| `/login` | Login form | Existing `AuthForm` in login mode |
-| `/sign-up` | Sign-up form | Existing `AuthForm` in sign-up mode |
+1. **Source data**: use the public OpenFlights `airports.dat` dataset (≈7,700 airports worldwide, includes IATA, city, country, name). Filter to entries that:
+   - have a valid 3-letter IATA code,
+   - are flagged as type `airport` (excludes heliports / train stations / closed),
+   - appear in the OpenFlights `routes.dat` file at least once as origin or destination (this is the practical proxy for "has scheduled commercial flights" and removes ~3,000 GA-only fields).
+   Result: ~3,300 commercial airports across ~230 countries.
 
-Old `/terms` and `/privacy` will 301-redirect (client-side `<Navigate replace>`) to the new URLs so existing emails / links keep working.
+2. **Generate the dataset offline** with a one-off Node script (run via `code--exec`, not shipped in the app):
+   - Download `airports.dat` + `routes.dat` from the OpenFlights GitHub mirror.
+   - Build a deduplicated array of `{ city, country, airportCode, airportName }` entries.
+   - Normalise country names to match Swappup's existing conventions (e.g. "United Kingdom", "United States", "Czech Republic" → use the same spelling already in the file; build a small override map for the ~15 known mismatches).
+   - Sort by country, then city, then airport code so the file is reviewable in PR diffs.
+   - Write the result to `src/data/airports.generated.ts` as `export const airports: CityData[] = [...]`.
 
-## Marketing pages — structure
+3. **Wire it into `flightData.ts`**:
+   - Keep the `CityData` interface and all helper functions (`getCountries`, `getCitiesByCountry`, `getUniqueCities`, `getPrimaryAirportCode`, `getAirportNameByCode`, etc.) unchanged.
+   - Replace the inline `cities` array with `export { airports as cities } from "./airports.generated"`.
+   - Keep the `airlines` array and `getAirlineData` exactly as they are.
 
-**Shared marketing layout** (`MarketingLayout`):
-- Top bar: Swappup logo (left) + "Login" and "Sign up" buttons (top right). Sign up is the primary CTA.
-- Page content slot.
-- Footer with: links to About, Terms & Conditions, Privacy Policy; company info block (address, registration number — placeholders for you to fill in); copyright.
+4. **Performance sanity checks** (the dataset grows ~50×):
+   - `ListingFilters`, `SellTicket`, `Onboarding`, `Preferences` already use Combobox/Command components that filter on type — confirm they still feel snappy with ~3,300 entries. If any of them iterate the full list on every render, memoise the country→cities map once at module load.
+   - Add a memoised `citiesByCountry` map inside `flightData.ts` so `getCitiesByCountry()` becomes O(1) instead of O(n).
 
-**Homepage (`/`)** sections:
-1. Hero — headline, subheadline, primary "Sign up" CTA, secondary "Login".
-2. Product screens — 2–3 mockup screenshots (placeholders sourced from `src/assets`, easy to swap).
-3. Value for users — short copy: turn unused tickets into cash, find cheaper flights from real travellers.
-4. USPs — 3–4 cards: ease of use, secure escrow, ID-verified users, value recovered.
-5. Final CTA band — "Get started" → `/sign-up`.
-
-**About (`/about`)**:
-- What Swappup is, who it's for, mission, vision. Single column, marketing layout.
-
-**Terms / Privacy**: keep current `LegalPage` markdown rendering; just expose them at the new URLs and wrap-or-not as preferred (initial pass: leave standalone, footer links point to the new paths).
-
-## Auth routing changes
-
-Current state: `/` is the auth screen behind `PublicRoute`. After auth, user is sent to `/home` (or `/onboarding`).
-
-Changes in `src/App.tsx`:
-- `/` → public `Home` marketing page (no auth check, accessible to everyone).
-- `/login` → `PublicRoute` wrapping `<Auth mode="login" />`.
-- `/sign-up` → `PublicRoute` wrapping `<Auth mode="signup" />`.
-- `/about` → public.
-- `/terms-and-conditions` → public (renders existing `LegalPage doc="terms"`).
-- `/privacy-policy` → public (renders existing `LegalPage doc="privacy"`).
-- `/terms` → `<Navigate to="/terms-and-conditions" replace />`.
-- `/privacy` → `<Navigate to="/privacy-policy" replace />`.
-- `ProtectedRoute` unchanged. When unauthenticated users hit `/home`, `/account`, etc., redirect target becomes `/login` instead of `/`.
-- `PublicRoute` (when already authenticated) keeps redirecting to `/home`, so logged-in users hitting `/login` or `/sign-up` skip past auth.
-
-The marketing homepage is reachable by everyone — even logged-in users — so they can revisit it. The top bar on the marketing layout will show "Open app" instead of Login/Sign up when `useAuth().isAuthenticated` is true.
-
-## Auth form — initial mode
-
-`AuthForm` currently toggles between login and signup internally. Add an optional `initialMode?: "login" | "signup"` prop and pass it from the `Auth` page based on the route (`/login` vs `/sign-up`). The internal toggle stays.
-
-## SEO
-
-- `index.html`: update sitewide title/description to marketing copy, keep canonical `https://swappup.com/`, add `Organization` JSON-LD.
-- Install `react-helmet-async` and add per-route `<Helmet>` to Home, About, Terms, Privacy with their own title/description/canonical/`og:*`.
-- `public/robots.txt` and a basic `sitemap.xml` listing the four public pages.
-
-## i18n
-
-All new marketing copy goes through the existing `useLanguage()` / `translations.ts` system (EN + IT), consistent with the rest of the app.
-
-## Design
-
-Reuses the existing dark charcoal + gold/amber + glassmorphism design tokens from `index.css` / `tailwind.config.ts`. No new color system.
-
-## Files to add
-
-- `src/components/layout/MarketingLayout.tsx` — top bar + footer wrapper.
-- `src/components/layout/MarketingHeader.tsx`
-- `src/components/layout/MarketingFooter.tsx` — links + company info block.
-- `src/pages/Landing.tsx` — the new public homepage at `/`.
-- `src/pages/About.tsx`
-- New marketing translation keys in `src/i18n/translations.ts`.
-- `public/sitemap.xml`.
-
-## Files to change
-
-- `src/App.tsx` — new routes, redirects, `/login` and `/sign-up`, public `/`.
-- `src/pages/Auth.tsx` + `src/components/auth/AuthForm.tsx` — accept `initialMode` prop derived from route.
-- Anywhere the code redirects unauthenticated users to `/` (e.g. `ProtectedRoute`, sign-out flows) → redirect to `/login` instead. I'll grep for `Navigate to="/"` and `navigate("/")` to catch all of them.
-- `index.html` — marketing meta + JSON-LD.
-- `src/main.tsx` — add `HelmetProvider`.
-- `public/robots.txt` — allow crawl, point at sitemap.
+5. **Validation**:
+   - Spot-check 10 random cities (London, Tokyo, Buenos Aires, Reykjavik, Nairobi, Auckland, etc.) load correctly in the Sell flow and Browse filters.
+   - Confirm existing listings still resolve via `getAirportNameByCode` (lookup by IATA — unchanged).
+   - Run `tsc` via the harness to confirm no type drift.
 
 ## Out of scope
 
-- No rewrite of terms/privacy copy (you said keep as-is).
-- No design exploration round — using current design tokens directly. If you want me to generate visual direction options for the landing page first, say the word and I'll run that before implementing.
-- Final company info (address, registration number) and product screenshots: I'll put clear placeholders so you can drop the real values in.
+- No change to country list semantics used by billing-address validation (`mem://logic/location-validation`) — that mapping lives elsewhere and is unaffected.
+- No translations for city names (cities stay in their English/local OpenFlights form, matching the current convention).
+- No airline list changes.
+- No backend/DB migration: listings already store free-form `departure_city` / `arrival_city` strings plus IATA codes, so old data keeps working.
+
+## Files
+
+- **Add**: `src/data/airports.generated.ts` (auto-generated, ~3,300 entries, ~150 KB).
+- **Edit**: `src/data/flightData.ts` — swap inline array for re-export, add memoised lookup map.
+- **Add (dev-only, not committed to runtime)**: `scripts/build-airports.mjs` — the generator, kept in the repo for future refreshes.
+
+## Risks & mitigations
+
+- **Country-name mismatches** between OpenFlights and Swappup's billing-address country list → handled by the override map in the generator; any remaining mismatch surfaces as a city tagged with an unknown country and is logged during generation for manual review.
+- **Bundle size**: +~150 KB raw / ~40 KB gzipped added to the main bundle. Acceptable for now; if it becomes an issue we can lazy-load the array via dynamic import in a follow-up.
+- **Stale data**: OpenFlights is community-maintained and updates infrequently. The generator script makes refreshes a one-command job.
