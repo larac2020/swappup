@@ -185,7 +185,7 @@ export const faqContent = {
       "Everything you need to know about pricing, protection and using Swappup — for both first-time visitors and existing travellers.",
     stillNeedHelp: {
       h2: "Still need help?",
-      bodyBefore: "Signed-in users can reach our team from the in-app Support page. New here? ",
+      bodyBefore: "Email us anytime at support@swappup.com. New here? ",
       linkText: "Create an account",
       bodyAfter: " to get started.",
     },
@@ -237,7 +237,7 @@ export const faqContent = {
       {
         title: "Account & support",
         items: [
-          { q: "How do I contact support?", a: "Signed-in users can reach our team from the Support page inside the app. We typically reply within one business day." },
+          { q: "How do I contact support?", a: "Email us at support@swappup.com and we'll typically reply within one business day." },
           { q: "How is my data handled?", a: "privacy_link" },
           { q: "How do I close my account?", a: "From Account → Privacy & Data, you can permanently delete your account and personal data at any time." },
         ],
