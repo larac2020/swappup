@@ -92,15 +92,15 @@ export const landingContent = {
     demoEyebrow: "Guarda com'è facile",
     demoTitle: "Vendere o comprare un biglietto non è mai stato così semplice.",
     demoSubtitle: "Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click.\nIn cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.",
-    sellTitle: "Trasforma i biglietti inutilizzati in denaro",
+    sellTitle: "Recupera parte di quello che hai speso",
     sellBody:
-      "La maggior parte delle compagnie aeree non rimborsa il biglietto se cambi programma. Swappup ti aiuta a recuperare quei soldi — qualcun altro prende il tuo posto e tu ti porti a casa il valore del biglietto.",
+      "Se i tuoi piani cambiano, la compagnia aerea quasi mai ti rimborsa. Con Swappup metti in vendita il tuo biglietto e recuperi una parte di quello che hai speso — un piccolo vantaggio invece di una perdita totale.",
     sellBullets: [
-      "Scegli tu il prezzo. Decidi tu.",
-      "Vendi solo a persone che ci hanno mostrato un documento vero — niente acquirenti anonimi.",
-      "Custodiamo i soldi dell'acquirente in sicurezza finché non conferma che il biglietto è a suo nome.",
+      "Scegli il tuo prezzo di vendita.",
+      "Vendi in totale sicurezza — niente acquirenti anonimi.",
+      "Ricevi il tuo pagamento sul tuo conto preferito.",
     ],
-    buyTitle: "Trova posti che altri viaggiatori non possono usare",
+    buyTitle: "Trova il tuo prossimo viaggio a meno",
     buyBody:
       "Sfoglia voli messi in vendita da viaggiatori che hanno cambiato programma. Spesso costano meno che prenotare direttamente — stesso posto, stesso volo, stessa compagnia.",
     buyBullets: [
@@ -117,7 +117,7 @@ export const landingContent = {
       { title: "Valore davvero recuperato", body: "Riprenditi i soldi che altrimenti resterebbero alla compagnia aerea." },
     ],
     finalTitle: "Pronto a scambiare il tuo prossimo volo?",
-    finalSubtitle: "Iscriverti è gratis. Basta un minuto per mettere in vendita un biglietto o trovarne uno.",
+    finalSubtitle: "Iscriverti è gratis. Bastano pochi click per mettere in vendita un biglietto o trovarne uno.",
     finalCta: "Crea il tuo account",
     finalLogin: "Accedi",
   },
