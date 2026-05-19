@@ -7,6 +7,7 @@ import { headerContent } from "@/i18n/marketingContent";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 
 export function MarketingHeader() {
   const { isAuthenticated } = useAuth();
@@ -71,14 +72,7 @@ export function MarketingHeader() {
 
         {/* Mobile menu */}
         <div className="flex md:hidden items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setLocale(locale === "en" ? "it" : "en")}
-            aria-label={c.languageLabel}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/50 bg-background/40 text-base leading-none"
-          >
-            <span aria-hidden="true">{locale === "en" ? "🇬🇧" : "🇮🇹"}</span>
-          </button>
+          <LanguageToggle />
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={c.menu}>
