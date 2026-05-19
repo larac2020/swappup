@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { landingContent, marketingMeta } from "@/i18n/marketingContent";
+import { PhoneMock } from "@/components/marketing/PhoneMock";
 
 export default function Landing() {
   const { locale } = useLanguage();
@@ -50,20 +51,36 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Product screens placeholder */}
-          <div className="mt-16 grid gap-4 sm:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="glass aspect-[9/16] rounded-2xl border border-border/50 bg-secondary/30 flex items-center justify-center text-xs text-muted-foreground"
-              >
-                {c.productScreenLabel(i)}
-              </div>
-            ))}
+          {/* Product screens */}
+          <div className="mt-16 grid gap-10 sm:grid-cols-2 sm:gap-6">
+            <PhoneMock kind="browse" locale={locale} caption={c.browseCaption} />
+            <PhoneMock kind="sell" locale={locale} caption={c.sellCaption} />
           </div>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            {c.productScreenHint}
-          </p>
+        </div>
+      </section>
+
+      {/* Demo video */}
+      <section className="border-t border-border/50 bg-secondary/10">
+        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-2xl text-center space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">{c.demoEyebrow}</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{c.demoTitle}</h2>
+            <p className="text-muted-foreground">{c.demoSubtitle}</p>
+          </div>
+          <div className="mt-10 overflow-hidden rounded-3xl border border-border/50 bg-background shadow-2xl shadow-primary/10">
+            <video
+              key={locale}
+              className="block w-full"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/videos/swappup-demo-poster.jpg"
+            >
+              <source src={`/videos/swappup-demo-${locale}.mp4`} type="video/mp4" />
+            </video>
+          </div>
         </div>
       </section>
 
