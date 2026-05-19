@@ -16,7 +16,7 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
       left={
         <>
           <Eyebrow>{c.s3_eyebrow}</Eyebrow>
-          <Heading>{c.s3_publish}</Heading>
+          <Heading>{c.s3_title}</Heading>
         </>
       }
       right={
