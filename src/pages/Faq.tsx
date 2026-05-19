@@ -39,7 +39,7 @@ export default function Faq() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("airline_change_fees")
-        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type")
+        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, updated_at")
         .eq("is_transferable", true)
         .eq("route_type", "international")
         .order("airline_name", { ascending: true });
@@ -47,6 +47,24 @@ export default function Faq() {
       return data || [];
     },
   });
+
+  const linkifyEmail = (text: string): React.ReactNode => {
+    const re = /support@swappup\.com/g;
+    const parts = text.split(re);
+    if (parts.length === 1) return text;
+    const nodes: React.ReactNode[] = [];
+    parts.forEach((p, i) => {
+      nodes.push(p);
+      if (i < parts.length - 1) {
+        nodes.push(
+          <a key={i} href="mailto:support@swappup.com" className="text-primary underline">
+            support@swappup.com
+          </a>,
+        );
+      }
+    });
+    return <>{nodes}</>;
+  };
 
   const renderAnswer = (raw: string): React.ReactNode => {
     if (raw === "signup_link") {
@@ -69,7 +87,7 @@ export default function Faq() {
         </>
       );
     }
-    return raw;
+    return linkifyEmail(raw);
   };
 
   const answerText = (raw: string): string => {
