@@ -72,7 +72,6 @@ export function MarketingHeader() {
 
         {/* Mobile menu */}
         <div className="flex md:hidden items-center gap-1">
-          <LanguageToggle />
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={c.menu}>
@@ -121,6 +120,9 @@ export function MarketingHeader() {
                     </SheetClose>
                   </>
                 )}
+                <div className="mt-4 flex justify-center">
+                  <LanguageToggle />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
