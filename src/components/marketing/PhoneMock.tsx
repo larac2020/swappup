@@ -1,4 +1,4 @@
-import { Plane, Heart, Search, Sparkles, ArrowRight, Upload, CheckCircle2, Rocket, Bell } from "lucide-react";
+import { Plane, Heart, Sparkles, ArrowRight, Upload, CheckCircle2, Bell, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ScreenKind = "browse" | "sell";
@@ -36,29 +36,47 @@ const browseCopy = {
 const sellCopy = {
   en: {
     title: "Sell your ticket",
-    step: "Step 2 of 3 · Review details",
+    steps: ["Upload", "Review", "Publish"],
+    routeHeader: "Route",
+    fromLabel: "From",
+    toLabel: "To",
     from: "London Gatwick (LGW)",
-    to: "Barcelona (BCN)",
+    to: "Barcelona El Prat (BCN)",
+    dateHeader: "Flight date",
     date: "Sat 6 Jun · 09:25",
-    airline: "easyJet · U28491",
-    passenger: "1 adult · Economy",
-    paid: "Original price £142",
-    listingPrice: "Listing price £89",
-    boost: "Boost visibility · +£2.99",
-    publish: "Publish listing",
+    flightHeader: "Flight details",
+    airlineLabel: "Airline",
+    airline: "easyJet",
+    flightLabel: "Flight no.",
+    flightNo: "U28491",
+    priceHeader: "Price",
+    originalLabel: "Paid",
+    originalPrice: "£142",
+    listingLabel: "Listing price",
+    listingPrice: "£89",
+    publish: "Continue",
   },
   it: {
     title: "Vendi il tuo biglietto",
-    step: "Passo 2 di 3 · Controlla i dettagli",
+    steps: ["Carica", "Rivedi", "Pubblica"],
+    routeHeader: "Tratta",
+    fromLabel: "Da",
+    toLabel: "A",
     from: "Milano Malpensa (MXP)",
-    to: "Barcellona (BCN)",
+    to: "Barcellona El Prat (BCN)",
+    dateHeader: "Data del volo",
     date: "Sab 6 giu · 09:25",
-    airline: "Vueling · VY6321",
-    passenger: "1 adulto · Economy",
-    paid: "Prezzo originale €148",
-    listingPrice: "Prezzo di vendita €95",
-    boost: "Aumenta visibilità · +€2,99",
-    publish: "Pubblica annuncio",
+    flightHeader: "Dettagli volo",
+    airlineLabel: "Compagnia",
+    airline: "Vueling",
+    flightLabel: "Numero volo",
+    flightNo: "VY6321",
+    priceHeader: "Prezzo",
+    originalLabel: "Pagato",
+    originalPrice: "€148",
+    listingLabel: "Prezzo di vendita",
+    listingPrice: "€95",
+    publish: "Continua",
   },
 } as const;
 
@@ -141,21 +159,62 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
   const c = sellCopy[locale];
   return (
     <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
-      <div className="flex items-center justify-between pb-1">
+      <div className="flex items-center justify-between pb-2">
         <span className="text-sm font-semibold">{c.title}</span>
       </div>
-      <p className="text-[10px] text-muted-foreground">{c.step}</p>
 
-      <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
-        <div className="space-y-1.5 text-xs">
-          <Row label={c.from} />
-          <Row label={c.to} />
-          <Row label={c.date} />
-          <Row label={c.airline} />
-          <Row label={c.passenger} />
-          <Row label={c.paid} muted />
-          <Row label={c.listingPrice} />
-        </div>
+      {/* Stepper — step 2 active */}
+      <div className="flex items-center gap-1 pb-2.5">
+        {c.steps.map((label, i) => {
+          const done = i < 1;
+          const active = i === 1;
+          return (
+            <div key={label} className="flex flex-1 items-center gap-1">
+              <div
+                className={cn(
+                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[8px] font-bold",
+                  active && "border-primary bg-primary text-primary-foreground",
+                  done && "border-primary/50 bg-primary/20 text-primary",
+                  !active && !done && "border-border bg-secondary/50 text-muted-foreground",
+                )}
+              >
+                {done ? <CheckCircle2 className="h-2.5 w-2.5" /> : i + 1}
+              </div>
+              {i < c.steps.length - 1 && (
+                <div className={cn("h-px flex-1", done ? "bg-primary/50" : "bg-border")} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="space-y-2 overflow-hidden">
+        {/* Route */}
+        <Section icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader}>
+          <Field label={c.fromLabel} value={c.from} />
+          <Field label={c.toLabel} value={c.to} />
+        </Section>
+
+        {/* Date */}
+        <Section icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader}>
+          <Field value={c.date} />
+        </Section>
+
+        {/* Flight */}
+        <Section title={c.flightHeader}>
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.airlineLabel} value={c.airline} />
+            <Field label={c.flightLabel} value={c.flightNo} />
+          </div>
+        </Section>
+
+        {/* Price */}
+        <Section title={c.priceHeader}>
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.originalLabel} value={c.originalPrice} muted />
+            <Field label={c.listingLabel} value={c.listingPrice} accent />
+          </div>
+        </Section>
       </div>
 
       <div className="mt-auto pt-3">
@@ -168,11 +227,31 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
   );
 }
 
-function Row({ label, muted }: { label: string; muted?: boolean }) {
+function Section({ icon, title, children }: { icon?: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <CheckCircle2 className={cn("h-3 w-3 shrink-0", muted ? "text-muted-foreground" : "text-primary")} />
-      <span className={cn("truncate", muted && "text-muted-foreground")}>{label}</span>
+    <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+      <div className="flex items-center gap-1 pb-1 text-[10px] font-semibold text-foreground">
+        {icon}
+        <span>{title}</span>
+      </div>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, value, muted, accent }: { label?: string; value: string; muted?: boolean; accent?: boolean }) {
+  return (
+    <div className="rounded-md bg-background/60 px-2 py-1">
+      {label && <div className="text-[8.5px] uppercase tracking-wide text-muted-foreground">{label}</div>}
+      <div
+        className={cn(
+          "truncate text-[11px] font-medium",
+          muted && "text-muted-foreground line-through",
+          accent && "text-primary font-semibold",
+        )}
+      >
+        {value}
+      </div>
     </div>
   );
 }
