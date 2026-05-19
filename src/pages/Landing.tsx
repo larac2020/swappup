@@ -53,7 +53,7 @@ export default function Landing() {
               <img
                 src={swappupLogo}
                 alt="Swappup"
-                className="h-16 w-auto sm:h-20 md:h-24"
+                className="h-10 w-auto sm:h-12 md:h-14"
               />
             </div>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
