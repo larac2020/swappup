@@ -124,7 +124,6 @@ export const SceneBoostPublish: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) =
               {c.s3_fee_title}
             </div>
             <FeeRow label={c.s3_fee_listing} value={c.s3_fee_listing_value} />
-            <FeeRow label={c.s3_fee_namechange} value={c.s3_fee_namechange_value} negative />
             <FeeRow label={c.s3_fee_platform} value={c.s3_fee_platform_value} negative />
             <div style={{ height: 1, background: theme.border, margin: "2px 0" }} />
             <FeeRow label={c.s3_fee_payout} value={c.s3_fee_payout_value} bold />
