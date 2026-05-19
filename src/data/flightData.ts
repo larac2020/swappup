@@ -6,9 +6,6 @@ export interface CityData {
   airportName: string;
 }
 
-export const cities: CityData[] = [
-  // United Kingdom
-  { city: "London", country: "United Kingdom", airportCode: "LHR", airportName: "Heathrow" },
   { city: "London", country: "United Kingdom", airportCode: "LGW", airportName: "Gatwick" },
   { city: "London", country: "United Kingdom", airportCode: "STN", airportName: "Stansted" },
   { city: "London", country: "United Kingdom", airportCode: "LTN", airportName: "Luton" },
@@ -112,54 +109,78 @@ export const cities: CityData[] = [
   { city: "Marrakech", country: "Morocco", airportCode: "RAK", airportName: "Menara" },
   // Egypt
   { city: "Cairo", country: "Egypt", airportCode: "CAI", airportName: "Cairo International" },
-  { city: "Hurghada", country: "Egypt", airportCode: "HRG", airportName: "Hurghada" },
-];
+import { airports as _airports } from "./airports.generated";
+
+// Global dataset of commercial airports (sourced from OpenFlights via scripts/build-airports.mjs).
+export const cities: CityData[] = _airports;
+
+// Pre-built lookup maps so helpers stay O(1) on the global dataset (~3300 entries).
+const _citiesByCountry = new Map<string, string[]>();
+const _airportsByCity = new Map<string, CityData[]>();
+const _airportByCode = new Map<string, CityData>();
+const _countryByCity = new Map<string, string>();
+const _uniqueCities: { city: string; country: string }[] = [];
+{
+  const seenCity = new Set<string>();
+  const tmpByCountry = new Map<string, Set<string>>();
+  for (const c of cities) {
+    const cityKey = `${c.city}|${c.country}`;
+    if (!seenCity.has(cityKey)) {
+      seenCity.add(cityKey);
+      _uniqueCities.push({ city: c.city, country: c.country });
+      if (!_countryByCity.has(c.city)) _countryByCity.set(c.city, c.country);
+    }
+    if (!tmpByCountry.has(c.country)) tmpByCountry.set(c.country, new Set());
+    tmpByCountry.get(c.country)!.add(c.city);
+    if (!_airportsByCity.has(c.city)) _airportsByCity.set(c.city, []);
+    _airportsByCity.get(c.city)!.push(c);
+    _airportByCode.set(c.airportCode, c);
+  }
+  for (const [country, set] of tmpByCountry) {
+    _citiesByCountry.set(country, [...set].sort());
+  }
+}
+const _countries = [..._citiesByCountry.keys()].sort();
 
 // Get unique cities (first airport per city)
 export function getUniqueCities(): { city: string; country: string }[] {
-  const seen = new Set<string>();
-  return cities.filter((c) => {
-    const key = `${c.city}|${c.country}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).map(({ city, country }) => ({ city, country }));
+  return _uniqueCities;
 }
 
 // Get unique countries
 export function getCountries(): string[] {
-  return [...new Set(cities.map((c) => c.country))].sort();
+  return _countries;
 }
 
 // Get cities for a given country
 export function getCitiesByCountry(country: string): string[] {
-  return [...new Set(cities.filter((c) => c.country === country).map((c) => c.city))].sort();
+  return _citiesByCountry.get(country) ?? [];
 }
 
 // Get the country for a given city
 export function getCountryForCity(city: string): string | undefined {
-  return cities.find((c) => c.city === city)?.country;
+  return _countryByCity.get(city);
 }
 
 // Get airport code(s) for a city
 export function getAirportCodesForCity(city: string): CityData[] {
-  return cities.filter((c) => c.city === city);
+  return _airportsByCity.get(city) ?? [];
 }
 
 // Get first airport code for a city (for display)
 export function getPrimaryAirportCode(city: string): string {
-  return cities.find((c) => c.city === city)?.airportCode ?? "";
+  return _airportsByCity.get(city)?.[0]?.airportCode ?? "";
 }
 
 // Get primary airport name for a city
 export function getPrimaryAirportName(city: string): string {
-  return cities.find((c) => c.city === city)?.airportName ?? "";
+  return _airportsByCity.get(city)?.[0]?.airportName ?? "";
 }
 
 // Lookup airport name by IATA code
 export function getAirportNameByCode(code: string | null | undefined): string {
   if (!code) return "";
-  return cities.find((c) => c.airportCode === code)?.airportName ?? "";
+  return _airportByCode.get(code)?.airportName ?? "";
 }
 
 // Airlines with typical name change fees
