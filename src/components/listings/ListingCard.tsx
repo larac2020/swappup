@@ -1,4 +1,4 @@
-import { Calendar, Plane, Users, Heart, ShoppingCart, ArrowLeftRight, ArrowRight } from "lucide-react";
+import { Calendar, Users, Heart, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -185,42 +185,25 @@ export function ListingCard({
     >
       <div className="glass rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-glow-sm">
         {/* Image */}
-        <div className="relative h-40 overflow-hidden">
+        <div className="relative h-32 overflow-hidden">
           <img
             src={imageUrl || `https://images.unsplash.com/photo-1488085061387-422e29b40080?w=800&auto=format&fit=crop`}
             alt={destinationCity}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-          
-          {/* Trip type badge */}
-          <div className="absolute top-3 left-3">
-            <div className="glass-strong rounded-lg px-2 py-1 flex items-center gap-1">
-              {returnDate ? (
-                <>
-                  <ArrowLeftRight className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wide">{t("tripRoundTrip") || "Round-trip"}</span>
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wide">{t("tripOneWay") || "One-way"}</span>
-                </>
-              )}
-            </div>
-          </div>
 
           {/* Price badge — advertised price only */}
-          <div className="absolute top-3 right-3">
-            <div className="glass-strong rounded-xl px-3 py-1.5">
-              <span className="text-lg font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
+          <div className="absolute top-2 right-2">
+            <div className="glass-strong rounded-lg px-2.5 py-1">
+              <span className="text-base font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
             </div>
           </div>
 
           {/* Favorite button */}
           <button
             onClick={handleFavoriteClick}
-            className="absolute bottom-3 right-3 p-1.5 rounded-lg glass-strong transition-colors"
+            className="absolute bottom-2 right-2 p-1.5 rounded-lg glass-strong transition-colors"
           >
             <Heart
               className={cn(
@@ -234,42 +217,46 @@ export function ListingCard({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3">
+        <div className="p-3 space-y-2">
           {(
             <>
-              {/* Route with carrier on the right */}
+              {/* Route: cities on top, codes with arrow below */}
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="text-center min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="text-center min-w-0 flex-1">
+                    <p className="font-semibold text-foreground text-sm truncate leading-tight">{originCity}</p>
                     {originCode && (
-                      <span className="text-xs font-bold text-primary">{originCode}</span>
+                      <span className="text-[10px] font-bold text-primary tracking-wide">{originCode}</span>
                     )}
-                    <p className="font-semibold text-foreground text-sm truncate">{originCity}</p>
                   </div>
-                  <Plane className="w-4 h-4 text-primary -rotate-45 flex-shrink-0" />
-                  <div className="text-center min-w-0">
+                  <span className="text-primary text-sm font-bold flex-shrink-0" aria-label={returnDate ? t("tripRoundTrip") : t("tripOneWay")}>
+                    {returnDate ? "⇄" : "→"}
+                  </span>
+                  <div className="text-center min-w-0 flex-1">
+                    <p className="font-semibold text-foreground text-sm truncate leading-tight">{destinationCity}</p>
                     {destCode && (
-                      <span className="text-xs font-bold text-primary">{destCode}</span>
+                      <span className="text-[10px] font-bold text-primary tracking-wide">{destCode}</span>
                     )}
-                    <p className="font-semibold text-foreground text-sm truncate">{destinationCity}</p>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{carrierLabel}</span>
               </div>
 
-              {/* Details */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>
-                    {formatDate(departureDate)}
-                    {returnDate && ` - ${formatDate(returnDate)}`}
-                  </span>
+              {/* Details + carrier */}
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span className="truncate">
+                      {formatDate(departureDate)}
+                      {returnDate && ` - ${formatDate(returnDate)}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    <span>{ticketCount}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
-                </div>
+                <span className="truncate text-right flex-shrink-0 max-w-[40%]">{carrierLabel}</span>
               </div>
             </>
           )}
@@ -277,11 +264,11 @@ export function ListingCard({
           {/* Add to Cart CTA */}
           <Button
             size="sm"
-            className="w-full gap-2"
+            className="w-full gap-2 h-8 text-xs"
             onClick={handleAddToCart}
             disabled={addToCart.isPending}
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingCart className="w-3.5 h-3.5" />
             {t("cardAddToCart")}
           </Button>
         </div>

@@ -175,6 +175,10 @@ const translations = {
     cardAddedToCart: "Added to cart",
     tripRoundTrip: "Round-trip",
     tripOneWay: "One-way",
+    feeLastVerified: "Fee last verified",
+    verifiedToday: "verified today",
+    verifiedDaysAgo: "verified {days}d ago",
+    feeAccuracyDisclaimer: "Fees are auto-verified against the airline's website but may change without notice. Swappup is not responsible for inaccurate pricing — please double-check on the airline's site and flag any discrepancy below.",
 
     // My Listings
     myListingsTitle: "My Listings",
@@ -1034,6 +1038,10 @@ const translations = {
     cardAddedToCart: "Aggiunto al carrello",
     tripRoundTrip: "Andata e ritorno",
     tripOneWay: "Solo andata",
+    feeLastVerified: "Tariffa verificata l'ultima volta",
+    verifiedToday: "verificata oggi",
+    verifiedDaysAgo: "verificata {days}g fa",
+    feeAccuracyDisclaimer: "Le tariffe sono verificate automaticamente sul sito della compagnia, ma possono variare senza preavviso. Swappup non è responsabile per importi inesatti — ti invitiamo a controllare sul sito ufficiale e segnalare eventuali discrepanze qui sotto.",
 
     // My Listings
     myListingsTitle: "I Miei Annunci",
