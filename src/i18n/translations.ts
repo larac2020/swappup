@@ -836,12 +836,6 @@ const translations = {
 
     // Account extra
     accountVersion: "SwappUp v1.0.0",
-    aboutRegisteredOffice: "Sede legale",
-    aboutCompanyNo: "Numero di iscrizione",
-    aboutVersion: "Versione",
-    aboutBuild: "Build",
-    aboutRights: "Tutti i diritti riservati.",
-    headerSupport: "Supporto",
     aboutRegisteredOffice: "Registered office",
     aboutCompanyNo: "Company No.",
     aboutVersion: "Version",
