@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 const STALE_DAYS = 30;
+const FORCE_REFRESH_COOLDOWN_MINUTES = 60;
 const FIRECRAWL = "https://api.firecrawl.dev/v2/search";
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -156,8 +157,20 @@ Deno.serve(async (req) => {
       !cached.last_verified_at ||
       Date.now() - new Date(cached.last_verified_at).getTime() > STALE_DAYS * 86400_000;
 
-    if (cached && !stale && !force_refresh) {
-      return new Response(JSON.stringify({ ...cached, cached: true }), {
+    // Cooldown on force_refresh: prevents authenticated users from burning
+    // Firecrawl + AI credits by repeatedly calling with force_refresh=true.
+    let refreshThrottled = false;
+    let effectiveForceRefresh = !!force_refresh;
+    if (effectiveForceRefresh && cached?.last_verified_at) {
+      const ageMs = Date.now() - new Date(cached.last_verified_at).getTime();
+      if (ageMs < FORCE_REFRESH_COOLDOWN_MINUTES * 60_000) {
+        effectiveForceRefresh = false;
+        refreshThrottled = true;
+      }
+    }
+
+    if (cached && !stale && !effectiveForceRefresh) {
+      return new Response(JSON.stringify({ ...cached, cached: true, refresh_throttled: refreshThrottled }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
