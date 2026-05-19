@@ -4,7 +4,11 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function Auth() {
+interface AuthProps {
+  initialMode?: "login" | "signup";
+}
+
+export default function Auth({ initialMode = "login" }: AuthProps = {}) {
   const navigate = useNavigate();
   const { isAuthenticated, loading, user } = useAuth();
   const [routing, setRouting] = useState(false);
@@ -39,5 +43,5 @@ export default function Auth() {
     );
   }
 
-  return <AuthForm />;
+  return <AuthForm initialMode={initialMode} />;
 }
