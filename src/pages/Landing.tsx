@@ -76,7 +76,6 @@ export default function Landing() {
               loop
               playsInline
               preload="metadata"
-              poster="/videos/swappup-demo-poster.jpg"
             >
               <source src={`/videos/swappup-demo-${locale}.mp4`} type="video/mp4" />
             </video>
