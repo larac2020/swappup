@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  CheckCircle2
+  CheckCircle2, HelpCircle, ChevronLeft, ChevronRight
 } from "lucide-react";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
@@ -29,6 +29,7 @@ import {
 } from "@/data/flightData";
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Link } from "react-router-dom";
 
 interface TicketInclusions {
   luggageIncluded: boolean;
@@ -120,7 +121,7 @@ export default function SellTicket() {
   const editId = searchParams.get("edit");
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   // Check profile completion for sell gating
   const { data: gateProfile } = useQuery({
@@ -139,6 +140,10 @@ export default function SellTicket() {
   const isPaymentComplete = typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true";
   const allSectionsComplete = isProfileComplete && isAddressComplete && isVerified && isPaymentComplete;
   const isEditMode = !!editId;
+
+  // Wizard (3-step) mode is enabled only when creating a new listing.
+  const wizard = !isEditMode;
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const [isReturn, setIsReturn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -834,8 +839,41 @@ export default function SellTicket() {
 
         {(isEditMode || allSectionsComplete || !gateProfile) && (
         <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+          {/* Stepper (wizard mode only) */}
+          {wizard && (
+            <div className="flex items-center justify-between gap-2 px-1">
+              {[
+                { n: 1 as const, label: locale === "it" ? "Carica" : "Upload" },
+                { n: 2 as const, label: locale === "it" ? "Rivedi i dati" : "Review details" },
+                { n: 3 as const, label: locale === "it" ? "Promuovi e pubblica" : "Boost & publish" },
+              ].map((s, idx, arr) => {
+                const done = step > s.n;
+                const active = step === s.n;
+                return (
+                  <div key={s.n} className="flex-1 flex items-center gap-2">
+                    <div className={cn(
+                      "shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors",
+                      active && "bg-primary text-primary-foreground border-primary",
+                      done && "bg-primary/20 text-primary border-primary/50",
+                      !active && !done && "bg-secondary/50 text-muted-foreground border-border"
+                    )}>
+                      {done ? <CheckCircle2 className="w-4 h-4" /> : s.n}
+                    </div>
+                    <span className={cn(
+                      "text-xs font-medium hidden sm:inline",
+                      active ? "text-foreground" : "text-muted-foreground"
+                    )}>{s.label}</span>
+                    {idx < arr.length - 1 && (
+                      <div className={cn("h-px flex-1", done ? "bg-primary/50" : "bg-border")} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Upload Ticket — REQUIRED */}
-          {!isEditMode && (
+          {!isEditMode && (!wizard || step === 1) && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Upload className="w-5 h-5 text-primary" />
@@ -870,12 +908,83 @@ export default function SellTicket() {
                   </>
                 )}
               </label>
+
+              {/* Inline transferability check — shown as soon as an airline is detected */}
+              {formData.airline && (
+                <TransferabilityCheck
+                  airline={formData.airline}
+                  fareType={formData.fareType || "standard"}
+                  onResult={(r) => {
+                    setFlightTransferBlocked(r.blocking);
+                    setFlightTransferFee(r.fee);
+                    setFlightFeeAcknowledged(r.acknowledged);
+                  }}
+                />
+              )}
+
+              {/* Blocked airline: deep-link to FAQ list of supported airlines */}
+              {flightTransferBlocked && (
+                <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-4 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-destructive">
+                        {locale === "it"
+                          ? "Questa compagnia aerea non consente il cambio nome"
+                          : "This airline does not allow name changes"}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {locale === "it"
+                          ? "Su Swappup puoi vendere solo biglietti di compagnie che permettono il trasferimento del nominativo. Consulta l'elenco delle compagnie supportate e le rispettive tariffe di cambio nome."
+                          : "On Swappup you can only sell tickets from airlines that allow name transfers. See the list of supported airlines and their name-change fees."}
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild type="button" variant="outline" size="sm" className="w-full">
+                    <Link to="/faq#supported-airlines">
+                      <HelpCircle className="w-4 h-4" />
+                      {locale === "it" ? "Vedi compagnie supportate e tariffe" : "View supported airlines & fees"}
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* Step 1 nav */}
+              {wizard && (
+                <Button
+                  type="button"
+                  variant="gold"
+                  size="lg"
+                  className="w-full"
+                  disabled={
+                    !ticketUploaded ||
+                    flightTransferBlocked ||
+                    (flightTransferFee !== null && !flightFeeAcknowledged)
+                  }
+                  onClick={() => setStep(2)}
+                >
+                  {locale === "it" ? "Continua" : "Continue"}
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           )}
 
           {/* FLIGHT TICKET FORM */}
-          {formData.listingType === "flight_ticket" && (
+          {formData.listingType === "flight_ticket" && (!wizard || step === 2) && (
             <>
+          {/* Transferability check (edit mode only — wizard renders it in step 1) */}
+          {isEditMode && formData.airline && (
+            <TransferabilityCheck
+              airline={formData.airline}
+              fareType={formData.fareType || "standard"}
+              onResult={(r) => {
+                setFlightTransferBlocked(r.blocking);
+                setFlightTransferFee(r.fee);
+                setFlightFeeAcknowledged(r.acknowledged);
+              }}
+            />
+          )}
           {/* Flight schedule verification status */}
           {(isVerifyingFlight || flightVerification) && (
             <div>
@@ -1116,19 +1225,6 @@ export default function SellTicket() {
                 </div>
               </div>
 
-              {/* Transferability Check */}
-              {formData.airline && (
-                <TransferabilityCheck
-                  airline={formData.airline}
-                  fareType={formData.fareType || "standard"}
-                  onResult={(r) => {
-                    setFlightTransferBlocked(r.blocking);
-                    setFlightTransferFee(r.fee);
-                    setFlightFeeAcknowledged(r.acknowledged);
-                  }}
-                />
-              )}
-
               {/* Outbound flight */}
               <div className="space-y-3 rounded-xl border border-border/50 p-3">
                 <p className="text-sm font-medium text-primary">Outbound flight</p>
@@ -1289,10 +1385,40 @@ export default function SellTicket() {
               className="bg-secondary/50 min-h-24"
             />
           </div>
+
+          {/* Step 2 nav */}
+          {wizard && (
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" size="lg" className="flex-1" onClick={() => setStep(1)}>
+                <ChevronLeft className="w-4 h-4" />
+                {locale === "it" ? "Indietro" : "Back"}
+              </Button>
+              <Button
+                type="button"
+                variant="gold"
+                size="lg"
+                className="flex-1"
+                disabled={
+                  !formData.originCity ||
+                  !formData.destinationCity ||
+                  !formData.airline ||
+                  !formData.departureDate ||
+                  !formData.price ||
+                  !!priceError ||
+                  (flightVerification != null && (flightVerification.status === "mismatch" || flightVerification.status === "not_found"))
+                }
+                onClick={() => setStep(3)}
+              >
+                {locale === "it" ? "Continua" : "Continue"}
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
             </>
           )}
 
           {/* Bump Listing */}
+          {(!wizard || step === 3) && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -1372,8 +1498,9 @@ export default function SellTicket() {
               );
             })()}
           </div>
+          )}
 
-          {(() => {
+          {(!wizard || step === 3) && (() => {
             const blockedByVerification =
               formData.listingType === "flight_ticket" &&
               flightVerification != null &&
@@ -1406,11 +1533,18 @@ export default function SellTicket() {
                     </label>
                   </div>
                 )}
+              <div className="flex gap-3">
+                {wizard && (
+                  <Button type="button" variant="outline" size="xl" className="flex-1" onClick={() => setStep(2)}>
+                    <ChevronLeft className="w-5 h-5" />
+                    {locale === "it" ? "Indietro" : "Back"}
+                  </Button>
+                )}
               <Button
                 type="submit"
                 variant="gold"
                 size="xl"
-                className="w-full"
+                className={wizard ? "flex-1" : "w-full"}
                   disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck)}
               >
                 {createListingMutation.isPending ? (
@@ -1423,6 +1557,7 @@ export default function SellTicket() {
                   <>{editId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}{editId ? t("sellSubmitUpdate") : t("sellHeaderCreate")}</>
                 )}
               </Button>
+              </div>
               </>
             );
           })()}
