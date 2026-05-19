@@ -1,7 +1,7 @@
 import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
-import { Phone, Eyebrow, Heading, SceneLayout } from "./Shared";
+import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
 
 export const SceneAutofill: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
   const frame = useCurrentFrame();
@@ -18,7 +18,7 @@ export const SceneAutofill: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
       }
       right={
         <Phone>
-          <div style={{ fontSize: 13, fontWeight: 600, color: theme.muted, marginBottom: 12 }}>Swappup / Sell</div>
+          <ScreenHeader title={c.s2_screen} />
           <div style={{ color: theme.primary, fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>
             ✦ {c.s2_title}
           </div>
@@ -52,6 +52,29 @@ export const SceneAutofill: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
               );
             })}
           </div>
+          <div style={{ flex: 1 }} />
+          {(() => {
+            const cta = spring({ frame: frame - 30, fps, config: { damping: 18 } });
+            return (
+              <div
+                style={{
+                  marginTop: 14,
+                  padding: "12px",
+                  borderRadius: 12,
+                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryGlow})`,
+                  color: "#000",
+                  textAlign: "center",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  opacity: cta,
+                  transform: `translateY(${interpolate(cta, [0, 1], [10, 0])}px)`,
+                  boxShadow: `0 10px 24px ${theme.primary}40`,
+                }}
+              >
+                {c.s2_cta}
+              </div>
+            );
+          })()}
         </Phone>
       }
     />
