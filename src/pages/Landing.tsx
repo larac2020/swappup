@@ -256,3 +256,42 @@ export default function Landing() {
     </MarketingLayout>
   );
 }
+
+function StoreBadge({
+  store,
+  topLine,
+  bottomLine,
+  href,
+}: {
+  store: "apple" | "google";
+  topLine: string;
+  bottomLine: string;
+  href: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-foreground px-4 py-2.5 text-background transition hover:bg-foreground/90"
+      aria-label={`${topLine} ${bottomLine}`}
+    >
+      {store === "apple" ? (
+        <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden="true">
+          <path d="M16.365 1.43c0 1.14-.43 2.22-1.17 3.03-.79.88-2.07 1.55-3.13 1.47-.14-1.12.43-2.28 1.17-3.05.84-.86 2.27-1.5 3.13-1.45zM21 17.36c-.55 1.27-.81 1.83-1.51 2.95-.98 1.55-2.36 3.48-4.07 3.49-1.52.02-1.91-.99-3.97-.98-2.06.01-2.49.99-4.01.97-1.71-.02-3.02-1.76-4-3.31C.84 16.05.55 11.7 2.34 9.36c1.27-1.66 3.27-2.63 5.16-2.63 1.92 0 3.13 1.05 4.72 1.05 1.54 0 2.48-1.05 4.7-1.05 1.68 0 3.45.92 4.71 2.5-4.14 2.27-3.47 8.21.37 8.13z" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+          <path fill="#34A853" d="M3.6 20.4c.2.1.5.2.8.2.3 0 .6-.1.9-.3l10-5.8-2.8-2.8L3.6 20.4z" />
+          <path fill="#FBBC04" d="M19.7 11.2 16.5 9.4 13.3 12l3.2 3.2 3.2-1.8c.6-.3.9-.9.9-1.6 0-.6-.3-1.3-.9-1.6z" />
+          <path fill="#4285F4" d="M3.6 3.6c-.1.2-.1.4-.1.7v15.4c0 .2 0 .4.1.7L13.3 12 3.6 3.6z" />
+          <path fill="#EA4335" d="M13.3 12 16.5 9.4 5.3 3.4c-.3-.2-.6-.3-.9-.3-.3 0-.6.1-.8.2L13.3 12z" />
+        </svg>
+      )}
+      <span className="flex flex-col items-start leading-tight">
+        <span className="text-[10px] uppercase tracking-wide opacity-80">{topLine}</span>
+        <span className="text-sm font-semibold">{bottomLine}</span>
+      </span>
+    </a>
+  );
+}
