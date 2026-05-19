@@ -65,9 +65,11 @@ export const ScenePayout: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
             <div style={{ fontSize: 16, fontWeight: 700, color: theme.text, textAlign: "center", padding: "0 12px" }}>
               {c.s6_title}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: theme.primary }}>
-              {c.s6_sub}
-            </div>
+            {c.s6_sub && (
+              <div style={{ fontSize: 22, fontWeight: 800, color: theme.primary }}>
+                {c.s6_sub}
+              </div>
+            )}
           </div>
         </Phone>
       }
