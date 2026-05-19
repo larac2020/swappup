@@ -12,23 +12,23 @@ interface PhoneMockProps {
 
 const browseCopy = {
   en: {
-    title: "Browse",
+    title: "Search",
     aiPlaceholder: "Weekend trip from London",
     chips: ["Any date", "Direct", "Carry-on"],
     cards: [
-      { from: "LHR", to: "BCN", date: "Sat 6 Jun", airline: "British Airways", price: "£68", original: "£142" },
-      { from: "LGW", to: "LIS", date: "Fri 5 Jun", airline: "easyJet", price: "£54", original: "£119" },
-      { from: "STN", to: "BUD", date: "Sat 6 Jun", airline: "Ryanair", price: "£39", original: "£88" },
+      { from: "LGW", to: "BCN", date: "Sat 6 Jun", airline: "easyJet", price: "£68" },
+      { from: "LGW", to: "LIS", date: "Fri 5 Jun", airline: "Vueling", price: "£54" },
+      { from: "STN", to: "BUD", date: "Sat 6 Jun", airline: "Ryanair", price: "£39" },
     ],
   },
   it: {
-    title: "Sfoglia",
+    title: "Cerca",
     aiPlaceholder: "Weekend da Milano",
     chips: ["Qualsiasi data", "Diretto", "Bagaglio a mano"],
     cards: [
-      { from: "MXP", to: "BCN", date: "Sab 6 giu", airline: "Vueling", price: "€72", original: "€148" },
-      { from: "LIN", to: "LIS", date: "Ven 5 giu", airline: "ITA Airways", price: "€89", original: "€164" },
-      { from: "BGY", to: "BUD", date: "Sab 6 giu", airline: "Ryanair", price: "€44", original: "€96" },
+      { from: "MXP", to: "BCN", date: "Sab 6 giu", airline: "Vueling", price: "€72" },
+      { from: "LIN", to: "LIS", date: "Ven 5 giu", airline: "ITA Airways", price: "€89" },
+      { from: "BGY", to: "BUD", date: "Sab 6 giu", airline: "Ryanair", price: "€44" },
     ],
   },
 } as const;
@@ -37,15 +37,15 @@ const sellCopy = {
   en: {
     title: "Sell your ticket",
     step: "Step 2 of 3 · Review details",
-    from: "London Heathrow (LHR)",
+    from: "London Gatwick (LGW)",
     to: "Barcelona (BCN)",
     date: "Sat 6 Jun · 09:25",
-    airline: "British Airways · BA478",
+    airline: "easyJet · U28491",
     passenger: "1 adult · Economy",
     paid: "Original price £142",
+    listingPrice: "Listing price £89",
     boost: "Boost visibility · +£2.99",
     publish: "Publish listing",
-    autoFilled: "Auto-filled from PDF",
   },
   it: {
     title: "Vendi il tuo biglietto",
@@ -56,9 +56,9 @@ const sellCopy = {
     airline: "Vueling · VY6321",
     passenger: "1 adulto · Economy",
     paid: "Prezzo originale €148",
+    listingPrice: "Prezzo di vendita €95",
     boost: "Aumenta visibilità · +€2,99",
     publish: "Pubblica annuncio",
-    autoFilled: "Compilato dal PDF",
   },
 } as const;
 
@@ -125,9 +125,8 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
             <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>{card.date} · {card.airline}</span>
             </div>
-            <div className="mt-1.5 flex items-baseline justify-between">
+            <div className="mt-1.5 flex items-baseline justify-end">
               <span className="text-sm font-semibold text-primary">{card.price}</span>
-              <span className="text-[10px] text-muted-foreground line-through">{card.original}</span>
             </div>
           </div>
         ))}
@@ -146,17 +145,14 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
       <p className="text-[10px] text-muted-foreground">{c.step}</p>
 
       <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
-        <div className="flex items-center gap-1.5 text-[10px] font-medium text-primary">
-          <Sparkles className="h-3 w-3" />
-          {c.autoFilled}
-        </div>
-        <div className="mt-2 space-y-1.5 text-xs">
+        <div className="space-y-1.5 text-xs">
           <Row label={c.from} />
           <Row label={c.to} />
           <Row label={c.date} />
           <Row label={c.airline} />
           <Row label={c.passenger} />
           <Row label={c.paid} muted />
+          <Row label={c.listingPrice} />
         </div>
       </div>
 
