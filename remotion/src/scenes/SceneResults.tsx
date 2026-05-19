@@ -49,16 +49,13 @@ export const SceneResults: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%)" }} />
-                    <div style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.55)", color: theme.primary, fontWeight: 800, fontSize: 12, padding: "3px 8px", borderRadius: 8 }}>
-                      {card.price}
-                    </div>
                   </div>
                   <div style={{ padding: "8px 10px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: theme.text }}>{card.route}</span>
-                      <span style={{ fontSize: 10, color: theme.muted }}>{card.date}</span>
+                      <span style={{ fontSize: 10, color: theme.muted }}>{card.date} · {card.airline}</span>
                     </div>
-                    <span style={{ fontSize: 9, color: theme.muted, whiteSpace: "nowrap" }}>{card.airline}</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#F59E0B", whiteSpace: "nowrap" }}>{card.price}</span>
                   </div>
                 </div>
               );
