@@ -51,11 +51,11 @@ const sections: Section[] = [
       },
       {
         q: "Are there any fees for buyers or sellers?",
-        a: "Swappup charges a small service fee on successful transactions to cover payment processing, escrow, identity verification and platform operations. The exact amount is always shown clearly before you confirm a purchase or accept an offer — there are no surprises at checkout.",
+        a: "Swappup charges a small service fee on successful transactions to cover payment processing, secure payment handling, identity verification and platform operations. The exact amount is always shown clearly before you confirm a purchase or accept an offer — there are no surprises at checkout.",
       },
       {
         q: "Who pays the airline name-change fee?",
-        a: "The buyer pays the airline's name-change fee on top of the ticket price. We estimate it upfront based on the airline, hold it in escrow at checkout, and release it to the seller once the transfer is confirmed.",
+        a: "The buyer pays the airline's name-change fee on top of the ticket price. We estimate it upfront based on the airline, hold it safely at checkout, and release it to the seller once the transfer is confirmed.",
       },
       {
         q: "How do I set my price?",
@@ -72,7 +72,7 @@ const sections: Section[] = [
       },
       {
         q: "What happens to my money before I receive the ticket?",
-        a: "Your payment is held securely in escrow. The seller is only paid once the airline confirms the name change into your name. If the transfer doesn't happen on time, you are refunded automatically.",
+        a: "Your payment is held safely by Swappup. The seller is only paid once the airline confirms the name change into your name. If the transfer doesn't happen on time, you are refunded automatically.",
       },
       {
         q: "What if the seller doesn't transfer the ticket?",
@@ -97,7 +97,7 @@ const sections: Section[] = [
       },
       {
         q: "When do I get paid?",
-        a: "After the buyer purchases, you have 24 hours to complete the name change with the airline. Once the buyer confirms receipt, your payout is released from escrow to your linked account.",
+        a: "After the buyer purchases, you have 24 hours to complete the name change with the airline. Once the buyer confirms receipt, your payout is released to your linked account.",
       },
       {
         q: "Can I cancel a listing?",
@@ -118,7 +118,7 @@ const sections: Section[] = [
       },
       {
         q: "What if I change my mind after buying?",
-        a: "Because tickets are tied to flight dates, all sales are final once the airline confirms the name change. Before that point, you're protected by escrow.",
+        a: "Because tickets are tied to flight dates, all sales are final once the airline confirms the name change. Before that point, your payment is held safely and refundable if the transfer doesn't go through.",
       },
     ],
   },
