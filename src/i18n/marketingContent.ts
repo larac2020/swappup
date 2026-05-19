@@ -88,7 +88,7 @@ export const landingContent = {
     ctaGetStarted: "Inizia ora",
     ctaHaveAccount: "Ho già un account",
     browseCaption: "Cerca il tuo prossimo viaggio, descrivendolo con l'IA.",
-    sellCaption: "Carica il tuo biglietto, scegli il prezzo e pubblicalo.",
+    sellCaption: "Carica il tuo biglietto, scegli il prezzo e pubblica.",
     demoEyebrow: "Guarda com'è facile",
     demoTitle: "Vendere o comprare un biglietto non è mai stato così semplice.",
     demoSubtitle: "Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click.\nIn cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.",
