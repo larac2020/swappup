@@ -19,9 +19,6 @@ export const SceneAutofill: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
       right={
         <Phone>
           <ScreenHeader title={c.s2_screen} />
-          <div style={{ color: theme.primary, fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>
-            ✦ {c.s2_title}
-          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {rows.map((row, i) => {
               const s = spring({ frame: frame - 8 - i * 7, fps, config: { damping: 18 } });
