@@ -973,6 +973,18 @@ export default function SellTicket() {
           {/* FLIGHT TICKET FORM */}
           {formData.listingType === "flight_ticket" && (!wizard || step === 2) && (
             <>
+          {/* Transferability check (edit mode only — wizard renders it in step 1) */}
+          {isEditMode && formData.airline && (
+            <TransferabilityCheck
+              airline={formData.airline}
+              fareType={formData.fareType || "standard"}
+              onResult={(r) => {
+                setFlightTransferBlocked(r.blocking);
+                setFlightTransferFee(r.fee);
+                setFlightFeeAcknowledged(r.acknowledged);
+              }}
+            />
+          )}
           {/* Flight schedule verification status */}
           {(isVerifyingFlight || flightVerification) && (
             <div>
