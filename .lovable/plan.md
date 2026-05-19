@@ -1,15 +1,30 @@
-## Italian demo section copy update
+## Italian marketing copy refresh
 
-**File:** `src/i18n/marketingContent.ts` (Italian block only)
+**File:** `src/i18n/marketingContent.ts` — Italian block only. English untouched.
 
-1. Replace `demoTitle`:
-   - From: `Dall'upload alla vendita, in meno di un minuto.`
-   - To: `Vendere o comprare un biglietto non è mai stato così semplice.`
+### Sell section
 
-2. Update `demoSubtitle` to split the two sentences onto separate rows using a `\n` line break:
-   - From: `Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click. In cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.`
-   - To: `Pronto a vendere? Carica il tuo biglietto e pubblica l'annuncio in pochi click.\nIn cerca di un nuovo viaggio? Trova il tuo prossimo volo con la ricerca smart.`
+- `sellTitle`: `Trasforma i biglietti inutilizzati in denaro`
+  → `Recupera parte di quello che hai speso`
 
-3. In `src/pages/Landing.tsx`, add `whitespace-pre-line` to the demo subtitle `<p>` (currently it has no such class) so the `\n` renders as a visible line break.
+- `sellBody`:
+  → `Se i tuoi piani cambiano, la compagnia aerea quasi mai ti rimborsa. Con Swappup metti in vendita il tuo biglietto e recuperi una parte di quello che hai speso — un piccolo vantaggio invece di una perdita totale.`
 
-English copy is left untouched.
+- `sellBullets`:
+  1. `Scegli tu il prezzo. Decidi tu.` → `Scegli il tuo prezzo di vendita.`
+  2. `Vendi solo a persone che ci hanno mostrato un documento vero — niente acquirenti anonimi.` → `Vendi in totale sicurezza — niente acquirenti anonimi.`
+  3. `Custodiamo i soldi dell'acquirente in sicurezza finché non conferma che il biglietto è a suo nome.` → `Ricevi il tuo pagamento sul tuo conto preferito.`
+
+### Buy section
+
+- `buyTitle`: `Trova posti che altri viaggiatori non possono usare`
+  → `Trova il tuo prossimo viaggio a meno`
+
+- `buyBody`: (kept, still fits)
+
+### Final CTA
+
+- `finalSubtitle`: `Iscriverti è gratis. Basta un minuto per mettere in vendita un biglietto o trovarne uno.`
+  → `Iscriverti è gratis. Bastano pochi click per mettere in vendita un biglietto o trovarne uno.`
+
+No structural / English changes.
