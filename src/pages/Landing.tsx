@@ -85,7 +85,7 @@ export default function Landing() {
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
-                  <span>Set your price. We never take more than you decide is fair.</span>
+                  <span>Set your own price and stay in control of the deal.</span>
                 </li>
                 <li className="flex gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
