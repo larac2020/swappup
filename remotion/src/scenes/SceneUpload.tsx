@@ -1,7 +1,7 @@
 import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { theme } from "../theme";
 import type { copy } from "../copy";
-import { Phone, Eyebrow, Heading, SceneLayout } from "./Shared";
+import { Phone, Eyebrow, Heading, SceneLayout, ScreenHeader } from "./Shared";
 
 export const SceneUpload: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
   const frame = useCurrentFrame();
@@ -100,9 +100,3 @@ export const SceneUpload: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
     />
   );
 };
-
-const ScreenHeader: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ fontSize: 15, fontWeight: 700, color: theme.text, marginBottom: 14, textAlign: "center" }}>
-    {title}
-  </div>
-);
