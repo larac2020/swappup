@@ -1,44 +1,96 @@
-## Current state
+## Goal
 
-The scanner finding is **already partially addressed** — `get-name-change-fee` has both:
-- `verify_jwt = true` in `supabase/config.toml`
-- An in-function `auth.getUser()` check that returns 401 without a valid session
+Turn `swappup.com` from an auth-walled app entry into a public marketing site, while keeping the existing app fully gated behind authentication.
 
-Anonymous attackers can no longer hit this endpoint. The remaining risk is an **authenticated** user spamming `force_refresh: true` to burn Firecrawl + Lovable AI credits. The scanner's own remediation note (#3) recommends rate-limiting `force_refresh` per airline as the next layer.
+## New public routes
 
-## Recommended fix (best practice, defense in depth)
+| Route | Page | Notes |
+|---|---|---|
+| `/` | Marketing homepage | Hero, screens, value props, footer |
+| `/about` | About Swappup | Mission, vision, what it does, for whom |
+| `/terms-and-conditions` | Terms | Reuses existing `LegalPage` (markdown) |
+| `/privacy-policy` | Privacy | Reuses existing `LegalPage` (markdown) |
+| `/login` | Login form | Existing `AuthForm` in login mode |
+| `/sign-up` | Sign-up form | Existing `AuthForm` in sign-up mode |
 
-Three small, layered changes:
+Old `/terms` and `/privacy` will 301-redirect (client-side `<Navigate replace>`) to the new URLs so existing emails / links keep working.
 
-### 1. Server-side cooldown on `force_refresh` (primary fix)
+## Marketing pages — structure
 
-In `liveLookup` flow, before calling Firecrawl, check the cached row's `last_verified_at`. If a refresh happened in the last **60 minutes**, ignore `force_refresh` and return the cached value with a `refresh_throttled: true` flag. This caps live lookups at ~1/hour per airline+route globally, regardless of who calls it.
+**Shared marketing layout** (`MarketingLayout`):
+- Top bar: Swappup logo (left) + "Login" and "Sign up" buttons (top right). Sign up is the primary CTA.
+- Page content slot.
+- Footer with: links to About, Terms & Conditions, Privacy Policy; company info block (address, registration number — placeholders for you to fill in); copyright.
 
-No new table needed — the existing `airline_change_fees.last_verified_at` column is the rate-limit source of truth.
+**Homepage (`/`)** sections:
+1. Hero — headline, subheadline, primary "Sign up" CTA, secondary "Login".
+2. Product screens — 2–3 mockup screenshots (placeholders sourced from `src/assets`, easy to swap).
+3. Value for users — short copy: turn unused tickets into cash, find cheaper flights from real travellers.
+4. USPs — 3–4 cards: ease of use, secure escrow, ID-verified users, value recovered.
+5. Final CTA band — "Get started" → `/sign-up`.
 
-### 2. Per-user rate limit on the endpoint (cheap secondary layer)
+**About (`/about`)**:
+- What Swappup is, who it's for, mission, vision. Single column, marketing layout.
 
-Add a lightweight per-user throttle: max **10 calls / minute / user** to the function, tracked in a new `edge_function_rate_limits` table (`user_id`, `function_name`, `window_start`, `count`) or reuse an existing pattern if one exists. Returns 429 on excess. Protects against an attacker who tries to rotate airlines.
+**Terms / Privacy**: keep current `LegalPage` markdown rendering; just expose them at the new URLs and wrap-or-not as preferred (initial pass: leave standalone, footer links point to the new paths).
 
-### 3. Restrict `force_refresh` to staff (optional, strongest)
+## Auth routing changes
 
-`force_refresh` is really an admin / data-curation feature. We could gate it behind a `has_role(auth.uid(), 'admin')` check and let normal users only consume the cache (which auto-refreshes at 30-day staleness anyway). This eliminates the abuse surface entirely.
+Current state: `/` is the auth screen behind `PublicRoute`. After auth, user is sent to `/home` (or `/onboarding`).
 
-## What I recommend you pick
+Changes in `src/App.tsx`:
+- `/` → public `Home` marketing page (no auth check, accessible to everyone).
+- `/login` → `PublicRoute` wrapping `<Auth mode="login" />`.
+- `/sign-up` → `PublicRoute` wrapping `<Auth mode="signup" />`.
+- `/about` → public.
+- `/terms-and-conditions` → public (renders existing `LegalPage doc="terms"`).
+- `/privacy-policy` → public (renders existing `LegalPage doc="privacy"`).
+- `/terms` → `<Navigate to="/terms-and-conditions" replace />`.
+- `/privacy` → `<Navigate to="/privacy-policy" replace />`.
+- `ProtectedRoute` unchanged. When unauthenticated users hit `/home`, `/account`, etc., redirect target becomes `/login` instead of `/`.
+- `PublicRoute` (when already authenticated) keeps redirecting to `/home`, so logged-in users hitting `/login` or `/sign-up` skip past auth.
 
-- **Minimum viable:** Step 1 only. One-file change, eliminates 99% of the credit-burn risk with no schema work.
-- **Recommended:** Steps 1 + 3. Cleanest — regular users can never trigger paid calls on demand, and the 30-day staleness check handles legitimate refresh needs automatically.
-- **Belt-and-suspenders:** All three. Worth it only if the function will get more endpoints / public-ish surfaces later.
+The marketing homepage is reachable by everyone — even logged-in users — so they can revisit it. The top bar on the marketing layout will show "Open app" instead of Login/Sign up when `useAuth().isAuthenticated` is true.
 
-## Also worth doing while we're here
+## Auth form — initial mode
 
-- Mark the `get_name_change_fee_unauth` scanner finding as **fixed** (the auth gate is already in place; the finding is stale).
-- Update `@security-memory` to note the cooldown + role gate as the accepted pattern for paid-API edge functions, so the scanner doesn't re-flag this.
+`AuthForm` currently toggles between login and signup internally. Add an optional `initialMode?: "login" | "signup"` prop and pass it from the `Auth` page based on the route (`/login` vs `/sign-up`). The internal toggle stays.
 
-## Technical notes
+## SEO
 
-- The cooldown check belongs **before** the Firecrawl fetch in `liveLookup` (or inline in the handler before calling it) so no paid call fires when throttled.
-- 429 responses should include `Retry-After` header for good client behavior.
-- If we add the rate-limit table, use a `SECURITY DEFINER` RPC `consume_rate_limit(_fn text, _limit int, _window_seconds int)` returning boolean — keeps RLS simple and the logic reusable across other paid-API functions (`verify-id`, `verify-voucher`, `verify-flight`, `parse-ticket`, `ai-search`).
+- `index.html`: update sitewide title/description to marketing copy, keep canonical `https://swappup.com/`, add `Organization` JSON-LD.
+- Install `react-helmet-async` and add per-route `<Helmet>` to Home, About, Terms, Privacy with their own title/description/canonical/`og:*`.
+- `public/robots.txt` and a basic `sitemap.xml` listing the four public pages.
 
-Tell me which option (1, 1+3, or all three) you want and I'll implement it.
+## i18n
+
+All new marketing copy goes through the existing `useLanguage()` / `translations.ts` system (EN + IT), consistent with the rest of the app.
+
+## Design
+
+Reuses the existing dark charcoal + gold/amber + glassmorphism design tokens from `index.css` / `tailwind.config.ts`. No new color system.
+
+## Files to add
+
+- `src/components/layout/MarketingLayout.tsx` — top bar + footer wrapper.
+- `src/components/layout/MarketingHeader.tsx`
+- `src/components/layout/MarketingFooter.tsx` — links + company info block.
+- `src/pages/Landing.tsx` — the new public homepage at `/`.
+- `src/pages/About.tsx`
+- New marketing translation keys in `src/i18n/translations.ts`.
+- `public/sitemap.xml`.
+
+## Files to change
+
+- `src/App.tsx` — new routes, redirects, `/login` and `/sign-up`, public `/`.
+- `src/pages/Auth.tsx` + `src/components/auth/AuthForm.tsx` — accept `initialMode` prop derived from route.
+- Anywhere the code redirects unauthenticated users to `/` (e.g. `ProtectedRoute`, sign-out flows) → redirect to `/login` instead. I'll grep for `Navigate to="/"` and `navigate("/")` to catch all of them.
+- `index.html` — marketing meta + JSON-LD.
+- `src/main.tsx` — add `HelmetProvider`.
+- `public/robots.txt` — allow crawl, point at sitemap.
+
+## Out of scope
+
+- No rewrite of terms/privacy copy (you said keep as-is).
+- No design exploration round — using current design tokens directly. If you want me to generate visual direction options for the landing page first, say the word and I'll run that before implementing.
+- Final company info (address, registration number) and product screenshots: I'll put clear placeholders so you can drop the real values in.
