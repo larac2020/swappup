@@ -88,6 +88,7 @@ export const SceneCheckout: React.FC<{ c: (typeof copy)["en"] }> = ({ c }) => {
               {c.s5b_summary}
             </div>
             <Row label={c.s5b_ticket} value={c.s5b_ticket_value} />
+            <Row label={c.s5b_fee} value={c.s5b_fee_value} />
             <div style={{ height: 1, background: theme.border, margin: "2px 0" }} />
             <Row label={c.s5b_total} value={c.s5b_total_value} bold />
           </div>
