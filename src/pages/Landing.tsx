@@ -51,7 +51,7 @@ export default function Landing() {
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               {c.heroTitle1} <span className="text-primary">{c.heroTitle2}</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{c.heroSubtitle}</p>
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground whitespace-pre-line">{c.heroSubtitle}</p>
             <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
               <Button asChild variant="gold" size="lg" className="min-w-44">
                 <Link to="/sign-up">
@@ -95,7 +95,7 @@ export default function Landing() {
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             >
-              <source src={`/videos/swappup-demo-${locale}.mp4?v=6`} type="video/mp4" />
+              <source src={`/videos/swappup-demo-${locale}.mp4?v=7`} type="video/mp4" />
             </video>
             <button
               type="button"
