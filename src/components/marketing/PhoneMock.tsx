@@ -36,21 +36,23 @@ const browseCopy = {
 const sellCopy = {
   en: {
     title: "Sell your ticket",
-    steps: ["Upload", "Review", "Publish"],
-    routeHeader: "Route",
-    fromLabel: "From",
-    toLabel: "To",
-    from: "London Gatwick (LGW)",
-    to: "Barcelona El Prat (BCN)",
+    steps: ["Upload", "Review details", "Boost & publish"],
+    routeHeader: "Flight route",
+    countryLabel: "Country",
+    cityLabel: "City",
+    fromCountry: "United Kingdom",
+    fromCity: "London (LGW)",
+    toCountry: "Spain",
+    toCity: "Barcelona (BCN)",
     dateHeader: "Flight date",
     date: "Sat 6 Jun · 09:25",
-    flightHeader: "Flight details",
+    airlineHeader: "Airline & flight",
     airlineLabel: "Airline",
     airline: "easyJet",
     flightLabel: "Flight no.",
     flightNo: "U28491",
-    priceHeader: "Price",
-    originalLabel: "Paid",
+    priceHeader: "Pricing",
+    originalLabel: "Original price",
     originalPrice: "£142",
     listingLabel: "Listing price",
     listingPrice: "£89",
@@ -58,21 +60,23 @@ const sellCopy = {
   },
   it: {
     title: "Vendi il tuo biglietto",
-    steps: ["Carica", "Rivedi", "Pubblica"],
-    routeHeader: "Tratta",
-    fromLabel: "Da",
-    toLabel: "A",
-    from: "Milano Malpensa (MXP)",
-    to: "Barcellona El Prat (BCN)",
+    steps: ["Carica", "Rivedi i dati", "Promuovi e pubblica"],
+    routeHeader: "Tratta del volo",
+    countryLabel: "Paese",
+    cityLabel: "Città",
+    fromCountry: "Italia",
+    fromCity: "Milano (MXP)",
+    toCountry: "Spagna",
+    toCity: "Barcellona (BCN)",
     dateHeader: "Data del volo",
     date: "Sab 6 giu · 09:25",
-    flightHeader: "Dettagli volo",
+    airlineHeader: "Compagnia e volo",
     airlineLabel: "Compagnia",
     airline: "Vueling",
     flightLabel: "Numero volo",
     flightNo: "VY6321",
     priceHeader: "Prezzo",
-    originalLabel: "Pagato",
+    originalLabel: "Prezzo originale",
     originalPrice: "€148",
     listingLabel: "Prezzo di vendita",
     listingPrice: "€95",
@@ -188,33 +192,48 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         })}
       </div>
 
-      <div className="space-y-2 overflow-hidden">
-        {/* Route */}
-        <Section icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader}>
-          <Field label={c.fromLabel} value={c.from} />
-          <Field label={c.toLabel} value={c.to} />
-        </Section>
+      <div className="space-y-2.5 overflow-hidden">
+        {/* Flight route — mirrors the glass card on the real Sell page */}
+        <SectionHeader icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader} />
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2 space-y-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.countryLabel} value={c.fromCountry} />
+            <Field label={c.cityLabel} value={c.fromCity} />
+          </div>
+          <div className="flex justify-center py-0.5">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20">
+              <Plane className="h-2.5 w-2.5 -rotate-45 text-primary" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.countryLabel} value={c.toCountry} />
+            <Field label={c.cityLabel} value={c.toCity} />
+          </div>
+        </div>
 
         {/* Date */}
-        <Section icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader}>
+        <SectionHeader icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader} />
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
           <Field value={c.date} />
-        </Section>
+        </div>
 
-        {/* Flight */}
-        <Section title={c.flightHeader}>
+        {/* Airline & flight */}
+        <SectionHeader title={c.airlineHeader} />
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.airlineLabel} value={c.airline} />
             <Field label={c.flightLabel} value={c.flightNo} />
           </div>
-        </Section>
+        </div>
 
-        {/* Price */}
-        <Section title={c.priceHeader}>
+        {/* Pricing */}
+        <SectionHeader title={c.priceHeader} />
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.originalLabel} value={c.originalPrice} muted />
             <Field label={c.listingLabel} value={c.listingPrice} accent />
           </div>
-        </Section>
+        </div>
       </div>
 
       <div className="mt-auto pt-3">
@@ -227,14 +246,11 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
   );
 }
 
-function Section({ icon, title, children }: { icon?: React.ReactNode; title: string; children: React.ReactNode }) {
+function SectionHeader({ icon, title }: { icon?: React.ReactNode; title: string }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
-      <div className="flex items-center gap-1 pb-1 text-[10px] font-semibold text-foreground">
-        {icon}
-        <span>{title}</span>
-      </div>
-      <div className="space-y-1">{children}</div>
+    <div className="flex items-center gap-1 px-0.5 text-[10px] font-semibold text-foreground">
+      {icon}
+      <span>{title}</span>
     </div>
   );
 }
