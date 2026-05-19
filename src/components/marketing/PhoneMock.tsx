@@ -16,9 +16,9 @@ const browseCopy = {
     aiPlaceholder: "Weekend trip from London",
     chips: ["Any date", "Direct", "Carry-on"],
     cards: [
-      { from: "LGW", to: "BCN", date: "Sat 6 Jun", airline: "easyJet", price: "£68" },
-      { from: "LGW", to: "LIS", date: "Fri 5 Jun", airline: "Vueling", price: "£54" },
-      { from: "STN", to: "BUD", date: "Sat 6 Jun", airline: "Ryanair", price: "£39" },
+      { from: "LGW", to: "BCN", date: "Sat 6 Jun", airline: "easyJet", price: "£68", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
+      { from: "LGW", to: "LIS", date: "Fri 5 Jun", airline: "Vueling", price: "£54", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
+      { from: "STN", to: "BUD", date: "Sat 6 Jun", airline: "Ryanair", price: "£39", image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=600&auto=format&fit=crop" },
     ],
   },
   it: {
@@ -26,9 +26,9 @@ const browseCopy = {
     aiPlaceholder: "Weekend da Milano",
     chips: ["Qualsiasi data", "Diretto", "Bagaglio a mano"],
     cards: [
-      { from: "MXP", to: "BCN", date: "Sab 6 giu", airline: "Vueling", price: "€72" },
-      { from: "LIN", to: "LIS", date: "Ven 5 giu", airline: "ITA Airways", price: "€89" },
-      { from: "BGY", to: "BUD", date: "Sab 6 giu", airline: "Ryanair", price: "€44" },
+      { from: "MXP", to: "BCN", date: "Sab 6 giu", airline: "Vueling", price: "€72", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&auto=format&fit=crop" },
+      { from: "LIN", to: "LIS", date: "Ven 5 giu", airline: "ITA Airways", price: "€89", image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&auto=format&fit=crop" },
+      { from: "BGY", to: "BUD", date: "Sab 6 giu", airline: "Ryanair", price: "€44", image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=600&auto=format&fit=crop" },
     ],
   },
 } as const;
@@ -112,20 +112,21 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
         {c.cards.map((card, i) => (
           <div
             key={i}
-            className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 backdrop-blur"
+            className="flex gap-2 rounded-xl border border-border/60 bg-secondary/30 p-2 backdrop-blur"
           >
-            <div className="flex items-center justify-between">
+            <div className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg">
+              <img src={card.image} alt={card.to} className="h-full w-full object-cover" loading="lazy" />
+              <Heart className="absolute right-1 top-1 h-3 w-3 text-white drop-shadow" />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col justify-between">
               <div className="flex items-center gap-1.5 text-xs font-medium">
                 <span>{card.from}</span>
                 <Plane className="h-3 w-3 text-primary" />
                 <span>{card.to}</span>
               </div>
-              <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+              <div className="text-[10px] text-muted-foreground truncate">{card.date} · {card.airline}</div>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-              <span>{card.date} · {card.airline}</span>
-            </div>
-            <div className="mt-1.5 flex items-baseline justify-end">
+            <div className="flex flex-col items-end justify-center pl-1">
               <span className="text-sm font-semibold text-primary">{card.price}</span>
             </div>
           </div>
@@ -153,16 +154,6 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
           <Row label={c.passenger} />
           <Row label={c.paid} muted />
           <Row label={c.listingPrice} />
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-secondary/40 p-2.5">
-        <div className="flex items-center gap-2 text-xs">
-          <Rocket className="h-3.5 w-3.5 text-primary" />
-          <span>{c.boost}</span>
-        </div>
-        <div className="h-4 w-7 rounded-full bg-primary/80 p-0.5">
-          <div className="ml-auto h-3 w-3 rounded-full bg-background" />
         </div>
       </div>
 
