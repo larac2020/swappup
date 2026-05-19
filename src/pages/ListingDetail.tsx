@@ -188,6 +188,32 @@ export default function ListingDetail() {
   const listingCurrency = (listing as any).currency || "EUR";
   const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
 
+  // Last-verified timestamp for the airline name-change fee
+  const { data: feeMeta } = useQuery({
+    queryKey: ["airline-fee-meta", listing.airline],
+    queryFn: async () => {
+      if (!listing.airline) return null;
+      const { data } = await supabase
+        .from("airline_change_fees")
+        .select("last_verified_at, source_url")
+        .ilike("airline_name", listing.airline)
+        .order("last_verified_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!listing.airline && nameChangeFee > 0,
+  });
+
+  const formatVerified = (iso?: string | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    const diffHours = (Date.now() - d.getTime()) / 36e5;
+    if (diffHours < 24) return t("verifiedToday") || "verified today";
+    const days = Math.floor(diffHours / 24);
+    return (t("verifiedDaysAgo") || "verified {days}d ago").replace("{days}", String(days));
+  };
+
   return (
     <AppLayout showNav={false}>
       <div className="min-h-screen">
@@ -521,15 +547,25 @@ export default function ListingDetail() {
                   <span>{fmt(nameChangeFee)}</span>
                 </div>
               )}
+              {nameChangeFee > 0 && feeMeta?.last_verified_at && (
+                <p className="text-[11px] text-muted-foreground -mt-1">
+                  {t("feeLastVerified") || "Fee last verified"}: {formatVerified(feeMeta.last_verified_at)}
+                </p>
+              )}
               <div className="flex justify-between pt-2 border-t border-border/50 text-base font-semibold">
                 <span>{t("priceTotalYouPay")}</span>
                 <span className="text-primary">{fmt(totalPrice)}</span>
               </div>
             </div>
             {nameChangeFee > 0 && (
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {t(isTrain ? "trainAdditiveDisclaimer" : "flightAdditiveDisclaimer", { operator: carrierLabel, airline: carrierLabel })}
-              </p>
+              <>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(isTrain ? "trainAdditiveDisclaimer" : "flightAdditiveDisclaimer", { operator: carrierLabel, airline: carrierLabel })}
+                </p>
+                <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                  {t("feeAccuracyDisclaimer") || `Fees are auto-verified against ${carrierLabel}'s website but may change. Swappup is not responsible for inaccurate pricing — please double-check on the airline's site and flag any issue below.`}
+                </p>
+              </>
             )}
           </div>
 
