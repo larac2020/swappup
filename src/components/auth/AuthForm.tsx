@@ -14,8 +14,12 @@ import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
 
 type AuthMode = "login" | "signup" | "forgot";
 
-export function AuthForm() {
-  const [mode, setMode] = useState<AuthMode>("login");
+interface AuthFormProps {
+  initialMode?: "login" | "signup";
+}
+
+export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
