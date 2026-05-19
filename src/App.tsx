@@ -23,6 +23,7 @@ import Privacy from "./pages/Privacy";
 import Unsubscribe from "./pages/Unsubscribe";
 import Landing from "./pages/Landing";
 import About from "./pages/About";
+import Faq from "./pages/Faq";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             {/* Public marketing site */}
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<Faq />} />
             <Route path="/terms-and-conditions" element={<Terms />} />
             <Route path="/privacy-policy" element={<Privacy />} />
             {/* Legacy legal URLs */}
