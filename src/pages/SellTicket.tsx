@@ -121,7 +121,7 @@ export default function SellTicket() {
   const editId = searchParams.get("edit");
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   // Check profile completion for sell gating
   const { data: gateProfile } = useQuery({
@@ -843,9 +843,9 @@ export default function SellTicket() {
           {wizard && (
             <div className="flex items-center justify-between gap-2 px-1">
               {[
-                { n: 1 as const, label: t("sellStep1") || "Upload" },
-                { n: 2 as const, label: t("sellStep2") || "Review details" },
-                { n: 3 as const, label: t("sellStep3") || "Boost & publish" },
+                { n: 1 as const, label: locale === "it" ? "Carica" : "Upload" },
+                { n: 2 as const, label: locale === "it" ? "Rivedi i dati" : "Review details" },
+                { n: 3 as const, label: locale === "it" ? "Promuovi e pubblica" : "Boost & publish" },
               ].map((s, idx, arr) => {
                 const done = step > s.n;
                 const active = step === s.n;
