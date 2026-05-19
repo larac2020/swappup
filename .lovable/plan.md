@@ -1,50 +1,45 @@
-## Goal
-Fix the "Supported airlines & name-change fees" FAQ table so it shows real airlines with real fees, in alphabetical order, split into two sections: airlines that allow name changes, and airlines that don't (shown as "N/A").
+## What's happening today
+All airline fees were seeded as **EUR** with hard-coded euro amounts. The FAQ table renders that raw value (e.g. `€115.00 EUR`) and ignores the viewer's preferred currency, so a UK user never sees GBP.
 
-## 1. Seed real airline data (insert into `airline_change_fees`)
+Two separate issues are bundled in "are prices in the right currency?":
 
-Upsert the following rows with `last_verified_at = now()`, `confidence = 'high'`, `route_type = 'international'`, currency `EUR` (best-known public per-passenger fees as of May 2026 — user can correct later):
+1. **Storage currency** — every row says EUR, even for airlines that publish in another currency (BA / easyJet → GBP, Delta / United / American → USD, Norwegian → NOK, etc.). The auto-refresh job we discussed will fix this over time because the extractor returns the currency it found on the official page — but the current seed is wrong.
+2. **Display currency** — even when the row's currency is correct, the FAQ doesn't convert it to the viewer's `preferred_currency`. The app already has `useDisplayCurrency()` + `formatPrice(amount, from, to)` (`src/lib/currency.ts`) used elsewhere; the FAQ just isn't using them.
 
-**Transferable (allow name change):**
-| Airline | Fee | Notes |
-|---|---|---|
-| Ryanair | €115 | Online name correction |
-| Wizz Air | €60 | Online via Wizz Account |
-| Vueling | €60 | Per passenger, per flight |
-| Volotea | €50 | Name correction fee |
-| Air Europa | €120 | Name change fee |
-| Iberia | €80 | Per passenger |
-| ITA Airways | €90 | Per passenger |
-| Aer Lingus | €100 | Short-haul |
-| TAP Air Portugal | €100 | Per passenger |
-| Eurowings | €70 | Per passenger |
+## Plan
 
-**Non-transferable (`is_transferable = false`, fee = 0):**
-| Airline | Notes |
+### 1. Fix the seeded native currencies (data only)
+Update the existing rows so the stored currency matches what the airline actually publishes:
+
+| Currency | Airlines |
 |---|---|
-| easyJet | Only minor spelling corrections, no full name change |
-| British Airways | Non-transferable |
-| Lufthansa | Non-transferable |
-| Air France | Non-transferable |
-| KLM | Non-transferable |
-| Swiss | Non-transferable |
-| Delta | Non-transferable |
-| United | Non-transferable |
-| American Airlines | Non-transferable |
-| Emirates | Non-transferable |
+| EUR (keep) | Ryanair, Wizz Air, Vueling, Volotea, Air Europa, Iberia, ITA Airways, TAP Air Portugal, Eurowings, Aer Lingus, Pegasus, SunExpress, PLAY |
+| GBP | British Airways, easyJet |
+| USD | Delta, United, American Airlines, flydubai (publishes in AED but quoted in USD on intl site — keep as USD for now) |
+| NOK | Norwegian |
+| ISK | Icelandair |
+| MYR | AirAsia |
+| AUD | Jetstar |
+| SGD | Scoot |
+| PHP | Cebu Pacific |
+| INR | IndiGo |
+| CHF | Swiss |
 
-Existing wrong rows (Ryanair / Wizz Air / British Airways with €0) are overwritten via upsert on (`airline_code`, `route_type`).
+Fees themselves stay as the same rough amount but expressed in the native currency (e.g. BA stored as £0 non-transferable, Norwegian as 500 NOK, etc.). The amounts will be replaced with precise values by the auto-refresh job (separate plan); this step just gets the currency field right so display conversion works immediately.
 
-## 2. FAQ page update (`src/pages/Faq.tsx`)
+Also extend `SUPPORTED_CURRENCIES` + `RATES_PER_EUR` + `CURRENCY_SYMBOLS` in `src/lib/currency.ts` with `ISK`, `MYR`, `PHP` (the rest are already there).
 
-- Remove the `is_transferable = true` filter so both groups are fetched; sort alphabetically.
-- Split the result into two arrays: `transferable` and `nonTransferable`.
-- Render two subsections inside the "Supported airlines" block:
-  - **"Airlines that allow name changes" / "Compagnie che permettono il cambio nome"** — table with fee column.
-  - **"Airlines that don't allow name changes" / "Compagnie che non permettono il cambio nome"** — same table layout but the fee column shows **"N/A"** in muted text, and the leading icon switches from green check to a muted X / dash so it's instantly readable.
-- Keep the "Verified on" column for both sections.
-- Keep the existing intro copy but tweak it to mention the two groups (EN + IT).
+### 2. Make the FAQ table show the viewer's currency
+In `src/pages/Faq.tsx`:
 
-## 3. Out of scope
-- No change to the refresh job, dispute flow, edge functions, or any other page.
-- Real-world fees can vary by fare class and route; the user can correct individual values after seeding.
+- Call `useDisplayCurrency()` to get the target currency.
+- Replace the hand-rolled `{sym}{Number(fee).toFixed(2)} {CURRENCY}` with `formatPrice(fee, a.currency, displayCurrency)`.
+- Add a small caption under the table: *"Fees shown in your preferred currency (set in Account). Conversion is indicative; you'll be charged in the airline's currency."* (EN + IT).
+- For signed-out marketing visitors `useDisplayCurrency()` falls back to EUR, which is the expected default.
+
+### 3. (Carry-over from previous turn) Make the auto-refresh job currency-aware
+When we ship the cron-driven refresh, the Gemini extraction prompt already asks for `currency` in ISO code, and the upsert writes it to the row. We just need to make sure the harden-step in the previous plan **does not** force-overwrite currency to EUR (today's code does `currency: live.currency || "EUR"` which is fine) — so no extra work, just call it out so a future edit doesn't regress it.
+
+## Out of scope
+- Live FX rates (we keep the static table for display; payments still happen in the airline's currency at checkout).
+- Per-route currency variants (e.g. Ryanair publishing in GBP for UK departures) — `route_type` already exists on the table if we ever want to split.
