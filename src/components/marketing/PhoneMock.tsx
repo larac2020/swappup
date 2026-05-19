@@ -112,22 +112,23 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
         {c.cards.map((card, i) => (
           <div
             key={i}
-            className="flex gap-2 rounded-xl border border-border/60 bg-secondary/30 p-2 backdrop-blur"
+            className="overflow-hidden rounded-xl border border-border/60 bg-secondary/30 backdrop-blur"
           >
-            <div className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg">
+            <div className="relative h-16 w-full overflow-hidden">
               <img src={card.image} alt={card.to} className="h-full w-full object-cover" loading="lazy" />
-              <Heart className="absolute right-1 top-1 h-3 w-3 text-white drop-shadow" />
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 to-transparent" />
+              <div className="absolute right-1.5 top-1.5 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-semibold text-primary backdrop-blur">
+                {card.price}
+              </div>
+              <Heart className="absolute bottom-1.5 right-1.5 h-3 w-3 text-white drop-shadow" />
             </div>
-            <div className="flex min-w-0 flex-1 flex-col justify-between">
+            <div className="px-2.5 py-1.5">
               <div className="flex items-center gap-1.5 text-xs font-medium">
                 <span>{card.from}</span>
                 <Plane className="h-3 w-3 text-primary" />
                 <span>{card.to}</span>
               </div>
               <div className="text-[10px] text-muted-foreground truncate">{card.date} · {card.airline}</div>
-            </div>
-            <div className="flex flex-col items-end justify-center pl-1">
-              <span className="text-sm font-semibold text-primary">{card.price}</span>
             </div>
           </div>
         ))}
