@@ -836,6 +836,12 @@ const translations = {
 
     // Account extra
     accountVersion: "SwappUp v1.0.0",
+    aboutRegisteredOffice: "Registered office",
+    aboutCompanyNo: "Company No.",
+    aboutVersion: "Version",
+    aboutBuild: "Build",
+    aboutRights: "All rights reserved.",
+    headerSupport: "Support",
 
     // Product tour
     tourWelcomeTitle: "Welcome to Swappup ✈️",
