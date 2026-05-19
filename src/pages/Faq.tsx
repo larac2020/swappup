@@ -244,38 +244,6 @@ export default function Faq() {
             </ul>
           </div>
 
-          {/* Non-transferable airlines */}
-          <h3 className="mt-8 text-base font-semibold text-foreground">
-            {locale === "it" ? "Compagnie che non permettono il cambio nome" : "Airlines that don't allow name changes"}
-          </h3>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-border/50">
-            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
-              <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
-              <span className="text-right">{locale === "it" ? "Verificata il" : "Verified on"}</span>
-            </div>
-            <ul className="divide-y divide-border/50">
-              {nonTransferable.map((a) => (
-                <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
-                    {a.airline_name}
-                  </span>
-                  <span className="text-right text-sm font-medium text-muted-foreground tabular-nums">
-                    {locale === "it" ? "N/D" : "N/A"}
-                  </span>
-                  <span className="text-right text-xs text-muted-foreground tabular-nums">
-                    {formatVerified(a)}
-                  </span>
-                </li>
-              ))}
-              {supportedAirlines && nonTransferable.length === 0 && (
-                <li className="px-4 py-6 text-sm text-muted-foreground">
-                  {locale === "it" ? "Nessuna compagnia in questo elenco." : "No airlines in this list."}
-                </li>
-              )}
-            </ul>
-          </div>
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
