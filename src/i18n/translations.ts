@@ -173,6 +173,8 @@ const translations = {
     cardTickets: "tickets",
     cardAddToCart: "Add to Cart",
     cardAddedToCart: "Added to cart",
+    tripRoundTrip: "Round-trip",
+    tripOneWay: "One-way",
 
     // My Listings
     myListingsTitle: "My Listings",
@@ -1030,6 +1032,8 @@ const translations = {
     cardTickets: "biglietti",
     cardAddToCart: "Aggiungi al Carrello",
     cardAddedToCart: "Aggiunto al carrello",
+    tripRoundTrip: "Andata e ritorno",
+    tripOneWay: "Solo andata",
 
     // My Listings
     myListingsTitle: "I Miei Annunci",

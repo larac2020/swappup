@@ -1,4 +1,4 @@
-import { Calendar, Plane, Users, Heart, ShoppingCart, Shield } from "lucide-react";
+import { Calendar, Plane, Users, Heart, ShoppingCart, ArrowLeftRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
@@ -194,13 +193,29 @@ export function ListingCard({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
           
+          {/* Trip type badge */}
+          <div className="absolute top-3 left-3">
+            <div className="glass-strong rounded-lg px-2 py-1 flex items-center gap-1">
+              {returnDate ? (
+                <>
+                  <ArrowLeftRight className="w-3 h-3 text-primary" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide">{t("tripRoundTrip") || "Round-trip"}</span>
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="w-3 h-3 text-primary" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide">{t("tripOneWay") || "One-way"}</span>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Price badge — advertised price only */}
           <div className="absolute top-3 right-3">
             <div className="glass-strong rounded-xl px-3 py-1.5">
               <span className="text-lg font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
             </div>
           </div>
-
 
           {/* Favorite button */}
           <button
@@ -242,22 +257,19 @@ export function ListingCard({
                 <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{carrierLabel}</span>
               </div>
 
-              {/* Details + Buyer Protection */}
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>
-                      {formatDate(departureDate)}
-                      {returnDate && ` - ${formatDate(returnDate)}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
-                  </div>
+              {/* Details */}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>
+                    {formatDate(departureDate)}
+                    {returnDate && ` - ${formatDate(returnDate)}`}
+                  </span>
                 </div>
-                <BuyerProtectionBadge compact sellerVerified />
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}</span>
+                </div>
               </div>
             </>
           )}
