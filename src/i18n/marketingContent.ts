@@ -84,7 +84,7 @@ export const landingContent = {
     heroTitle1: "Non perdere il tuo biglietto aereo.",
     heroTitle2: "Swappalo.",
     heroSubtitle:
-      "Hai cambiato programma? Metti in vendita il tuo biglietto gratis e ricopri le spese.\nCerchi un nuovo viaggio? Compra un biglietto da chi non può più volare, a meno del prezzo originale.",
+      "Hai cambiato programma? Vendi il tuo biglietto e ricopri le spese.\nCerchi un nuovo viaggio? Compra un biglietto da chi non può più volare, a meno del prezzo originale.",
     ctaGetStarted: "Inizia ora",
     ctaHaveAccount: "Ho già un account",
     browseCaption: "Sfoglia e cerca con l'AI i posti messi in vendita da viaggiatori veri.",
