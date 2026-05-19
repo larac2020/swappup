@@ -221,10 +221,13 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
           </div>
         </div>
 
-        {/* Date */}
+        {/* Date + Time (one-way) */}
         <SectionHeader icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader} />
         <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
-          <Field value={c.date} />
+          <div className="grid grid-cols-2 gap-1.5">
+            <Field label={c.dateLabel} value={c.date} />
+            <Field label={c.timeLabel} value={c.time} />
+          </div>
         </div>
 
         {/* Airline & flight */}
@@ -233,6 +236,15 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.airlineLabel} value={c.airline} />
             <Field label={c.flightLabel} value={c.flightNo} />
+          </div>
+        </div>
+
+        {/* Name-change fee notice (transferability check) */}
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-2 flex gap-1.5">
+          <Info className="h-3 w-3 shrink-0 text-primary mt-[1px]" />
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-semibold text-foreground">{c.feeTitle}</div>
+            <div className="text-[9.5px] leading-snug text-muted-foreground">{c.feeBody}</div>
           </div>
         </div>
 
