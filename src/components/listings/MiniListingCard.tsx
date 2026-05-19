@@ -1,4 +1,4 @@
-import { Plane } from "lucide-react";
+import { Plane, ArrowLeftRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryAirportCode } from "@/data/flightData";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
@@ -9,6 +9,7 @@ interface MiniListingCardProps {
   originCity: string;
   destinationCity: string;
   departureDate: string;
+  returnDate?: string;
   price: number;
   originalPrice?: number;
   imageUrl?: string;
@@ -27,6 +28,7 @@ export function MiniListingCard({
   originCity,
   destinationCity,
   departureDate,
+  returnDate,
   price,
   originalPrice,
   imageUrl,
@@ -62,6 +64,15 @@ export function MiniListingCard({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+          {/* Trip type */}
+          <div className="absolute top-1.5 left-1.5 glass-strong rounded-md px-1.5 py-0.5 flex items-center gap-1">
+            {returnDate ? (
+              <ArrowLeftRight className="w-2.5 h-2.5 text-primary" />
+            ) : (
+              <ArrowRight className="w-2.5 h-2.5 text-primary" />
+            )}
+            <span className="text-[9px] font-semibold uppercase tracking-wide">{returnDate ? "R/T" : "O/W"}</span>
+          </div>
           {/* Price */}
           <div className="absolute bottom-1.5 right-1.5">
             <span className="text-sm font-bold text-primary">{formatPrice(price, currency, displayCurrency)}</span>
