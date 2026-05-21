@@ -1589,7 +1589,7 @@ const translations = {
     sellInclSpeedy: "Imbarco Prioritario",
     sellPricingHeader: "Prezzo",
     sellPriceLowerError: "Il prezzo di vendita deve essere inferiore al prezzo originale",
-    sellAdditiveFeeHint: "L'acquirente pagherà inoltre il costo del cambio nominativo dell'operatore in aggiunta al tuo prezzo di vendita (trattenuto in escrow).",
+    sellAdditiveFeeHint: "L'acquirente pagherà inoltre il costo del cambio nominativo dell'operatore in aggiunta al tuo prezzo di vendita (custodito in sicurezza da Swappup fino alla conferma del trasferimento).",
     sellFeeBreakdownTitle: "I tuoi guadagni",
     sellFeeListingPrice: "Prezzo di vendita",
     sellFeePlatformFee: "Commissione piattaforma ({pct}%)",
