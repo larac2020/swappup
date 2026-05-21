@@ -1,19 +1,24 @@
-## Add app-style "About" info to mobile
+## Problem
 
-### 1. About block at bottom of Account page
-Add a small, muted block below the existing Support section in `src/pages/Account.tsx`:
-- Swappup logo (small)
-- "Swappup Ltd · Registered office: London, United Kingdom · Company No. 00000000"
-- "Version 1.0.0 (build {commit/date})" — driven by a constant in `src/lib/appVersion.ts` so it's easy to bump
-- "© {year} Swappup Ltd"
-- Tappable "Terms" and "Privacy" text links (since mobile users no longer see the footer)
+After login, the `LanguageToggle` pill renders inside `BottomNav` (above the bottom navigation bar) on every authenticated page. The user wants it gone from that spot, and instead:
+1. Shown at the top-right of the app, and
+2. Reachable from the profile (already exists in `Account.tsx` as the "Language" section — no change needed there).
 
-All copy goes through the existing i18n (`translations.ts`) in EN + IT.
+## Changes
 
-### 2. Support link in marketing mobile menu
-Add a "Support" entry to the hamburger sheet in `src/components/marketing/MarketingHeader.tsx`, linking to `/support` (page already exists). Add `support` label to `headerContent` EN/IT.
+1. **`src/components/layout/BottomNav.tsx`**
+   - Remove the `<LanguageToggle />` block (and its import) currently rendered above the nav items.
 
-### Out of scope
-- No PWA / Capacitor work
-- No changes to desktop footer
-- No new pages
+2. **`src/components/layout/AppLayout.tsx`**
+   - Add a fixed top-right container that renders `<LanguageToggle />` when `showNav` is true.
+   - Position: `fixed top-3 right-3 z-50` so it floats above page content on all authenticated routes (Home, Browse, Cart, Listings, Account, sub-pages). Add `pt-safe` consideration via existing styling already on the toggle (it already has glass background).
+   - Keep it out of the marketing/landing layout (those don't use `AppLayout`).
+
+3. **`src/pages/Account.tsx`**
+   - No change needed: the in-profile language section already exists (lines 245–267).
+
+## Notes
+
+- The Account page's existing language list stays as the primary in-profile control.
+- The floating top-right toggle gives one-click access from any app screen without crowding the bottom nav.
+- No business logic, i18n, or routing changes.
