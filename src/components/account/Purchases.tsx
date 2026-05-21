@@ -406,7 +406,7 @@ export default function Purchases() {
                 {/* Escrow Info */}
                 {(p.escrow_status === "held" || p.escrow_status === "authorized") && (
                   <p className="text-xs text-muted-foreground px-1">
-                    💰 Payment held in escrow until transfer is confirmed
+                    💰 Payment safely held by Swappup until the ticket transfer is confirmed
                   </p>
                 )}
                     </div>

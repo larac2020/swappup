@@ -166,7 +166,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             <div className="glass rounded-xl p-3 border border-border/60 space-y-2">
               <p className="text-xs text-muted-foreground">
                 Upload a screenshot or PDF receipt from the airline confirming you paid the name-change fee
-                (€{Number(purchase.name_change_fee).toFixed(2)}). This protects the buyer and is required to release escrow.
+                (€{Number(purchase.name_change_fee).toFixed(2)}). This protects the buyer and is required before we release the payment to you.
               </p>
               <Input
                 id="payment-proof"
