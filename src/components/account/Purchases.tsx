@@ -20,6 +20,9 @@ import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
 import { useState, useEffect, useRef } from "react";
 import { CopyButton, downloadTicketPdf, downloadReceiptPdf, shareTicket, canShare } from "./purchaseHelpers";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter, X } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
@@ -45,6 +48,12 @@ export default function Purchases() {
   const initialOpen = searchParams.get("open");
   const [expandedId, setExpandedId] = useState<string | null>(initialOpen);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const [destQuery, setDestQuery] = useState("");
+  const [airlineFilter, setAirlineFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (initialOpen && cardRefs.current[initialOpen]) {
@@ -73,6 +82,25 @@ export default function Purchases() {
     },
     enabled: !!user?.id,
   });
+
+  const airlines = Array.from(
+    new Set(((purchases ?? []) as any[]).map((p) => p.listings?.airline).filter(Boolean))
+  ) as string[];
+
+  const filteredPurchases = ((purchases ?? []) as any[]).filter((p) => {
+    const l = p.listings as any;
+    if (destQuery) {
+      const q = destQuery.toLowerCase();
+      const hay = `${l?.destination_city ?? ""} ${l?.destination_country ?? ""} ${l?.destination_airport ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (airlineFilter !== "all" && l?.airline !== airlineFilter) return false;
+    if (dateFrom && new Date(p.created_at) < new Date(dateFrom)) return false;
+    if (dateTo && new Date(p.created_at) > new Date(`${dateTo}T23:59:59`)) return false;
+    return true;
+  });
+  const hasActiveFilter = !!(destQuery || airlineFilter !== "all" || dateFrom || dateTo);
+  const clearFilters = () => { setDestQuery(""); setAirlineFilter("all"); setDateFrom(""); setDateTo(""); };
 
   const { data: purchases, isLoading } = useQuery({
     queryKey: ["purchases", profile?.id],
@@ -140,7 +168,52 @@ export default function Purchases() {
         </div>
       ) : (
         <div className="space-y-3">
-          {purchases.map((p: any) => {
+          <div className="glass rounded-2xl p-3 space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowFilters((s) => !s)}
+              className="w-full flex items-center justify-between text-sm font-medium"
+            >
+              <span className="flex items-center gap-2"><Filter className="w-4 h-4" /> Filters{hasActiveFilter ? ` · ${filteredPurchases.length}/${purchases.length}` : ""}</span>
+              {hasActiveFilter && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); clearFilters(); }}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                ><X className="w-3 h-3" /> Clear</span>
+              )}
+            </button>
+            {showFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Input
+                  placeholder="Destination (city, country)"
+                  value={destQuery}
+                  onChange={(e) => setDestQuery(e.target.value)}
+                />
+                <Select value={airlineFilter} onValueChange={setAirlineFilter}>
+                  <SelectTrigger><SelectValue placeholder="Airline" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All airlines</SelectItem>
+                    {airlines.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Purchased from</label>
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Purchased to</label>
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </div>
+          {filteredPurchases.length === 0 ? (
+            <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">
+              No purchases match your filters.
+            </div>
+          ) : filteredPurchases.map((p: any) => {
             const listing = p.listings as any;
             const cur = listing?.currency || "EUR";
             const status = statusConfig[p.status] || statusConfig.pending;
@@ -181,6 +254,7 @@ export default function Purchases() {
                         ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy")
                         : format(new Date(p.created_at), "MMM d, yyyy")}
                       {listing?.airline ? ` · ${listing.airline}` : ""}
+                      {` · Purchased ${format(new Date(p.created_at), "MMM d, yyyy 'at' HH:mm")}`}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
