@@ -1753,7 +1753,7 @@ export function t(locale: Locale, key: TranslationKey, params?: Record<string, s
   let text = getTranslation(locale, key);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
-      text = text.replace(`{${k}}`, String(v));
+      text = text.split(`{${k}}`).join(String(v));
     });
   }
   return text;
