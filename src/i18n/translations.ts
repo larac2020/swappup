@@ -179,7 +179,7 @@ const translations = {
     feeLastVerified: "Fee last verified",
     verifiedToday: "verified today",
     verifiedDaysAgo: "verified {days}d ago",
-    feeAccuracyDisclaimer: "Fees are auto-verified against the airline's website but may change without notice. Swappup is not responsible for inaccurate pricing — please double-check on the airline's site and flag any discrepancy below.",
+    feeAccuracyDisclaimer: "We check this fee against the airline's website, but airlines can update it at any time. Swappup is not responsible for changes in the airline's pricing. Please confirm the current amount on the airline's site, and let us know below if anything looks off.",
 
     // My Listings
     myListingsTitle: "My Listings",
@@ -606,8 +606,8 @@ const translations = {
     trainSelectFare: "Select fare class",
     trainBlockedTitle: "Listing blocked — operator does not allow name changes",
     trainTransferWarn: "Name-change fees change frequently. Always confirm the current fee on the operator's official website before listing.",
-    trainAdditiveDisclaimer: "The name-change fee is added on top of the ticket price and held safely by Swappup. The seller pays it directly to {operator} to transfer the ticket into your name. Fees can change — verify the current amount on {operator}'s official website before purchase.",
-    flightAdditiveDisclaimer: "The name-change fee is added on top of the ticket price and held safely by Swappup. The seller pays it directly to {airline} to transfer the ticket into your name. Fees can change — verify the current amount on {airline}'s official website before purchase.",
+    trainAdditiveDisclaimer: "The name change fee is added on top of the ticket price and kept safely by Swappup. The seller uses it to pay {operator} directly so the ticket can be moved into your name. Fees can change, so please check the current amount on the official {operator} website before you buy.",
+    flightAdditiveDisclaimer: "The name change fee is added on top of the ticket price and kept safely by Swappup. The seller uses it to pay {airline} directly so the ticket can be moved into your name. Fees can change, so please check the current amount on the official {airline} website before you buy.",
     priceTicketPrice: "Ticket price",
     priceNameChangeFee: "Name change fee",
     priceTotalYouPay: "Total you pay",
@@ -1049,7 +1049,7 @@ const translations = {
     feeLastVerified: "Tariffa verificata l'ultima volta",
     verifiedToday: "verificata oggi",
     verifiedDaysAgo: "verificata {days}g fa",
-    feeAccuracyDisclaimer: "Le tariffe sono verificate automaticamente sul sito della compagnia, ma possono variare senza preavviso. Swappup non è responsabile per importi inesatti — ti invitiamo a controllare sul sito ufficiale e segnalare eventuali discrepanze qui sotto.",
+    feeAccuracyDisclaimer: "Controlliamo questa tariffa sul sito della compagnia, ma le compagnie possono aggiornarla in qualsiasi momento. Swappup non è responsabile delle variazioni di prezzo della compagnia. Verifica l'importo aggiornato sul sito ufficiale e segnalaci qui sotto se qualcosa non torna.",
 
     // My Listings
     myListingsTitle: "I Miei Annunci",
@@ -1476,8 +1476,8 @@ const translations = {
     trainSelectFare: "Seleziona classe tariffaria",
     trainBlockedTitle: "Annuncio bloccato — l'operatore non consente il cambio nominativo",
     trainTransferWarn: "I costi di cambio nominativo cambiano spesso. Verifica sempre l'importo aggiornato sul sito ufficiale dell'operatore prima di pubblicare.",
-    trainAdditiveDisclaimer: "Il costo del cambio nominativo viene aggiunto al prezzo del biglietto e custodito in sicurezza da Swappup. Il venditore lo paga direttamente a {operator} per trasferire il biglietto a tuo nome. I costi possono cambiare — verifica l'importo aggiornato sul sito ufficiale di {operator} prima dell'acquisto.",
-    flightAdditiveDisclaimer: "Il costo del cambio nominativo viene aggiunto al prezzo del biglietto e custodito in sicurezza da Swappup. Il venditore lo paga direttamente a {airline} per trasferire il biglietto a tuo nome. I costi possono cambiare — verifica l'importo aggiornato sul sito ufficiale di {airline} prima dell'acquisto.",
+    trainAdditiveDisclaimer: "Il costo del cambio nominativo viene aggiunto al prezzo del biglietto e custodito in sicurezza da Swappup. Il venditore lo usa per pagare direttamente {operator} e intestare il biglietto a tuo nome. I costi possono cambiare, quindi verifica l'importo aggiornato sul sito ufficiale di {operator} prima dell'acquisto.",
+    flightAdditiveDisclaimer: "Il costo del cambio nominativo viene aggiunto al prezzo del biglietto e custodito in sicurezza da Swappup. Il venditore lo usa per pagare direttamente {airline} e intestare il biglietto a tuo nome. I costi possono cambiare, quindi verifica l'importo aggiornato sul sito ufficiale di {airline} prima dell'acquisto.",
     priceTicketPrice: "Prezzo del biglietto",
     priceNameChangeFee: "Costo cambio nominativo",
     priceTotalYouPay: "Totale da pagare",
@@ -1753,7 +1753,7 @@ export function t(locale: Locale, key: TranslationKey, params?: Record<string, s
   let text = getTranslation(locale, key);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
-      text = text.replace(`{${k}}`, String(v));
+      text = text.split(`{${k}}`).join(String(v));
     });
   }
   return text;
