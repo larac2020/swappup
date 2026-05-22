@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft, Loader2, FileText, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Filter, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -21,6 +24,11 @@ export default function TransactionHistory() {
   const [filter, setFilter] = useState<"all" | "bought" | "sold">(
     initialFilter === "bought" || initialFilter === "sold" ? initialFilter : "all"
   );
+  const [destQuery, setDestQuery] = useState("");
+  const [airlineFilter, setAirlineFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (filter === "all") next.delete("type"); else next.set("type", filter);
@@ -81,6 +89,29 @@ export default function TransactionHistory() {
     enabled: !!profile?.id,
   });
 
+  const airlines = Array.from(
+    new Set(((transactions ?? []) as any[]).map((tx) => tx.listings?.airline).filter(Boolean))
+  ) as string[];
+
+  const baseFiltered = (transactions ?? []).filter((tx) => {
+    if (filter !== "all") {
+      const isBuyer = tx.buyer_id === profile?.id;
+      if (filter === "bought" ? !isBuyer : isBuyer) return false;
+    }
+    const l = tx.listings as any;
+    if (destQuery) {
+      const q = destQuery.toLowerCase();
+      const hay = `${l?.destination_city ?? ""} ${l?.destination_country ?? ""} ${l?.destination_airport ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (airlineFilter !== "all" && l?.airline !== airlineFilter) return false;
+    if (dateFrom && new Date(tx.created_at) < new Date(dateFrom)) return false;
+    if (dateTo && new Date(tx.created_at) > new Date(`${dateTo}T23:59:59`)) return false;
+    return true;
+  });
+  const hasActiveFilter = !!(destQuery || airlineFilter !== "all" || dateFrom || dateTo);
+  const clearFilters = () => { setDestQuery(""); setAirlineFilter("all"); setDateFrom(""); setDateTo(""); };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -113,24 +144,58 @@ export default function TransactionHistory() {
         ))}
       </div>
 
+      <div className="glass rounded-2xl p-3 space-y-3">
+        <button
+          type="button"
+          onClick={() => setShowFilters((s) => !s)}
+          className="w-full flex items-center justify-between text-sm font-medium"
+        >
+          <span className="flex items-center gap-2"><Filter className="w-4 h-4" /> Filters{hasActiveFilter ? ` · ${baseFiltered.length}` : ""}</span>
+          {hasActiveFilter && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); clearFilters(); }}
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+            ><X className="w-3 h-3" /> Clear</span>
+          )}
+        </button>
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Input
+              placeholder="Destination (city, country)"
+              value={destQuery}
+              onChange={(e) => setDestQuery(e.target.value)}
+            />
+            <Select value={airlineFilter} onValueChange={setAirlineFilter}>
+              <SelectTrigger><SelectValue placeholder="Airline" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All airlines</SelectItem>
+                {airlines.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">From</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">To</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
+          </div>
+        )}
+      </div>
+
       {isLoading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : !(transactions ?? []).filter((tx) => {
-          if (filter === "all") return true;
-          const isBuyer = tx.buyer_id === profile?.id;
-          return filter === "bought" ? isBuyer : !isBuyer;
-        }).length ? (
+      ) : !baseFiltered.length ? (
         <div className="glass rounded-2xl p-8 text-center space-y-3">
           <FileText className="w-12 h-12 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">{t("transactionsEmpty")}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {transactions!.filter((tx) => {
-            if (filter === "all") return true;
-            const isBuyer = tx.buyer_id === profile?.id;
-            return filter === "bought" ? isBuyer : !isBuyer;
-          }).map((tx) => {
+          {baseFiltered.map((tx) => {
             const isBuyer = tx.buyer_id === profile?.id;
             const listing = tx.listings as any;
             const cur = (listing as any)?.currency || "EUR";
@@ -143,7 +208,7 @@ export default function TransactionHistory() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{listing?.title || "Ticket"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {isBuyer ? t("transactionsPurchased") : t("transactionsSold")} · {format(new Date(tx.created_at), "MMM d, yyyy")}
+                      {isBuyer ? t("transactionsPurchased") : t("transactionsSold")} · {format(new Date(tx.created_at), "MMM d, yyyy 'at' HH:mm")}
                     </p>
                   </div>
                   <div className="text-right">
