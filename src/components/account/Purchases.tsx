@@ -83,25 +83,6 @@ export default function Purchases() {
     enabled: !!user?.id,
   });
 
-  const airlines = Array.from(
-    new Set(((purchases ?? []) as any[]).map((p) => p.listings?.airline).filter(Boolean))
-  ) as string[];
-
-  const filteredPurchases = ((purchases ?? []) as any[]).filter((p) => {
-    const l = p.listings as any;
-    if (destQuery) {
-      const q = destQuery.toLowerCase();
-      const hay = `${l?.destination_city ?? ""} ${l?.destination_country ?? ""} ${l?.destination_airport ?? ""}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    if (airlineFilter !== "all" && l?.airline !== airlineFilter) return false;
-    if (dateFrom && new Date(p.created_at) < new Date(dateFrom)) return false;
-    if (dateTo && new Date(p.created_at) > new Date(`${dateTo}T23:59:59`)) return false;
-    return true;
-  });
-  const hasActiveFilter = !!(destQuery || airlineFilter !== "all" || dateFrom || dateTo);
-  const clearFilters = () => { setDestQuery(""); setAirlineFilter("all"); setDateFrom(""); setDateTo(""); };
-
   const { data: purchases, isLoading } = useQuery({
     queryKey: ["purchases", profile?.id],
     queryFn: async () => {
@@ -124,6 +105,25 @@ export default function Purchases() {
     },
     enabled: !!profile?.id,
   });
+
+  const airlines = Array.from(
+    new Set(((purchases ?? []) as any[]).map((p) => p.listings?.airline).filter(Boolean))
+  ) as string[];
+
+  const filteredPurchases = ((purchases ?? []) as any[]).filter((p) => {
+    const l = p.listings as any;
+    if (destQuery) {
+      const q = destQuery.toLowerCase();
+      const hay = `${l?.destination_city ?? ""} ${l?.destination_country ?? ""} ${l?.destination_airport ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (airlineFilter !== "all" && l?.airline !== airlineFilter) return false;
+    if (dateFrom && new Date(p.created_at) < new Date(dateFrom)) return false;
+    if (dateTo && new Date(p.created_at) > new Date(`${dateTo}T23:59:59`)) return false;
+    return true;
+  });
+  const hasActiveFilter = !!(destQuery || airlineFilter !== "all" || dateFrom || dateTo);
+  const clearFilters = () => { setDestQuery(""); setAirlineFilter("all"); setDateFrom(""); setDateTo(""); };
 
   const releaseMutation = useMutation({
     mutationFn: async (purchase_id: string) => {
