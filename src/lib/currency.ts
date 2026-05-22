@@ -43,7 +43,7 @@ export function formatPrice(
   opts: { decimals?: number } = {},
 ): string {
   const converted = convertAmount(Number(amount) || 0, fromCurrency, toCurrency);
-  const decimals = opts.decimals ?? (converted >= 100 ? 0 : 2);
+  const decimals = opts.decimals ?? 2;
   const symbol = getCurrencySymbol(toCurrency);
   const formatted = converted.toLocaleString(undefined, {
     minimumFractionDigits: decimals,
