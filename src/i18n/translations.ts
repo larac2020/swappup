@@ -179,7 +179,7 @@ const translations = {
     feeLastVerified: "Fee last verified",
     verifiedToday: "verified today",
     verifiedDaysAgo: "verified {days}d ago",
-    feeAccuracyDisclaimer: "Fees are auto-verified against the airline's website but may change without notice. Swappup is not responsible for inaccurate pricing — please double-check on the airline's site and flag any discrepancy below.",
+    feeAccuracyDisclaimer: "We check this fee against the airline's website, but airlines can update it at any time. Swappup is not responsible for changes in the airline's pricing. Please confirm the current amount on the airline's site, and let us know below if anything looks off.",
 
     // My Listings
     myListingsTitle: "My Listings",
@@ -606,8 +606,8 @@ const translations = {
     trainSelectFare: "Select fare class",
     trainBlockedTitle: "Listing blocked — operator does not allow name changes",
     trainTransferWarn: "Name-change fees change frequently. Always confirm the current fee on the operator's official website before listing.",
-    trainAdditiveDisclaimer: "The name-change fee is added on top of the ticket price and held safely by Swappup. The seller pays it directly to {operator} to transfer the ticket into your name. Fees can change — verify the current amount on {operator}'s official website before purchase.",
-    flightAdditiveDisclaimer: "The name-change fee is added on top of the ticket price and held safely by Swappup. The seller pays it directly to {airline} to transfer the ticket into your name. Fees can change — verify the current amount on {airline}'s official website before purchase.",
+    trainAdditiveDisclaimer: "The name change fee is added on top of the ticket price and kept safely by Swappup. The seller uses it to pay {operator} directly so the ticket can be moved into your name. Fees can change, so please check the current amount on the official {operator} website before you buy.",
+    flightAdditiveDisclaimer: "The name change fee is added on top of the ticket price and kept safely by Swappup. The seller uses it to pay {airline} directly so the ticket can be moved into your name. Fees can change, so please check the current amount on the official {airline} website before you buy.",
     priceTicketPrice: "Ticket price",
     priceNameChangeFee: "Name change fee",
     priceTotalYouPay: "Total you pay",
