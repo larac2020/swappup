@@ -57,6 +57,21 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
+  // Total purchases count — includes pending so a buyer sees their
+  // in-progress order reflected immediately after checkout.
+  const { data: purchasesCount = 0 } = useQuery({
+    queryKey: ["purchasesCount", profile?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("purchases")
+        .select("*", { count: "exact", head: true })
+        .eq("buyer_id", profile!.id);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!profile?.id,
+  });
+
   const { data: recentSearches = [] } = useQuery({
     queryKey: ["recentSearches", profile?.id],
     queryFn: async () => {
