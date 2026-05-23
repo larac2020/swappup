@@ -333,7 +333,7 @@ export default function Home() {
               </button>
               <button onClick={() => navigate("/account/purchases")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
                 <ShoppingBag className="w-4 h-4 text-primary mx-auto mb-0.5" />
-                <p className="text-base font-bold">{profile?.transactions_bought ?? 0}</p>
+                <p className="text-base font-bold">{purchasesCount}</p>
                 <p className="text-[10px] text-muted-foreground">{t("homePurchases")}</p>
               </button>
               <button onClick={() => navigate("/account/watchlist")} className="glass rounded-xl p-2.5 text-center hover:border-primary/30 transition-colors">
