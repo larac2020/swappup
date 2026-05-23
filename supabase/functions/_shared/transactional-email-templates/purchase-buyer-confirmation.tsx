@@ -2,7 +2,7 @@
 import * as React from 'npm:react@18.3.1'
 import { Heading, Text, Section, Link } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { EmailLayout, TripCard, TripDetails, h1, p, brand, PREFERENCES_URL } from './_layout.tsx'
+import { EmailLayout, TripCard, TripDetails, h1, p, brand, PREFERENCES_URL, APP_URL } from './_layout.tsx'
 import { Locale, normalizeLocale, t } from './i18n.ts'
 
 interface Props {
@@ -33,6 +33,9 @@ const dict = {
     step3: 'On the airline website, check that the change was made correctly using the booking reference and the name you provided to {seller}. Then, within 48 hours, head back to the swappup app and confirm everything looks good. Only at that point we will send the money to {seller} and your purchase is finalised.',
     issueTitle: 'Found an issue with the booking?',
     issueBody: 'If something does not look right, or if {seller} does not update the booking with your name within 24 hours, your purchase is automatically refunded in full. No forms, no waiting.',
+    receiptTitle: 'Your receipt',
+    receiptBody: 'You can download your payment receipt anytime from your purchases.',
+    receiptCta: 'View receipt',
     sign: 'Have a great day,',
     team: 'The swappup team',
     seller: 'your seller',
@@ -55,6 +58,9 @@ const dict = {
     step3: 'Sul sito della compagnia aerea, verifica che il cambio sia stato fatto correttamente usando il codice prenotazione e il nome che hai fornito a {seller}. Poi, entro 48 ore, torna sull\'app swappup e conferma che tutto sia in ordine. Solo a quel punto invieremo il bonifico a {seller} e il tuo acquisto sarà finalizzato.',
     issueTitle: 'Hai riscontrato un problema con la prenotazione?',
     issueBody: 'Se qualcosa non torna, o se {seller} non aggiorna la prenotazione con il tuo nome entro 24 ore, il tuo acquisto viene rimborsato automaticamente per intero. Nessun modulo, nessuna attesa.',
+    receiptTitle: 'La tua ricevuta',
+    receiptBody: 'Puoi scaricare la ricevuta di pagamento quando vuoi dai tuoi acquisti.',
+    receiptCta: 'Vai alla ricevuta',
     sign: 'Buona giornata,',
     team: 'Il team swappup',
     seller: 'il venditore',
@@ -97,6 +103,11 @@ const Email = ({ buyerName, totalPrice, trip, purchaseId, orderNumber, bookingRe
       </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>{t(loc, dict, 'issueTitle')}</Heading>
       <Text style={p}>{t(loc, dict, 'issueBody', { seller })}</Text>
+      <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>{t(loc, dict, 'receiptTitle')}</Heading>
+      <Text style={p}>
+        {t(loc, dict, 'receiptBody')}{' '}
+        <Link href={`${APP_URL}/account/purchases`} style={{ color: brand.goldDeep, textDecoration: 'underline', fontWeight: 600 }}>{t(loc, dict, 'receiptCta')}</Link>.
+      </Text>
       <Text style={{ ...p, marginTop: '18px', marginBottom: 0 }}>
         {t(loc, dict, 'sign')}<br />{t(loc, dict, 'team')}
       </Text>
