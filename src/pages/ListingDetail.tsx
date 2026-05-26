@@ -575,7 +575,7 @@ export default function ListingDetail() {
             <div className="sticky bottom-4 flex gap-3">
               <Button variant="gold" size="xl" className="flex-1" onClick={() => setShowPurchaseDialog(true)}>
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Buy Now — {fmt(Number(listing.price) + nameChangeFee)}
+                Buy Now
               </Button>
             </div>
           )}
