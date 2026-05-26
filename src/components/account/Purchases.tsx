@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw, Download, FileText, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw, Download, FileText, Share2, PartyPopper, Mail, UserCheck, BellRing } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export default function Purchases() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialOpen = searchParams.get("open");
+  const justPurchased = searchParams.get("success") === "1";
   const [expandedId, setExpandedId] = useState<string | null>(initialOpen);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
