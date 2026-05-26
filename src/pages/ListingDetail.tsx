@@ -196,10 +196,11 @@ export default function ListingDetail() {
   const originAirportName = getAirportNameByCode(savedOriginAirport) || getPrimaryAirportName(listing.origin_city);
   const destAirportName = getAirportNameByCode(savedDestAirport) || getPrimaryAirportName(listing.destination_city);
 
-  // Calculate name change fee from operator/airline data
-  let nameChangeFee = 0;
-  if (listing.name_change_fee != null) nameChangeFee = Number(listing.name_change_fee);
-  else nameChangeFee = getAirlineData(listing.airline)?.nameChangeFee || 0;
+  // Name-change fee must match the server-trusted value used at checkout.
+  // The backend (`create-purchase-checkout`) uses listing.name_change_fee only,
+  // so never fall back to static airline data here — that would show a total
+  // different from what Stripe actually charges.
+  const nameChangeFee = listing.name_change_fee != null ? Number(listing.name_change_fee) : 0;
   const ticketPrice = Number(listing.price);
   const totalPrice = ticketPrice + nameChangeFee;
   const listingCurrency = (listing as any).currency || "EUR";
