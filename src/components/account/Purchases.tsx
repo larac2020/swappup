@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw, Download, FileText, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronDown, Loader2, ShoppingBag, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RotateCcw, Download, FileText, Share2, PartyPopper, Mail, UserCheck, BellRing } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export default function Purchases() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialOpen = searchParams.get("open");
+  const justPurchased = searchParams.get("success") === "1";
   const [expandedId, setExpandedId] = useState<string | null>(initialOpen);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -168,6 +169,51 @@ export default function Purchases() {
         </div>
       ) : (
         <div className="space-y-3">
+          {justPurchased && (
+            <div className="glass-strong rounded-2xl p-5 space-y-4 border border-primary/30">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <PartyPopper className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="font-display font-semibold text-lg">Purchase confirmed</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Your payment is safely held until the seller transfers the ticket into your name. Here's what happens next.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete("success");
+                    setSearchParams(params, { replace: true });
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <ol className="space-y-3 text-sm">
+                <li className="flex gap-3">
+                  <Mail className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><span className="font-medium">Check your email.</span> We've sent a confirmation with your receipt link.</span>
+                </li>
+                <li className="flex gap-3">
+                  <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><span className="font-medium">Seller has 24h</span> to transfer the ticket to your name with the airline.</span>
+                </li>
+                <li className="flex gap-3">
+                  <BellRing className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><span className="font-medium">You'll get notified</span> as soon as the seller marks the transfer as done.</span>
+                </li>
+                <li className="flex gap-3">
+                  <UserCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><span className="font-medium">Confirm the transfer</span> from this page once you see the updated ticket — that releases the payment.</span>
+                </li>
+              </ol>
+            </div>
+          )}
           <div className="glass rounded-2xl p-3 space-y-3">
             <button
               type="button"
