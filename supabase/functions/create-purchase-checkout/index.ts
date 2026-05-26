@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       }],
       payment_intent_data: { capture_method: "manual" },
       metadata: { purchase_id: purchase.id },
-      success_url: `${origin}/listing/${listing.id}?purchase=${purchase.id}&success=1`,
+      success_url: `${origin}/account/purchases?open=${purchase.id}&success=1`,
       cancel_url: `${origin}/listing/${listing.id}?purchase=${purchase.id}&canceled=1`,
     });
 
