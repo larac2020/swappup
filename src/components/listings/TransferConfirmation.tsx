@@ -25,15 +25,19 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
   const [bookingRef, setBookingRef] = useState(purchase?.original_booking_ref || "");
   const [surname, setSurname] = useState(buyerSurname);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [nameChangeProofFile, setNameChangeProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const confirmMutation = useMutation({
     mutationFn: async () => {
       if (!proofFile) throw new Error("Please upload a payment confirmation for the name change fee.");
+      if (!nameChangeProofFile) throw new Error("Please upload a screenshot of the completed name change.");
       const maxBytes = 8 * 1024 * 1024;
       if (proofFile.size > maxBytes) throw new Error("File too large (max 8MB).");
+      if (nameChangeProofFile.size > maxBytes) throw new Error("Name change screenshot too large (max 8MB).");
       const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
       if (!allowed.includes(proofFile.type)) throw new Error("Unsupported file type. Use PNG, JPG, WEBP or PDF.");
+      if (!allowed.includes(nameChangeProofFile.type)) throw new Error("Unsupported file type for name change screenshot. Use PNG, JPG, WEBP or PDF.");
 
       setUploading(true);
       const { data: userData } = await supabase.auth.getUser();
@@ -44,8 +48,15 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
       const { error: upErr } = await supabase.storage
         .from("transfer-proofs")
         .upload(path, proofFile, { upsert: false, contentType: proofFile.type });
-      setUploading(false);
       if (upErr) throw upErr;
+
+      const ncExt = nameChangeProofFile.name.split(".").pop()?.toLowerCase() || "bin";
+      const ncPath = `${uid}/${purchase.id}-namechange-${Date.now()}.${ncExt}`;
+      const { error: ncUpErr } = await supabase.storage
+        .from("transfer-proofs")
+        .upload(ncPath, nameChangeProofFile, { upsert: false, contentType: nameChangeProofFile.type });
+      setUploading(false);
+      if (ncUpErr) throw ncUpErr;
 
       // Update + notifications run server-side so buyer PII never reaches the seller's client.
       const { error } = await supabase.functions.invoke("confirm-transfer", {
@@ -54,6 +65,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           booking_ref: bookingRef.trim(),
           surname: surname.trim(),
           proof_path: path,
+          name_change_proof_path: ncPath,
         },
       });
       if (error) throw error;
@@ -183,6 +195,33 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             </div>
           </div>
 
+          {/* Name change screenshot upload */}
+          <div className="space-y-2">
+            <Label htmlFor="name-change-proof" className="flex items-center gap-2">
+              <FileCheck2 className="w-4 h-4 text-primary" />
+              Name Change Screenshot (required)
+            </Label>
+            <div className="glass rounded-xl p-3 border border-border/60 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Upload a screenshot from the airline clearly showing the updated passenger name
+                ({purchase.buyer_full_name}) <strong>and the timestamp</strong> of the change. This is mandatory
+                proof that the name change was completed successfully.
+              </p>
+              <Input
+                id="name-change-proof"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,application/pdf"
+                onChange={(e) => setNameChangeProofFile(e.target.files?.[0] || null)}
+                className="bg-secondary/50 file:text-foreground"
+              />
+              {nameChangeProofFile && (
+                <p className="text-xs text-primary flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> {nameChangeProofFile.name} ({(nameChangeProofFile.size / 1024).toFixed(0)} KB)
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Validation Info */}
           <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -200,7 +239,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             <Button
               variant="gold"
               className="flex-1 gap-2"
-              disabled={!bookingRef.trim() || !surname.trim() || !proofFile || isExpired || confirmMutation.isPending || uploading}
+              disabled={!bookingRef.trim() || !surname.trim() || !proofFile || !nameChangeProofFile || isExpired || confirmMutation.isPending || uploading}
               onClick={() => confirmMutation.mutate()}
             >
               {(confirmMutation.isPending || uploading) ? (

@@ -871,6 +871,7 @@ export type Database = {
           id: string
           listing_id: string | null
           name_change_fee: number | null
+          name_change_proof_url: string | null
           original_booking_ref: string | null
           quantity: number
           seller_deadline_warning_sent: boolean
@@ -899,6 +900,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           name_change_fee?: number | null
+          name_change_proof_url?: string | null
           original_booking_ref?: string | null
           quantity: number
           seller_deadline_warning_sent?: boolean
@@ -927,6 +929,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           name_change_fee?: number | null
+          name_change_proof_url?: string | null
           original_booking_ref?: string | null
           quantity?: number
           seller_deadline_warning_sent?: boolean

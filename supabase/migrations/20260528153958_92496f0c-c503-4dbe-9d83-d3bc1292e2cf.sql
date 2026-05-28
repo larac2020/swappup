@@ -1,0 +1,1 @@
+ALTER TABLE public.purchases ADD COLUMN IF NOT EXISTS name_change_proof_url text;
