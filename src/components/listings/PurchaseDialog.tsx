@@ -28,6 +28,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   const [email, setEmail] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [escrowAccepted, setEscrowAccepted] = useState(false);
+  const [nameAccepted, setNameAccepted] = useState(false);
   const [liveFee, setLiveFee] = useState<any>(null);
   const [feeLoading, setFeeLoading] = useState(false);
 
@@ -94,7 +95,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
     },
   });
 
-  const isValid = fullName.trim().length >= 3 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && privacyAccepted && escrowAccepted;
+  const isValid = fullName.trim().length >= 3 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && privacyAccepted && escrowAccepted && nameAccepted;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,6 +189,19 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                 className="bg-secondary/50"
               />
               <p className="text-xs text-muted-foreground">This exact name will be used for the ticket name change.</p>
+              <div className="flex items-start gap-2 pt-2 rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+                <Checkbox
+                  id="name-accept"
+                  checked={nameAccepted}
+                  onCheckedChange={(c) => setNameAccepted(c === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="name-accept" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
+                  I understand that this name will be used by the seller to complete the name change.
+                  I am solely responsible for ensuring the name is correct and release both the seller
+                  and Swappup from any liability arising from incorrect or incomplete information provided by me.
+                </label>
+              </div>
             </div>
 
             <div className="space-y-2">
