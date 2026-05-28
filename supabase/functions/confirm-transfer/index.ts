@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
     if (!u.user) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json();
-    const { purchase_id, booking_ref, surname, proof_path } = body ?? {};
-    if (!purchase_id || !booking_ref || !surname || !proof_path) {
+    const { purchase_id, booking_ref, surname, proof_path, name_change_proof_path } = body ?? {};
+    if (!purchase_id || !booking_ref || !surname || !proof_path || !name_change_proof_path) {
       return json({ error: "Missing fields" }, 400);
     }
 
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
         escrow_status: "pending_release",
         seller_transferred: true,
         transfer_payment_proof_url: proof_path,
+        name_change_proof_url: name_change_proof_path,
         escrow_deadline: escrowDeadline,
       })
       .eq("id", purchase_id);
