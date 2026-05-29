@@ -31,6 +31,13 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SRK);
 
+    // Fetch listing early to compute payment-hold release deadline = departure + 24h.
+    const { data: listingForDeadline } = await admin
+      .from("listings")
+      .select("departure_date, departure_time")
+      .eq("id", (await admin.from("purchases").select("listing_id").eq("id", purchase_id).single()).data?.listing_id || "")
+      .single();
+
     // Fetch purchase and verify caller is the seller.
     const { data: purchase, error: pErr } = await admin
       .from("purchases")
@@ -49,7 +56,16 @@ Deno.serve(async (req) => {
     }
 
     // Update purchase as seller (server-side, service role).
-    const escrowDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    // Payment is held until 24 hours after the flight departs.
+    let escrowDeadline: string;
+    if (listingForDeadline?.departure_date) {
+      const time = listingForDeadline.departure_time || "23:59:00";
+      const departureTs = new Date(`${listingForDeadline.departure_date}T${time}Z`).getTime();
+      escrowDeadline = new Date(departureTs + 24 * 60 * 60 * 1000).toISOString();
+    } else {
+      // Fallback: 48h from confirmation if no departure date on file.
+      escrowDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    }
     const { error: updErr } = await admin
       .from("purchases")
       .update({
