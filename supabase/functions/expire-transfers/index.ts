@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       sellerCount++;
     }
 
-    // Buyer 48h verification window expired — seller transferred but buyer never confirmed.
+    // Verification window expired (now = 24h after departure) — auto-release payment to seller.
     const { data: expiredBuyer } = await admin.from("purchases")
       .select("id")
       .eq("status", "transfer_confirmed")
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
 
     let buyerCount = 0;
     for (const p of expiredBuyer || []) {
-      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/cancel-escrow`, {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/release-escrow`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           purchase_id: p.id,
-          reason: "Buyer did not confirm the booking within 48 hours",
-          cause: "buyer_no_confirm",
+          auto: true,
+          reason: "Buyer did not raise an issue within 24 hours after departure",
         }),
       });
       buyerCount++;
