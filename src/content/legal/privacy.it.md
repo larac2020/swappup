@@ -14,7 +14,7 @@ Raccogliamo:
 - **Dati del profilo** — numero di telefono, indirizzo di fatturazione, paese, foto profilo (facoltativa).
 - **Dati di verifica dell'identità** — una foto del passaporto o della carta d'identità, elaborata da un fornitore di intelligenza artificiale per estrarre il nome e verificarne l'autenticità. Conserviamo il documento in storage privato e il nome estratto nel profilo.
 - **Dati degli annunci** — dettagli del volo o del treno, prezzi, file dei biglietti caricati (utilizzati sia per pre-compilare gli annunci sia come prova di possesso).
-- **Dati delle transazioni** — cronologia degli acquisti, stato dei pagamenti, stato dell'escrow. I dati della carta sono gestiti direttamente da Stripe; non vediamo né conserviamo il numero completo della carta.
+- **Dati delle transazioni** — cronologia degli acquisti, stato dei pagamenti, stato della custodia del pagamento. I dati della carta sono gestiti direttamente da Stripe; non vediamo né conserviamo il numero completo della carta.
 - **Dati di utilizzo** — pagine visitate, query di ricerca, informazioni sul dispositivo e sul browser, indirizzo IP.
 - **Cookie e tecnologie simili** — cookie strettamente necessari per il login e la gestione della sessione.
 
@@ -22,10 +22,10 @@ Raccogliamo:
 
 Trattiamo i dati personali per:
 
-- Fornire il Servizio (creazione e gestione del tuo account, annunci, acquisti ed escrow).
+- Fornire il Servizio (creazione e gestione del tuo account, annunci, acquisti e custodia sicura del pagamento).
 - Verificare la tua identità e prevenire le frodi.
 - Elaborare i pagamenti tramite Stripe.
-- Inviare email transazionali (verifica, ricevute di acquisto, aggiornamenti escrow).
+- Inviare email transazionali (verifica, ricevute di acquisto, aggiornamenti sulla custodia del pagamento).
 - Migliorare la piattaforma e personalizzare i contenuti (ad esempio mostrare offerte rilevanti).
 - Adempiere agli obblighi di legge.
 

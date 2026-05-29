@@ -30,11 +30,11 @@ By creating a listing you confirm that:
 
 You may not list tickets that you know to be non-transferable, fraudulent, stolen, expired, or already used.
 
-## 5. Buying and the escrow flow
+## 5. Buying and the secure payment hold
 
-When a buyer purchases a listing, the payment is held in escrow by our payment processor. Funds are released to the seller only after the buyer confirms that the carrier has issued the updated ticket in the buyer's name.
+When a buyer purchases a listing, the payment is held securely by our payment processor on the buyer's behalf. Funds are released to the seller **24 hours after the scheduled departure** of the ticket — or earlier, as soon as the buyer confirms in the app that the carrier has issued the updated ticket in their name.
 
-If the seller fails to complete the transfer within the deadline, the buyer is entitled to a full refund.
+If the buyer flags an issue before the release window closes, the funds remain on hold while we review the dispute. If the seller fails to complete the name change within the deadline shown in the order, the buyer is entitled to a full refund.
 
 ## 6. Fees and payments
 
@@ -48,7 +48,7 @@ You agree not to:
 
 - Use the Service to commit fraud or facilitate any illegal activity.
 - Create more than one account, or impersonate another person.
-- Circumvent the in-platform escrow by transacting off-platform.
+- Circumvent the in-platform secure payment hold by transacting off-platform.
 - Upload false identity documents.
 - Scrape, reverse-engineer or interfere with the Service.
 

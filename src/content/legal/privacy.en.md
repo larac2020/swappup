@@ -14,7 +14,7 @@ We collect:
 - **Profile data** — phone number, billing address, country, profile photo (optional).
 - **Identity-verification data** — a photo of a passport or national ID, processed by an AI provider to extract your name and check authenticity. We store the document in private storage and the extracted name in your profile.
 - **Listing data** — flight or train details, prices, uploaded ticket files (used both to pre-fill listings and as proof of ownership).
-- **Transaction data** — purchase history, payment status, escrow status. Card details are handled directly by Stripe; we never see or store your full card number.
+- **Transaction data** — purchase history, payment status, payment-hold status. Card details are handled directly by Stripe; we never see or store your full card number.
 - **Usage data** — pages viewed, search queries, device and browser information, IP address.
 - **Cookies and similar technologies** — strictly necessary cookies for login and session management.
 
@@ -22,10 +22,10 @@ We collect:
 
 We process personal data to:
 
-- Provide the Service (creating and managing your account, listings, purchases and escrow).
+- Provide the Service (creating and managing your account, listings, purchases and the secure payment hold).
 - Verify your identity and prevent fraud.
 - Process payments through Stripe.
-- Send transactional emails (verification, purchase receipts, escrow updates).
+- Send transactional emails (verification, purchase receipts, payment-hold updates).
 - Improve the platform and personalise content (e.g. surfacing relevant deals).
 - Comply with legal obligations.
 

@@ -148,7 +148,7 @@ export default function NotificationSettings() {
               <div className="flex-1">
                 <p className="text-sm font-medium">Essential transaction emails</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Purchase confirmations, escrow updates, deadline alerts, name-change requests, payouts and refunds. These are required to complete sales safely and can't be turned off.
+                  Purchase confirmations, payment-hold updates, deadline alerts, name-change requests, payouts and refunds. These are required to complete sales safely and can't be turned off.
                 </p>
               </div>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-primary">Always on</span>

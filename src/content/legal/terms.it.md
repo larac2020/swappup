@@ -30,11 +30,11 @@ Creando un annuncio confermi che:
 
 Non puoi pubblicare biglietti che sai essere non trasferibili, fraudolenti, rubati, scaduti o già utilizzati.
 
-## 5. Acquisto e flusso di garanzia (escrow)
+## 5. Acquisto e custodia sicura del pagamento
 
-Quando un acquirente acquista un annuncio, il pagamento viene trattenuto in garanzia dal nostro processore di pagamento. I fondi vengono rilasciati al venditore solo dopo che l'acquirente conferma che il vettore ha emesso il biglietto aggiornato a suo nome.
+Quando un acquirente acquista un annuncio, il pagamento viene custodito in sicurezza dal nostro processore di pagamento per conto dell'acquirente. I fondi vengono rilasciati al venditore **24 ore dopo l'orario di partenza previsto** del biglietto — oppure prima, non appena l'acquirente conferma in app che il vettore ha emesso il biglietto aggiornato a suo nome.
 
-Se il venditore non completa il trasferimento entro la scadenza, l'acquirente ha diritto al rimborso integrale.
+Se l'acquirente segnala un problema prima della chiusura della finestra di rilascio, i fondi restano custoditi mentre esaminiamo la contestazione. Se il venditore non completa il cambio nome entro la scadenza indicata nell'ordine, l'acquirente ha diritto al rimborso integrale.
 
 ## 6. Commissioni e pagamenti
 
@@ -48,7 +48,7 @@ Ti impegni a non:
 
 - Utilizzare il Servizio per commettere frodi o facilitare attività illegali.
 - Creare più di un account o impersonare un'altra persona.
-- Aggirare l'escrow della piattaforma transando al di fuori di essa.
+- Aggirare la custodia sicura del pagamento della piattaforma transando al di fuori di essa.
 - Caricare documenti d'identità falsi.
 - Effettuare scraping, reverse engineering o interferire con il Servizio.
 

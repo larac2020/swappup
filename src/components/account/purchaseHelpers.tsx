@@ -403,7 +403,7 @@ export function downloadReceiptPdf(p: any, listing: any, profile: any) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     setText(doc, BRAND.muted);
-    doc.text(`Escrow status: ${p.escrow_status}`, 14, y);
+    doc.text(`Payment-hold status: ${p.escrow_status}`, 14, y);
     y += 8;
   }
 

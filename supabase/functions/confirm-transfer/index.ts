@@ -48,8 +48,23 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden" }, 403);
     }
 
+    // Payment-hold release deadline = 24h after the flight departs.
+    const { data: listingForDeadline } = await admin
+      .from("listings")
+      .select("departure_date, departure_time")
+      .eq("id", purchase.listing_id)
+      .single();
+
     // Update purchase as seller (server-side, service role).
-    const escrowDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    let escrowDeadline: string;
+    if (listingForDeadline?.departure_date) {
+      const time = listingForDeadline.departure_time || "23:59:00";
+      const departureTs = new Date(`${listingForDeadline.departure_date}T${time}Z`).getTime();
+      escrowDeadline = new Date(departureTs + 24 * 60 * 60 * 1000).toISOString();
+    } else {
+      // Fallback: 48h from confirmation if no departure date on file.
+      escrowDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    }
     const { error: updErr } = await admin
       .from("purchases")
       .update({

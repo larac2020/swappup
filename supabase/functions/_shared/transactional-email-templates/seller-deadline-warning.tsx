@@ -37,7 +37,7 @@ const dict = {
     pushTip: '💡 Turn on push notifications to know the moment the buyer confirms and your payment is on the way.',
     updatePrefs: 'Update notification preferences',
     cta: 'Confirm the name change in the app',
-    feeReminder: 'Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer fails to confirm within 48 hours.',
+    feeReminder: 'Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer flags an issue before the payment is released (24 hours after departure).',
     doneTitle: 'Already done it?',
     doneBody: 'Great. Just upload the new booking confirmation in the app and the sale will go through straight away.',
     sign: 'Have a great day,', team: 'The swappup team',

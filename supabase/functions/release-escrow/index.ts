@@ -9,30 +9,42 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const auth = req.headers.get("Authorization");
-    if (!auth) return j({ error: "Unauthorized" }, 401);
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: auth } } },
-    );
-    const { data: u } = await userClient.auth.getUser();
-    if (!u.user) return j({ error: "Unauthorized" }, 401);
+    const auth = req.headers.get("Authorization") || "";
+    const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isServiceRole = auth === `Bearer ${SRK}`;
 
-    const { purchase_id } = await req.json();
+    const body = await req.json();
+    const { purchase_id, auto } = body || {};
+    const autoRelease = isServiceRole && auto === true;
+
+    let callerUserId: string | null = null;
+    if (!autoRelease) {
+      if (!auth) return j({ error: "Unauthorized" }, 401);
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: auth } } },
+      );
+      const { data: u } = await userClient.auth.getUser();
+      if (!u.user) return j({ error: "Unauthorized" }, 401);
+      callerUserId = u.user.id;
+    }
+
     if (!purchase_id) return j({ error: "Missing purchase_id" }, 400);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      SRK,
     );
 
     const { data: purchase } = await admin.from("purchases").select("*").eq("id", purchase_id).single();
     if (!purchase) return j({ error: "Not found" }, 404);
 
-    // Only buyer can release
-    const { data: buyerProfile } = await admin.from("profiles").select("user_id").eq("id", purchase.buyer_id).single();
-    if (buyerProfile?.user_id !== u.user.id) return j({ error: "Forbidden" }, 403);
+    if (!autoRelease) {
+      // Only buyer can release manually
+      const { data: buyerProfile } = await admin.from("profiles").select("user_id").eq("id", purchase.buyer_id).single();
+      if (buyerProfile?.user_id !== callerUserId) return j({ error: "Forbidden" }, 403);
+    }
     if (purchase.escrow_status === "released") return j({ ok: true, already: true });
 
     // Capture PI
