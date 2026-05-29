@@ -106,7 +106,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
             Complete Your Purchase
           </DialogTitle>
           <DialogDescription>
-            Your payment will be held in escrow until the seller confirms the name change on the ticket.
+            Your payment is held safely by Swappup and released to the seller 24 hours after your flight departs — or earlier, as soon as you confirm everything is in order.
           </DialogDescription>
         </DialogHeader>
 
@@ -158,7 +158,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
               </div>
             )}
             <div className="border-t border-border/50 pt-3 flex items-center justify-between">
-              <span className="font-semibold">Total (held in escrow)</span>
+              <span className="font-semibold">Total (securely held by Swappup)</span>
               <span className="text-xl font-bold text-primary">{fmt(totalPrice)}</span>
             </div>
             {showConversionNote && (
@@ -245,7 +245,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
               </div>
             </div>
 
-            {/* Escrow Terms */}
+            {/* Payment hold terms */}
             <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -254,8 +254,9 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                   onCheckedChange={(c) => setEscrowAccepted(c === true)}
                 />
                 <label htmlFor="escrow-accept" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
-                  I agree that my payment of <strong>{fmt(totalPrice)}</strong> will be held in escrow until the seller confirms
-                  the name change. If not completed within 24 hours, I will receive a full refund.
+                  I agree that my payment of <strong>{fmt(totalPrice)}</strong> will be held safely by Swappup and only released to
+                  the seller 24 hours after my flight departs (or sooner if I confirm everything is in order). If the seller
+                  does not complete the name change within 24 hours of purchase, I will receive a full refund.
                 </label>
               </div>
             </div>
