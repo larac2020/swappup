@@ -51,7 +51,7 @@ const dict = {
     deadlineBody: 'If you do not update the booking by {deadline}, the purchase is automatically refunded to the buyer and the sale is cancelled. If something is blocking you, please get in touch with us as soon as possible.',
     fallbackDeadline: 'the 24 hour deadline',
     cta: 'Confirm the name change in the app',
-    feeReminder: 'Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer fails to confirm within 48 hours.',
+    feeReminder: 'Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer flags an issue before the payment is released (24 hours after departure).',
     sign: 'Have a great day,',
     team: 'The swappup team',
     buyer: 'your buyer',
