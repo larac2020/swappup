@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, CheckCircle2, Clock, User, Plane, AlertTriangle, Upload, FileCheck2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,11 +28,13 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [nameChangeProofFile, setNameChangeProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [finalityAccepted, setFinalityAccepted] = useState(false);
 
   const confirmMutation = useMutation({
     mutationFn: async () => {
       if (!proofFile) throw new Error("Please upload a payment confirmation for the name change fee.");
       if (!nameChangeProofFile) throw new Error("Please upload a screenshot of the completed name change.");
+      if (!finalityAccepted) throw new Error("You must accept the finality commitment to confirm the transfer.");
       const maxBytes = 8 * 1024 * 1024;
       if (proofFile.size > maxBytes) throw new Error("File too large (max 8MB).");
       if (nameChangeProofFile.size > maxBytes) throw new Error("Name change screenshot too large (max 8MB).");
@@ -66,6 +69,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
           surname: surname.trim(),
           proof_path: path,
           name_change_proof_path: ncPath,
+          finality_accepted: true,
         },
       });
       if (error) throw error;
@@ -231,6 +235,24 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             </p>
           </div>
 
+          {/* Finality / no-reversal binding attestation */}
+          <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="finality-accept"
+                checked={finalityAccepted}
+                onCheckedChange={(c) => setFinalityAccepted(c === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="finality-accept" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
+                I confirm the name change is <strong>final</strong>. I will not request or attempt any reversal,
+                further name change, cancellation, refund, voucher or mileage transfer on this ticket.
+                I understand that doing so is a breach of the Swappup Terms and may result in a permanent
+                ban, withholding or claw-back of funds, chargeback recovery and legal action.
+              </label>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
@@ -239,7 +261,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             <Button
               variant="gold"
               className="flex-1 gap-2"
-              disabled={!bookingRef.trim() || !surname.trim() || !proofFile || !nameChangeProofFile || isExpired || confirmMutation.isPending || uploading}
+              disabled={!bookingRef.trim() || !surname.trim() || !proofFile || !nameChangeProofFile || !finalityAccepted || isExpired || confirmMutation.isPending || uploading}
               onClick={() => confirmMutation.mutate()}
             >
               {(confirmMutation.isPending || uploading) ? (

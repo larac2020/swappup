@@ -259,6 +259,12 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                   does not complete the name change within 24 hours of purchase, I will receive a full refund.
                 </label>
               </div>
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-2">
+                <strong>Important:</strong> if anything is wrong at check-in or boarding, contact Swappup
+                <strong> before</strong> the hold is released (i.e. before 24h after your scheduled departure).
+                Once the hold is released, the payment can no longer be reversed and any claim must be pursued
+                directly against the seller and/or the airline.
+              </p>
             </div>
           </div>
 

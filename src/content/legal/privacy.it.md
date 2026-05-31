@@ -49,6 +49,8 @@ Alcuni fornitori trattano i dati al di fuori del Regno Unito/UE. In tali casi fa
 
 Conserviamo i dati personali per il tempo in cui il tuo account è attivo e per un periodo ragionevole successivo per adempiere agli obblighi fiscali, contabili e di prevenzione frodi. I documenti di verifica dell'identità sono conservati per il periodo richiesto dalle norme antifrode e poi cancellati.
 
+**Evidenze su contestazioni e frodi.** Le prove di pagamento dei trasferimenti, gli screenshot di conferma del cambio nome, i riferimenti della verifica dell'identità, i log transazionali, gli hash di IP e fingerprint del dispositivo e i metadati di sessione sono conservati per **sei (6) anni** dalla relativa transazione. Tale conservazione è necessaria per difendere o far valere pretese legali ai sensi dell'UK Limitation Act 1980 e delle norme UE equivalenti, per gestire chargeback e contestazioni e per adempiere agli obblighi previsti dai Termini di Servizio (in particolare le clausole di responsabilità post-trasferimento). La base giuridica è il nostro legittimo interesse alla prevenzione delle frodi e all'accertamento, esercizio o difesa di pretese legali.
+
 ## 7. I tuoi diritti (GDPR UK e UE)
 
 Hai il diritto di:

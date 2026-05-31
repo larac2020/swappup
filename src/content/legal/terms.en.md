@@ -42,6 +42,25 @@ SwappUp may charge a service fee, which will always be displayed before checkout
 
 The selling price of a ticket may not exceed its original face value.
 
+## 6a. Post-transfer ticket misuse — limitation of liability
+
+SwappUp is a peer-to-peer marketplace and is not the carrier, issuer or holder of any ticket listed on the platform. Once the airline confirms the name change to the buyer and SwappUp releases the funds to the seller, the transaction is final. SwappUp is not responsible for, and disclaims all liability arising from, any subsequent act or omission of the seller, the buyer or the airline — including, without limitation:
+
+1. the seller requesting a further name change, cancellation, refund, voucher, mileage credit or any other modification of the ticket after transfer;
+2. the airline rejecting, downgrading or invalidating the ticket at check-in or boarding;
+3. the buyer being denied boarding for reasons unrelated to the name change SwappUp verified;
+4. any tax, fare-class or fee adjustment imposed by the carrier after transfer.
+
+The buyer's sole remedy in such cases lies against the seller and/or the airline under applicable consumer and contract law. SwappUp will, on request and where lawful, share the evidence it retains (name-change confirmation screenshot, transfer payment proof, ID-verification reference and session logs) to assist the buyer in pursuing that remedy. Identity verification is mandatory before any user can sell — this is what makes the original seller identifiable and accountable for any post-transfer misconduct.
+
+### 6b. Seller covenants
+
+The seller irrevocably warrants that, after the name change is confirmed to the buyer, they will not request, authorise or attempt any reversal, further name change, cancellation, refund, voucher or mileage transfer in respect of the ticket. Breach of this covenant entitles SwappUp to permanently ban the account, withhold or claw back funds still under the secure payment hold, pursue chargeback and civil recovery, and report the conduct to the airline and, where applicable, to law enforcement.
+
+### 6c. Dispute window
+
+If anything is wrong at check-in or boarding, the buyer must contact SwappUp **before** the secure payment hold is released (i.e. before 24 hours after the scheduled departure). Once the hold is released, SwappUp can no longer reverse the payment and the buyer's claim must be pursued directly against the seller and/or the airline.
+
 ## 7. Prohibited conduct
 
 You agree not to:

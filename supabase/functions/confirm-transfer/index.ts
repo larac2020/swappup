@@ -24,10 +24,20 @@ Deno.serve(async (req) => {
     if (!u.user) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json();
-    const { purchase_id, booking_ref, surname, proof_path, name_change_proof_path } = body ?? {};
+    const { purchase_id, booking_ref, surname, proof_path, name_change_proof_path, finality_accepted } = body ?? {};
     if (!purchase_id || !booking_ref || !surname || !proof_path || !name_change_proof_path) {
       return json({ error: "Missing fields" }, 400);
     }
+    if (finality_accepted !== true) {
+      return json({ error: "Seller finality acceptance is required" }, 400);
+    }
+
+    // Capture the IP from common edge headers (best-effort; used as legal evidence).
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-real-ip") ||
+      null;
 
     const admin = createClient(SUPABASE_URL, SRK);
 
@@ -77,6 +87,8 @@ Deno.serve(async (req) => {
         transfer_payment_proof_url: proof_path,
         name_change_proof_url: name_change_proof_path,
         escrow_deadline: escrowDeadline,
+        seller_finality_accepted_at: new Date().toISOString(),
+        seller_finality_ip: ip,
       })
       .eq("id", purchase_id);
     if (updErr) throw updErr;

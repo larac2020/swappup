@@ -49,6 +49,8 @@ Some providers process data outside the UK/EU. Where this happens we rely on Sta
 
 We retain personal data for as long as your account is active and for a reasonable period afterwards to comply with tax, accounting and fraud-prevention obligations. Identity-verification documents are retained for the period required by anti-fraud rules and then deleted.
 
+**Dispute and fraud evidence.** Transfer payment proofs, name-change confirmation screenshots, identity-verification references, transactional logs, IP and device-fingerprint hashes and session metadata are retained for **six (6) years** after the related transaction. This retention is necessary to defend or pursue legal claims under the UK Limitation Act 1980 and equivalent EU rules, to support chargeback and dispute resolution, and to comply with our obligations under the Terms of Service (in particular the post-transfer liability provisions). The legal basis is our legitimate interest in fraud prevention and the establishment, exercise or defence of legal claims.
+
 ## 7. Your rights (UK and EU GDPR)
 
 You have the right to:

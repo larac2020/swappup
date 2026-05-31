@@ -875,6 +875,8 @@ export type Database = {
           original_booking_ref: string | null
           quantity: number
           seller_deadline_warning_sent: boolean
+          seller_finality_accepted_at: string | null
+          seller_finality_ip: string | null
           seller_id: string | null
           seller_late_warning_sent: boolean
           seller_reminder_sent: boolean
@@ -904,6 +906,8 @@ export type Database = {
           original_booking_ref?: string | null
           quantity: number
           seller_deadline_warning_sent?: boolean
+          seller_finality_accepted_at?: string | null
+          seller_finality_ip?: string | null
           seller_id?: string | null
           seller_late_warning_sent?: boolean
           seller_reminder_sent?: boolean
@@ -933,6 +937,8 @@ export type Database = {
           original_booking_ref?: string | null
           quantity?: number
           seller_deadline_warning_sent?: boolean
+          seller_finality_accepted_at?: string | null
+          seller_finality_ip?: string | null
           seller_id?: string | null
           seller_late_warning_sent?: boolean
           seller_reminder_sent?: boolean
