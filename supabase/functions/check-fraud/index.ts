@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
     // 7. Airline concentration (most active listings on a single airline)
     // 8. IP/device reuse across multiple users (shared fingerprint)
     // 9. Unusually cheap listings vs route median
+    // 10. Post-transfer reuse — seller listed/sold the same flight+date+booking ref after a completed transfer
 
     const { data: profiles, error: profilesErr } = await supabaseAdmin
       .from("profiles")
@@ -237,6 +238,51 @@ Deno.serve(async (req) => {
           score += 15;
           flags.push("unusually_cheap_listings");
         }
+      }
+
+      // 13. Post-transfer reuse — same flight + departure_date + original booking ref re-listed or re-sold
+      //     by this seller AFTER a completed transfer. Strong signal the seller reverted the name change.
+      const { data: completedTransfers } = await supabaseAdmin
+        .from("purchases")
+        .select("listing_id, original_booking_ref, transfer_confirmed_at, listings:listing_id(flight_number, departure_date)")
+        .eq("seller_id", profile.id)
+        .eq("status", "transfer_confirmed")
+        .not("transfer_confirmed_at", "is", null);
+
+      let postTransferReuse = 0;
+      for (const t of completedTransfers ?? []) {
+        const flightNo = (t as any).listings?.flight_number;
+        const depDate = (t as any).listings?.departure_date;
+        const bookingRef = (t as any).original_booking_ref;
+        if (!flightNo || !depDate) continue;
+
+        // Any *other* listing by this seller for the same flight+date created after the transfer was confirmed?
+        const { count: dupListings } = await supabaseAdmin
+          .from("listings")
+          .select("*", { count: "exact", head: true })
+          .eq("seller_id", profile.id)
+          .eq("flight_number", flightNo)
+          .eq("departure_date", depDate)
+          .neq("id", (t as any).listing_id)
+          .gte("created_at", (t as any).transfer_confirmed_at);
+
+        // Any *other* purchase by this seller with the same original booking ref after the transfer?
+        let dupPurchases = 0;
+        if (bookingRef) {
+          const { count } = await supabaseAdmin
+            .from("purchases")
+            .select("*", { count: "exact", head: true })
+            .eq("seller_id", profile.id)
+            .eq("original_booking_ref", bookingRef)
+            .neq("listing_id", (t as any).listing_id);
+          dupPurchases = count ?? 0;
+        }
+
+        if ((dupListings ?? 0) > 0 || dupPurchases > 0) postTransferReuse++;
+      }
+      if (postTransferReuse > 0) {
+        score += 80; // Severe — likely seller reverted name change to re-sell the same ticket
+        flags.push("post_transfer_ticket_reuse");
       }
 
       const isFlagged = score >= 50;
