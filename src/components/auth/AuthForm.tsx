@@ -82,10 +82,6 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
           return;
         }
-        if (!allCriteriaMet(password)) {
-          // Criteria are shown inline in the live checklist — no toast needed.
-          return;
-        }
         if (!legalAccepted) {
           toast({ title: t("error"), description: t("legalMustAccept"), variant: "destructive" });
           return;
@@ -396,8 +392,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
             className="w-full"
             disabled={
               loading ||
-              (mode === "signup" &&
-                (emailExists === true || !legalAccepted || !allCriteriaMet(password)))
+              (mode === "signup" && (emailExists === true || !legalAccepted))
             }
           >
             {loading ? (
