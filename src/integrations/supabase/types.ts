@@ -1059,6 +1059,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          country: string | null
+          device_hash: string | null
+          first_seen_at: string
+          hit_count: number
+          id: string
+          ip_hash: string | null
+          last_seen_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          device_hash?: string | null
+          first_seen_at?: string
+          hit_count?: number
+          id?: string
+          ip_hash?: string | null
+          last_seen_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          device_hash?: string | null
+          first_seen_at?: string
+          hit_count?: number
+          id?: string
+          ip_hash?: string | null
+          last_seen_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       watchlist: {
         Row: {
           created_at: string
