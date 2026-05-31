@@ -26,6 +26,11 @@ Deno.serve(async (req) => {
     // 2. Rapid listing creation (> 3 in 1 hour)
     // 3. Failed verifications
     // 4. Account age vs listing count ratio
+    // 5. Repeated cancellations (buyer- or seller-initiated)
+    // 6. Repeated disputes (seller_reports against them + name_change_fee_disputes filed)
+    // 7. Airline concentration (most active listings on a single airline)
+    // 8. IP/device reuse across multiple users (shared fingerprint)
+    // 9. Unusually cheap listings vs route median
 
     const { data: profiles, error: profilesErr } = await supabaseAdmin
       .from("profiles")
@@ -41,9 +46,9 @@ Deno.serve(async (req) => {
       const accountDays = accountAge / (1000 * 60 * 60 * 24);
 
       // 1. Check active listings
-      const { count: activeListings } = await supabaseAdmin
+      const { data: activeListingRows, count: activeListings } = await supabaseAdmin
         .from("listings")
-        .select("*", { count: "exact", head: true })
+        .select("airline, price, origin_city, destination_city", { count: "exact" })
         .eq("seller_id", profile.id)
         .eq("is_active", true);
 
@@ -92,6 +97,145 @@ Deno.serve(async (req) => {
         if ((highValueListings?.length ?? 0) > 0) {
           score += 20;
           flags.push("new_account_high_value");
+        }
+      }
+
+      // 8. Repeated cancellations — purchases involving this user (as buyer or seller) that were cancelled
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      const [{ count: cancelledAsSeller }, { count: cancelledAsBuyer }] = await Promise.all([
+        supabaseAdmin
+          .from("purchases")
+          .select("*", { count: "exact", head: true })
+          .eq("seller_id", profile.id)
+          .eq("status", "cancelled")
+          .gte("created_at", ninetyDaysAgo),
+        supabaseAdmin
+          .from("purchases")
+          .select("*", { count: "exact", head: true })
+          .eq("buyer_id", profile.id)
+          .eq("status", "cancelled")
+          .gte("created_at", ninetyDaysAgo),
+      ]);
+      const totalCancellations = (cancelledAsSeller ?? 0) + (cancelledAsBuyer ?? 0);
+      if (totalCancellations >= 5) {
+        score += 35;
+        flags.push("repeated_cancellations_severe");
+      } else if (totalCancellations >= 2) {
+        score += 20;
+        flags.push("repeated_cancellations");
+      }
+
+      // 9. Repeated disputes — reports filed against this seller + name-change-fee disputes they filed
+      const [{ count: reportsAgainst }, { count: feeDisputes }] = await Promise.all([
+        supabaseAdmin
+          .from("seller_reports")
+          .select("*", { count: "exact", head: true })
+          .eq("seller_id", profile.id)
+          .gte("created_at", ninetyDaysAgo),
+        supabaseAdmin
+          .from("name_change_fee_disputes")
+          .select("*", { count: "exact", head: true })
+          .eq("seller_id", profile.id)
+          .gte("created_at", ninetyDaysAgo),
+      ]);
+      const totalDisputes = (reportsAgainst ?? 0) + (feeDisputes ?? 0);
+      if (totalDisputes >= 3) {
+        score += 30;
+        flags.push("repeated_disputes_severe");
+      } else if (totalDisputes >= 1) {
+        score += 15;
+        flags.push("repeated_disputes");
+      }
+
+      // 10. Airline concentration — >=70% of active listings on a single airline (with >=4 listings)
+      if ((activeListings ?? 0) >= 4 && activeListingRows) {
+        const byAirline = new Map<string, number>();
+        for (const row of activeListingRows) {
+          const a = (row.airline ?? "").trim().toLowerCase();
+          if (!a) continue;
+          byAirline.set(a, (byAirline.get(a) ?? 0) + 1);
+        }
+        let topShare = 0;
+        for (const c of byAirline.values()) {
+          const share = c / (activeListings ?? 1);
+          if (share > topShare) topShare = share;
+        }
+        if (topShare >= 0.9) {
+          score += 20;
+          flags.push("airline_concentration_severe");
+        } else if (topShare >= 0.7) {
+          score += 10;
+          flags.push("airline_concentration");
+        }
+      }
+
+      // 11. IP/device reuse — same ip_hash or device_hash seen on >=2 distinct users
+      const { data: sessions } = await supabaseAdmin
+        .from("user_sessions")
+        .select("ip_hash, device_hash")
+        .eq("user_id", profile.user_id);
+
+      const ipHashes = Array.from(
+        new Set((sessions ?? []).map((s) => s.ip_hash).filter((h) => h && h.length > 0))
+      );
+      const deviceHashes = Array.from(
+        new Set((sessions ?? []).map((s) => s.device_hash).filter((h) => h && h.length > 0))
+      );
+
+      let sharedIp = false;
+      let sharedDevice = false;
+      if (ipHashes.length > 0) {
+        const { data: sharedIpRows } = await supabaseAdmin
+          .from("user_sessions")
+          .select("user_id")
+          .in("ip_hash", ipHashes)
+          .neq("user_id", profile.user_id)
+          .limit(1);
+        sharedIp = (sharedIpRows?.length ?? 0) > 0;
+      }
+      if (deviceHashes.length > 0) {
+        const { data: sharedDeviceRows } = await supabaseAdmin
+          .from("user_sessions")
+          .select("user_id")
+          .in("device_hash", deviceHashes)
+          .neq("user_id", profile.user_id)
+          .limit(1);
+        sharedDevice = (sharedDeviceRows?.length ?? 0) > 0;
+      }
+      if (sharedDevice) {
+        score += 30;
+        flags.push("shared_device_fingerprint");
+      } else if (sharedIp) {
+        score += 10;
+        flags.push("shared_ip");
+      }
+
+      // 12. Unusually cheap listings — listing price < 40% of route median (>=3 comparable listings)
+      if (activeListingRows && activeListingRows.length > 0) {
+        let cheapCount = 0;
+        for (const row of activeListingRows) {
+          if (!row.origin_city || !row.destination_city || !row.price) continue;
+          const { data: peers } = await supabaseAdmin
+            .from("listings")
+            .select("price")
+            .eq("origin_city", row.origin_city)
+            .eq("destination_city", row.destination_city)
+            .eq("is_active", true)
+            .neq("seller_id", profile.id);
+          const prices = (peers ?? [])
+            .map((p) => Number(p.price))
+            .filter((n) => Number.isFinite(n) && n > 0)
+            .sort((a, b) => a - b);
+          if (prices.length < 3) continue;
+          const median = prices[Math.floor(prices.length / 2)];
+          if (Number(row.price) < median * 0.4) cheapCount++;
+        }
+        if (cheapCount >= 3) {
+          score += 25;
+          flags.push("unusually_cheap_listings_severe");
+        } else if (cheapCount >= 1) {
+          score += 15;
+          flags.push("unusually_cheap_listings");
         }
       }
 
