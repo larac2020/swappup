@@ -42,6 +42,25 @@ SwappUp può applicare una commissione di servizio, che sarà sempre mostrata pr
 
 Il prezzo di vendita di un biglietto non può superare il valore originale del biglietto stesso.
 
+## 6a. Uso improprio del biglietto dopo il trasferimento — limitazione di responsabilità
+
+SwappUp è un marketplace peer-to-peer e non è il vettore, l'emittente o il titolare di alcun biglietto pubblicato sulla piattaforma. Una volta che la compagnia aerea conferma il cambio nome all'acquirente e SwappUp rilascia i fondi al venditore, la transazione è definitiva. SwappUp non è responsabile, ed esclude qualsiasi responsabilità derivante, da qualsiasi successivo atto od omissione del venditore, dell'acquirente o del vettore — compresi, a titolo esemplificativo:
+
+1. la richiesta da parte del venditore di un ulteriore cambio nome, cancellazione, rimborso, voucher, accredito miglia o qualsiasi altra modifica del biglietto dopo il trasferimento;
+2. il rifiuto, il downgrade o l'invalidazione del biglietto da parte del vettore al check-in o all'imbarco;
+3. il rifiuto dell'imbarco all'acquirente per motivi non collegati al cambio nome verificato da SwappUp;
+4. qualsiasi adeguamento di tasse, classe tariffaria o commissioni imposto dal vettore dopo il trasferimento.
+
+L'unico rimedio dell'acquirente in tali casi è esercitabile nei confronti del venditore e/o del vettore secondo la normativa applicabile in materia di consumatori e contratti. Su richiesta e ove lecito, SwappUp condividerà le evidenze conservate (screenshot di conferma del cambio nome, prova di pagamento del trasferimento, riferimento di verifica dell'identità e log di sessione) per assistere l'acquirente nell'azione. La verifica dell'identità è obbligatoria prima che un utente possa vendere — è ciò che rende il venditore originario identificabile e responsabile per ogni successivo abuso.
+
+### 6b. Impegni del venditore
+
+Il venditore garantisce in modo irrevocabile che, dopo la conferma del cambio nome all'acquirente, non richiederà, autorizzerà né tenterà alcuna inversione, ulteriore cambio nome, cancellazione, rimborso, voucher o trasferimento miglia in relazione al biglietto. La violazione di tale impegno legittima SwappUp a bannare definitivamente l'account, trattenere o recuperare i fondi ancora in custodia sicura, avviare procedure di chargeback e azioni civili, e segnalare la condotta al vettore e, ove applicabile, alle autorità competenti.
+
+### 6c. Finestra di contestazione
+
+Se qualcosa non funziona al check-in o all'imbarco, l'acquirente deve contattare SwappUp **prima** che la custodia sicura del pagamento venga rilasciata (ossia prima delle 24 ore successive alla partenza prevista). Una volta rilasciata la custodia, SwappUp non può più stornare il pagamento e l'acquirente dovrà rivolgersi direttamente al venditore e/o al vettore.
+
 ## 7. Condotte vietate
 
 Ti impegni a non:
