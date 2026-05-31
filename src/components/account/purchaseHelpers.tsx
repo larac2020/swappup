@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { formatPrice } from "@/lib/currency";
+import swappupLogo from "@/assets/swappup-logo.png";
 
 export function CopyButton({ value, label }: { value?: string | null; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -68,7 +69,21 @@ function setDraw(doc: jsPDF, c: [number, number, number]) {
   doc.setDrawColor(c[0], c[1], c[2]);
 }
 
-function brandHeader(doc: jsPDF, subtitle: string, rightLine?: string) {
+let _logoPromise: Promise<HTMLImageElement> | null = null;
+function loadLogo(): Promise<HTMLImageElement> {
+  if (!_logoPromise) {
+    _logoPromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = swappupLogo;
+    });
+  }
+  return _logoPromise;
+}
+
+function brandHeader(doc: jsPDF, subtitle: string, rightLine?: string, logo?: HTMLImageElement) {
   // Top gold accent bar (full width)
   setFill(doc, BRAND.gold);
   doc.rect(0, 0, 210, 4, "F");
@@ -76,17 +91,24 @@ function brandHeader(doc: jsPDF, subtitle: string, rightLine?: string) {
   setFill(doc, BRAND.gold);
   doc.rect(0, 4, 3, 24, "F");
 
-  // Wordmark
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  setText(doc, BRAND.ink);
-  doc.text("swappup", 14, 18);
+  // Logo
+  if (logo) {
+    const h = 9;
+    const ratio = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 4;
+    const w = h * ratio;
+    doc.addImage(logo, "PNG", 14, 10, w, h);
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    setText(doc, BRAND.ink);
+    doc.text("swappup", 14, 18);
+  }
 
   // Subtitle
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   setText(doc, BRAND.muted);
-  doc.text(subtitle.toUpperCase(), 14, 24);
+  doc.text(subtitle.toUpperCase(), 14, 26);
 
   // Right meta
   if (rightLine) {
@@ -198,10 +220,12 @@ function supportBlock(doc: jsPDF, y: number): number {
 export async function downloadTicketPdf(p: any, listing: any, seller?: any, profile?: any) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const orderShort = String(p.id).slice(0, 8).toUpperCase();
+  const logo = await loadLogo().catch(() => undefined);
   brandHeader(
     doc,
     "Booking confirmation",
     `Order #${orderShort} · ${format(new Date(p.created_at), "dd MMM yyyy")}`,
+    logo,
   );
 
   let y = 44;
@@ -298,7 +322,7 @@ export async function downloadTicketPdf(p: any, listing: any, seller?: any, prof
   // Support
   if (y > 230) {
     doc.addPage();
-    brandHeader(doc, "Booking confirmation", `Order #${orderShort}`);
+    brandHeader(doc, "Booking confirmation", `Order #${orderShort}`, logo);
     y = 44;
   }
   supportBlock(doc, y);
@@ -310,13 +334,15 @@ export async function downloadTicketPdf(p: any, listing: any, seller?: any, prof
 /* ----------------------------------------------------------------
  * Payment receipt PDF
  * ---------------------------------------------------------------- */
-export function downloadReceiptPdf(p: any, listing: any, profile: any) {
+export async function downloadReceiptPdf(p: any, listing: any, profile: any) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const orderShort = String(p.id).slice(0, 8).toUpperCase();
+  const logo = await loadLogo().catch(() => undefined);
   brandHeader(
     doc,
     "Payment receipt",
     `Receipt #${orderShort} · ${format(new Date(p.created_at), "dd MMM yyyy")}`,
+    logo,
   );
 
   const cur = listing?.currency || "EUR";
@@ -372,9 +398,9 @@ export function downloadReceiptPdf(p: any, listing: any, profile: any) {
   const ticket = total - fee;
 
   const lineItems: Array<[string, string]> = [
-    [`Ticket × ${p.quantity ?? 1}`, formatPrice(ticket, cur, cur)],
+    [`Ticket × ${p.quantity ?? 1}`, formatPrice(ticket, cur, cur, { decimals: 2 })],
   ];
-  if (fee > 0) lineItems.push(["Name change fee", formatPrice(fee, cur, cur)]);
+  if (fee > 0) lineItems.push(["Name change fee", formatPrice(fee, cur, cur, { decimals: 2 })]);
 
   doc.setFontSize(11);
   lineItems.forEach(([k, v]) => {
@@ -396,7 +422,7 @@ export function downloadReceiptPdf(p: any, listing: any, profile: any) {
   doc.setFontSize(13);
   setText(doc, BRAND.ink);
   doc.text("Total paid", 18, y + 1.5);
-  doc.text(formatPrice(total, cur, cur), 192, y + 1.5, { align: "right" });
+  doc.text(formatPrice(total, cur, cur, { decimals: 2 }), 192, y + 1.5, { align: "right" });
   y += 14;
 
   if (p.escrow_status && p.escrow_status !== "none") {
