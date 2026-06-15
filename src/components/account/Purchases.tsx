@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { it as itLocale, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
@@ -24,18 +25,26 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, X } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
-  transfer_confirmed: { label: "Transfer Confirmed", className: "bg-success/10 text-success border-success/30" },
-  completed: { label: "Completed", className: "bg-success/10 text-success border-success/30" },
-  pending: { label: "Pending", className: "bg-warning/10 text-warning border-warning/30" },
-  refunded: { label: "Refunded", className: "bg-muted text-muted-foreground border-muted" },
+const statusClass: Record<string, string> = {
+  pending_transfer: "bg-warning/10 text-warning border-warning/30",
+  transfer_confirmed: "bg-success/10 text-success border-success/30",
+  completed: "bg-success/10 text-success border-success/30",
+  pending: "bg-warning/10 text-warning border-warning/30",
+  refunded: "bg-muted text-muted-foreground border-muted",
+};
+const statusKey: Record<string, "purStatusAwaiting" | "purStatusTransferConfirmed" | "purStatusCompleted" | "purStatusPending" | "purStatusRefunded"> = {
+  pending_transfer: "purStatusAwaiting",
+  transfer_confirmed: "purStatusTransferConfirmed",
+  completed: "purStatusCompleted",
+  pending: "purStatusPending",
+  refunded: "purStatusRefunded",
 };
 
 export default function Purchases() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const dfLocale = locale === "it" ? itLocale : enUS;
   const displayCurrency = useDisplayCurrency();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -132,10 +141,10 @@ export default function Purchases() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Receipt confirmed", description: "Payment has been released to the seller." });
+      toast({ title: t("purReceiptConfirmed"), description: t("purReceiptConfirmedDesc") });
       qc.invalidateQueries({ queryKey: ["purchases"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("purFailed"), description: e.message, variant: "destructive" }),
   });
 
   const cancelMutation = useMutation({
@@ -144,10 +153,10 @@ export default function Purchases() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Refund requested", description: "Your payment hold has been released." });
+      toast({ title: t("purRefundRequested"), description: t("purRefundRequestedDesc") });
       qc.invalidateQueries({ queryKey: ["purchases"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("purFailed"), description: e.message, variant: "destructive" }),
   });
 
   return (
