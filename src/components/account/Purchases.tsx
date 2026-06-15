@@ -72,6 +72,25 @@ export default function Purchases() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialOpen]);
 
+  // Safety net: if Stripe's webhook is delayed/misconfigured, reconcile the
+  // purchase server-side from the success redirect so emails still go out.
+  useEffect(() => {
+    if (!justPurchased || !initialOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await supabase.functions.invoke("reconcile-purchase", {
+          body: { purchase_id: initialOpen },
+        });
+        if (!cancelled) qc.invalidateQueries({ queryKey: ["purchases"] });
+      } catch (e) {
+        console.error("reconcile-purchase failed", e);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [justPurchased, initialOpen]);
+
   const toggleExpanded = (id: string) => {
     setExpandedId((cur) => {
       const next = cur === id ? null : id;
