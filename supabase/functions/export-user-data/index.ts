@@ -37,9 +37,24 @@ serve(async (req) => {
     // Get all user data
     const profileId = profile?.id;
     
-    const [listings, purchases, favorites, searchHistory, cartItems, consent, notifications] = await Promise.all([
+    // Columns safe to share with a seller about their sales (NO buyer PII).
+    // Mirrors get_seller_purchases() / the seller view used elsewhere in the app.
+    const SELLER_PURCHASE_COLUMNS = [
+      "id","listing_id","seller_id","buyer_id","quantity","total_price",
+      "status","escrow_status","escrow_deadline","transfer_deadline",
+      "seller_transferred","buyer_confirmed","name_change_fee",
+      "transfer_booking_ref","transfer_surname","transfer_confirmed_at",
+      "seller_reminder_sent","seller_deadline_warning_sent","seller_late_warning_sent",
+      "created_at",
+    ].join(",");
+
+    const [listings, buyerPurchases, sellerPurchases, favorites, searchHistory, cartItems, consent, notifications] = await Promise.all([
       profileId ? adminClient.from("listings").select("*").eq("seller_id", profileId) : { data: [] },
-      profileId ? adminClient.from("purchases").select("*").or(`buyer_id.eq.${profileId},seller_id.eq.${profileId}`) : { data: [] },
+      // Buyer side: user owns this PII, full export is fine.
+      profileId ? adminClient.from("purchases").select("*").eq("buyer_id", profileId) : { data: [] },
+      // Seller side: strip buyer PII (buyer_email, buyer_full_name, stripe_payment_id,
+      // transfer_payment_proof_url, name_change_proof_url, etc.).
+      profileId ? adminClient.from("purchases").select(SELLER_PURCHASE_COLUMNS).eq("seller_id", profileId) : { data: [] },
       profileId ? adminClient.from("favorites").select("*").eq("user_id", profileId) : { data: [] },
       profileId ? adminClient.from("search_history").select("*").eq("user_id", profileId) : { data: [] },
       profileId ? adminClient.from("cart_items").select("*").eq("user_id", profileId) : { data: [] },
@@ -56,7 +71,8 @@ serve(async (req) => {
       profile: profile || null,
       data_consent: consent.data || [],
       listings: listings.data || [],
-      purchases: purchases.data || [],
+      purchases_as_buyer: buyerPurchases.data || [],
+      purchases_as_seller: sellerPurchases.data || [],
       favorites: favorites.data || [],
       search_history: searchHistory.data || [],
       cart_items: cartItems.data || [],
