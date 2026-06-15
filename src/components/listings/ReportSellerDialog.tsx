@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Flag, Loader2 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ReportSellerDialogProps {
   open: boolean;
@@ -31,14 +32,14 @@ interface ReportSellerDialogProps {
   listingId?: string;
 }
 
-const REASONS = [
-  { value: "fake_listing", label: "Fake or fraudulent listing" },
-  { value: "price_manipulation", label: "Suspicious pricing" },
-  { value: "non_transferable", label: "Ticket likely not transferable" },
-  { value: "impersonation", label: "Impersonation / stolen identity" },
-  { value: "off_platform", label: "Asked to pay outside the platform" },
-  { value: "harassment", label: "Harassment or abusive behaviour" },
-  { value: "other", label: "Other" },
+const REASON_VALUES = [
+  { value: "fake_listing", key: "rsReasonFake" as const },
+  { value: "price_manipulation", key: "rsReasonPrice" as const },
+  { value: "non_transferable", key: "rsReasonNT" as const },
+  { value: "impersonation", key: "rsReasonImp" as const },
+  { value: "off_platform", key: "rsReasonOff" as const },
+  { value: "harassment", key: "rsReasonHarass" as const },
+  { value: "other", key: "rsReasonOther" as const },
 ];
 
 export function ReportSellerDialog({
@@ -50,12 +51,13 @@ export function ReportSellerDialog({
   listingId,
 }: ReportSellerDialogProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [reason, setReason] = useState<string>("");
   const [details, setDetails] = useState("");
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (!reason) throw new Error("Please select a reason");
+      if (!reason) throw new Error(t("rsSelectReason"));
       const { error } = await supabase.from("seller_reports").insert({
         reporter_id: reporterProfileId,
         seller_id: sellerProfileId,
@@ -67,8 +69,8 @@ export function ReportSellerDialog({
     },
     onSuccess: () => {
       toast({
-        title: "Report submitted",
-        description: "Thanks — our trust & safety team will review it.",
+        title: t("rsSubmitted"),
+        description: t("rsSubmittedDesc"),
       });
       setReason("");
       setDetails("");
@@ -76,7 +78,7 @@ export function ReportSellerDialog({
     },
     onError: (err: any) => {
       toast({
-        title: "Could not submit report",
+        title: t("rsFailed"),
         description: err.message,
         variant: "destructive",
       });
@@ -89,25 +91,22 @@ export function ReportSellerDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Flag className="w-5 h-5 text-destructive" />
-            Report {sellerName}
+            {t("rsTitle", { name: sellerName })}
           </DialogTitle>
-          <DialogDescription>
-            Help us keep SwappUp safe. Reports are confidential and reviewed by
-            our trust &amp; safety team.
-          </DialogDescription>
+          <DialogDescription>{t("rsDesc")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="report-reason">Reason</Label>
+            <Label htmlFor="report-reason">{t("rsReason")}</Label>
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger id="report-reason">
-                <SelectValue placeholder="Select a reason" />
+                <SelectValue placeholder={t("rsReasonPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {REASONS.map((r) => (
+                {REASON_VALUES.map((r) => (
                   <SelectItem key={r.value} value={r.value}>
-                    {r.label}
+                    {t(r.key)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -115,10 +114,10 @@ export function ReportSellerDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="report-details">Additional details (optional)</Label>
+            <Label htmlFor="report-details">{t("rsDetails")}</Label>
             <Textarea
               id="report-details"
-              placeholder="Describe what happened..."
+              placeholder={t("rsDetailsPlaceholder")}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               maxLength={1000}
@@ -133,7 +132,7 @@ export function ReportSellerDialog({
             onClick={() => onOpenChange(false)}
             disabled={submit.isPending}
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -143,12 +142,12 @@ export function ReportSellerDialog({
             {submit.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Submitting...
+                {t("rsSubmitting")}
               </>
             ) : (
               <>
                 <Flag className="w-4 h-4 mr-2" />
-                Submit report
+                {t("rsSubmit")}
               </>
             )}
           </Button>
