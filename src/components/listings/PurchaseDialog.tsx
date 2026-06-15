@@ -85,11 +85,17 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
       });
       if (error) throw error;
       if (!data?.url) throw new Error("Checkout session could not be created");
-      // Open in new tab — works inside Lovable preview iframe (which blocks top-level redirects to Stripe)
-      const win = window.open(data.url, "_blank", "noopener,noreferrer");
-      if (!win) {
-        // Popup blocked — fall back to top-level redirect
-        window.top ? (window.top.location.href = data.url) : (window.location.href = data.url);
+      // Top-level redirect so the buyer returns to the same browsing context
+      // (preserving the Supabase session in localStorage). Opening Stripe in a
+      // new tab caused storage-partitioned sessions and a bounce to /login on return.
+      try {
+        if (window.top) {
+          window.top.location.href = data.url;
+        } else {
+          window.location.href = data.url;
+        }
+      } catch {
+        window.location.href = data.url;
       }
     },
     onSuccess: () => {

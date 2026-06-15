@@ -39,6 +39,7 @@ function ScrollToTop() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -49,7 +50,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const next = `${location.pathname}${location.search}${location.hash}`;
+    const to = next && next !== "/" ? `/login?next=${encodeURIComponent(next)}` : "/login";
+    return <Navigate to={to} replace state={{ from: location }} />;
   }
 
   return (
@@ -62,6 +65,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -72,7 +76,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
+    const params = new URLSearchParams(location.search);
+    const rawNext = params.get("next");
+    const safeNext = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/home";
+    return <Navigate to={safeNext} replace />;
   }
 
   return <>{children}</>;

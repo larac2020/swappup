@@ -1,43 +1,33 @@
-## Why no email arrived
+## Problem
 
-The buyer confirmation email (and the seller "action required" email) is sent from inside `stripe-purchase-webhook` when Stripe fires `checkout.session.completed`. Checks against the project show:
+After paying on Stripe, the buyer lands on `/login` instead of their new purchase. Two issues compound:
 
-- No invocations of `stripe-purchase-webhook` in the edge function logs.
-- All recent `purchases` rows are stuck at `status = pending`, `escrow_status = pending`, with a `cs_test_…` (Checkout Session) id — meaning the webhook never ran to flip them to `pending_transfer` / `authorized`.
-- `email_send_log` has no rows in the last 2 days, confirming nothing was ever queued.
+1. **`PurchaseDialog` opens Stripe in a new tab** (`window.open(url, "_blank")`). Stripe's `success_url` then loads `/account/purchases?open=…&success=1` in that new tab. In Lovable preview (and in any browser context where storage is partitioned), the new top-level tab does not share the iframe's `localStorage`, so the Supabase session is missing and `ProtectedRoute` redirects to `/login`.
+2. **`ProtectedRoute` discards the intended URL** when redirecting unauthenticated users. Even after re-logging in, the buyer lands on `/home`, never on `/account/purchases?open=…&success=1`, so the existing `reconcile-purchase` safety net never runs and they don't see their ticket.
 
-So the email pipeline itself is fine; the problem is Stripe never reaches our webhook, which means the whole post-payment flow is skipped.
+## Fix
 
-## Plan
+### 1. Top-level redirect to Stripe instead of new tab
+In `src/components/listings/PurchaseDialog.tsx`:
+- Replace the `window.open(data.url, "_blank")` flow with `window.top!.location.href = data.url` (with `window.location.href` as the fallback). Stripe Checkout supports top-frame navigation from the Lovable preview iframe — the old "iframe blocks redirects to Stripe" comment is stale.
+- This keeps the buyer in the same top-level browsing context for the entire round-trip (app → Stripe → app), so the Supabase session in `localStorage` is intact when they return, and `ProtectedRoute` passes.
 
-### 1. Repair the Stripe webhook (root cause)
+### 2. Preserve the intended URL through login
+In `src/App.tsx` (`ProtectedRoute`) and `src/pages/Auth.tsx`:
+- When `ProtectedRoute` redirects to `/login`, pass the current `location.pathname + location.search` as React Router state (`state={{ from: location }}`) and as a `?next=` query param for safety.
+- In `Auth.tsx`, after a successful sign-in, read `state.from` (or `?next=`) and `navigate(next, { replace: true })` instead of always going to `/home`. Restrict `next` to same-origin paths starting with `/` to avoid open-redirect.
+- `PublicRoute` should also honor `?next=` when an already-authenticated user lands on `/login` (so the Stripe return tab, if the session *is* present, sails straight through to the purchase page rather than `/home`).
 
-- Make sure Stripe has a webhook endpoint pointing to the deployed `stripe-purchase-webhook` function URL.
-- Subscribe it to: `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_failed`.
-- Make sure `STRIPE_WEBHOOK_SECRET` in our secrets matches that endpoint's signing secret (and, if there are separate test/live endpoints, that the correct one is used for whichever Stripe mode payments are being taken in).
-- After fixing, do a small test purchase and confirm a row appears in `email_send_log` and the buyer receives the email.
+### 3. No backend changes
+`success_url` and `cancel_url` in `create-purchase-checkout` stay as-is. The `reconcile-purchase` call already wired up in `Purchases.tsx` will now reliably fire on the success redirect because the buyer reaches that route.
 
-### 2. Add a safety-net reconciliation (defense in depth)
+## Files to change
 
-Even with the webhook working, webhooks can be delayed/failed. Add a redundant, idempotent reconciliation so a successful payment is never silently stuck:
+- `src/components/listings/PurchaseDialog.tsx` — swap `window.open` for top-level redirect.
+- `src/App.tsx` — `ProtectedRoute` passes `from`/`next`; `PublicRoute` honors `next`.
+- `src/pages/Auth.tsx` — post-login navigation honors `state.from` / `?next=` with same-origin guard.
 
-- New edge function `reconcile-purchase` (verify_jwt = true):
-  - Input: `purchase_id`.
-  - Loads the purchase, checks it belongs to the calling buyer, and is still `pending`.
-  - Retrieves the Stripe Checkout Session by `stripe_payment_id`. If `payment_status = paid` (or the underlying PaymentIntent is `requires_capture` / `succeeded`), runs the same finalization code path the webhook runs: update purchase status, decrement listing stock, insert seller notification, and invoke `send-transactional-email` for both buyer + seller using the same idempotency keys (`buyer-confirm-<id>`, `seller-action-<id>`) so duplicate sends are impossible if the webhook also fires.
-- On the buyer's success redirect (`/account/purchases?open=<id>&success=1`), call `reconcile-purchase` once on mount. If the webhook already ran, this is a no-op.
+## Out of scope
 
-### 3. Backfill the stuck purchases (optional, on request)
-
-The recent `cs_test_…` purchases are test sessions and look like test data, so by default we won't touch them. If desired, the same `reconcile-purchase` function can be invoked for each stuck purchase to either complete or expire them based on the Stripe session state.
-
-## Technical details
-
-- Files added: `supabase/functions/reconcile-purchase/index.ts` (and a `verify_jwt = true` block in `supabase/config.toml`).
-- Files edited: `src/components/account/Purchases.tsx` (or wherever the `?success=1` redirect is handled) to invoke `reconcile-purchase` once with the purchase id from the query string.
-- Email logic is **not** changed — same templates, same `send-transactional-email`, same idempotency keys, so this work is purely about making sure the trigger actually runs.
-
-## What I need from you
-
-1. Confirm whether the Stripe webhook for `stripe-purchase-webhook` is currently set up in your Stripe dashboard, and whether you're operating in **test** or **live** mode for these purchases. If you're not sure, I can walk you through verifying it in Stripe.
-2. Confirm you want me to also add the client-side reconciliation safety net (recommended).
+- Stripe webhook configuration (tracked separately).
+- The 6 stuck `cs_test_…` purchases (still pending; can be reconciled on request).
