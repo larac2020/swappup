@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { it as itLocale, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
@@ -24,18 +25,26 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, X } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  pending_transfer: { label: "Awaiting Transfer", className: "bg-warning/10 text-warning border-warning/30" },
-  transfer_confirmed: { label: "Transfer Confirmed", className: "bg-success/10 text-success border-success/30" },
-  completed: { label: "Completed", className: "bg-success/10 text-success border-success/30" },
-  pending: { label: "Pending", className: "bg-warning/10 text-warning border-warning/30" },
-  refunded: { label: "Refunded", className: "bg-muted text-muted-foreground border-muted" },
+const statusClass: Record<string, string> = {
+  pending_transfer: "bg-warning/10 text-warning border-warning/30",
+  transfer_confirmed: "bg-success/10 text-success border-success/30",
+  completed: "bg-success/10 text-success border-success/30",
+  pending: "bg-warning/10 text-warning border-warning/30",
+  refunded: "bg-muted text-muted-foreground border-muted",
+};
+const statusKey: Record<string, "purStatusAwaiting" | "purStatusTransferConfirmed" | "purStatusCompleted" | "purStatusPending" | "purStatusRefunded"> = {
+  pending_transfer: "purStatusAwaiting",
+  transfer_confirmed: "purStatusTransferConfirmed",
+  completed: "purStatusCompleted",
+  pending: "purStatusPending",
+  refunded: "purStatusRefunded",
 };
 
 export default function Purchases() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const dfLocale = locale === "it" ? itLocale : enUS;
   const displayCurrency = useDisplayCurrency();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -132,10 +141,10 @@ export default function Purchases() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Receipt confirmed", description: "Payment has been released to the seller." });
+      toast({ title: t("purReceiptConfirmed"), description: t("purReceiptConfirmedDesc") });
       qc.invalidateQueries({ queryKey: ["purchases"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("purFailed"), description: e.message, variant: "destructive" }),
   });
 
   const cancelMutation = useMutation({
@@ -144,10 +153,10 @@ export default function Purchases() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Refund requested", description: "Your payment hold has been released." });
+      toast({ title: t("purRefundRequested"), description: t("purRefundRequestedDesc") });
       qc.invalidateQueries({ queryKey: ["purchases"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("purFailed"), description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -176,14 +185,12 @@ export default function Purchases() {
                   <PartyPopper className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-display font-semibold text-lg">Purchase confirmed</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Your payment is safely held until the seller transfers the ticket into your name. Here's what happens next.
-                  </p>
+                  <h2 className="font-display font-semibold text-lg">{t("purConfirmedTitle")}</h2>
+                  <p className="text-sm text-muted-foreground">{t("purConfirmedDesc")}</p>
                 </div>
                 <button
                   type="button"
-                  aria-label="Dismiss"
+                  aria-label={t("purDismiss")}
                   onClick={() => {
                     const params = new URLSearchParams(searchParams);
                     params.delete("success");
@@ -197,19 +204,19 @@ export default function Purchases() {
               <ol className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <Mail className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><span className="font-medium">Check your email.</span> We've sent a confirmation with your receipt link.</span>
+                  <span><span className="font-medium">{t("purStepEmail")}</span>{t("purStepEmailRest")}</span>
                 </li>
                 <li className="flex gap-3">
                   <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><span className="font-medium">Seller has 24h</span> to transfer the ticket to your name with the airline.</span>
+                  <span><span className="font-medium">{t("purStep24h")}</span>{t("purStep24hRest")}</span>
                 </li>
                 <li className="flex gap-3">
                   <BellRing className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><span className="font-medium">You'll get notified</span> as soon as the seller marks the transfer as done.</span>
+                  <span><span className="font-medium">{t("purStepNotified")}</span>{t("purStepNotifiedRest")}</span>
                 </li>
                 <li className="flex gap-3">
                   <UserCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><span className="font-medium">Confirm the transfer</span> from this page once you see the updated ticket — that releases the payment.</span>
+                  <span><span className="font-medium">{t("purStepConfirm")}</span>{t("purStepConfirmRest")}</span>
                 </li>
               </ol>
             </div>
@@ -220,36 +227,36 @@ export default function Purchases() {
               onClick={() => setShowFilters((s) => !s)}
               className="w-full flex items-center justify-between text-sm font-medium"
             >
-              <span className="flex items-center gap-2"><Filter className="w-4 h-4" /> Filters{hasActiveFilter ? ` · ${filteredPurchases.length}/${purchases.length}` : ""}</span>
+              <span className="flex items-center gap-2"><Filter className="w-4 h-4" /> {t("purFilters")}{hasActiveFilter ? ` · ${filteredPurchases.length}/${purchases.length}` : ""}</span>
               {hasActiveFilter && (
                 <span
                   role="button"
                   tabIndex={0}
                   onClick={(e) => { e.stopPropagation(); clearFilters(); }}
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                ><X className="w-3 h-3" /> Clear</span>
+                ><X className="w-3 h-3" /> {t("purClear")}</span>
               )}
             </button>
             {showFilters && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Input
-                  placeholder="Destination (city, country)"
+                  placeholder={t("purDestPlaceholder")}
                   value={destQuery}
                   onChange={(e) => setDestQuery(e.target.value)}
                 />
                 <Select value={airlineFilter} onValueChange={setAirlineFilter}>
-                  <SelectTrigger><SelectValue placeholder="Airline" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("purAirline")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All airlines</SelectItem>
+                    <SelectItem value="all">{t("purAllAirlines")}</SelectItem>
                     {airlines.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Purchased from</label>
+                  <label className="text-xs text-muted-foreground">{t("purPurchasedFrom")}</label>
                   <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Purchased to</label>
+                  <label className="text-xs text-muted-foreground">{t("purPurchasedTo")}</label>
                   <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                 </div>
               </div>
@@ -257,12 +264,13 @@ export default function Purchases() {
           </div>
           {filteredPurchases.length === 0 ? (
             <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">
-              No purchases match your filters.
+              {t("purNoMatch")}
             </div>
           ) : filteredPurchases.map((p: any) => {
             const listing = p.listings as any;
             const cur = listing?.currency || "EUR";
-            const status = statusConfig[p.status] || statusConfig.pending;
+            const statusCls = statusClass[p.status] || statusClass.pending;
+            const statusLabel = t(statusKey[p.status] || statusKey.pending);
             const isTransferConfirmed = p.status === "transfer_confirmed";
             const isPendingTransfer = p.status === "pending_transfer";
             const isPending = p.status === "pending";
@@ -275,7 +283,7 @@ export default function Purchases() {
             const route =
               listing?.origin_city && listing?.destination_city
                 ? `${listing.origin_city} ${isRoundTrip ? "↔" : "→"} ${listing.destination_city}`
-                : listing?.title || "Ticket";
+                : listing?.title || t("purTicket");
 
             return (
               <div
@@ -297,15 +305,15 @@ export default function Purchases() {
                     <p className="font-medium truncate">{route}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {listing?.departure_date
-                        ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy")
-                        : format(new Date(p.created_at), "MMM d, yyyy")}
+                        ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy", { locale: dfLocale })
+                        : format(new Date(p.created_at), "MMM d, yyyy", { locale: dfLocale })}
                       {listing?.airline ? ` · ${listing.airline}` : ""}
-                      {` · Purchased ${format(new Date(p.created_at), "MMM d, yyyy 'at' HH:mm")}`}
+                      {` · ${t("purPurchasedAt", { date: format(new Date(p.created_at), "MMM d, yyyy · HH:mm", { locale: dfLocale }) })}`}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-primary">{formatPrice(Number(p.total_price), cur, displayCurrency)}</p>
-                    <Badge variant="outline" className={`text-xs ${status.className}`}>{status.label}</Badge>
+                    <Badge variant="outline" className={`text-xs ${statusCls}`}>{statusLabel}</Badge>
                   </div>
                   <ChevronDown
                     className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -320,9 +328,9 @@ export default function Purchases() {
                     <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
                 {/* Trip details — always visible */}
                 <div className="rounded-lg bg-secondary/40 p-3 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Trip details</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t("purTripDetails")}</p>
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Route:</span>{" "}
+                    <span className="text-muted-foreground">{t("purRoute")}</span>{" "}
                     <span className="font-medium text-foreground">
                       {listing?.origin_city || "—"}
                       {listing?.origin_airport ? ` (${listing.origin_airport})` : ""}
@@ -332,29 +340,29 @@ export default function Purchases() {
                     </span>
                   </p>
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Airline:</span>{" "}
+                    <span className="text-muted-foreground">{t("purAirlineLabel")}</span>{" "}
                     <span className="font-medium text-foreground">{listing?.airline || "—"}</span>
                   </p>
                   {listing?.flight_number && (
                     <p className="text-sm">
-                      <span className="text-muted-foreground">Flight #:</span>{" "}
+                      <span className="text-muted-foreground">{t("purFlightNumber")}</span>{" "}
                       <span className="font-mono font-medium text-foreground">{listing.flight_number}</span>
                       <CopyButton value={listing.flight_number} label="Flight number" />
                     </p>
                   )}
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Departure:</span>{" "}
+                    <span className="text-muted-foreground">{t("purDeparture")}</span>{" "}
                     <span className="font-medium text-foreground">
-                      {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
+                      {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy", { locale: dfLocale }) : "—"}
                       {listing?.departure_time ? ` · ${listing.departure_time.slice(0, 5)}` : ""}
                       {listing?.arrival_time ? ` → ${listing.arrival_time.slice(0, 5)}` : ""}
                     </span>
                   </p>
                   {isRoundTrip && (
                     <p className="text-sm">
-                      <span className="text-muted-foreground">Return:</span>{" "}
+                      <span className="text-muted-foreground">{t("purReturn")}</span>{" "}
                       <span className="font-medium text-foreground">
-                        {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
+                        {format(new Date(listing.return_date), "EEE, MMM d, yyyy", { locale: dfLocale })}
                         {listing?.return_departure_time ? ` · ${listing.return_departure_time.slice(0, 5)}` : ""}
                         {listing?.return_arrival_time ? ` → ${listing.return_arrival_time.slice(0, 5)}` : ""}
                         {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
@@ -362,7 +370,7 @@ export default function Purchases() {
                     </p>
                   )}
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Passengers:</span>{" "}
+                    <span className="text-muted-foreground">{t("purPassengers")}</span>{" "}
                     <span className="font-medium text-foreground">{p.quantity}</span>
                   </p>
                 </div>
@@ -371,9 +379,9 @@ export default function Purchases() {
                 <div className="flex flex-wrap items-center gap-2 px-1">
                   {p.name_change_fee > 0 && (
                     <div className="text-xs text-muted-foreground flex items-center gap-2 flex-1 min-w-0">
-                      <span>Ticket: {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
+                      <span>{t("purTicketAmount")} {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
                       <span>•</span>
-                      <span>Name change fee: {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
+                      <span>{t("purNameChangeFeeLabel")} {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
                     </div>
                   )}
                   <Button
@@ -382,7 +390,7 @@ export default function Purchases() {
                     className="gap-1.5 h-7 ml-auto text-xs"
                     onClick={() => downloadReceiptPdf(p, listing, profile)}
                   >
-                    <FileText className="w-3.5 h-3.5" /> Receipt
+                    <FileText className="w-3.5 h-3.5" /> {t("purReceipt")}
                   </Button>
                 </div>
 
@@ -390,9 +398,7 @@ export default function Purchases() {
                 {isPending && (
                   <div className="rounded-lg bg-warning/10 p-3 flex items-start gap-2">
                     <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                    <p className="text-xs text-warning">
-                      Payment is processing. We'll notify you as soon as the seller starts the name-change transfer.
-                    </p>
+                    <p className="text-xs text-warning">{t("purPaymentProcessing")}</p>
                   </div>
                 )}
 
@@ -400,9 +406,7 @@ export default function Purchases() {
                 {isRefunded && (
                   <div className="rounded-lg bg-muted/50 p-3 flex items-start gap-2">
                     <RotateCcw className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      This purchase was refunded. The amount has been returned to your original payment method.
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t("purRefundedInfo")}</p>
                   </div>
                 )}
 
@@ -416,10 +420,10 @@ export default function Purchases() {
                     )}
                     <div>
                       <p className={`text-xs font-medium ${isExpired ? "text-destructive" : "text-warning"}`}>
-                        {isExpired ? "Transfer deadline expired — refund eligible" : "Waiting for seller to complete name change"}
+                        {isExpired ? t("purDeadlineExpired") : t("purWaitingSeller")}
                       </p>
                       {deadline && !isExpired && (
-                        <p className="text-xs text-muted-foreground">Deadline: {format(deadline, "MMM d, HH:mm")}</p>
+                        <p className="text-xs text-muted-foreground">{t("purDeadline")} {format(deadline, "MMM d, HH:mm", { locale: dfLocale })}</p>
                       )}
                     </div>
                   </div>
@@ -431,47 +435,45 @@ export default function Purchases() {
                     {isTransferConfirmed && (
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                        <p className="text-xs font-medium text-success">Name change confirmed — your booking details:</p>
+                        <p className="text-xs font-medium text-success">{t("purNameChangeConfirmed")}</p>
                       </div>
                     )}
                     {!isTransferConfirmed && (
-                      <p className="text-xs font-medium text-muted-foreground">Your booking details</p>
+                      <p className="text-xs font-medium text-muted-foreground">{t("purBookingDetails")}</p>
                     )}
                     <div className="space-y-1">
                       <p className="text-sm">
-                        <span className="text-muted-foreground">Booking Ref:</span>{" "}
+                        <span className="text-muted-foreground">{t("purBookingRef")}</span>{" "}
                         <span className="font-mono font-bold text-foreground">{p.transfer_booking_ref}</span>
                         <CopyButton value={p.transfer_booking_ref} label="Booking reference" />
                       </p>
                       <p className="text-sm">
-                        <span className="text-muted-foreground">Surname:</span>{" "}
+                        <span className="text-muted-foreground">{t("purSurname")}</span>{" "}
                         <span className="font-bold text-foreground">{p.transfer_surname}</span>
                         <CopyButton value={p.transfer_surname} label="Surname" />
                       </p>
                       {p.buyer_full_name && (
                         <p className="text-sm">
-                          <span className="text-muted-foreground">Passenger name on ticket:</span>{" "}
+                          <span className="text-muted-foreground">{t("purPassengerName")}</span>{" "}
                           <span className="font-bold text-foreground">{p.buyer_full_name}</span>
                           <CopyButton value={p.buyer_full_name} label="Passenger name" />
                         </p>
                       )}
                       {p.transfer_payment_proof_url && (
                         <p className="text-sm">
-                          <span className="text-muted-foreground">Payment proof:</span>{" "}
+                          <span className="text-muted-foreground">{t("purPaymentProof")}</span>{" "}
                           <a
                             href={p.transfer_payment_proof_url}
                             target="_blank"
                             rel="noreferrer"
                             className="font-medium text-primary underline underline-offset-4"
                           >
-                            View receipt
+                            {t("purViewReceipt")}
                           </a>
                         </p>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      This is a swappup booking confirmation — not your boarding pass. Use these credentials on the airline's website to retrieve your ticket and check in.
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t("purBookingDisclaimer")}</p>
                     <div className="flex flex-row flex-wrap gap-2 pt-2">
                       {p.escrow_status !== "released" && (
                         <Button
@@ -479,21 +481,21 @@ export default function Purchases() {
                           disabled={releaseMutation.isPending}
                           onClick={() => releaseMutation.mutate(p.id)}
                         >
-                          <ShieldCheck className="w-4 h-4" /> Confirm everything is ok
+                          <ShieldCheck className="w-4 h-4" /> {t("purConfirmOk")}
                         </Button>
                       )}
                       <Button
                         size="sm" variant="outline" className="gap-2"
                         onClick={() => downloadTicketPdf(p, listing, p.seller, profile)}
                       >
-                        <Download className="w-4 h-4" /> Download confirmation PDF
+                        <Download className="w-4 h-4" /> {t("purDownloadPdf")}
                       </Button>
                       {canShare() && (
                         <Button
                           size="sm" variant="outline" className="gap-2"
                           onClick={() => shareTicket(p, listing)}
                         >
-                          <Share2 className="w-4 h-4" /> Share
+                          <Share2 className="w-4 h-4" /> {t("purShare")}
                         </Button>
                       )}
                       {p.escrow_status !== "released" && (
@@ -505,7 +507,7 @@ export default function Purchases() {
                             setReportOpen(true);
                           }}
                         >
-                          <AlertTriangle className="w-4 h-4" /> Report a problem
+                          <AlertTriangle className="w-4 h-4" /> {t("purReportProblem")}
                         </Button>
                       )}
                     </div>
@@ -517,17 +519,15 @@ export default function Purchases() {
                   <Button
                     size="sm" variant="outline" className="gap-2"
                     disabled={cancelMutation.isPending}
-                    onClick={() => cancelMutation.mutate({ purchase_id: p.id, reason: "Seller missed the 24h deadline" })}
+                    onClick={() => cancelMutation.mutate({ purchase_id: p.id, reason: t("purRefundReasonMissed") })}
                   >
-                    <RotateCcw className="w-4 h-4" /> Request refund
+                    <RotateCcw className="w-4 h-4" /> {t("purRequestRefund")}
                   </Button>
                 )}
 
                 {/* Escrow Info */}
                 {(p.escrow_status === "held" || p.escrow_status === "authorized") && (
-                  <p className="text-xs text-muted-foreground px-1">
-                    💰 Payment safely held by Swappup until the ticket transfer is confirmed
-                  </p>
+                  <p className="text-xs text-muted-foreground px-1">{t("purEscrowHeld")}</p>
                 )}
                     </div>
                   </div>
@@ -541,15 +541,11 @@ export default function Purchases() {
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report a problem</DialogTitle>
-            <DialogDescription>
-              Sorry you're having trouble with this purchase. Please email our support team
-              and we'll look into it right away. Include your order reference and a short
-              description of the issue.
-            </DialogDescription>
+            <DialogTitle>{t("purReportTitle")}</DialogTitle>
+            <DialogDescription>{t("purReportDesc")}</DialogDescription>
           </DialogHeader>
           <div className="rounded-md border bg-muted/30 p-3 text-sm">
-            <p className="text-muted-foreground">Send an email to:</p>
+            <p className="text-muted-foreground">{t("purSendEmailTo")}</p>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
                 `Problem with purchase ${reportPurchaseId ?? ""}`,
@@ -561,7 +557,7 @@ export default function Purchases() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setReportOpen(false)}>
-              Close
+              {t("close")}
             </Button>
             <Button
               variant="gold"
@@ -571,7 +567,7 @@ export default function Purchases() {
                 )}`;
               }}
             >
-              Open email
+              {t("purOpenEmail")}
             </Button>
           </DialogFooter>
         </DialogContent>
