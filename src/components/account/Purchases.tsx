@@ -315,7 +315,7 @@ export default function Purchases() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-primary">{formatPrice(Number(p.total_price), cur, displayCurrency)}</p>
-                    <Badge variant="outline" className={`text-xs ${status.className}`}>{status.label}</Badge>
+                    <Badge variant="outline" className={`text-xs ${statusCls}`}>{statusLabel}</Badge>
                   </div>
                   <ChevronDown
                     className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
