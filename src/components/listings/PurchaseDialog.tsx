@@ -33,7 +33,10 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   const [feeLoading, setFeeLoading] = useState(false);
 
   const ticketPrice = Number(listing.price);
-  const effectiveFee = liveFee?.fee_amount != null ? Number(liveFee.fee_amount) : nameChangeFee;
+  // Always use the fee shown on the listing detail page so the escrow total matches exactly.
+  // The live-fee fetch below is informational only (shows source/last-verified date and lets
+  // the buyer recheck), but it must not change the amount we display or charge here.
+  const effectiveFee = nameChangeFee;
   const totalPrice = ticketPrice + effectiveFee;
   const listingCurrency = (listing as any).currency || "EUR";
   const displayCurrency = useDisplayCurrency();
