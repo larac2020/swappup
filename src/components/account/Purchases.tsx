@@ -271,7 +271,8 @@ export default function Purchases() {
           ) : filteredPurchases.map((p: any) => {
             const listing = p.listings as any;
             const cur = listing?.currency || "EUR";
-            const status = statusConfig[p.status] || statusConfig.pending;
+            const statusCls = statusClass[p.status] || statusClass.pending;
+            const statusLabel = t(statusKey[p.status] || statusKey.pending);
             const isTransferConfirmed = p.status === "transfer_confirmed";
             const isPendingTransfer = p.status === "pending_transfer";
             const isPending = p.status === "pending";
