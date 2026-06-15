@@ -493,7 +493,7 @@ export default function ListingDetail() {
           {/* Seller Notes */}
           {listing.additional_notes && (
             <div className="glass rounded-2xl p-4 space-y-2">
-              <h3 className="font-semibold">Seller's Notes</h3>
+              <h3 className="font-semibold">{t("sellersNotes")}</h3>
               <p className="text-sm text-muted-foreground">{listing.additional_notes}</p>
             </div>
           )}
@@ -512,11 +512,11 @@ export default function ListingDetail() {
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{sellerName}</span>
                     {seller.verification_status === "verified" && (
-                      <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/30">Verified</Badge>
+                      <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/30">{t("verifiedBadge")}</Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {seller.transactions_sold ?? 0} sold • {seller.transactions_bought ?? 0} bought
+                    {t("sellerSoldBought", { sold: seller.transactions_sold ?? 0, bought: seller.transactions_bought ?? 0 })}
                   </p>
                 </div>
               </div>
@@ -528,7 +528,7 @@ export default function ListingDetail() {
                   onClick={() => setShowReportDialog(true)}
                 >
                   <Flag className="w-4 h-4" />
-                  Report seller
+                  {t("reportSeller")}
                 </Button>
               )}
             </div>
@@ -575,7 +575,7 @@ export default function ListingDetail() {
             <div className="sticky bottom-4 flex gap-3">
               <Button variant="gold" size="xl" className="flex-1" onClick={() => setShowPurchaseDialog(true)}>
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Buy Now
+                {t("buyNow")}
               </Button>
             </div>
           )}
