@@ -1713,7 +1713,7 @@ export default function SellTicket() {
                             return;
                           }
                           toast({ title: locale === "it" ? "Annuncio eliminato" : "Listing deleted" });
-                          navigate("/account/listings");
+                          navigate("/listings");
                         }}
                       >
                         {locale === "it" ? "Elimina" : "Delete"}
