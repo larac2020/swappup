@@ -346,7 +346,7 @@ function SaleDetailsDialog({
               </div>
             )}
             <div className="flex items-center justify-between font-semibold pt-1 border-t border-border/40">
-              <span>{t("purchasesTitle") /* fallback label */ ? "Total" : "Total"}</span>
+              <span>Total</span>
               <span className="text-success">{formatPrice(Number(tx.total_price), cur, displayCurrency)}</span>
             </div>
           </div>
