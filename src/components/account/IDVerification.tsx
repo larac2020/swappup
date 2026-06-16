@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle, Info } from "lucide-react";
+import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -24,6 +24,7 @@ export default function IDVerification() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [storedPreview, setStoredPreview] = useState<string | null>(null);
+  const [revealStored, setRevealStored] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -204,21 +205,48 @@ export default function IDVerification() {
           </div>
         ) : storedPreview ? (
           <div className="space-y-3">
-            <img
-              src={storedPreview}
-              alt="Uploaded ID document"
-              className="w-full max-h-[70vh] rounded-xl object-contain bg-secondary/40"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
-                <Camera className="w-4 h-4" /> {t("idTakePhoto")}
-              </button>
-              <button onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
-                <Upload className="w-4 h-4" /> {t("idUploadFile")}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setRevealStored((v) => !v)}
+              aria-label={revealStored ? "Hide ID document" : "Reveal ID document"}
+              className="relative w-full rounded-xl overflow-hidden bg-secondary/40 group"
+            >
+              <img
+                src={storedPreview}
+                alt="Uploaded ID document"
+                className={`w-full max-h-[70vh] object-contain transition-[filter] duration-300 ${revealStored ? "blur-0" : "blur-2xl scale-105"}`}
+              />
+              {!revealStored && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/30 backdrop-blur-sm">
+                  <Eye className="w-6 h-6 text-foreground" />
+                  <span className="text-sm font-medium">Click to view document</span>
+                  <span className="text-xs text-muted-foreground">Hidden for your privacy</span>
+                </div>
+              )}
+            </button>
+            {revealStored ? (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setRevealStored(false)}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                  <EyeOff className="w-4 h-4" /> Close
+                </button>
+                <button onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                  <Upload className="w-4 h-4" /> Upload new document
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => cameraInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                  <Camera className="w-4 h-4" /> {t("idTakePhoto")}
+                </button>
+                <button onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                  <Upload className="w-4 h-4" /> {t("idUploadFile")}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
