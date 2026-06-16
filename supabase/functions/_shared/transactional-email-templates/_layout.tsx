@@ -213,11 +213,8 @@ export const TripCard = ({
         <Text style={row}><span style={label}>{isRoundTrip ? `${t(loc, tripDict, 'outbound')}: ` : `${t(loc, tripDict, 'departure')}: `}</span>{fmtLeg(trip.departureDate, trip.departureTime)}</Text>
       )}
       {isRoundTrip && (
-        <Text style={row}><span style={label}>{t(loc, tripDict, 'return')}: </span>{fmtLeg(trip.returnDate, trip.returnTime)}</Text>
+        <Text style={row}><span style={label}>{t(loc, tripDict, 'return')}: </span>{fmtLeg(trip.returnDate, trip.returnTime)}{trip.returnFlightNumber ? ` · ${trip.returnFlightNumber}` : ''}</Text>
       )}
-        {isRoundTrip && trip.returnFlightNumber && (
-          <Text style={row}><span style={label}>{t(loc, tripDict, 'return')}: </span>{trip.returnFlightNumber}</Text>
-        )}
       {trip.airline && <Text style={row}><span style={label}>{t(loc, tripDict, 'airline')}: </span>{trip.airline}{trip.flightNumber ? ` · ${trip.flightNumber}` : ''}</Text>}
       {trip.passengers && trip.passengers > 1 && (
         <Text style={row}><span style={label}>{t(loc, tripDict, 'passengers')}: </span>{trip.passengers}</Text>
