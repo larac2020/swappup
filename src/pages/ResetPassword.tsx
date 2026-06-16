@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plane, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { PasswordChecklist } from "@/components/auth/PasswordChecklist";
+import { PasswordChecklist, allCriteriaMet } from "@/components/auth/PasswordChecklist";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -63,6 +63,10 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allCriteriaMet(password)) {
+      toast({ title: "Weak password", description: "Please meet all password requirements.", variant: "destructive" });
+      return;
+    }
     if (password !== confirmPassword) {
       toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
       return;
@@ -149,8 +153,14 @@ export default function ResetPassword() {
               />
             </div>
           </div>
-          <Button type="submit" variant="gold" size="lg" className="w-full" disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</> : "Set New Password"}
+          <Button
+            type="submit"
+            variant="gold"
+            size="lg"
+            className="w-full"
+            disabled={loading || !allCriteriaMet(password) || password !== confirmPassword}
+          >
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Resetting...</> : "Reset Password"}
           </Button>
         </form>
       </div>
