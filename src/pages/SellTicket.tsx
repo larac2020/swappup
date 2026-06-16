@@ -107,6 +107,7 @@ const getDefaultFormData = () => ({
   trainClass: "",
   trainType: "",
   travelClass: "",
+  returnTravelClass: "",
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
