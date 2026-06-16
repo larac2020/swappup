@@ -489,10 +489,16 @@ export type Database = {
           per_ticket_inclusions: Json | null
           price: number
           return_arrival_time: string | null
+          return_carry_on_included: boolean | null
           return_date: string | null
           return_departure_time: string | null
           return_flight_number: string | null
+          return_luggage_included: boolean | null
+          return_meal_included: boolean | null
+          return_per_ticket_inclusions: Json | null
+          return_speedy_boarding: boolean | null
           return_stopovers: number | null
+          return_travel_class: string | null
           seller_id: string
           speedy_boarding: boolean | null
           stopovers: number | null
@@ -547,10 +553,16 @@ export type Database = {
           per_ticket_inclusions?: Json | null
           price: number
           return_arrival_time?: string | null
+          return_carry_on_included?: boolean | null
           return_date?: string | null
           return_departure_time?: string | null
           return_flight_number?: string | null
+          return_luggage_included?: boolean | null
+          return_meal_included?: boolean | null
+          return_per_ticket_inclusions?: Json | null
+          return_speedy_boarding?: boolean | null
           return_stopovers?: number | null
+          return_travel_class?: string | null
           seller_id: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
@@ -605,10 +617,16 @@ export type Database = {
           per_ticket_inclusions?: Json | null
           price?: number
           return_arrival_time?: string | null
+          return_carry_on_included?: boolean | null
           return_date?: string | null
           return_departure_time?: string | null
           return_flight_number?: string | null
+          return_luggage_included?: boolean | null
+          return_meal_included?: boolean | null
+          return_per_ticket_inclusions?: Json | null
+          return_speedy_boarding?: boolean | null
           return_stopovers?: number | null
+          return_travel_class?: string | null
           seller_id?: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
