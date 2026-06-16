@@ -94,6 +94,30 @@ You must respond ONLY with a JSON object using this exact tool call format.`
                     type: "boolean",
                     description: "Whether the name on the document matches the provided profile name. True if no profile name was provided."
                   },
+                  first_name: {
+                    type: "string",
+                    description: "First name (given name) as printed on the document"
+                  },
+                  last_name: {
+                    type: "string",
+                    description: "Last name (surname) as printed on the document"
+                  },
+                  date_of_birth: {
+                    type: "string",
+                    description: "Date of birth in YYYY-MM-DD format if visible, else empty string"
+                  },
+                  expiry_date: {
+                    type: "string",
+                    description: "Document expiry date in YYYY-MM-DD format if visible, else empty string"
+                  },
+                  issuing_country: {
+                    type: "string",
+                    description: "Issuing country, prefer ISO-3166 alpha-2 code (e.g. GB, IT, US). Empty string if unknown."
+                  },
+                  document_number: {
+                    type: "string",
+                    description: "Document number as printed. Empty string if not visible."
+                  },
                   confidence: {
                     type: "string",
                     enum: ["high", "medium", "low"],
@@ -139,7 +163,19 @@ You must respond ONLY with a JSON object using this exact tool call format.`
 
     const result = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify({ verification: result }), {
+    // Server-side expiry check + derive last4 of document number
+    const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+    let is_expired = false;
+    if (typeof result.expiry_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(result.expiry_date)) {
+      const exp = new Date(result.expiry_date + "T00:00:00Z");
+      if (!isNaN(exp.getTime())) is_expired = exp < today;
+    }
+    const docNum = typeof result.document_number === "string" ? result.document_number.trim() : "";
+    const document_number_last4 = docNum ? docNum.slice(-4) : "";
+    // Strip full document_number from the response — we never return it to the client.
+    delete result.document_number;
+
+    return new Response(JSON.stringify({ verification: { ...result, is_expired, document_number_last4 } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

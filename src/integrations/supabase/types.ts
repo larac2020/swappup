@@ -793,6 +793,13 @@ export type Database = {
           full_name: string | null
           has_payment_method: boolean
           id: string
+          id_document_country: string | null
+          id_document_dob: string | null
+          id_document_expiry: string | null
+          id_document_first_name: string | null
+          id_document_last_name: string | null
+          id_document_number_last4: string | null
+          id_document_type: string | null
           id_document_url: string | null
           phone: string | null
           postal_code: string | null
@@ -826,6 +833,13 @@ export type Database = {
           full_name?: string | null
           has_payment_method?: boolean
           id?: string
+          id_document_country?: string | null
+          id_document_dob?: string | null
+          id_document_expiry?: string | null
+          id_document_first_name?: string | null
+          id_document_last_name?: string | null
+          id_document_number_last4?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -859,6 +873,13 @@ export type Database = {
           full_name?: string | null
           has_payment_method?: boolean
           id?: string
+          id_document_country?: string | null
+          id_document_dob?: string | null
+          id_document_expiry?: string | null
+          id_document_first_name?: string | null
+          id_document_last_name?: string | null
+          id_document_number_last4?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           phone?: string | null
           postal_code?: string | null
