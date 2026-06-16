@@ -166,7 +166,7 @@ export default function IDVerification() {
 
         {idPreview ? (
           <div className="relative">
-            <img src={idPreview} alt="ID Preview" className="w-full rounded-xl object-cover max-h-48" />
+            <img src={idPreview} alt="ID Preview" className="w-full max-h-[70vh] rounded-xl object-contain bg-secondary/40" />
             <button
               onClick={() => { setIdFile(null); setIdPreview(null); setVerifyResult(null); }}
               className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
