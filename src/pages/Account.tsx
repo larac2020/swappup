@@ -74,13 +74,15 @@ export default function Account() {
   });
 
   // Compute completion status for each section
+  const idExpiry = (profile as any)?.id_document_expiry as string | null | undefined;
+  const idExpired = !!(idExpiry && new Date(idExpiry) < new Date(new Date().toDateString()));
   const sectionComplete = {
     profile: !!(profile?.full_name && profile?.phone),
     address: !!(profile?.address_line1 && profile?.city && profile?.postal_code && profile?.country),
     payment:
       !!paymentData?.hasPaymentMethod ||
       (typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true"),
-    verification: profile?.verification_status === "verified",
+    verification: profile?.verification_status === "verified" && !idExpired,
   };
 
   const menuItems = [
@@ -118,13 +120,17 @@ export default function Account() {
   const fullName = profile?.full_name || user?.user_metadata?.full_name || "User";
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
-  const verificationLabel = profile?.verification_status === "verified"
+  const verificationLabel = idExpired
+    ? "ID expired"
+    : profile?.verification_status === "verified"
     ? t("accountVerified")
     : profile?.verification_status === "rejected"
     ? t("accountRejected")
     : t("accountPending");
 
-  const verificationStyle = profile?.verification_status === "verified"
+  const verificationStyle = idExpired
+    ? "bg-destructive/10 text-destructive border-destructive/30"
+    : profile?.verification_status === "verified"
     ? "bg-success/10 text-success border-success/30"
     : profile?.verification_status === "rejected"
     ? "bg-destructive/10 text-destructive border-destructive/30"
