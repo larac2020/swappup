@@ -98,6 +98,7 @@ const getDefaultFormData = () => ({
   currency: "EUR",
   ticketCount: "1",
   stopovers: "0",
+  returnStopovers: "0",
   additionalNotes: "",
   boostHours: 0 as number, // 0 = no boost; otherwise 24 | 72 | 168
   // Train-only fields
@@ -229,6 +230,7 @@ export default function SellTicket() {
         currency: (editListing as any).currency || "EUR",
         ticketCount: String(editListing.ticket_count),
         stopovers: String(editListing.stopovers ?? 0),
+        returnStopovers: String((editListing as any).return_stopovers ?? 0),
         additionalNotes: editListing.additional_notes || "",
         boostHours: 0,
         operator: (editListing as any).operator || "",
@@ -580,6 +582,7 @@ export default function SellTicket() {
         listingData.meal_included = sameInclusions ? sharedInclusions.mealIncluded : perTicketInclusions[0]?.mealIncluded ?? false;
         listingData.speedy_boarding = sameInclusions ? sharedInclusions.speedyBoarding : perTicketInclusions[0]?.speedyBoarding ?? false;
         listingData.stopovers = parseInt(formData.stopovers);
+        listingData.return_stopovers = isReturn ? parseInt(formData.returnStopovers) : null;
         listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
         // Store flight name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = flightTransferFee ?? null;
@@ -1257,6 +1260,13 @@ export default function SellTicket() {
                     <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("sellStopovers")}</Label>
+                    <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div />
+                </div>
               </div>
 
               {/* Inbound flight (only for return trips) */}
@@ -1280,6 +1290,13 @@ export default function SellTicket() {
                       <Input type="time" value={formData.returnArrivalTime} onChange={(e) => setFormData({ ...formData, returnArrivalTime: e.target.value })} className="bg-secondary/50" />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t("sellStopovers")}</Label>
+                      <Input type="number" min="0" value={formData.returnStopovers} onChange={(e) => setFormData({ ...formData, returnStopovers: e.target.value })} className="bg-secondary/50" />
+                    </div>
+                    <div />
+                  </div>
                 </div>
               )}
 
@@ -1288,10 +1305,7 @@ export default function SellTicket() {
                   <Label>{t("sellNumberOfTicketsLabel")}</Label>
                   <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("sellStopovers")}</Label>
-                  <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
-                </div>
+                <div />
               </div>
             </div>
           </div>

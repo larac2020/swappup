@@ -195,7 +195,7 @@ export default function Browse() {
       if (filters.luggageIncluded === true && !listing.luggage_included) return false;
       if (filters.carryOnIncluded === true && !listing.carry_on_included) return false;
       if (filters.mealIncluded === true && !listing.meal_included) return false;
-      if (filters.directOnly === true && (listing.stopovers ?? 0) > 0) return false;
+      if (filters.directOnly === true && ((listing.stopovers ?? 0) > 0 || (((listing as any).return_stopovers ?? 0) > 0))) return false;
 
       return true;
     });
@@ -285,7 +285,7 @@ export default function Browse() {
         if (!airlineOk) return false;
         return (filters.luggageIncluded && !l.luggage_included) ||
           (filters.mealIncluded && !l.meal_included) ||
-          (filters.directOnly && (l.stopovers ?? 0) > 0);
+          (filters.directOnly && ((l.stopovers ?? 0) > 0 || (((l as any).return_stopovers ?? 0) > 0)));
       }));
       const combined = addUnique([...items, ...amenityItems]);
       if (combined.length > 0) {
