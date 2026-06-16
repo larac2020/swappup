@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChevronLeft, Loader2, FileText, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ChevronLeft, Loader2, FileText, ArrowUpRight, ArrowDownLeft, Plane, Clock, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,8 @@ import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice } from "@/lib/currency";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CopyButton } from "./purchaseHelpers";
 
 export default function TransactionHistory() {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export default function TransactionHistory() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [detailsTx, setDetailsTx] = useState<any | null>(null);
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (filter === "all") next.delete("type"); else next.set("type", filter);
@@ -199,8 +202,20 @@ export default function TransactionHistory() {
             const isBuyer = tx.buyer_id === profile?.id;
             const listing = tx.listings as any;
             const cur = (listing as any)?.currency || "EUR";
+            const handleOpen = () => {
+              if (isBuyer) {
+                navigate(`/account/purchases?open=${tx.id}`);
+              } else {
+                setDetailsTx(tx);
+              }
+            };
             return (
-              <div key={tx.id} className="glass rounded-2xl p-4">
+              <button
+                type="button"
+                key={tx.id}
+                onClick={handleOpen}
+                className="w-full text-left glass rounded-2xl p-4 hover:bg-foreground/5 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isBuyer ? "bg-destructive/10" : "bg-success/10"}`}>
                     {isBuyer ? <ArrowUpRight className="w-5 h-5 text-destructive" /> : <ArrowDownLeft className="w-5 h-5 text-success" />}
@@ -216,11 +231,182 @@ export default function TransactionHistory() {
                     <Badge variant="outline" className="text-xs">{tx.status}</Badge>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       )}
+
+      <SaleDetailsDialog tx={detailsTx} onClose={() => setDetailsTx(null)} displayCurrency={displayCurrency} />
     </div>
+  );
+}
+
+function SaleDetailsDialog({
+  tx,
+  onClose,
+  displayCurrency,
+}: {
+  tx: any | null;
+  onClose: () => void;
+  displayCurrency: string;
+}) {
+  const { t } = useLanguage();
+  if (!tx) return null;
+  const listing = tx.listings as any;
+  const cur = listing?.currency || "EUR";
+  const isRoundTrip = !!listing?.return_date;
+  const deadline = tx.transfer_deadline ? new Date(tx.transfer_deadline) : null;
+  const isExpired = deadline && deadline < new Date();
+  const statusTone: Record<string, string> =
+    {
+      pending_transfer: "bg-warning/10 text-warning border-warning/30",
+      transfer_confirmed: "bg-success/10 text-success border-success/30",
+      completed: "bg-success/10 text-success border-success/30",
+      refunded: "bg-muted text-muted-foreground border-muted",
+      pending: "bg-warning/10 text-warning border-warning/30",
+    } as const;
+  const tone = statusTone[tx.status] || "bg-muted text-muted-foreground border-muted";
+
+  return (
+    <Dialog open={!!tx} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="glass-strong border-border/60 max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Plane className="w-5 h-5 text-primary" />
+            {t("transactionsSold")} · {listing?.title || "Ticket"}
+          </DialogTitle>
+          <DialogDescription>
+            {format(new Date(tx.created_at), "MMM d, yyyy 'at' HH:mm")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          {/* Status */}
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className={`text-xs ${tone}`}>{String(tx.status).replace(/_/g, " ")}</Badge>
+            <span className="font-semibold text-success">
+              +{formatPrice(Number(tx.total_price), cur, displayCurrency)}
+            </span>
+          </div>
+
+          {/* Trip */}
+          <div className="rounded-lg bg-secondary/40 p-3 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground mb-1">{t("purTripDetails")}</p>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("purRoute")}</span>{" "}
+              <span className="font-medium text-foreground">
+                {listing?.origin_city || "—"}
+                {listing?.origin_airport ? ` (${listing.origin_airport})` : ""}
+                {` ${isRoundTrip ? "↔" : "→"} `}
+                {listing?.destination_city || "—"}
+                {listing?.destination_airport ? ` (${listing.destination_airport})` : ""}
+              </span>
+            </p>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("purAirlineLabel")}</span>{" "}
+              <span className="font-medium text-foreground">{listing?.airline || "—"}</span>
+              {listing?.flight_number ? <span className="font-mono"> · {listing.flight_number}</span> : null}
+            </p>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("purDeparture")}</span>{" "}
+              <span className="font-medium text-foreground">
+                {listing?.departure_date ? format(new Date(listing.departure_date), "EEE, MMM d, yyyy") : "—"}
+                {listing?.departure_time ? ` · ${String(listing.departure_time).slice(0, 5)}` : ""}
+                {listing?.arrival_time ? ` → ${String(listing.arrival_time).slice(0, 5)}` : ""}
+              </span>
+            </p>
+            {isRoundTrip && (
+              <p className="text-sm">
+                <span className="text-muted-foreground">{t("purReturn")}</span>{" "}
+                <span className="font-medium text-foreground">
+                  {format(new Date(listing.return_date), "EEE, MMM d, yyyy")}
+                  {listing?.return_departure_time ? ` · ${String(listing.return_departure_time).slice(0, 5)}` : ""}
+                  {listing?.return_arrival_time ? ` → ${String(listing.return_arrival_time).slice(0, 5)}` : ""}
+                  {listing?.return_flight_number ? ` · ${listing.return_flight_number}` : ""}
+                </span>
+              </p>
+            )}
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("purPassengers")}</span>{" "}
+              <span className="font-medium text-foreground">{tx.quantity}</span>
+            </p>
+          </div>
+
+          {/* Payout breakdown */}
+          <div className="rounded-lg bg-secondary/40 p-3 space-y-1 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t("purTicketAmount")}</span>
+              <span>{formatPrice(Number(tx.total_price) - Number(tx.name_change_fee || 0), cur, displayCurrency)}</span>
+            </div>
+            {Number(tx.name_change_fee) > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t("purNameChangeFeeLabel")}</span>
+                <span>{formatPrice(Number(tx.name_change_fee), cur, displayCurrency)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between font-semibold pt-1 border-t border-border/40">
+              <span>{t("purchasesTitle") /* fallback label */ ? "Total" : "Total"}</span>
+              <span className="text-success">{formatPrice(Number(tx.total_price), cur, displayCurrency)}</span>
+            </div>
+          </div>
+
+          {/* Transfer status */}
+          {tx.status === "pending_transfer" && (
+            <div className={`rounded-lg p-3 flex items-start gap-2 ${isExpired ? "bg-destructive/10" : "bg-warning/10"}`}>
+              {isExpired ? (
+                <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+              ) : (
+                <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              )}
+              <p className="text-xs">
+                {isExpired
+                  ? "Transfer deadline expired."
+                  : deadline
+                    ? `Deadline: ${format(deadline, "MMM d, HH:mm")}`
+                    : "Awaiting name change."}
+              </p>
+            </div>
+          )}
+
+          {tx.transfer_confirmed_at && (
+            <div className="rounded-lg bg-success/10 p-3 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              <p className="text-xs">
+                Name change confirmed on {format(new Date(tx.transfer_confirmed_at), "MMM d, yyyy 'at' HH:mm")}.
+              </p>
+            </div>
+          )}
+
+          {tx.escrow_status && tx.escrow_status !== "none" && (
+            <div className="rounded-lg bg-secondary/40 p-3 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Payout status: <span className="font-medium text-foreground">{tx.escrow_status}</span>
+              </p>
+            </div>
+          )}
+
+          {(tx.transfer_booking_ref || tx.transfer_surname) && (
+            <div className="rounded-lg bg-secondary/40 p-3 space-y-1 text-sm">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Booking submitted to buyer</p>
+              {tx.transfer_booking_ref && (
+                <p>
+                  <span className="text-muted-foreground">Booking ref: </span>
+                  <span className="font-mono font-bold">{tx.transfer_booking_ref}</span>
+                  <CopyButton value={tx.transfer_booking_ref} label="Booking reference" />
+                </p>
+              )}
+              {tx.transfer_surname && (
+                <p>
+                  <span className="text-muted-foreground">Surname: </span>
+                  <span className="font-bold">{tx.transfer_surname}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
