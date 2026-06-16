@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Shield, Camera, Upload, Loader2, X, CheckCircle, Clock, XCircle, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -25,6 +26,7 @@ export default function IDVerification() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [storedPreview, setStoredPreview] = useState<string | null>(null);
   const [revealStored, setRevealStored] = useState(false);
+  const [mismatchPending, setMismatchPending] = useState<any | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -98,16 +100,34 @@ export default function IDVerification() {
         return;
       }
 
-      if (verification?.name_matches_profile === false) {
+      if (verification?.is_expired) {
         toast({
-          title: t("idNameMismatch"),
-          description: `The name on the document ("${verification.extracted_name || "unknown"}") does not match your profile name ("${profile?.full_name || "not set"}"). Please update your Personal Information first.`,
+          title: "Document expired",
+          description: `This document expired on ${verification.expiry_date}. Please upload a valid (non-expired) ID.`,
           variant: "destructive",
         });
         return;
       }
 
-      // Upload to storage
+      if (verification?.name_matches_profile === false) {
+        // Soft confirm — let the user decide whether to proceed or upload again.
+        setMismatchPending(verification);
+        setUploading(false);
+        return;
+      }
+
+      await finalizeUpload(verification);
+    } catch (err: any) {
+      toast({ title: t("idVerificationFailed"), description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const finalizeUpload = async (verification: any) => {
+    if (!idFile || !user) return;
+    setUploading(true);
+    try {
       const ext = idFile.name.split(".").pop();
       const filePath = `${user.id}/id-document.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -116,14 +136,25 @@ export default function IDVerification() {
 
       const { data: urlData } = supabase.storage.from("id-documents").getPublicUrl(filePath);
 
+      const isoDate = (v: any) =>
+        typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+
       await supabase.from("profiles").update({
         id_document_url: urlData.publicUrl,
         verification_status: "verified",
+        id_document_type: verification.document_type || null,
+        id_document_country: verification.issuing_country || null,
+        id_document_expiry: isoDate(verification.expiry_date),
+        id_document_first_name: verification.first_name || null,
+        id_document_last_name: verification.last_name || null,
+        id_document_dob: isoDate(verification.date_of_birth),
+        id_document_number_last4: verification.document_number_last4 || null,
       }).eq("user_id", user.id);
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setIdFile(null);
       setIdPreview(null);
+      setMismatchPending(null);
       toast({ title: t("idVerifiedToast"), description: `${verification.document_type} accepted.` });
       navigate("/account");
     } catch (err: any) {
@@ -142,6 +173,10 @@ export default function IDVerification() {
   const status = (profile?.verification_status as keyof typeof statusConfig) || "pending";
   const StatusIcon = statusConfig[status]?.icon || Clock;
   const isVerified = status === "verified";
+  const storedExpiry = (profile as any)?.id_document_expiry
+    ? new Date((profile as any).id_document_expiry as string)
+    : null;
+  const isStoredExpired = !!(storedExpiry && storedExpiry < new Date(new Date().toDateString()));
 
   if (isLoading) {
     return (
@@ -175,6 +210,18 @@ export default function IDVerification() {
           </div>
         </div>
       </div>
+
+      {isStoredExpired && (
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium text-destructive">Your ID document has expired</p>
+            <p className="text-muted-foreground">
+              Expired on {storedExpiry?.toLocaleDateString()}. Please upload a new, valid document to continue using Swappup.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Upload section */}
       <div className="glass rounded-2xl p-6 space-y-4">
@@ -286,6 +333,43 @@ export default function IDVerification() {
           </Button>
         )}
       </div>
+
+      <AlertDialog open={!!mismatchPending} onOpenChange={(o) => !o && setMismatchPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Name mismatch detected</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  The name on the document is{" "}
+                  <strong>"{mismatchPending?.extracted_name || "unknown"}"</strong>{" "}
+                  but your Swappup account name is{" "}
+                  <strong>"{profile?.full_name || "not set"}"</strong>.
+                </p>
+                <p>Is the document yours and the name correct?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setMismatchPending(null);
+                setIdFile(null);
+                setIdPreview(null);
+                setVerifyResult(null);
+              }}
+            >
+              Upload again
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => mismatchPending && finalizeUpload(mismatchPending)}
+              disabled={uploading}
+            >
+              {uploading ? "Saving..." : "It's correct — proceed"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
