@@ -107,6 +107,7 @@ const getDefaultFormData = () => ({
   trainClass: "",
   trainType: "",
   travelClass: "",
+  returnTravelClass: "",
   trainOriginStation: "",
   trainDestinationStation: "",
   departureTime: "",
@@ -181,6 +182,12 @@ export default function SellTicket() {
   const [perTicketInclusions, setPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
   const [sameInclusions, setSameInclusions] = useState(true);
 
+  // Inbound (return) leg add-ons. When `inboundSameAsOutbound` is true, the inbound
+  // values mirror outbound automatically and the inbound inputs are hidden.
+  const [inboundSharedInclusions, setInboundSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
+  const [inboundPerTicketInclusions, setInboundPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
+  const [inboundSameAsOutbound, setInboundSameAsOutbound] = useState(true);
+
   // Train-specific inclusions (used only when listingType === "train_ticket")
   const [trainInclusions, setTrainInclusions] = useState<TrainInclusions>({ ...defaultTrainInclusions });
 
@@ -238,6 +245,7 @@ export default function SellTicket() {
         trainClass: (editListing as any).train_class || "",
         trainType: (editListing as any).train_type || "",
         travelClass: (editListing as any).travel_class || "",
+        returnTravelClass: (editListing as any).return_travel_class || "",
         trainOriginStation: (editListing as any).origin_station || "",
         trainDestinationStation: (editListing as any).destination_station || "",
         departureTime: (editListing as any).departure_time || "",
@@ -277,6 +285,40 @@ export default function SellTicket() {
           Array(editListing.ticket_count).fill(null).map(() => ({ ...shared }))
         );
       }
+
+      // Inbound inclusions: present in DB only when sellers set them differently.
+      const inboundShared: TicketInclusions = {
+        luggageIncluded: (editListing as any).return_luggage_included ?? shared.luggageIncluded,
+        carryOnIncluded: (editListing as any).return_carry_on_included ?? shared.carryOnIncluded,
+        mealIncluded: (editListing as any).return_meal_included ?? shared.mealIncluded,
+        speedyBoarding: (editListing as any).return_speedy_boarding ?? shared.speedyBoarding,
+      };
+      setInboundSharedInclusions(inboundShared);
+      const hasOwnInbound =
+        hasReturn && (
+          (editListing as any).return_travel_class != null ||
+          (editListing as any).return_luggage_included != null ||
+          (editListing as any).return_carry_on_included != null ||
+          (editListing as any).return_meal_included != null ||
+          (editListing as any).return_speedy_boarding != null ||
+          (editListing as any).return_per_ticket_inclusions != null
+        );
+      setInboundSameAsOutbound(!hasOwnInbound);
+      const rpi = (editListing as any).return_per_ticket_inclusions;
+      if (rpi && Array.isArray(rpi)) {
+        setInboundPerTicketInclusions(
+          rpi.map((t: any) => ({
+            luggageIncluded: t.luggageIncluded ?? false,
+            carryOnIncluded: t.carryOnIncluded ?? true,
+            mealIncluded: t.mealIncluded ?? false,
+            speedyBoarding: t.speedyBoarding ?? false,
+          }))
+        );
+      } else {
+        setInboundPerTicketInclusions(
+          Array(editListing.ticket_count).fill(null).map(() => ({ ...inboundShared }))
+        );
+      }
     }
   }, [editListing, editLoaded]);
 
@@ -285,6 +327,12 @@ export default function SellTicket() {
     const count = parseInt(newCount) || 1;
     setFormData((prev) => ({ ...prev, ticketCount: newCount }));
     setPerTicketInclusions((prev) => {
+      if (count > prev.length) {
+        return [...prev, ...Array(count - prev.length).fill(null).map(() => ({ ...defaultInclusions }))];
+      }
+      return prev.slice(0, count);
+    });
+    setInboundPerTicketInclusions((prev) => {
       if (count > prev.length) {
         return [...prev, ...Array(count - prev.length).fill(null).map(() => ({ ...defaultInclusions }))];
       }
@@ -319,6 +367,9 @@ export default function SellTicket() {
     setSharedInclusions({ ...defaultInclusions });
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
+    setInboundSharedInclusions({ ...defaultInclusions });
+    setInboundPerTicketInclusions([{ ...defaultInclusions }]);
+    setInboundSameAsOutbound(true);
     setFlightVerification(null);
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
@@ -584,6 +635,31 @@ export default function SellTicket() {
         listingData.stopovers = parseInt(formData.stopovers);
         listingData.return_stopovers = isReturn ? parseInt(formData.returnStopovers) : null;
         listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
+        // Inbound cabin & add-ons. When sameAsOutbound (or one-way), don't persist
+        // anything inbound-specific so the existing outbound values apply by default.
+        if (isReturn && !inboundSameAsOutbound) {
+          listingData.return_travel_class = formData.returnTravelClass || null;
+          listingData.return_luggage_included = sameInclusions
+            ? inboundSharedInclusions.luggageIncluded
+            : inboundPerTicketInclusions[0]?.luggageIncluded ?? false;
+          listingData.return_carry_on_included = sameInclusions
+            ? inboundSharedInclusions.carryOnIncluded
+            : inboundPerTicketInclusions[0]?.carryOnIncluded ?? true;
+          listingData.return_meal_included = sameInclusions
+            ? inboundSharedInclusions.mealIncluded
+            : inboundPerTicketInclusions[0]?.mealIncluded ?? false;
+          listingData.return_speedy_boarding = sameInclusions
+            ? inboundSharedInclusions.speedyBoarding
+            : inboundPerTicketInclusions[0]?.speedyBoarding ?? false;
+          listingData.return_per_ticket_inclusions = (sameInclusions ? null : inboundPerTicketInclusions) as any;
+        } else {
+          listingData.return_travel_class = null;
+          listingData.return_luggage_included = null;
+          listingData.return_carry_on_included = null;
+          listingData.return_meal_included = null;
+          listingData.return_speedy_boarding = null;
+          listingData.return_per_ticket_inclusions = null;
+        }
         // Store flight name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = flightTransferFee ?? null;
       }
@@ -1133,77 +1209,7 @@ export default function SellTicket() {
             </div>
           </div>
 
-          {/* One-way / Return toggle + Dates */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-primary" />
-              {t("sellFlightDates")}
-            </h2>
-            <div className="glass rounded-2xl p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{t("sellReturnFlight")}</Label>
-                <Switch
-                  checked={isReturn}
-                  onCheckedChange={(checked) => {
-                    setIsReturn(checked);
-                    if (!checked) {
-                      setFormData((prev) => ({ ...prev, returnDate: undefined }));
-                    }
-                  }}
-                />
-              </div>
-              <div className={cn("grid gap-4", isReturn ? "grid-cols-2" : "grid-cols-1")}>
-                <div className="space-y-2">
-                  <Label>{t("sellDepartureDate")}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.departureDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.departureDate ? format(formData.departureDate, "PPP") : t("sellSelectDate")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.departureDate}
-                        onSelect={(date) => setFormData({ ...formData, departureDate: date })}
-                        initialFocus
-                        disabled={(date) => date < minDepartureDate}
-                        modifiers={{ today: today }}
-                        modifiersClassNames={{ today: "text-muted-foreground" }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                {isReturn && (
-                  <div className="space-y-2">
-                    <Label>{t("sellReturnDate")}</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.returnDate ? format(formData.returnDate, "PPP") : t("sellSelectDate")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.returnDate}
-                          onSelect={(date) => setFormData({ ...formData, returnDate: date })}
-                          initialFocus
-                          disabled={(date) => date < (formData.departureDate ?? minDepartureDate)}
-                          modifiers={{ today: today }}
-                          modifiersClassNames={{ today: "text-muted-foreground" }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Flight Details */}
+          {/* Flight Details — unified per-direction layout */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">{t("sellFlightDetails")}</h2>
             <div className="glass rounded-2xl p-4 space-y-4">
@@ -1228,9 +1234,86 @@ export default function SellTicket() {
                 </div>
               </div>
 
-              {/* Outbound flight */}
-              <div className="space-y-3 rounded-xl border border-border/50 p-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
+                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
+                </div>
+                <div className="space-y-2 flex flex-col">
+                  <Label>{t("sellReturnFlight")}</Label>
+                  <div className="flex items-center h-10">
+                    <Switch
+                      checked={isReturn}
+                      onCheckedChange={(checked) => {
+                        setIsReturn(checked);
+                        if (!checked) {
+                          setFormData((prev) => ({ ...prev, returnDate: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {ticketCount > 1 && (
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">{t("sellSameForAllQ")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sellSameForAllHint")}</p>
+                  </div>
+                  <Switch checked={sameInclusions} onCheckedChange={setSameInclusions} />
+                </div>
+              )}
+
+              {/* Outbound block */}
+              <div className="space-y-4 rounded-xl border border-border/50 p-3">
                 <p className="text-sm font-medium text-primary">Outbound flight</p>
+
+                <div className="space-y-2">
+                  <Label>{t("sellDepartureDate")}</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.departureDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.departureDate ? format(formData.departureDate, "PPP") : t("sellSelectDate")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.departureDate}
+                        onSelect={(date) => setFormData({ ...formData, departureDate: date })}
+                        initialFocus
+                        disabled={(date) => date < minDepartureDate}
+                        modifiers={{ today: today }}
+                        modifiersClassNames={{ today: "text-muted-foreground" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Departure time</Label>
+                    <Input type="time" value={formData.departureTime} onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Arrival time</Label>
+                    <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("sellFlightNumber")}</Label>
+                    <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("sellStopovers")}</Label>
+                    <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>{t("sellCabinClass")}</Label>
                   <Select value={formData.travelClass} onValueChange={(v) => setFormData({ ...formData, travelClass: v })}>
@@ -1243,43 +1326,60 @@ export default function SellTicket() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t("sellFlightNumber")}</Label>
-                    <Input placeholder="e.g. VY8500" value={formData.flightNumber} onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })} className="bg-secondary/50" />
-                  </div>
-                  <div />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Departure time</Label>
-                    <Input type="time" value={formData.departureTime} onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })} className="bg-secondary/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Arrival time</Label>
-                    <Input type="time" value={formData.arrivalTime} onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })} className="bg-secondary/50" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t("sellStopovers")}</Label>
-                    <Input type="number" min="0" value={formData.stopovers} onChange={(e) => setFormData({ ...formData, stopovers: e.target.value })} className="bg-secondary/50" />
-                  </div>
-                  <div />
+
+                <div className="pt-2 border-t border-border/50 space-y-3">
+                  <p className="text-sm font-medium">{t("sellWhatsIncluded")}</p>
+                  {sameInclusions ? (
+                    renderInclusionToggles(sharedInclusions, (field, value) =>
+                      setSharedInclusions((prev) => ({ ...prev, [field]: value }))
+                    )
+                  ) : (
+                    <div className="space-y-5">
+                      {perTicketInclusions.map((inc, i) => (
+                        <div key={i} className={cn(i > 0 && "pt-4 border-t border-border/50")}>
+                          {renderInclusionToggles(
+                            inc,
+                            (field, value) =>
+                              setPerTicketInclusions((prev) =>
+                                prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
+                              ),
+                            t("sellTicketLabelN", { n: i + 1 })
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Inbound flight (only for return trips) */}
+              {/* Inbound block */}
               {isReturn && (
-                <div className="space-y-3 rounded-xl border border-border/50 p-3">
+                <div className="space-y-4 rounded-xl border border-border/50 p-3">
                   <p className="text-sm font-medium text-primary">Inbound flight</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("sellFlightNumber")}</Label>
-                      <Input placeholder="e.g. VY8501" value={formData.returnFlightNumber} onChange={(e) => setFormData({ ...formData, returnFlightNumber: e.target.value })} className="bg-secondary/50" />
-                    </div>
-                    <div />
+
+                  <div className="space-y-2">
+                    <Label>{t("sellReturnDate")}</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.returnDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.returnDate ? format(formData.returnDate, "PPP") : t("sellSelectDate")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.returnDate}
+                          onSelect={(date) => setFormData({ ...formData, returnDate: date })}
+                          initialFocus
+                          disabled={(date) => date < (formData.departureDate ?? minDepartureDate)}
+                          modifiers={{ today: today }}
+                          modifiersClassNames={{ today: "text-muted-foreground" }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Departure time</Label>
@@ -1290,58 +1390,66 @@ export default function SellTicket() {
                       <Input type="time" value={formData.returnArrivalTime} onChange={(e) => setFormData({ ...formData, returnArrivalTime: e.target.value })} className="bg-secondary/50" />
                     </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t("sellFlightNumber")}</Label>
+                      <Input placeholder="e.g. VY8501" value={formData.returnFlightNumber} onChange={(e) => setFormData({ ...formData, returnFlightNumber: e.target.value })} className="bg-secondary/50" />
+                    </div>
                     <div className="space-y-2">
                       <Label>{t("sellStopovers")}</Label>
                       <Input type="number" min="0" value={formData.returnStopovers} onChange={(e) => setFormData({ ...formData, returnStopovers: e.target.value })} className="bg-secondary/50" />
                     </div>
-                    <div />
                   </div>
-                </div>
-              )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("sellNumberOfTicketsLabel")}</Label>
-                  <Input type="number" min="1" value={formData.ticketCount} onChange={(e) => handleTicketCountChange(e.target.value)} className="bg-secondary/50" required />
-                </div>
-                <div />
-              </div>
-            </div>
-          </div>
-
-          {/* What's Included */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t("sellWhatsIncluded")}</h2>
-            <div className="glass rounded-2xl p-4 space-y-4">
-              {ticketCount > 1 && (
-                <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium">{t("sellSameForAllQ")}</p>
-                    <p className="text-xs text-muted-foreground">{t("sellSameForAllHint")}</p>
-                  </div>
-                  <Switch checked={sameInclusions} onCheckedChange={setSameInclusions} />
-                </div>
-              )}
-
-              {sameInclusions ? (
-                renderInclusionToggles(sharedInclusions, (field, value) =>
-                  setSharedInclusions((prev) => ({ ...prev, [field]: value }))
-                )
-              ) : (
-                <div className="space-y-5">
-                  {perTicketInclusions.map((inc, i) => (
-                    <div key={i} className={cn(i > 0 && "pt-4 border-t border-border/50")}>
-                      {renderInclusionToggles(
-                        inc,
-                        (field, value) =>
-                          setPerTicketInclusions((prev) =>
-                            prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
-                          ),
-                        t("sellTicketLabelN", { n: i + 1 })
-                      )}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">Same cabin & add-ons as outbound</p>
+                      <p className="text-xs text-muted-foreground">Apply outbound cabin class and add-ons to the return leg</p>
                     </div>
-                  ))}
+                    <Switch checked={inboundSameAsOutbound} onCheckedChange={setInboundSameAsOutbound} />
+                  </div>
+
+                  {!inboundSameAsOutbound && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>{t("sellCabinClass")}</Label>
+                        <Select value={formData.returnTravelClass} onValueChange={(v) => setFormData({ ...formData, returnTravelClass: v })}>
+                          <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellCabinClassPlaceholder")} /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="economy">{t("cabinEconomy")}</SelectItem>
+                            <SelectItem value="premium_economy">{t("cabinPremiumEconomy")}</SelectItem>
+                            <SelectItem value="business">{t("cabinBusiness")}</SelectItem>
+                            <SelectItem value="first">{t("cabinFirst")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="pt-2 border-t border-border/50 space-y-3">
+                        <p className="text-sm font-medium">{t("sellWhatsIncluded")}</p>
+                        {sameInclusions ? (
+                          renderInclusionToggles(inboundSharedInclusions, (field, value) =>
+                            setInboundSharedInclusions((prev) => ({ ...prev, [field]: value }))
+                          )
+                        ) : (
+                          <div className="space-y-5">
+                            {inboundPerTicketInclusions.map((inc, i) => (
+                              <div key={i} className={cn(i > 0 && "pt-4 border-t border-border/50")}>
+                                {renderInclusionToggles(
+                                  inc,
+                                  (field, value) =>
+                                    setInboundPerTicketInclusions((prev) =>
+                                      prev.map((item, idx) => (idx === i ? { ...item, [field]: value } : item))
+                                    ),
+                                  t("sellTicketLabelN", { n: i + 1 })
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
