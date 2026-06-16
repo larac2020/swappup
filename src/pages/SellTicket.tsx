@@ -17,8 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Plane, Calendar as CalendarIcon, Plus, Upload,
   Luggage, Utensils, Zap, AlertCircle, Loader2, Sparkles, Pencil,
-  CheckCircle2, HelpCircle, ChevronLeft, ChevronRight
+  CheckCircle2, HelpCircle, ChevronLeft, ChevronRight, Trash2
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import TransferabilityCheck, { fareTypes } from "@/components/listings/TransferabilityCheck";
 import SellerFeeBreakdown from "@/components/listings/SellerFeeBreakdown";
 import { cn } from "@/lib/utils";
@@ -1680,6 +1681,47 @@ export default function SellTicket() {
                 )}
               </Button>
               </div>
+              {isEditMode && editId && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xl"
+                      className="w-full mt-3 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="w-5 h-5" /> {locale === "it" ? "Elimina annuncio" : "Delete listing"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{locale === "it" ? "Eliminare questo annuncio?" : "Delete this listing?"}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {locale === "it"
+                          ? "L'annuncio verrà rimosso definitivamente. Questa azione non può essere annullata."
+                          : "This listing will be permanently removed. This action cannot be undone."}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{locale === "it" ? "Annulla" : "Cancel"}</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={async () => {
+                          const { error } = await supabase.from("listings").delete().eq("id", editId);
+                          if (error) {
+                            toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
+                            return;
+                          }
+                          toast({ title: locale === "it" ? "Annuncio eliminato" : "Listing deleted" });
+                          navigate("/account/listings");
+                        }}
+                      >
+                        {locale === "it" ? "Elimina" : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               </>
             );
           })()}
