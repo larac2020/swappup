@@ -239,6 +239,7 @@ export default function SellTicket() {
         trainClass: (editListing as any).train_class || "",
         trainType: (editListing as any).train_type || "",
         travelClass: (editListing as any).travel_class || "",
+        returnTravelClass: (editListing as any).return_travel_class || "",
         trainOriginStation: (editListing as any).origin_station || "",
         trainDestinationStation: (editListing as any).destination_station || "",
         departureTime: (editListing as any).departure_time || "",
