@@ -635,6 +635,31 @@ export default function SellTicket() {
         listingData.stopovers = parseInt(formData.stopovers);
         listingData.return_stopovers = isReturn ? parseInt(formData.returnStopovers) : null;
         listingData.per_ticket_inclusions = (sameInclusions ? null : perTicketInclusions) as any;
+        // Inbound cabin & add-ons. When sameAsOutbound (or one-way), don't persist
+        // anything inbound-specific so the existing outbound values apply by default.
+        if (isReturn && !inboundSameAsOutbound) {
+          listingData.return_travel_class = formData.returnTravelClass || null;
+          listingData.return_luggage_included = sameInclusions
+            ? inboundSharedInclusions.luggageIncluded
+            : inboundPerTicketInclusions[0]?.luggageIncluded ?? false;
+          listingData.return_carry_on_included = sameInclusions
+            ? inboundSharedInclusions.carryOnIncluded
+            : inboundPerTicketInclusions[0]?.carryOnIncluded ?? true;
+          listingData.return_meal_included = sameInclusions
+            ? inboundSharedInclusions.mealIncluded
+            : inboundPerTicketInclusions[0]?.mealIncluded ?? false;
+          listingData.return_speedy_boarding = sameInclusions
+            ? inboundSharedInclusions.speedyBoarding
+            : inboundPerTicketInclusions[0]?.speedyBoarding ?? false;
+          listingData.return_per_ticket_inclusions = (sameInclusions ? null : inboundPerTicketInclusions) as any;
+        } else {
+          listingData.return_travel_class = null;
+          listingData.return_luggage_included = null;
+          listingData.return_carry_on_included = null;
+          listingData.return_meal_included = null;
+          listingData.return_speedy_boarding = null;
+          listingData.return_per_ticket_inclusions = null;
+        }
         // Store flight name-change fee SEPARATELY (additive at checkout)
         listingData.name_change_fee = flightTransferFee ?? null;
       }
