@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,7 @@ export default function IDVerification() {
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [storedPreview, setStoredPreview] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -33,6 +34,28 @@ export default function IDVerification() {
     },
     enabled: !!user?.id,
   });
+
+  // Fetch a signed preview URL of the already-uploaded ID document.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!user?.id || !profile?.id_document_url) {
+        setStoredPreview(null);
+        return;
+      }
+      // Find the stored file (extension is unknown — list the user's folder).
+      const { data: files } = await supabase.storage
+        .from("id-documents")
+        .list(user.id, { limit: 10 });
+      const match = files?.find((f) => f.name.startsWith("id-document"));
+      if (!match) return;
+      const { data: signed } = await supabase.storage
+        .from("id-documents")
+        .createSignedUrl(`${user.id}/${match.name}`, 60 * 10);
+      if (!cancelled && signed?.signedUrl) setStoredPreview(signed.signedUrl);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.id_document_url]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,6 +140,7 @@ export default function IDVerification() {
 
   const status = (profile?.verification_status as keyof typeof statusConfig) || "pending";
   const StatusIcon = statusConfig[status]?.icon || Clock;
+  const isVerified = status === "verified";
 
   if (isLoading) {
     return (
@@ -153,16 +177,20 @@ export default function IDVerification() {
 
       {/* Upload section */}
       <div className="glass rounded-2xl p-6 space-y-4">
-        <Alert className="bg-accent/50 border-accent">
-          <Info className="w-4 h-4" />
-          <AlertDescription className="text-sm">
-            {t("idNameMustMatch")}
-          </AlertDescription>
-        </Alert>
+        {!isVerified && (
+          <Alert className="bg-accent/50 border-accent">
+            <Info className="w-4 h-4" />
+            <AlertDescription className="text-sm">
+              {t("idNameMustMatch")}
+            </AlertDescription>
+          </Alert>
+        )}
 
-        <p className="text-sm text-muted-foreground text-center">
-          {t("idUploadDesc")}
-        </p>
+        {!isVerified && (
+          <p className="text-sm text-muted-foreground text-center">
+            {t("idUploadDesc")}
+          </p>
+        )}
 
         {idPreview ? (
           <div className="relative">
@@ -173,6 +201,24 @@ export default function IDVerification() {
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+        ) : storedPreview ? (
+          <div className="space-y-3">
+            <img
+              src={storedPreview}
+              alt="Uploaded ID document"
+              className="w-full max-h-[70vh] rounded-xl object-contain bg-secondary/40"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                <Camera className="w-4 h-4" /> {t("idTakePhoto")}
+              </button>
+              <button onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/50 hover:border-primary/50 transition-colors text-sm text-muted-foreground">
+                <Upload className="w-4 h-4" /> {t("idUploadFile")}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
