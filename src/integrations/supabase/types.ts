@@ -1276,6 +1276,7 @@ export type Database = {
       }
     }
     Functions: {
+      deactivate_past_listings: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
