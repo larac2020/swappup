@@ -492,6 +492,7 @@ export type Database = {
           return_date: string | null
           return_departure_time: string | null
           return_flight_number: string | null
+          return_stopovers: number | null
           seller_id: string
           speedy_boarding: boolean | null
           stopovers: number | null
@@ -549,6 +550,7 @@ export type Database = {
           return_date?: string | null
           return_departure_time?: string | null
           return_flight_number?: string | null
+          return_stopovers?: number | null
           seller_id: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
@@ -606,6 +608,7 @@ export type Database = {
           return_date?: string | null
           return_departure_time?: string | null
           return_flight_number?: string | null
+          return_stopovers?: number | null
           seller_id?: string
           speedy_boarding?: boolean | null
           stopovers?: number | null
