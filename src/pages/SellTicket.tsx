@@ -367,6 +367,9 @@ export default function SellTicket() {
     setSharedInclusions({ ...defaultInclusions });
     setPerTicketInclusions([{ ...defaultInclusions }]);
     setSameInclusions(true);
+    setInboundSharedInclusions({ ...defaultInclusions });
+    setInboundPerTicketInclusions([{ ...defaultInclusions }]);
+    setInboundSameAsOutbound(true);
     setFlightVerification(null);
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
