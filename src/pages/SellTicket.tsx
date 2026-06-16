@@ -98,6 +98,7 @@ const getDefaultFormData = () => ({
   currency: "EUR",
   ticketCount: "1",
   stopovers: "0",
+  returnStopovers: "0",
   additionalNotes: "",
   boostHours: 0 as number, // 0 = no boost; otherwise 24 | 72 | 168
   // Train-only fields
