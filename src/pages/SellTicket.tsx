@@ -182,6 +182,12 @@ export default function SellTicket() {
   const [perTicketInclusions, setPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
   const [sameInclusions, setSameInclusions] = useState(true);
 
+  // Inbound (return) leg add-ons. When `inboundSameAsOutbound` is true, the inbound
+  // values mirror outbound automatically and the inbound inputs are hidden.
+  const [inboundSharedInclusions, setInboundSharedInclusions] = useState<TicketInclusions>({ ...defaultInclusions });
+  const [inboundPerTicketInclusions, setInboundPerTicketInclusions] = useState<TicketInclusions[]>([{ ...defaultInclusions }]);
+  const [inboundSameAsOutbound, setInboundSameAsOutbound] = useState(true);
+
   // Train-specific inclusions (used only when listingType === "train_ticket")
   const [trainInclusions, setTrainInclusions] = useState<TrainInclusions>({ ...defaultTrainInclusions });
 
