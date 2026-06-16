@@ -22,23 +22,21 @@ const dict = {
     hi: 'Hi {name},',
     hiThere: 'Hi there,',
     thanks: 'Thank you so much for your purchase with swappup.',
-    safe: 'Your money is safe with us and will only be sent to {seller} once your name is on the booking.',
+    safe: 'Your money is safely held by swappup and will only be released once your name is on the booking.',
     tripTitle: 'Your purchase',
     whatNext: 'What happens next',
-    step1Before: '',
-    step1After: ' has 24 hours to update the booking with your name.',
-    step2: 'As soon as {seller} confirms the change in the app, we will let you know by email.',
+    step1: 'The booking will be updated with your name within 24 hours.',
+    step2: 'As soon as the change is confirmed, we will let you know by email.',
     pushTip: '💡 Turn on push notifications so you do not miss the moment.',
     updatePrefs: 'Update notification preferences',
-    step3: 'On the airline website, check that the change was made correctly using the booking reference and the name you provided to {seller}. Head back to the swappup app and confirm everything looks good — confirming early sends the money to {seller} sooner. Otherwise, the payment is released automatically 24 hours after your flight departs.',
+    step3: 'On the airline website, check that the change was made correctly using the booking reference and the name you provided. Head back to the swappup app and confirm everything looks good — confirming early releases the payment sooner. Otherwise, the payment is released automatically 24 hours after your flight departs.',
     issueTitle: 'Found an issue with the booking?',
-    issueBody: 'If something does not look right, or if {seller} does not update the booking with your name within 24 hours, your purchase is automatically refunded in full. No forms, no waiting.',
+    issueBody: 'If something does not look right, or if the booking is not updated with your name within 24 hours, your purchase is automatically refunded in full. No forms, no waiting.',
     receiptTitle: 'Your receipt',
     receiptBody: 'You can download your payment receipt anytime from your purchases.',
     receiptCta: 'View receipt',
     sign: 'Have a great day,',
     team: 'The swappup team',
-    seller: 'your seller',
     subjectWithOrder: 'Your swappup purchase is confirmed (Order {order})',
     subject: 'Your swappup purchase is confirmed',
   },
@@ -47,23 +45,21 @@ const dict = {
     hi: 'Ciao {name},',
     hiThere: 'Ciao,',
     thanks: 'Grazie mille per il tuo acquisto su swappup.',
-    safe: 'Il pagamento è al sicuro con noi e verrà inviato a {seller} solo quando il tuo nome sarà sulla prenotazione.',
+    safe: 'Il pagamento è custodito in sicurezza da swappup e verrà rilasciato solo quando il tuo nome sarà sulla prenotazione.',
     tripTitle: 'Il tuo acquisto',
     whatNext: 'Cosa succede ora',
-    step1Before: '',
-    step1After: ' ha 24 ore per aggiornare la prenotazione con il tuo nome.',
-    step2: 'Non appena {seller} conferma il cambio in app, ti avviseremo via email.',
+    step1: 'La prenotazione verrà aggiornata con il tuo nome entro 24 ore.',
+    step2: 'Non appena il cambio sarà confermato, ti avviseremo via email.',
     pushTip: '💡 Attiva le notifiche push per non perdere il momento.',
     updatePrefs: 'Aggiorna le preferenze di notifica',
-    step3: 'Sul sito della compagnia aerea, verifica che il cambio sia stato fatto correttamente usando il codice prenotazione e il nome che hai fornito a {seller}. Torna sull\'app swappup e conferma che è tutto in ordine — confermare in anticipo invia il bonifico a {seller} più rapidamente. In caso contrario, il pagamento viene rilasciato automaticamente 24 ore dopo la partenza del volo.',
+    step3: 'Sul sito della compagnia aerea, verifica che il cambio sia stato fatto correttamente usando il codice prenotazione e il nome che hai fornito. Torna sull\'app swappup e conferma che è tutto in ordine — confermare in anticipo rilascia il pagamento più rapidamente. In caso contrario, il pagamento viene rilasciato automaticamente 24 ore dopo la partenza del volo.',
     issueTitle: 'Hai riscontrato un problema con la prenotazione?',
-    issueBody: 'Se qualcosa non torna, o se {seller} non aggiorna la prenotazione con il tuo nome entro 24 ore, il tuo acquisto viene rimborsato automaticamente per intero. Nessun modulo, nessuna attesa.',
+    issueBody: 'Se qualcosa non torna, o se la prenotazione non viene aggiornata con il tuo nome entro 24 ore, il tuo acquisto viene rimborsato automaticamente per intero. Nessun modulo, nessuna attesa.',
     receiptTitle: 'La tua ricevuta',
     receiptBody: 'Puoi scaricare la ricevuta di pagamento quando vuoi dai tuoi acquisti.',
     receiptCta: 'Vai alla ricevuta',
     sign: 'Buona giornata,',
     team: 'Il team swappup',
-    seller: 'il venditore',
     subjectWithOrder: 'Il tuo acquisto swappup è confermato (Ordine {order})',
     subject: 'Il tuo acquisto swappup è confermato',
   },
@@ -71,8 +67,6 @@ const dict = {
 
 const Email = ({ buyerName, totalPrice, trip, purchaseId, orderNumber, bookingRef, bookingName, locale }: Props) => {
   const loc = normalizeLocale(locale)
-  // Seller PII is intentionally hidden from the buyer; always use a generic label.
-  const seller = t(loc, dict, 'seller')
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const tripWithExtras: TripDetails | undefined = trip
     ? { ...trip, bookingRef: bookingRef || trip.bookingRef, bookingName: bookingName || trip.bookingName, escrowAmount: totalPrice, orderNumber: order }
@@ -81,16 +75,16 @@ const Email = ({ buyerName, totalPrice, trip, purchaseId, orderNumber, bookingRe
     <EmailLayout preview={t(loc, dict, 'preview')} transactional locale={loc}>
       <Text style={p}>{buyerName ? t(loc, dict, 'hi', { name: buyerName }) : t(loc, dict, 'hiThere')}</Text>
       <Text style={p}>{t(loc, dict, 'thanks')}</Text>
-      <Text style={p}>{t(loc, dict, 'safe', { seller })}</Text>
+      <Text style={p}>{t(loc, dict, 'safe')}</Text>
       <TripCard trip={tripWithExtras} title={t(loc, dict, 'tripTitle')} locale={loc} />
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>{t(loc, dict, 'whatNext')}</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
           <li style={{ marginBottom: '6px' }}>
-            {t(loc, dict, 'step1Before')}<strong>{seller}</strong>{t(loc, dict, 'step1After')}
+            {t(loc, dict, 'step1')}
           </li>
           <li style={{ marginBottom: '10px' }}>
-            {t(loc, dict, 'step2', { seller })}
+            {t(loc, dict, 'step2')}
             <Section style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: brand.goldTint, border: `1px solid ${brand.gold}`, borderRadius: '8px' }}>
               <Text style={{ margin: 0, color: brand.ink, fontSize: '13px', lineHeight: '20px' }}>
                 {t(loc, dict, 'pushTip')}{' '}
@@ -98,11 +92,11 @@ const Email = ({ buyerName, totalPrice, trip, purchaseId, orderNumber, bookingRe
               </Text>
             </Section>
           </li>
-          <li style={{ marginBottom: '6px' }}>{t(loc, dict, 'step3', { seller })}</li>
+          <li style={{ marginBottom: '6px' }}>{t(loc, dict, 'step3')}</li>
         </ol>
       </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>{t(loc, dict, 'issueTitle')}</Heading>
-      <Text style={p}>{t(loc, dict, 'issueBody', { seller })}</Text>
+      <Text style={p}>{t(loc, dict, 'issueBody')}</Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '24px 0 8px' }}>{t(loc, dict, 'receiptTitle')}</Heading>
       <Text style={p}>
         {t(loc, dict, 'receiptBody')}{' '}
