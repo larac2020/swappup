@@ -285,6 +285,40 @@ export default function SellTicket() {
           Array(editListing.ticket_count).fill(null).map(() => ({ ...shared }))
         );
       }
+
+      // Inbound inclusions: present in DB only when sellers set them differently.
+      const inboundShared: TicketInclusions = {
+        luggageIncluded: (editListing as any).return_luggage_included ?? shared.luggageIncluded,
+        carryOnIncluded: (editListing as any).return_carry_on_included ?? shared.carryOnIncluded,
+        mealIncluded: (editListing as any).return_meal_included ?? shared.mealIncluded,
+        speedyBoarding: (editListing as any).return_speedy_boarding ?? shared.speedyBoarding,
+      };
+      setInboundSharedInclusions(inboundShared);
+      const hasOwnInbound =
+        hasReturn && (
+          (editListing as any).return_travel_class != null ||
+          (editListing as any).return_luggage_included != null ||
+          (editListing as any).return_carry_on_included != null ||
+          (editListing as any).return_meal_included != null ||
+          (editListing as any).return_speedy_boarding != null ||
+          (editListing as any).return_per_ticket_inclusions != null
+        );
+      setInboundSameAsOutbound(!hasOwnInbound);
+      const rpi = (editListing as any).return_per_ticket_inclusions;
+      if (rpi && Array.isArray(rpi)) {
+        setInboundPerTicketInclusions(
+          rpi.map((t: any) => ({
+            luggageIncluded: t.luggageIncluded ?? false,
+            carryOnIncluded: t.carryOnIncluded ?? true,
+            mealIncluded: t.mealIncluded ?? false,
+            speedyBoarding: t.speedyBoarding ?? false,
+          }))
+        );
+      } else {
+        setInboundPerTicketInclusions(
+          Array(editListing.ticket_count).fill(null).map(() => ({ ...inboundShared }))
+        );
+      }
     }
   }, [editListing, editLoaded]);
 
@@ -293,6 +327,12 @@ export default function SellTicket() {
     const count = parseInt(newCount) || 1;
     setFormData((prev) => ({ ...prev, ticketCount: newCount }));
     setPerTicketInclusions((prev) => {
+      if (count > prev.length) {
+        return [...prev, ...Array(count - prev.length).fill(null).map(() => ({ ...defaultInclusions }))];
+      }
+      return prev.slice(0, count);
+    });
+    setInboundPerTicketInclusions((prev) => {
       if (count > prev.length) {
         return [...prev, ...Array(count - prev.length).fill(null).map(() => ({ ...defaultInclusions }))];
       }
