@@ -1,33 +1,56 @@
-## Problem
 
-After paying on Stripe, the buyer lands on `/login` instead of their new purchase. Two issues compound:
+## Goal
 
-1. **`PurchaseDialog` opens Stripe in a new tab** (`window.open(url, "_blank")`). Stripe's `success_url` then loads `/account/purchases?open=…&success=1` in that new tab. In Lovable preview (and in any browser context where storage is partitioned), the new top-level tab does not share the iframe's `localStorage`, so the Supabase session is missing and `ProtectedRoute` redirects to `/login`.
-2. **`ProtectedRoute` discards the intended URL** when redirecting unauthenticated users. Even after re-logging in, the buyer lands on `/home`, never on `/account/purchases?open=…&success=1`, so the existing `reconcile-purchase` safety net never runs and they don't see their ticket.
+Once a purchase is finalized, the listing must no longer be purchasable by anyone else, but it must remain fully visible (with expandable details) to the buyer in their Purchases and to the seller in their sold transactions.
 
-## Fix
+## Current state
 
-### 1. Top-level redirect to Stripe instead of new tab
-In `src/components/listings/PurchaseDialog.tsx`:
-- Replace the `window.open(data.url, "_blank")` flow with `window.top!.location.href = data.url` (with `window.location.href` as the fallback). Stripe Checkout supports top-frame navigation from the Lovable preview iframe — the old "iframe blocks redirects to Stripe" comment is stale.
-- This keeps the buyer in the same top-level browsing context for the entire round-trip (app → Stripe → app), so the Supabase session in `localStorage` is intact when they return, and `ProtectedRoute` passes.
+- **Stripe webhook** (`stripe-purchase-webhook`) and **reconcile-purchase** decrement `ticket_count` and set `is_active = newCount > 0`. So a listing with stock >1 stays active and re-purchasable after a sale.
+- **DB trigger `before_purchase_insert`** only blocks new purchases when `is_active=false` OR `ticket_count < quantity`. Until the webhook fires, a second checkout can be created.
+- **Buyer view** (`Purchases.tsx`): joins `purchases → listings(*)` by id, expandable card with full trip details. Works regardless of `is_active`.
+- **Seller view** (`TransactionHistory.tsx`): uses `get_seller_purchases` RPC + fetches `listings` by id; opens `SaleDetailsDialog`. Works regardless of `is_active`.
+- **Listings RLS**: public read policy currently allows anyone to read active listings; sellers/buyers can read their own via id-based join. Need to confirm the buyer can still read the listing after it goes inactive (it's joined via the purchase row).
 
-### 2. Preserve the intended URL through login
-In `src/App.tsx` (`ProtectedRoute`) and `src/pages/Auth.tsx`:
-- When `ProtectedRoute` redirects to `/login`, pass the current `location.pathname + location.search` as React Router state (`state={{ from: location }}`) and as a `?next=` query param for safety.
-- In `Auth.tsx`, after a successful sign-in, read `state.from` (or `?next=`) and `navigate(next, { replace: true })` instead of always going to `/home`. Restrict `next` to same-origin paths starting with `/` to avoid open-redirect.
-- `PublicRoute` should also honor `?next=` when an already-authenticated user lands on `/login` (so the Stripe return tab, if the session *is* present, sails straight through to the purchase page rather than `/home`).
+## Changes
 
-### 3. No backend changes
-`success_url` and `cancel_url` in `create-purchase-checkout` stay as-is. The `reconcile-purchase` call already wired up in `Purchases.tsx` will now reliably fire on the success redirect because the buyer reaches that route.
+### 1. Always deactivate the listing on successful sale
+In `supabase/functions/stripe-purchase-webhook/index.ts` and `supabase/functions/reconcile-purchase/index.ts`, when finalizing a purchase update the listing to:
+```ts
+ticket_count: 0,
+is_active: false,
+```
+regardless of previous stock. (A flight ticket listing represents one bookable seat; once sold, no one else can buy.)
 
-## Files to change
+### 2. Block double-purchase during the pending window
+Tighten `before_purchase_insert` (DB trigger) to also reject when an existing non-refunded purchase already exists for the listing:
+```sql
+IF EXISTS (
+  SELECT 1 FROM public.purchases
+  WHERE listing_id = NEW.listing_id
+    AND status IN ('pending','pending_transfer','transfer_confirmed','completed')
+) THEN
+  RAISE EXCEPTION 'LISTING_UNAVAILABLE: This listing already has an active purchase';
+END IF;
+```
+This prevents a race where two buyers reach Stripe Checkout before the webhook fires. Refunded/canceled purchases do not block.
 
-- `src/components/listings/PurchaseDialog.tsx` — swap `window.open` for top-level redirect.
-- `src/App.tsx` — `ProtectedRoute` passes `from`/`next`; `PublicRoute` honors `next`.
-- `src/pages/Auth.tsx` — post-login navigation honors `state.from` / `?next=` with same-origin guard.
+### 3. Ensure buyer can still read the listing after deactivation
+Verify the `listings` SELECT policy allows the buyer to read their purchased listing even when `is_active=false`. If the current policy is `is_active = true`-gated only, add a policy:
+```sql
+CREATE POLICY "Buyers can read their purchased listings"
+ON public.listings FOR SELECT TO authenticated
+USING (EXISTS (
+  SELECT 1 FROM public.purchases pu
+  JOIN public.profiles pr ON pr.id = pu.buyer_id
+  WHERE pu.listing_id = listings.id AND pr.user_id = auth.uid()
+));
+```
+Seller already has a policy on their own listings, so no change needed there. (Will confirm exact existing policies before writing the migration.)
+
+### 4. No UI changes required
+Both Purchases (buyer) and TransactionHistory + SaleDetailsDialog (seller) already render full trip details from the joined listing row. Once #3 guarantees read access, both parties continue to see and expand details after deactivation.
 
 ## Out of scope
 
-- Stripe webhook configuration (tracked separately).
-- The 6 stuck `cs_test_…` purchases (still pending; can be reconciled on request).
+- The `/listing/:id` public detail page — sold listings should 404 / redirect for non-participants; participants navigate through their account history instead.
+- Refund flow (already re-activates via `cancel-escrow` / refund handler — will leave as is).

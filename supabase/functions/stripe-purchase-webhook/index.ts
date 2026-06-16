@@ -53,10 +53,9 @@ Deno.serve(async (req) => {
     const { data: listing } = await admin.from("listings").select("*")
       .eq("id", purchase.listing_id).single();
     if (listing) {
-      const newCount = Math.max(0, (listing.ticket_count ?? 1) - (purchase.quantity ?? 1));
       await admin.from("listings").update({
-        ticket_count: newCount,
-        is_active: newCount > 0,
+        ticket_count: 0,
+        is_active: false,
       }).eq("id", purchase.listing_id);
 
       // Notify seller
