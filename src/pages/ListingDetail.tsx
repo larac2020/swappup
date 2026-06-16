@@ -453,10 +453,25 @@ export default function ListingDetail() {
                 <div className="flex items-start gap-3">
                   <Plane className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("sellCabinClass")}</p>
+                    <p className="text-sm text-muted-foreground">{listing.return_date ? "Outbound cabin" : t("sellCabinClass")}</p>
                     <p className="font-medium">{
                       (() => {
                         const v = (listing as any).travel_class as string;
+                        const key = v === "premium_economy" ? "cabinPremiumEconomy" : v === "business" ? "cabinBusiness" : v === "first" ? "cabinFirst" : "cabinEconomy";
+                        return t(key as any);
+                      })()
+                    }</p>
+                  </div>
+                </div>
+              )}
+              {!isTrain && listing.return_date && (listing as any).return_travel_class && (
+                <div className="flex items-start gap-3">
+                  <Plane className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inbound cabin</p>
+                    <p className="font-medium">{
+                      (() => {
+                        const v = (listing as any).return_travel_class as string;
                         const key = v === "premium_economy" ? "cabinPremiumEconomy" : v === "business" ? "cabinBusiness" : v === "first" ? "cabinFirst" : "cabinEconomy";
                         return t(key as any);
                       })()
@@ -484,23 +499,63 @@ export default function ListingDetail() {
           </div>
 
           {/* What's Included */}
-          <div className="glass rounded-2xl p-4 space-y-4">
-            <h3 className="font-semibold">What's Included</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className={`flex items-center gap-2 ${listing.luggage_included ? "text-primary" : "text-muted-foreground"}`}>
-                <Luggage className="w-5 h-5" /><span className="text-sm">Checked Luggage</span>
+          {(() => {
+            const hasInbound = !!listing.return_date && (
+              (listing as any).return_luggage_included != null ||
+              (listing as any).return_carry_on_included != null ||
+              (listing as any).return_meal_included != null ||
+              (listing as any).return_speedy_boarding != null
+            );
+            const inbound = {
+              luggage: (listing as any).return_luggage_included ?? listing.luggage_included,
+              carryOn: (listing as any).return_carry_on_included ?? listing.carry_on_included,
+              meal: (listing as any).return_meal_included ?? listing.meal_included,
+              speedy: (listing as any).return_speedy_boarding ?? listing.speedy_boarding,
+            };
+            return (
+              <div className="glass rounded-2xl p-4 space-y-4">
+                <h3 className="font-semibold">What's Included</h3>
+                <div className="space-y-3">
+                  <div>
+                    {hasInbound && <p className="text-xs font-medium text-muted-foreground mb-2">Outbound</p>}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className={`flex items-center gap-2 ${listing.luggage_included ? "text-primary" : "text-muted-foreground"}`}>
+                        <Luggage className="w-5 h-5" /><span className="text-sm">Checked Luggage</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${listing.carry_on_included ? "text-primary" : "text-muted-foreground"}`}>
+                        <Luggage className="w-5 h-5" /><span className="text-sm">Carry-on Bag</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${listing.meal_included ? "text-primary" : "text-muted-foreground"}`}>
+                        <Utensils className="w-5 h-5" /><span className="text-sm">In-flight Meal</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${listing.speedy_boarding ? "text-primary" : "text-muted-foreground"}`}>
+                        <Zap className="w-5 h-5" /><span className="text-sm">Speedy Boarding</span>
+                      </div>
+                    </div>
+                  </div>
+                  {hasInbound && (
+                    <div className="pt-3 border-t border-border/50">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Inbound</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className={`flex items-center gap-2 ${inbound.luggage ? "text-primary" : "text-muted-foreground"}`}>
+                          <Luggage className="w-5 h-5" /><span className="text-sm">Checked Luggage</span>
+                        </div>
+                        <div className={`flex items-center gap-2 ${inbound.carryOn ? "text-primary" : "text-muted-foreground"}`}>
+                          <Luggage className="w-5 h-5" /><span className="text-sm">Carry-on Bag</span>
+                        </div>
+                        <div className={`flex items-center gap-2 ${inbound.meal ? "text-primary" : "text-muted-foreground"}`}>
+                          <Utensils className="w-5 h-5" /><span className="text-sm">In-flight Meal</span>
+                        </div>
+                        <div className={`flex items-center gap-2 ${inbound.speedy ? "text-primary" : "text-muted-foreground"}`}>
+                          <Zap className="w-5 h-5" /><span className="text-sm">Speedy Boarding</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className={`flex items-center gap-2 ${listing.carry_on_included ? "text-primary" : "text-muted-foreground"}`}>
-                <Luggage className="w-5 h-5" /><span className="text-sm">Carry-on Bag</span>
-              </div>
-              <div className={`flex items-center gap-2 ${listing.meal_included ? "text-primary" : "text-muted-foreground"}`}>
-                <Utensils className="w-5 h-5" /><span className="text-sm">In-flight Meal</span>
-              </div>
-              <div className={`flex items-center gap-2 ${listing.speedy_boarding ? "text-primary" : "text-muted-foreground"}`}>
-                <Zap className="w-5 h-5" /><span className="text-sm">Speedy Boarding</span>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Seller Notes */}
           {listing.additional_notes && (
