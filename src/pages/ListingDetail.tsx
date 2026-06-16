@@ -466,8 +466,20 @@ export default function ListingDetail() {
               )}
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-primary mt-0.5" />
-                <div><p className="text-sm text-muted-foreground">Stopovers</p><p className="font-medium">{listing.stopovers === 0 ? "Direct flight" : `${listing.stopovers} stop(s)`}</p></div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{listing.return_date ? "Outbound stopovers" : "Stopovers"}</p>
+                  <p className="font-medium">{listing.stopovers === 0 ? "Direct flight" : `${listing.stopovers} stop(s)`}</p>
+                </div>
               </div>
+              {listing.return_date && (
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inbound stopovers</p>
+                    <p className="font-medium">{((listing as any).return_stopovers ?? 0) === 0 ? "Direct flight" : `${(listing as any).return_stopovers} stop(s)`}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
