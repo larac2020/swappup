@@ -457,6 +457,7 @@ export type Database = {
           additional_notes: string | null
           airline: string | null
           arrival_time: string | null
+          booking_reference: string | null
           bumped_until: string | null
           carry_on_included: boolean | null
           created_at: string
@@ -521,6 +522,7 @@ export type Database = {
           additional_notes?: string | null
           airline?: string | null
           arrival_time?: string | null
+          booking_reference?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
@@ -585,6 +587,7 @@ export type Database = {
           additional_notes?: string | null
           airline?: string | null
           arrival_time?: string | null
+          booking_reference?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
           created_at?: string
@@ -1339,6 +1342,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_booking_ref: { Args: { _ref: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
