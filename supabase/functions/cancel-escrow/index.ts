@@ -95,7 +95,6 @@ Deno.serve(async (req) => {
               idempotencyKey: `seller-buyer-no-confirm-${purchase.id}`,
               templateData: {
                 sellerName: (sellerP.full_name || "").split(" ")[0],
-                buyerName: (purchase.buyer_full_name || buyerP?.full_name || "").split(" ")[0],
                 nameChangeFee: purchase.name_change_fee ? `€${Number(purchase.name_change_fee).toFixed(2)}` : undefined,
                 purchaseId: purchase.id,
                 trip,
