@@ -32,6 +32,13 @@ import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 
+// Mandatory seller declaration version + text. Bump the version whenever the text changes.
+const SELLER_DECLARATION_VERSION = "2026-06-17";
+const SELLER_DECLARATION_TEXT_EN =
+  "I confirm that this booking has not been sold, transferred, or listed elsewhere, and that I have the legal right to transfer it to a buyer.";
+const SELLER_DECLARATION_TEXT_IT =
+  "Confermo che questa prenotazione non è stata venduta, trasferita o pubblicata altrove e di avere il diritto legale di trasferirla a un acquirente.";
+
 interface TicketInclusions {
   luggageIncluded: boolean;
   carryOnIncluded: boolean;
