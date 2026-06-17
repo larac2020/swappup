@@ -1178,6 +1178,60 @@ export type Database = {
           },
         ]
       }
+      seller_declarations: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          declaration_locale: string | null
+          declaration_text: string
+          declaration_version: string
+          id: string
+          listing_id: string | null
+          profile_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          declaration_locale?: string | null
+          declaration_text: string
+          declaration_version: string
+          id?: string
+          listing_id?: string | null
+          profile_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          declaration_locale?: string | null
+          declaration_text?: string
+          declaration_version?: string
+          id?: string
+          listing_id?: string | null
+          profile_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_declarations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_declarations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_reports: {
         Row: {
           created_at: string

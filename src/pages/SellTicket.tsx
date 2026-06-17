@@ -32,6 +32,13 @@ import { SUPPORTED_CURRENCIES, getCurrencySymbol } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 
+// Mandatory seller declaration version + text. Bump the version whenever the text changes.
+const SELLER_DECLARATION_VERSION = "2026-06-17";
+const SELLER_DECLARATION_TEXT_EN =
+  "I confirm that this booking has not been sold, transferred, or listed elsewhere, and that I have the legal right to transfer it to a buyer.";
+const SELLER_DECLARATION_TEXT_IT =
+  "Confermo che questa prenotazione non è stata venduta, trasferita o pubblicata altrove e di avere il diritto legale di trasferirla a un acquirente.";
+
 interface TicketInclusions {
   luggageIncluded: boolean;
   carryOnIncluded: boolean;
@@ -161,6 +168,7 @@ export default function SellTicket() {
   const [flightTransferFee, setFlightTransferFee] = useState<number | null>(null);
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
   const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
+  const [sellerDeclarationAck, setSellerDeclarationAck] = useState(false);
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
   // Flight schedule verification (Aviationstack via edge function)
@@ -678,13 +686,32 @@ export default function SellTicket() {
           .eq("id", editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("listings").insert({
-          ...listingData,
-          seller_id: profile!.id,
-          bumped_until: bumpedUntil,
-          name_change_risk_acknowledged_at: new Date().toISOString(),
-        } as any);
+        const { data: inserted, error } = await supabase
+          .from("listings")
+          .insert({
+            ...listingData,
+            seller_id: profile!.id,
+            bumped_until: bumpedUntil,
+            name_change_risk_acknowledged_at: new Date().toISOString(),
+          } as any)
+          .select("id")
+          .single();
         if (error) throw error;
+
+        // Persist the mandatory seller declaration for dispute / fraud audit trail.
+        try {
+          await supabase.from("seller_declarations" as any).insert({
+            user_id: user!.id,
+            profile_id: profile!.id,
+            listing_id: inserted?.id ?? null,
+            declaration_version: SELLER_DECLARATION_VERSION,
+            declaration_text: locale === "it" ? SELLER_DECLARATION_TEXT_IT : SELLER_DECLARATION_TEXT_EN,
+            declaration_locale: locale,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          } as any);
+        } catch {
+          // Non-blocking: the listing exists; declaration write failures shouldn't block the user.
+        }
       }
     },
     onSuccess: () => {
@@ -871,6 +898,17 @@ export default function SellTicket() {
       toast({
         title: t("sellToastListingBlocked"),
         description: t("sellToastNoConfirmRiskNotAck"),
+        variant: "destructive",
+      });
+      return;
+    }
+    // Mandatory seller declaration (creation only — edits don't re-prompt).
+    if (!isEditMode && !sellerDeclarationAck) {
+      toast({
+        title: t("sellToastListingBlocked"),
+        description: locale === "it"
+          ? "Devi accettare la dichiarazione del venditore per pubblicare l'annuncio."
+          : "You must accept the seller declaration before publishing this listing.",
         variant: "destructive",
       });
       return;
@@ -1720,6 +1758,34 @@ export default function SellTicket() {
                     </label>
                   </div>
                 )}
+                {!isEditMode && (
+                  <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">
+                          {locale === "it" ? "Dichiarazione del venditore" : "Seller declaration"}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {locale === "it"
+                            ? "Questa dichiarazione è obbligatoria e viene registrata per la risoluzione delle controversie e le indagini antifrode."
+                            : "This declaration is mandatory and is recorded for dispute resolution and fraud investigations."}
+                        </p>
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+                        checked={sellerDeclarationAck}
+                        onChange={(e) => setSellerDeclarationAck(e.target.checked)}
+                      />
+                      <span className="text-xs leading-relaxed">
+                        {locale === "it" ? SELLER_DECLARATION_TEXT_IT : SELLER_DECLARATION_TEXT_EN}
+                      </span>
+                    </label>
+                  </div>
+                )}
               <div className="flex gap-3">
                 {wizard && (
                   <Button type="button" variant="outline" size="xl" className="flex-1" onClick={() => setStep(2)}>
@@ -1732,7 +1798,7 @@ export default function SellTicket() {
                 variant="gold"
                 size="xl"
                 className={wizard ? "flex-1" : "w-full"}
-                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck)}
+                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck) || (!isEditMode && !sellerDeclarationAck)}
               >
                 {createListingMutation.isPending ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
