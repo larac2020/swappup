@@ -696,6 +696,28 @@ export default function SellTicket() {
     },
     onError: (error: any) => {
       const msg = error.message || "";
+      // Report duplicate-sale fraud attempts to the server for case tracking.
+      const fraudCode =
+        msg.includes("BOOKING_ALREADY_SOLD") ? "BOOKING_ALREADY_SOLD" :
+        msg.includes("DUPLICATE_BOOKING_FINGERPRINT") ? "DUPLICATE_BOOKING_FINGERPRINT" :
+        msg.includes("DUPLICATE_BOOKING_REF") || msg.includes("listings_booking_reference_unique_idx") ? "DUPLICATE_BOOKING_REF" :
+        msg.includes("LISTING_LOCKED") ? "LISTING_LOCKED" : null;
+      if (fraudCode) {
+        supabase.functions.invoke("report-fraud-attempt", {
+          body: {
+            error_code: fraudCode,
+            error_message: msg,
+            booking_reference: (formData as any)?.bookingReference || null,
+            attempted_listing: {
+              airline: (formData as any)?.airline,
+              flight_number: (formData as any)?.flightNumber,
+              departure_date: (formData as any)?.departureDate,
+              origin: (formData as any)?.originAirport || (formData as any)?.originCity,
+              destination: (formData as any)?.destinationAirport || (formData as any)?.destinationCity,
+            },
+          },
+        }).catch(() => {});
+      }
       if (msg.includes("DUPLICATE_LISTING")) {
         toast({ title: t("sellToastDuplicate"), description: t("sellToastDuplicateDesc"), variant: "destructive" });
       } else if (msg.includes("DUPLICATE_BOOKING_REF") || msg.includes("listings_booking_reference_unique_idx")) {
