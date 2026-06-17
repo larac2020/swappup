@@ -902,6 +902,17 @@ export default function SellTicket() {
       });
       return;
     }
+    // Mandatory seller declaration (creation only — edits don't re-prompt).
+    if (!isEditMode && !sellerDeclarationAck) {
+      toast({
+        title: t("sellToastListingBlocked"),
+        description: locale === "it"
+          ? "Devi accettare la dichiarazione del venditore per pubblicare l'annuncio."
+          : "You must accept the seller declaration before publishing this listing.",
+        variant: "destructive",
+      });
+      return;
+    }
     createListingMutation.mutate();
   };
 
