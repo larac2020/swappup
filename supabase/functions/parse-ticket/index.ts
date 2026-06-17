@@ -75,6 +75,14 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
 - Also return the detected currency (ISO 4217 code like "EUR", "GBP", "USD") in priceCurrency when visible.
 - If you genuinely cannot determine a reliable total price, OMIT originalPrice rather than guessing.`;
 
+    const systemPromptWithBookingRef = systemPrompt + `\n\nBOOKING REFERENCE / PNR EXTRACTION (CRITICAL — used to prevent the same booking being listed twice):
+- "bookingReference" MUST be the unique booking identifier the airline or rail operator assigns to this reservation. Also called: PNR, Booking Reference, Booking Code, Reservation Number, Record Locator, Confirmation Code, Airline Reference, Codice di prenotazione, Codice PNR, Numero di prenotazione, Buchungsnummer, Référence de réservation.
+- For airlines, this is typically a 6-character alphanumeric code (e.g. "ABC123", "XYZ7QP"). Ryanair, easyJet, BA, Lufthansa, Air France, Iberia and most carriers use this 6-char format. Some carriers use 5–7 characters.
+- For trains: Trenitalia "Codice di prenotazione" (often 6 letters); Italo 6-digit "Codice di prenotazione"; SNCF "Référence de dossier" (6 chars); Deutsche Bahn "Auftragsnummer".
+- Return the booking reference EXACTLY as printed (preserve case and characters), with no surrounding text.
+- Do NOT return ticket numbers (long numeric e-ticket strings like 13-digit "1234567890123"), transaction IDs, payment references, customer numbers, frequent-flyer numbers, or order numbers — only the booking reference / PNR that uniquely identifies the reservation with the carrier.
+- If you cannot confidently find the booking reference, OMIT the field rather than guessing.`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -84,7 +92,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPromptWithBookingRef },
           {
             role: "user",
             content: [
@@ -126,6 +134,7 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   originStation: { type: "string", description: "Origin station name (only for trains)" },
                   destinationStation: { type: "string", description: "Destination station name (only for trains)" },
                   departureTime: { type: "string", description: "Outbound departure time HH:MM 24h (trains; mirrors outboundDepartureTime)" },
+                  bookingReference: { type: "string", description: "Carrier booking reference / PNR / record locator exactly as printed (e.g. 'ABC123'). Omit if not clearly visible. Never return a long e-ticket number or order/transaction id here." },
                 },
                 required: [],
                 additionalProperties: false,
