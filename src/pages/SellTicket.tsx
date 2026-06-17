@@ -750,6 +750,18 @@ export default function SellTicket() {
         toast({ title: t("sellToastPriceCap"), description: t("sellToastPriceCapDesc"), variant: "destructive" });
       } else if (msg.includes("NOT_TRANSFERABLE")) {
         toast({ title: t("sellToastListingBlocked"), description: t("sellToastBlockedFlight"), variant: "destructive" });
+      } else if (msg.includes("ACCOUNT_BANNED")) {
+        toast({
+          title: "Account banned",
+          description: "Your account has been permanently banned and cannot create new listings.",
+          variant: "destructive",
+        });
+      } else if (msg.includes("ACCOUNT_SUSPENDED")) {
+        toast({
+          title: "Account under review",
+          description: "Your account is under fraud review. New listings are blocked until the case is cleared.",
+          variant: "destructive",
+        });
       } else {
         toast({ title: t("error"), description: msg, variant: "destructive" });
       }
