@@ -250,10 +250,17 @@ export default function Onboarding() {
 
       const { data: urlData } = supabase.storage.from("id-documents").getPublicUrl(filePath);
 
-      await supabase.from("profiles").update({
-        id_document_url: urlData.publicUrl,
-        verification_status: "verified",
-      }).eq("user_id", user.id);
+      // Persist verification server-side via the edge function (service role).
+      // The client is no longer allowed to write verification_status / id_document_*.
+      const { error: persistError } = await supabase.functions.invoke("verify-id", {
+        body: {
+          image: base64,
+          persist: true,
+          id_document_url: urlData.publicUrl,
+          acknowledge_name_mismatch: true,
+        },
+      });
+      if (persistError) throw persistError;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({ title: "ID verified!", description: `${verification.document_type} accepted.` });
