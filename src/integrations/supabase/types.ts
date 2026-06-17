@@ -386,6 +386,113 @@ export type Database = {
         }
         Relationships: []
       }
+      fraud_cases: {
+        Row: {
+          created_at: string
+          evidence: Json
+          id: string
+          opened_at: string
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["fraud_status_t"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          opened_at?: string
+          reason: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["fraud_status_t"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          opened_at?: string
+          reason?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["fraud_status_t"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_cases_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fraud_events: {
+        Row: {
+          actor_user_id: string | null
+          booking_fingerprint: string | null
+          booking_reference: string | null
+          case_id: string | null
+          created_at: string
+          event_type: string
+          evidence: Json
+          id: string
+          listing_id: string | null
+          purchase_id: string | null
+          seller_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          booking_fingerprint?: string | null
+          booking_reference?: string | null
+          case_id?: string | null
+          created_at?: string
+          event_type: string
+          evidence?: Json
+          id?: string
+          listing_id?: string | null
+          purchase_id?: string | null
+          seller_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          booking_fingerprint?: string | null
+          booking_reference?: string | null
+          case_id?: string | null
+          created_at?: string
+          event_type?: string
+          evidence?: Json
+          id?: string
+          listing_id?: string | null
+          purchase_id?: string | null
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "fraud_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_events_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fraud_scores: {
         Row: {
           flags: Json
@@ -791,6 +898,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1: string | null
           address_line2: string | null
           avatar_url: string | null
@@ -802,6 +910,7 @@ export type Database = {
           favorite_categories: string[] | null
           favorite_departure_city: string | null
           favorite_departure_country: string | null
+          fraud_case_id: string | null
           full_name: string | null
           has_payment_method: boolean
           id: string
@@ -813,6 +922,7 @@ export type Database = {
           id_document_number_last4: string | null
           id_document_type: string | null
           id_document_url: string | null
+          payouts_frozen: boolean
           phone: string | null
           postal_code: string | null
           preferred_currency: string
@@ -831,6 +941,7 @@ export type Database = {
             | null
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1?: string | null
           address_line2?: string | null
           avatar_url?: string | null
@@ -842,6 +953,7 @@ export type Database = {
           favorite_categories?: string[] | null
           favorite_departure_city?: string | null
           favorite_departure_country?: string | null
+          fraud_case_id?: string | null
           full_name?: string | null
           has_payment_method?: boolean
           id?: string
@@ -853,6 +965,7 @@ export type Database = {
           id_document_number_last4?: string | null
           id_document_type?: string | null
           id_document_url?: string | null
+          payouts_frozen?: boolean
           phone?: string | null
           postal_code?: string | null
           preferred_currency?: string
@@ -871,6 +984,7 @@ export type Database = {
             | null
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1?: string | null
           address_line2?: string | null
           avatar_url?: string | null
@@ -882,6 +996,7 @@ export type Database = {
           favorite_categories?: string[] | null
           favorite_departure_city?: string | null
           favorite_departure_country?: string | null
+          fraud_case_id?: string | null
           full_name?: string | null
           has_payment_method?: boolean
           id?: string
@@ -893,6 +1008,7 @@ export type Database = {
           id_document_number_last4?: string | null
           id_document_type?: string | null
           id_document_url?: string | null
+          payouts_frozen?: boolean
           phone?: string | null
           postal_code?: string | null
           preferred_currency?: string
@@ -1152,6 +1268,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_sessions: {
         Row: {
           country: string | null
@@ -1321,6 +1458,36 @@ export type Database = {
       }
     }
     Functions: {
+      admin_ban_seller: {
+        Args: { _reason: string; _seller_id: string }
+        Returns: string
+      }
+      admin_resolve_fraud_case: {
+        Args: {
+          _case_id: string
+          _notes?: string
+          _resolution: Database["public"]["Enums"]["fraud_status_t"]
+        }
+        Returns: {
+          created_at: string
+          evidence: Json
+          id: string
+          opened_at: string
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["fraud_status_t"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "fraud_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       compute_booking_fingerprint: {
         Args: {
           _airline: string
@@ -1391,6 +1558,13 @@ export type Database = {
           transfer_surname: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1411,6 +1585,8 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
+      fraud_status_t: "under_review" | "confirmed_fraud" | "cleared"
       listing_tag:
         | "city_trip"
         | "beach"
@@ -1421,6 +1597,7 @@ export type Database = {
         | "family"
         | "business"
       listing_type: "flight_ticket" | "travel_credit" | "train_ticket"
+      seller_account_status_t: "active" | "suspended" | "banned"
       verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
@@ -1549,6 +1726,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
+      fraud_status_t: ["under_review", "confirmed_fraud", "cleared"],
       listing_tag: [
         "city_trip",
         "beach",
@@ -1560,6 +1739,7 @@ export const Constants = {
         "business",
       ],
       listing_type: ["flight_ticket", "travel_credit", "train_ticket"],
+      seller_account_status_t: ["active", "suspended", "banned"],
       verification_status: ["pending", "verified", "rejected"],
     },
   },
