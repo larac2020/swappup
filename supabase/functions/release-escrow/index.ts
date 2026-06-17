@@ -40,6 +40,16 @@ Deno.serve(async (req) => {
     const { data: purchase } = await admin.from("purchases").select("*").eq("id", purchase_id).single();
     if (!purchase) return j({ error: "Not found" }, 404);
 
+    // Block payouts when the seller account is frozen / banned / under fraud review.
+    const { data: sellerGuard } = await admin
+      .from("profiles")
+      .select("payouts_frozen, account_status")
+      .eq("id", purchase.seller_id)
+      .single();
+    if (sellerGuard?.payouts_frozen || sellerGuard?.account_status === "banned" || sellerGuard?.account_status === "suspended") {
+      return j({ error: "PAYOUT_FROZEN: Seller account is under fraud review. Payout cannot be released." }, 403);
+    }
+
     if (!autoRelease) {
       // Only buyer can release manually
       const { data: buyerProfile } = await admin.from("profiles").select("user_id").eq("id", purchase.buyer_id).single();
