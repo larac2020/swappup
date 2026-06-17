@@ -457,6 +457,7 @@ export type Database = {
           additional_notes: string | null
           airline: string | null
           arrival_time: string | null
+          booking_fingerprint: string | null
           booking_reference: string | null
           bumped_until: string | null
           carry_on_included: boolean | null
@@ -522,6 +523,7 @@ export type Database = {
           additional_notes?: string | null
           airline?: string | null
           arrival_time?: string | null
+          booking_fingerprint?: string | null
           booking_reference?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
@@ -587,6 +589,7 @@ export type Database = {
           additional_notes?: string | null
           airline?: string | null
           arrival_time?: string | null
+          booking_fingerprint?: string | null
           booking_reference?: string | null
           bumped_until?: string | null
           carry_on_included?: boolean | null
@@ -1279,6 +1282,22 @@ export type Database = {
       }
     }
     Functions: {
+      compute_booking_fingerprint: {
+        Args: {
+          _airline: string
+          _departure_date: string
+          _destination_airport: string
+          _destination_city: string
+          _flight_number: string
+          _origin_airport: string
+          _origin_city: string
+          _original_price: number
+          _return_date: string
+          _return_flight_number: string
+          _ticket_count: number
+        }
+        Returns: string
+      }
       deactivate_past_listings: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
