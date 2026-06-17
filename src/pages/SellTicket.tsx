@@ -686,13 +686,32 @@ export default function SellTicket() {
           .eq("id", editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("listings").insert({
-          ...listingData,
-          seller_id: profile!.id,
-          bumped_until: bumpedUntil,
-          name_change_risk_acknowledged_at: new Date().toISOString(),
-        } as any);
+        const { data: inserted, error } = await supabase
+          .from("listings")
+          .insert({
+            ...listingData,
+            seller_id: profile!.id,
+            bumped_until: bumpedUntil,
+            name_change_risk_acknowledged_at: new Date().toISOString(),
+          } as any)
+          .select("id")
+          .single();
         if (error) throw error;
+
+        // Persist the mandatory seller declaration for dispute / fraud audit trail.
+        try {
+          await supabase.from("seller_declarations" as any).insert({
+            user_id: user!.id,
+            profile_id: profile!.id,
+            listing_id: inserted?.id ?? null,
+            declaration_version: SELLER_DECLARATION_VERSION,
+            declaration_text: locale === "it" ? SELLER_DECLARATION_TEXT_IT : SELLER_DECLARATION_TEXT_EN,
+            declaration_locale: locale,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          } as any);
+        } catch {
+          // Non-blocking: the listing exists; declaration write failures shouldn't block the user.
+        }
       }
     },
     onSuccess: () => {
