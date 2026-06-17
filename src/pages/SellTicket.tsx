@@ -704,6 +704,12 @@ export default function SellTicket() {
           description: "This booking has already been listed on Swappup and cannot be listed again.",
           variant: "destructive",
         });
+      } else if (msg.includes("DUPLICATE_BOOKING_FINGERPRINT")) {
+        toast({
+          title: t("sellToastDuplicate"),
+          description: "A very similar booking is already listed on Swappup. The same trip cannot be listed twice.",
+          variant: "destructive",
+        });
       } else if (msg.includes("RATE_LIMIT")) {
         toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
