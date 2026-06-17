@@ -136,20 +136,24 @@ export default function IDVerification() {
 
       const { data: urlData } = supabase.storage.from("id-documents").getPublicUrl(filePath);
 
-      const isoDate = (v: any) =>
-        typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
-
-      await supabase.from("profiles").update({
-        id_document_url: urlData.publicUrl,
-        verification_status: "verified",
-        id_document_type: verification.document_type || null,
-        id_document_country: verification.issuing_country || null,
-        id_document_expiry: isoDate(verification.expiry_date),
-        id_document_first_name: verification.first_name || null,
-        id_document_last_name: verification.last_name || null,
-        id_document_dob: isoDate(verification.date_of_birth),
-        id_document_number_last4: verification.document_number_last4 || null,
-      }).eq("user_id", user.id);
+      // Re-run verification server-side and let the edge function persist the
+      // protected profile fields (verification_status / id_document_*) using
+      // the service role. The client is no longer allowed to write these.
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(idFile);
+      });
+      const { error: persistError } = await supabase.functions.invoke("verify-id", {
+        body: {
+          image: base64,
+          profileName: profile?.full_name || undefined,
+          persist: true,
+          id_document_url: urlData.publicUrl,
+          acknowledge_name_mismatch: verification?.name_matches_profile === false,
+        },
+      });
+      if (persistError) throw persistError;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setIdFile(null);
