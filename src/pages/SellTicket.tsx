@@ -116,6 +116,7 @@ const getDefaultFormData = () => ({
   returnDepartureTime: "",
   returnArrivalTime: "",
   returnFlightNumber: "",
+  bookingReference: "",
 });
 
 export default function SellTicket() {
@@ -254,6 +255,7 @@ export default function SellTicket() {
         returnDepartureTime: (editListing as any).return_departure_time || "",
         returnArrivalTime: (editListing as any).return_arrival_time || "",
         returnFlightNumber: (editListing as any).return_flight_number || "",
+        bookingReference: (editListing as any).booking_reference || "",
       });
 
       const shared: TicketInclusions = {
@@ -556,6 +558,7 @@ export default function SellTicket() {
           arrivalTime: outboundArrTime,
           returnDepartureTime: inboundDepTime,
           returnArrivalTime: inboundArrTime,
+          bookingReference: typeof p.bookingReference === "string" ? p.bookingReference.trim() : "",
         }));
 
         // Sync per-ticket array
@@ -665,6 +668,9 @@ export default function SellTicket() {
         listingData.name_change_fee = flightTransferFee ?? null;
       }
 
+      // Booking reference / PNR — used to prevent the same booking being listed twice.
+      listingData.booking_reference = formData.bookingReference?.trim() || null;
+
       if (editId) {
         const { error } = await supabase
           .from("listings")
@@ -692,6 +698,12 @@ export default function SellTicket() {
       const msg = error.message || "";
       if (msg.includes("DUPLICATE_LISTING")) {
         toast({ title: t("sellToastDuplicate"), description: t("sellToastDuplicateDesc"), variant: "destructive" });
+      } else if (msg.includes("DUPLICATE_BOOKING_REF") || msg.includes("listings_booking_reference_unique_idx")) {
+        toast({
+          title: t("sellToastDuplicate"),
+          description: "This booking has already been listed on Swappup and cannot be listed again.",
+          variant: "destructive",
+        });
       } else if (msg.includes("RATE_LIMIT")) {
         toast({ title: t("sellToastRateLimit"), description: t("sellToastRateLimitDesc"), variant: "destructive" });
       } else if (msg.includes("PRICE_CAP")) {
