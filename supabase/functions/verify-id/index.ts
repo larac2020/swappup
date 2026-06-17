@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { requireUser } from "../_shared/require-user.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,13 @@ serve(async (req) => {
     const auth = await requireUser(req);
     if (auth.error) return auth.error;
 
-    const { image, profileName } = await req.json();
+    const {
+      image,
+      profileName,
+      persist,
+      id_document_url,
+      acknowledge_name_mismatch,
+    } = await req.json();
     if (!image) {
       return new Response(JSON.stringify({ error: "No image provided" }), {
         status: 400,
@@ -175,7 +182,58 @@ You must respond ONLY with a JSON object using this exact tool call format.`
     // Strip full document_number from the response — we never return it to the client.
     delete result.document_number;
 
-    return new Response(JSON.stringify({ verification: { ...result, is_expired, document_number_last4 } }), {
+    const verification = { ...result, is_expired, document_number_last4 };
+
+    // Persist the verified fields server-side (service role bypasses the
+    // protected-columns trigger on `profiles`). Clients are forbidden from
+    // writing verification_status / id_document_* directly.
+    if (persist === true) {
+      if (!verification.is_valid_id || !verification.appears_genuine || verification.is_expired) {
+        return new Response(
+          JSON.stringify({ error: "Document failed verification", verification }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (verification.name_matches_profile === false && acknowledge_name_mismatch !== true) {
+        return new Response(
+          JSON.stringify({ error: "Name mismatch not acknowledged", verification }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const isoDate = (v: unknown) =>
+        typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+
+      const { error: updateError } = await admin
+        .from("profiles")
+        .update({
+          id_document_url: typeof id_document_url === "string" ? id_document_url : null,
+          verification_status: "verified",
+          id_document_type: verification.document_type || null,
+          id_document_country: verification.issuing_country || null,
+          id_document_expiry: isoDate(verification.expiry_date),
+          id_document_first_name: verification.first_name || null,
+          id_document_last_name: verification.last_name || null,
+          id_document_dob: isoDate(verification.date_of_birth),
+          id_document_number_last4: verification.document_number_last4 || null,
+        })
+        .eq("user_id", auth.user.id);
+
+      if (updateError) {
+        console.error("verify-id persist error:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to persist verification" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
+    return new Response(JSON.stringify({ verification }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
