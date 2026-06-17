@@ -477,6 +477,7 @@ export type Database = {
           flight_number: string | null
           id: string
           is_active: boolean | null
+          is_sold: boolean
           listing_type: Database["public"]["Enums"]["listing_type"]
           luggage_included: boolean | null
           meal_included: boolean | null
@@ -502,6 +503,7 @@ export type Database = {
           return_stopovers: number | null
           return_travel_class: string | null
           seller_id: string
+          sold_at: string | null
           speedy_boarding: boolean | null
           stopovers: number | null
           tags: Database["public"]["Enums"]["listing_tag"][] | null
@@ -543,6 +545,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
+          is_sold?: boolean
           listing_type?: Database["public"]["Enums"]["listing_type"]
           luggage_included?: boolean | null
           meal_included?: boolean | null
@@ -568,6 +571,7 @@ export type Database = {
           return_stopovers?: number | null
           return_travel_class?: string | null
           seller_id: string
+          sold_at?: string | null
           speedy_boarding?: boolean | null
           stopovers?: number | null
           tags?: Database["public"]["Enums"]["listing_tag"][] | null
@@ -609,6 +613,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
+          is_sold?: boolean
           listing_type?: Database["public"]["Enums"]["listing_type"]
           luggage_included?: boolean | null
           meal_included?: boolean | null
@@ -634,6 +639,7 @@ export type Database = {
           return_stopovers?: number | null
           return_travel_class?: string | null
           seller_id?: string
+          sold_at?: string | null
           speedy_boarding?: boolean | null
           stopovers?: number | null
           tags?: Database["public"]["Enums"]["listing_tag"][] | null
@@ -1086,6 +1092,39 @@ export type Database = {
           reporter_id?: string
           seller_id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      sold_bookings: {
+        Row: {
+          booking_fingerprint: string | null
+          booking_reference_normalized: string | null
+          created_at: string
+          id: string
+          listing_id: string | null
+          purchase_id: string
+          seller_id: string
+          sold_at: string
+        }
+        Insert: {
+          booking_fingerprint?: string | null
+          booking_reference_normalized?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          purchase_id: string
+          seller_id: string
+          sold_at?: string
+        }
+        Update: {
+          booking_fingerprint?: string | null
+          booking_reference_normalized?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          purchase_id?: string
+          seller_id?: string
+          sold_at?: string
         }
         Relationships: []
       }
