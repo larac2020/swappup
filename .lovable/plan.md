@@ -1,69 +1,47 @@
-
 ## Goal
 
-Persist key ID document fields on the user profile, change the name-mismatch flow from a hard block to a confirm-or-retry choice, and surface expired-document warnings in the Account screen and on `/account/verification`.
+Stop emailing the buyer's full name and email address to the seller. These details must only be visible inside the swappup app (where the seller is authenticated and the data is already gated by `get_seller_purchases()` RPC + escrow status).
 
-## 1. Database — new profile columns
+## Findings from audit
 
-Migration adds nullable columns to `public.profiles`:
+1. **Main offender — `supabase/functions/stripe-purchase-webhook/index.ts`** (≈lines 116–129): sends `buyerFullName` + `buyerEmail` + `buyerName` to the seller in `purchase-seller-action-required`.
+2. **Same pattern — `supabase/functions/reconcile-purchase/index.ts`** (≈lines 150–160): mirror of the webhook used as a fallback. Identical leak.
+3. **Email template `purchase-seller-action-required.tsx`**: includes a "Buyer details to use with the airline → Full name" block and uses `{buyer}` in the intro line. The buyer's name/email rendered here must go.
+4. **`cancel-escrow/index.ts`** (lines 98): passes buyer's first name (`buyerName`) to the seller in `transfer-buyer-no-confirm-seller`. Lower-risk than full name + email, but still cross-party PII — remove for consistency.
+5. **Seller reminders (`seller-reminders/index.ts`)**: already does NOT pass buyer fields — no change needed.
+6. **In-app surfaces** (`MyListings.tsx`, `Purchases.tsx`, `TransferConfirmation.tsx`, PDF receipt in `purchaseHelpers.tsx`): already read through `get_seller_purchases()` which gates `buyer_full_name`/`buyer_email` to escrow statuses `authorized|pending_release|released|captured`. Keep as-is — this is the intended in-app exposure.
 
-- `id_document_type` text (passport / national_id / driving_license / unknown)
-- `id_document_country` text (ISO-3166 alpha-2 if detectable, else free text)
-- `id_document_expiry` date
-- `id_document_first_name` text
-- `id_document_last_name` text
-- `id_document_dob` date
-- `id_document_number_last4` text (last 4 chars of doc number, for support reference — full number is intentionally not stored)
+## Changes
 
-No RLS changes needed — `profiles` already restricts read/update to the owner.
+### 1. Template — `supabase/functions/_shared/transactional-email-templates/purchase-seller-action-required.tsx`
+- Remove `buyerName`, `buyerFullName`, `buyerEmail` from `Props` and from `previewData`.
+- Rewrite EN/IT `intro1/intro2` strings so the sentence reads "Great news! Your ticket has just been sold. You have **24 hours** to update the airline booking with the buyer's name." (no `{buyer}` interpolation).
+- Delete the "Buyer details to use with the airline" section entirely (the `buyerDetails` header, `fullName` row, and `originalRef` row are removed). The original booking ref is the seller's own data so it could stay, but to keep the template strictly focused on "go to app for buyer details" we drop the whole block.
+- Add a short line above the CTA in both locales: "Open the app to see the buyer's name and reference to use with the airline." / "Apri l'app per vedere il nome e il riferimento dell'acquirente da usare con la compagnia."
+- Keep CTA `Confirm the name change in the app` → `/account?tab=sales`.
+- Remove the now-unused `buyerDetails`, `fullName`, `originalRef`, `buyer` dictionary entries.
 
-## 2. `verify-id` edge function
+### 2. Webhook — `supabase/functions/stripe-purchase-webhook/index.ts`
+- In the `purchase-seller-action-required` invoke (≈line 119–128), remove `buyerFullName`, `buyerEmail`, and `bookingRef` from `templateData`. Keep `sellerName`, `nameChangeFee`, `deadline`, `trip`, `purchaseId`, `orderNumber`.
 
-Extend the Gemini tool schema with the new fields, all optional except those already required:
+### 3. Reconcile — `supabase/functions/reconcile-purchase/index.ts`
+- Apply the identical edit to the seller-action invoke (remove `buyerFullName`, `buyerEmail`, `bookingRef`).
 
-- `document_type` (already there)
-- `issuing_country` (string, ISO-2 preferred)
-- `expiry_date` (string, ISO `YYYY-MM-DD`)
-- `first_name`, `last_name`
-- `date_of_birth` (`YYYY-MM-DD`)
-- `document_number` (full number; used in-memory to derive last4, never persisted by the function itself)
+### 4. Cancel-escrow — `supabase/functions/cancel-escrow/index.ts`
+- In the `transfer-buyer-no-confirm-seller` invoke (line ~92–104), drop the `buyerName` field from `templateData`. The corresponding template should display a generic "your buyer" instead — verify and update `transfer-buyer-no-confirm-seller.tsx` to make `buyerName` optional and fall back to a generic noun in EN/IT (small adjustment, same dictionary pattern as the other template).
 
-Also add an `is_expired` convenience boolean computed server-side from `expiry_date` vs `now()`. Returned in the existing `verification` payload.
+### 5. Deploy
+- Deploy the three edge functions (`stripe-purchase-webhook`, `reconcile-purchase`, `cancel-escrow`) after edits, since email templates are bundled with the send function deployment chain.
 
-## 3. `IDVerification.tsx` — upload flow
+## Out of scope / explicitly NOT changed
 
-- After `verify-id` returns, if `name_matches_profile === false` (currently aborts) → open a confirm dialog:
-  - "The name on the document (X) doesn't match your Swappup name (Y)."
-  - Buttons: **"It's correct — proceed"** (continues to upload + save) and **"Upload again"** (resets the picker).
-- On successful save, write the new fields to `profiles` alongside `id_document_url` and `verification_status: 'verified'`.
-- If `verification.is_expired === true` at upload time → block with toast "This document is expired. Please upload a valid one." (no override; an expired ID is not acceptable proof).
-- Add a red expiry banner at the top of the page when the stored `id_document_expiry` is in the past, with text: "Your ID document expired on {date}. Upload a new one to continue using Swappup." plus a CTA scrolling to the upload picker.
+- Buyer-facing emails that include the buyer's own name (self-PII).
+- Confirm-transfer email to the buyer (`buyerName` going to the buyer themselves).
+- In-app display of buyer name/email in seller dashboard (`MyListings`, `Purchases`, `TransferConfirmation`, PDF receipt) — these are already correctly gated and are the intended replacement channel.
+- The separate `profile_self_flag_bypass` and `transfer_proofs_seller_can_read_buyer_proof` findings — separate fixes.
 
-## 4. `Account.tsx` — verification entry
+## Acceptance
 
-- Compute `idExpired = profile?.id_document_expiry && new Date(profile.id_document_expiry) < today`.
-- When `idExpired` is true:
-  - Show a small red dot / `AlertCircle` next to the "ID Verification" row.
-  - Change the section badge from "Verified" to "Expired" with the destructive style.
-  - Treat `sectionComplete.verification` as `false` so onboarding still nudges them.
-
-## 5. Translations
-
-Add EN/IT strings:
-- `idNameMismatchConfirmTitle`, `idNameMismatchConfirmDesc`
-- `idNameMismatchProceed`, `idNameMismatchUploadAgain`
-- `idExpiredBanner`, `idExpiredOnDate`
-- `accountIdExpired`
-- `idDocExpiredBlock`
-
-## Out of scope
-
-- Storing the full ID number, machine-readable zone, or photo crop.
-- Re-running verification automatically on a schedule.
-- Migrating already-verified profiles — those rows will simply have the new columns null until users re-upload.
-
-## Technical notes
-
-- Use the migration tool for the schema; no GRANT changes needed (the columns sit on an existing table whose grants already cover them).
-- Front-end fields go through the existing `profiles` update path in `uploadAndVerifyId`; no new RPC required.
-- The expiry banner and the upload-time expired-document block are two distinct paths: banner = stored value expired; block = newly uploaded doc already expired.
+- After a Stripe purchase webhook fires, the seller's email contains no buyer name and no buyer email — only trip, deadline, order number, fee, and a CTA directing them to the app.
+- The seller can still see buyer name + email inside the app under Account → Sales.
+- The "buyer didn't confirm" seller email no longer addresses the buyer by name.
