@@ -7,11 +7,7 @@ import { Locale, normalizeLocale, t } from './i18n.ts'
 
 interface Props {
   sellerName?: string
-  buyerName?: string
-  buyerFullName?: string
-  buyerEmail?: string
   trip?: TripDetails
-  bookingRef?: string
   deadline?: string
   purchaseId?: string
   orderNumber?: string
@@ -24,7 +20,7 @@ const dict = {
     preview: "You've made a sale, please update the booking",
     hi: 'Hi {name},',
     hiThere: 'Hi there,',
-    intro1: 'Great news! Your ticket has just been sold to {buyer}. To complete the sale and receive your money, you have ',
+    intro1: 'Great news! Your ticket has just been sold. To complete the sale and receive your money, you have ',
     intro2: ' to update the airline booking with the buyer\'s name.',
     intro2bold: '24 hours',
     salesDetails: 'Your sales details',
@@ -36,9 +32,7 @@ const dict = {
     airline: 'Airline',
     passengers: 'Passengers',
     amountPaid: 'Amount paid',
-    buyerDetails: 'Buyer details to use with the airline',
-    fullName: 'Full name',
-    originalRef: 'Original booking reference',
+    openAppForBuyer: 'Open the app to see the buyer\'s name and booking reference to use with the airline. For privacy, these details are only visible inside swappup.',
     unlock: 'Unlock your payment',
     s1Before: 'Go to the airline website and ',
     s1Bold: 'update the booking',
@@ -54,7 +48,6 @@ const dict = {
     feeReminder: 'Reminder: as you acknowledged when listing, the fee paid to the airline for the name change is not refundable by swappup if the buyer flags an issue before the payment is released (24 hours after departure).',
     sign: 'Have a great day,',
     team: 'The swappup team',
-    buyer: 'your buyer',
     at: 'at',
     subjectWithOrder: "You've made a sale! Please update the booking (Order {order})",
     subject: "You've made a sale! Please update the booking",
@@ -63,7 +56,7 @@ const dict = {
     preview: 'Hai fatto una vendita, aggiorna la prenotazione',
     hi: 'Ciao {name},',
     hiThere: 'Ciao,',
-    intro1: 'Ottime notizie! Il tuo biglietto è appena stato venduto a {buyer}. Per completare la vendita e ricevere il pagamento, hai ',
+    intro1: 'Ottime notizie! Il tuo biglietto è appena stato venduto. Per completare la vendita e ricevere il pagamento, hai ',
     intro2: ' per aggiornare la prenotazione con il nome dell\'acquirente.',
     intro2bold: '24 ore',
     salesDetails: 'Dettagli della vendita',
@@ -75,9 +68,7 @@ const dict = {
     airline: 'Compagnia',
     passengers: 'Passeggeri',
     amountPaid: 'Importo pagato',
-    buyerDetails: 'Dati dell\'acquirente da usare con la compagnia',
-    fullName: 'Nome completo',
-    originalRef: 'Codice prenotazione originale',
+    openAppForBuyer: 'Apri l\'app per vedere il nome e il riferimento di prenotazione dell\'acquirente da usare con la compagnia. Per privacy, questi dati sono visibili solo dentro swappup.',
     unlock: 'Sblocca il tuo pagamento',
     s1Before: 'Vai sul sito della compagnia aerea e ',
     s1Bold: 'aggiorna la prenotazione',
@@ -93,16 +84,14 @@ const dict = {
     feeReminder: 'Promemoria: come hai accettato in fase di pubblicazione, la commissione pagata alla compagnia aerea per il cambio nome non è rimborsabile da swappup se l\'acquirente non conferma entro 48 ore.',
     sign: 'Buona giornata,',
     team: 'Il team swappup',
-    buyer: 'il tuo acquirente',
     at: 'alle',
     subjectWithOrder: 'Hai fatto una vendita! Aggiorna la prenotazione (Ordine {order})',
     subject: 'Hai fatto una vendita! Aggiorna la prenotazione',
   },
 } as const
 
-const Email = ({ sellerName, buyerName, buyerFullName, trip, bookingRef, deadline, purchaseId, orderNumber, totalPrice, locale }: Props) => {
+const Email = ({ sellerName, trip, deadline, purchaseId, orderNumber, totalPrice, locale }: Props) => {
   const loc = normalizeLocale(locale)
-  const buyer = buyerName || buyerFullName || t(loc, dict, 'buyer')
   const order = orderNumber || (purchaseId ? `SW-${purchaseId.slice(0, 8).toUpperCase()}` : undefined)
   const isRoundTrip = !!(trip?.returnDate || trip?.returnTime)
   const fmtLeg = (date?: string, time?: string) => {
@@ -115,7 +104,7 @@ const Email = ({ sellerName, buyerName, buyerFullName, trip, bookingRef, deadlin
     <EmailLayout preview={t(loc, dict, 'preview')} transactional locale={loc}>
       <Text style={p}>{sellerName ? t(loc, dict, 'hi', { name: sellerName }) : t(loc, dict, 'hiThere')}</Text>
       <Text style={p}>
-        {t(loc, dict, 'intro1', { buyer })}<strong>{t(loc, dict, 'intro2bold')}</strong>{t(loc, dict, 'intro2')}
+        {t(loc, dict, 'intro1')}<strong>{t(loc, dict, 'intro2bold')}</strong>{t(loc, dict, 'intro2')}
       </Text>
       {trip && (
         <Section style={card}>
@@ -143,18 +132,11 @@ const Email = ({ sellerName, buyerName, buyerFullName, trip, bookingRef, deadlin
               <span style={label}>{t(loc, dict, 'amountPaid')}: </span>{amount}
             </Text>
           )}
-
-          <Text style={{ margin: '16px 0 10px', paddingTop: '12px', borderTop: `1px solid ${brand.border}`, color: brand.goldDeep, fontSize: '11px', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
-            {t(loc, dict, 'buyerDetails')}
-          </Text>
-          {buyerFullName && (
-            <Text style={row}><span style={label}>{t(loc, dict, 'fullName')}: </span>{buyerFullName}</Text>
-          )}
-          {bookingRef && (
-            <Text style={row}><span style={label}>{t(loc, dict, 'originalRef')}: </span>{bookingRef}</Text>
-          )}
         </Section>
       )}
+      <Text style={{ ...p, margin: '14px 0 0', fontStyle: 'italic', color: brand.goldDeep }}>
+        {t(loc, dict, 'openAppForBuyer')}
+      </Text>
       <Heading style={{ ...h1, fontSize: '16px', margin: '22px 0 8px' }}>{t(loc, dict, 'unlock')}</Heading>
       <Text style={p} as="div">
         <ol style={{ paddingLeft: '20px', margin: 0, color: brand.body, fontSize: '14px', lineHeight: '22px' }}>
@@ -199,12 +181,8 @@ export const template = {
   previewData: {
     locale: 'en',
     sellerName: 'Maria',
-    buyerName: 'Alex',
-    buyerFullName: 'Alex Johnson',
-    buyerEmail: 'alex@example.com',
     nameChangeFee: '€45.00',
     totalPrice: '€124.50',
-    bookingRef: 'XYZ123',
     deadline: '13 May 2026 14:30',
     purchaseId: 'abc-123',
     trip: {

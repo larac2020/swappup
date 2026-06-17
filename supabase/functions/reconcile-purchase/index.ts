@@ -154,12 +154,12 @@ Deno.serve(async (req) => {
             idempotencyKey: `seller-action-${purchase.id}`,
             templateData: {
               sellerName: (sellerProfile.full_name || '').split(' ')[0],
-              buyerFullName: purchase.buyer_full_name,
-              buyerEmail: purchase.buyer_email,
               nameChangeFee: fmt(purchase.name_change_fee),
-              bookingRef: purchase.original_booking_ref,
               deadline,
               trip,
+              purchaseId: purchase.id,
+              orderNumber,
+              totalPrice: fmt(purchase.total_price),
             },
           },
         }).catch((e) => console.error('email seller-action failed', e));
