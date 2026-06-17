@@ -1758,6 +1758,34 @@ export default function SellTicket() {
                     </label>
                   </div>
                 )}
+                {!isEditMode && (
+                  <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">
+                          {locale === "it" ? "Dichiarazione del venditore" : "Seller declaration"}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {locale === "it"
+                            ? "Questa dichiarazione è obbligatoria e viene registrata per la risoluzione delle controversie e le indagini antifrode."
+                            : "This declaration is mandatory and is recorded for dispute resolution and fraud investigations."}
+                        </p>
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+                        checked={sellerDeclarationAck}
+                        onChange={(e) => setSellerDeclarationAck(e.target.checked)}
+                      />
+                      <span className="text-xs leading-relaxed">
+                        {locale === "it" ? SELLER_DECLARATION_TEXT_IT : SELLER_DECLARATION_TEXT_EN}
+                      </span>
+                    </label>
+                  </div>
+                )}
               <div className="flex gap-3">
                 {wizard && (
                   <Button type="button" variant="outline" size="xl" className="flex-1" onClick={() => setStep(2)}>
@@ -1770,7 +1798,7 @@ export default function SellTicket() {
                 variant="gold"
                 size="xl"
                 className={wizard ? "flex-1" : "w-full"}
-                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck)}
+                  disabled={createListingMutation.isPending || isVerifyingFlight || blockedByVerification || (showRiskBox && !nameChangeRiskAck) || (!isEditMode && !sellerDeclarationAck)}
               >
                 {createListingMutation.isPending ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />{editId ? t("sellSubmitSaving") : t("sellSubmitCreating")}</>
