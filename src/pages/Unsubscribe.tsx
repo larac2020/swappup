@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Mail, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 type State = "loading" | "valid" | "already" | "invalid" | "submitting" | "done" | "error";
 
@@ -14,6 +15,7 @@ export default function Unsubscribe() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const token = params.get("token");
   const [state, setState] = useState<State>("loading");
   const [error, setError] = useState<string>("");
@@ -50,11 +52,11 @@ export default function Unsubscribe() {
       if ((data as any)?.success || (data as any)?.reason === "already_unsubscribed") {
         setState("done");
       } else {
-        setError("Could not complete unsubscribe.");
+        setError(t("unsubCouldNotComplete"));
         setState("error");
       }
     } catch (e: any) {
-      setError(e?.message || "Something went wrong.");
+      setError(e?.message || t("unsubSomethingWrong"));
       setState("error");
     }
   };
@@ -69,7 +71,7 @@ export default function Unsubscribe() {
           <div className="leading-tight">
             <p className="text-lg font-bold lowercase tracking-tight">swappup</p>
             <p className="text-[10px] uppercase tracking-[1.5px] text-primary/80 font-semibold">
-              Email preferences
+              {t("unsubBrandLine")}
             </p>
           </div>
         </div>
@@ -79,60 +81,54 @@ export default function Unsubscribe() {
         <div className="glass-strong border border-border/60 rounded-2xl p-8 max-w-md w-full">
           <div className="flex items-center gap-2 mb-4">
             <Mail className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-semibold">Manage your emails</h1>
+            <h1 className="text-lg font-semibold">{t("unsubManageTitle")}</h1>
           </div>
 
           {state === "loading" && (
             <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
-              <Loader2 className="w-4 h-4 animate-spin" /> Checking your link…
+              <Loader2 className="w-4 h-4 animate-spin" /> {t("unsubChecking")}
             </div>
           )}
 
           {state === "valid" && (
             <>
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                Confirm to stop receiving non-essential emails from swappup. You'll still get
-                critical updates required to complete your purchases or sales — these protect both
-                buyers and sellers and can't be turned off.
+                {t("unsubConfirmDesc")}
               </p>
               <Button variant="gold" className="w-full" onClick={confirm}>
-                Confirm unsubscribe
+                {t("unsubConfirmBtn")}
               </Button>
               <p className="text-xs text-muted-foreground mt-4 text-center">
-                Want finer control? Manage individual categories from your profile.
+                {t("unsubFineControl")}
               </p>
             </>
           )}
 
           {state === "submitting" && (
             <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
-              <Loader2 className="w-4 h-4 animate-spin" /> Updating your preferences…
+              <Loader2 className="w-4 h-4 animate-spin" /> {t("unsubUpdating")}
             </div>
           )}
 
           {state === "done" && (
             <div className="py-2 text-center">
               <CheckCircle2 className="w-10 h-10 mx-auto text-success mb-3" />
-              <p className="text-sm mb-1 font-medium">You've been unsubscribed</p>
-              <p className="text-xs text-muted-foreground">
-                We're sorry to see you go. You can re-enable emails anytime from your profile.
-              </p>
+              <p className="text-sm mb-1 font-medium">{t("unsubDoneTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("unsubDoneDesc")}</p>
             </div>
           )}
 
           {state === "already" && (
             <div className="py-2 text-center">
               <CheckCircle2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm">
-                You're already unsubscribed — no further action needed.
-              </p>
+              <p className="text-sm">{t("unsubAlready")}</p>
             </div>
           )}
 
           {(state === "invalid" || state === "error") && (
             <div className="py-2 text-center">
               <XCircle className="w-10 h-10 mx-auto text-destructive mb-3" />
-              <p className="text-sm">{error || "This unsubscribe link is invalid or has expired."}</p>
+              <p className="text-sm">{error || t("unsubInvalid")}</p>
             </div>
           )}
 
@@ -145,7 +141,7 @@ export default function Unsubscribe() {
               onClick={() => navigate("/account/notifications")}
             >
               <Settings className="w-4 h-4 mr-2" />
-              Manage all email preferences
+              {t("unsubManageAll")}
             </Button>
           )}
         </div>
@@ -153,13 +149,13 @@ export default function Unsubscribe() {
 
       <footer className="border-t border-border/40 py-4 px-6 text-center">
         <p className="text-[11px] text-muted-foreground">
-          Need help? Email{" "}
+          {t("unsubNeedHelp")}{" "}
           <a href="mailto:support@swappup.com" className="text-primary hover:underline">
             support@swappup.com
           </a>
         </p>
         <p className="text-[10px] text-muted-foreground/70 mt-1">
-          swappup is a peer-to-peer marketplace. We facilitate transactions between users but do not issue or operate flights.
+          {t("unsubFooterNote")}
         </p>
       </footer>
     </div>
