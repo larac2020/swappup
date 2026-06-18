@@ -1,5 +1,6 @@
 import { Check, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export interface PasswordCriteria {
   length: boolean;
@@ -27,10 +28,11 @@ interface Props {
 
 export function PasswordChecklist({ password, className }: Props) {
   const c = evaluatePassword(password);
+  const { t } = useLanguage();
   const items: { ok: boolean; label: string }[] = [
-    { ok: c.length, label: "At least 8 characters" },
-    { ok: c.letterAndNumber, label: "A mix of letters and numbers" },
-    { ok: c.special, label: "At least one special character (e.g. ! @ # ?)" },
+    { ok: c.length, label: t("pwCritLength") },
+    { ok: c.letterAndNumber, label: t("pwCritLetterNumber") },
+    { ok: c.special, label: t("pwCritSpecial") },
   ];
   return (
     <ul className={cn("space-y-1.5 text-xs", className)} aria-live="polite">
