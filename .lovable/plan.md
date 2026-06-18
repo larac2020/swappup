@@ -1,47 +1,34 @@
-## Goal
+## How translations are stored
 
-Stop emailing the buyer's full name and email address to the seller. These details must only be visible inside the swappup app (where the seller is authenticated and the data is already gated by `get_seller_purchases()` RPC + escrow status).
+Translations are **not stored in the database**. They live entirely in the frontend as TypeScript dictionaries:
 
-## Findings from audit
+- `src/i18n/translations.ts` — main `translations` object keyed by locale (`en`, `it`), ~2,000 lines. Used everywhere via `t("key")`.
+- `src/i18n/marketingContent.ts` — structured content (headers, footer, About, FAQ, meta tags) keyed by locale, used by the marketing site.
+- `src/content/legal/{terms,privacy}.{en,it}.md` — raw markdown files imported via `?raw` for the legal pages.
+- `remotion/src/copy.ts` — separate copy for the promo video.
 
-1. **Main offender — `supabase/functions/stripe-purchase-webhook/index.ts`** (≈lines 116–129): sends `buyerFullName` + `buyerEmail` + `buyerName` to the seller in `purchase-seller-action-required`.
-2. **Same pattern — `supabase/functions/reconcile-purchase/index.ts`** (≈lines 150–160): mirror of the webhook used as a fallback. Identical leak.
-3. **Email template `purchase-seller-action-required.tsx`**: includes a "Buyer details to use with the airline → Full name" block and uses `{buyer}` in the intro line. The buyer's name/email rendered here must go.
-4. **`cancel-escrow/index.ts`** (lines 98): passes buyer's first name (`buyerName`) to the seller in `transfer-buyer-no-confirm-seller`. Lower-risk than full name + email, but still cross-party PII — remove for consistency.
-5. **Seller reminders (`seller-reminders/index.ts`)**: already does NOT pass buyer fields — no change needed.
-6. **In-app surfaces** (`MyListings.tsx`, `Purchases.tsx`, `TransferConfirmation.tsx`, PDF receipt in `purchaseHelpers.tsx`): already read through `get_seller_purchases()` which gates `buyer_full_name`/`buyer_email` to escrow statuses `authorized|pending_release|released|captured`. Keep as-is — this is the intended in-app exposure.
+Runtime mechanics (`src/i18n/LanguageContext.tsx`):
+- The active locale is held in React state and persisted in `localStorage` under the key `flyswap_language`.
+- The toggle (`LanguageToggle`, `MarketingHeader`) only flips that key — no network call, no DB row.
+- The only locale-related data that touches the database is the user's notification language preference (used by edge functions when sending emails); it does not drive UI text.
 
-## Changes
+## Pages with missing / partial Italian
 
-### 1. Template — `supabase/functions/_shared/transactional-email-templates/purchase-seller-action-required.tsx`
-- Remove `buyerName`, `buyerFullName`, `buyerEmail` from `Props` and from `previewData`.
-- Rewrite EN/IT `intro1/intro2` strings so the sentence reads "Great news! Your ticket has just been sold. You have **24 hours** to update the airline booking with the buyer's name." (no `{buyer}` interpolation).
-- Delete the "Buyer details to use with the airline" section entirely (the `buyerDetails` header, `fullName` row, and `originalRef` row are removed). The original booking ref is the seller's own data so it could stay, but to keep the template strictly focused on "go to app for buyer details" we drop the whole block.
-- Add a short line above the CTA in both locales: "Open the app to see the buyer's name and reference to use with the airline." / "Apri l'app per vedere il nome e il riferimento dell'acquirente da usare con la compagnia."
-- Keep CTA `Confirm the name change in the app` → `/account?tab=sales`.
-- Remove the now-unused `buyerDetails`, `fullName`, `originalRef`, `buyer` dictionary entries.
+Pages that **never call `useLanguage`** and ship English-only strings:
 
-### 2. Webhook — `supabase/functions/stripe-purchase-webhook/index.ts`
-- In the `purchase-seller-action-required` invoke (≈line 119–128), remove `buyerFullName`, `buyerEmail`, and `bookingRef` from `templateData`. Keep `sellerName`, `nameChangeFee`, `deadline`, `trip`, `purchaseId`, `orderNumber`.
+1. **`src/pages/Auth.tsx`** (`/login`, `/sign-up`) — the page shell is empty, but the underlying **`src/components/auth/AuthForm.tsx`** has many hardcoded English strings (toasts like "Enter your email", "Welcome back!", "Account created!", subtitles "Welcome back. Sign in to continue.", "Create an account to start trading tickets.", button labels "Sending…", "Signing in…", "Creating account…", "Resend verification email", etc.). This is the page you noticed.
+2. **`src/pages/Onboarding.tsx`** — the entire 6-step mandatory account setup is hardcoded in English (labels, helper text, errors, step titles).
+3. **`src/pages/ResetPassword.tsx`** — password reset screen, all copy + toasts in English.
+4. **`src/pages/Support.tsx`** — support page hero, search box, FAQ accordion, contact cards.
+5. **`src/pages/Unsubscribe.tsx`** — email unsubscribe confirmation states ("loading", "valid", "already", "done", error messages).
 
-### 3. Reconcile — `supabase/functions/reconcile-purchase/index.ts`
-- Apply the identical edit to the seller-action invoke (remove `buyerFullName`, `buyerEmail`, `bookingRef`).
+Pages that **partially** use translations but still contain hardcoded English:
 
-### 4. Cancel-escrow — `supabase/functions/cancel-escrow/index.ts`
-- In the `transfer-buyer-no-confirm-seller` invoke (line ~92–104), drop the `buyerName` field from `templateData`. The corresponding template should display a generic "your buyer" instead — verify and update `transfer-buyer-no-confirm-seller.tsx` to make `buyerName` optional and fall back to a generic noun in EN/IT (small adjustment, same dictionary pattern as the other template).
+6. **`src/components/auth/PasswordChecklist.tsx`** — used by sign-up and reset-password; criteria labels are English-only.
+7. Various toast `description` strings sprinkled across otherwise-translated pages (`SellTicket`, `Account`, `MyListings`, `ListingDetail`, `Cart`, `Watchlist`) — not a full page, but worth a sweep.
 
-### 5. Deploy
-- Deploy the three edge functions (`stripe-purchase-webhook`, `reconcile-purchase`, `cancel-escrow`) after edits, since email templates are bundled with the send function deployment chain.
+Pages that are **fine** (fully translated): `Landing`, `About`, `Faq`, `Home`, `Browse`, `Cart`, `Watchlist`, `MyListings`, `Account`, `ListingDetail`, `SellTicket` (shell), `NotFound`, plus `Terms`/`Privacy` (via `LegalPage` which picks the IT markdown file).
 
-## Out of scope / explicitly NOT changed
+## Suggested next step
 
-- Buyer-facing emails that include the buyer's own name (self-PII).
-- Confirm-transfer email to the buyer (`buyerName` going to the buyer themselves).
-- In-app display of buyer name/email in seller dashboard (`MyListings`, `Purchases`, `TransferConfirmation`, PDF receipt) — these are already correctly gated and are the intended replacement channel.
-- The separate `profile_self_flag_bypass` and `transfer_proofs_seller_can_read_buyer_proof` findings — separate fixes.
-
-## Acceptance
-
-- After a Stripe purchase webhook fires, the seller's email contains no buyer name and no buyer email — only trip, deadline, order number, fee, and a CTA directing them to the app.
-- The seller can still see buyer name + email inside the app under Account → Sales.
-- The "buyer didn't confirm" seller email no longer addresses the buyer by name.
+If you want, I can switch to build mode and add Italian translations for the highest-impact gap first — **AuthForm + Auth page** (sign-up/login/forgot-password), since that is the first authenticated touchpoint and the one you hit. After that we can tackle `Onboarding`, then `ResetPassword`, `Support`, `Unsubscribe`, and the `PasswordChecklist` component. Let me know which scope you want and I'll produce a build plan.
