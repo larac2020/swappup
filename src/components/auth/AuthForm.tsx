@@ -36,7 +36,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
 
   const handleResendVerification = async () => {
     if (!email) {
-      toast({ title: "Enter your email", description: "Please enter your email above first.", variant: "destructive" });
+      toast({ title: t("authEnterEmailTitle"), description: t("authEnterEmailDesc"), variant: "destructive" });
       return;
     }
     setResending(true);
@@ -48,12 +48,12 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
       });
       if (error) throw error;
       toast({
-        title: "Verification email sent",
-        description: `We've sent a new verification link to ${email}.`,
+        title: t("authVerifyEmailSentTitle"),
+        description: t("authVerifyEmailSentDesc", { email }),
       });
       setNeedsVerification(true);
     } catch (error: any) {
-      toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
+      toast({ title: t("authCouldntResend"), description: error.message, variant: "destructive" });
     } finally {
       setResending(false);
     }
@@ -71,15 +71,15 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
         });
         if (error) throw error;
         toast({
-          title: "Reset link sent",
-          description: "Check your email for a password reset link.",
+          title: t("authResetSentTitle"),
+          description: t("authResetSentDesc"),
         });
         return;
       }
 
       if (mode === "signup") {
         if (password !== confirmPassword) {
-          toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
+          toast({ title: t("authPwMismatchTitle"), description: t("authPwMismatchDesc"), variant: "destructive" });
           return;
         }
         if (!legalAccepted) {
@@ -109,8 +109,8 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
         // Email verification is required — no session is returned until confirmed
         if (data?.user && !data.session) {
           toast({
-            title: "Check your inbox",
-            description: "We've sent a verification link to your email. Click it to activate your account.",
+            title: t("authCheckInboxTitle"),
+            description: t("authCheckInboxDesc"),
           });
           // Reset form back to login mode so they can sign in after verifying
           setMode("login");
@@ -118,8 +118,8 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           setConfirmPassword("");
         } else {
           toast({
-            title: "Account created!",
-            description: "Welcome to SwappUp.",
+            title: t("authAccountCreatedTitle"),
+            description: t("authAccountCreatedDesc"),
           });
         }
 
@@ -163,13 +163,13 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           return;
         }
         toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in.",
+          title: t("authWelcomeBackTitle"),
+          description: t("authWelcomeBackDesc"),
         });
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t("error"),
         description: error.message,
         variant: "destructive",
       });
@@ -196,10 +196,10 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           />
           <p className="text-muted-foreground">
             {mode === "login"
-              ? "Welcome back. Sign in to continue."
+              ? t("authSubtitleLogin")
               : mode === "forgot"
-              ? "Enter your email to receive a reset link."
-              : "Create an account to start trading tickets."}
+              ? t("authSubtitleForgot")
+              : t("authSubtitleSignup")}
           </p>
         </div>
 
@@ -213,7 +213,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                 mode === "login" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign In
+              {t("authTabSignIn")}
             </button>
             <button
               type="button"
@@ -222,7 +222,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                 mode === "signup" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign Up
+              {t("authTabSignUp")}
             </button>
           </div>
         )}
@@ -234,9 +234,9 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Verify your email to continue</p>
+                  <p className="text-sm font-medium text-foreground">{t("authVerifyEmailTitle")}</p>
                   <p className="text-xs text-muted-foreground">
-                    We sent a verification link to <span className="text-foreground">{email}</span>. You need to confirm it before you can sign in or buy and sell on swappup.
+                    {t("authVerifyEmailContinueDesc", { email })}
                   </p>
                 </div>
               </div>
@@ -248,18 +248,18 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                 onClick={handleResendVerification}
                 disabled={resending}
               >
-                {resending ? "Sending..." : "Resend verification email"}
+                {resending ? t("authResendSending") : t("authResendBtn")}
               </Button>
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">{t("authEmailLabel")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("authEmailPlaceholder")}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailExists(null); }}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
@@ -272,7 +272,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
               <div className="rounded-xl bg-warning/10 border border-warning/30 p-4 space-y-3 animate-fade-in">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                  <p className="text-sm text-foreground">This email is already registered.</p>
+                  <p className="text-sm text-foreground">{t("authEmailAlreadyRegistered")}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -282,7 +282,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                     className="flex-1"
                     onClick={() => setMode("login")}
                   >
-                    Log In
+                    {t("authLogIn")}
                   </Button>
                   <Button
                     type="button"
@@ -291,7 +291,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                     className="flex-1"
                     onClick={() => setMode("forgot")}
                   >
-                    Forgot Password
+                    {t("authForgotPasswordBtn")}
                   </Button>
                 </div>
               </div>
@@ -301,14 +301,14 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           {mode !== "forgot" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">{t("authPwLabel")}</Label>
                 {mode === "login" && (
                   <button
                     type="button"
                     onClick={() => setMode("forgot")}
                     className="text-xs text-primary hover:text-primary/80 transition-colors"
                   >
-                    Forgot password?
+                    {t("authForgotLink")}
                   </button>
                 )}
               </div>
@@ -340,7 +340,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
 
           {mode === "signup" && (
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">{t("authConfirmPwLabel")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -364,7 +364,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-destructive">Passwords don't match</p>
+                <p className="text-xs text-destructive">{t("authPwMismatchInline")}</p>
               )}
             </div>
           )}
@@ -377,10 +377,10 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
                 className="mt-0.5"
               />
               <span className="leading-relaxed">
-                I have read and accept the{" "}
-                <Link to="/terms-and-conditions" target="_blank" className="text-primary hover:underline">Terms of Service</Link>
-                {" "}and{" "}
-                <Link to="/privacy-policy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>
+                {t("authIHaveRead")}{" "}
+                <Link to="/terms-and-conditions" target="_blank" className="text-primary hover:underline">{t("authTosLink")}</Link>
+                {" "}{t("authAnd")}{" "}
+                <Link to="/privacy-policy" target="_blank" className="text-primary hover:underline">{t("authPrivacyLink")}</Link>
               </span>
             </label>
           )}
@@ -398,10 +398,10 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {mode === "forgot" ? "Sending..." : mode === "login" ? "Signing in..." : "Creating account..."}
+                {mode === "forgot" ? t("authSending") : mode === "login" ? t("authSigningIn") : t("authCreating")}
               </>
             ) : (
-              mode === "forgot" ? "Send Reset Link" : mode === "login" ? "Sign In" : "Create Account"
+              mode === "forgot" ? t("authSendResetLink") : mode === "login" ? t("authSignInCta") : t("authCreateAccountCta")
             )}
           </Button>
         </form>
@@ -409,7 +409,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
         {/* Divider */}
         <div className="flex items-center gap-4">
           <div className="flex-1 h-px bg-border/50" />
-          <span className="text-xs text-muted-foreground">or</span>
+          <span className="text-xs text-muted-foreground">{t("authOr")}</span>
           <div className="flex-1 h-px bg-border/50" />
         </div>
 
@@ -423,7 +423,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
               redirect_uri: window.location.origin,
             });
             if (error) {
-              toast({ title: "Error", description: error.message, variant: "destructive" });
+              toast({ title: t("error"), description: error.message, variant: "destructive" });
             }
           }}
         >
@@ -433,7 +433,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          Continue with Google
+          {t("authContinueGoogle")}
         </Button>
 
         {/* Toggle Auth Mode */}
@@ -441,9 +441,9 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           <p className="text-muted-foreground">
             {mode === "forgot" ? (
               <>
-                Remember your password?{" "}
+                {t("authRememberPw")}{" "}
                 <button type="button" onClick={() => setMode("login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                  Sign in
+                  {t("authSignInLink")}
                 </button>
               </>
             ) : null}
@@ -459,17 +459,17 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
               disabled={resending}
               className="text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-60"
             >
-              {resending ? "Sending..." : "Didn't get the email? Resend verification link"}
+              {resending ? t("authResendSending") : t("authResendInline")}
             </button>
           </div>
         )}
 
         {/* Terms */}
         <p className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our{" "}
-          <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
-          {" "}and{" "}
-          <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+          {t("authFooterTerms")}{" "}
+          <Link to="/terms-and-conditions" className="text-primary hover:underline">{t("authTosLink")}</Link>
+          {" "}{t("authAnd")}{" "}
+          <Link to="/privacy-policy" className="text-primary hover:underline">{t("authPrivacyLink")}</Link>
         </p>
       </div>
     </div>
