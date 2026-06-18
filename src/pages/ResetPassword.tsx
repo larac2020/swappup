@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plane, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { PasswordChecklist, allCriteriaMet } from "@/components/auth/PasswordChecklist";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -16,6 +17,7 @@ export default function ResetPassword() {
   const [status, setStatus] = useState<"loading" | "ready" | "invalid">("loading");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event first (must be before any async calls)
@@ -64,23 +66,23 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allCriteriaMet(password)) {
-      toast({ title: "Weak password", description: "Please meet all password requirements.", variant: "destructive" });
+      toast({ title: t("resetWeakTitle"), description: t("resetWeakDesc"), variant: "destructive" });
       return;
     }
     if (password !== confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
+      toast({ title: t("error"), description: t("resetMismatchDesc"), variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast({ title: "Password updated", description: "You can now sign in with your new password." });
+      toast({ title: t("resetUpdatedTitle"), description: t("resetUpdatedDesc") });
       // Sign out the recovery session so the user signs in with the new password.
       await supabase.auth.signOut();
       navigate("/login");
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("error"), description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -98,8 +100,8 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Invalid or expired reset link.</p>
-          <Button variant="gold" onClick={() => navigate("/login")}>Back to Sign In</Button>
+          <p className="text-muted-foreground">{t("resetInvalidLink")}</p>
+          <Button variant="gold" onClick={() => navigate("/login")}>{t("resetBackToSignIn")}</Button>
         </div>
       </div>
     );
@@ -112,13 +114,13 @@ export default function ResetPassword() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-gold shadow-glow mb-4">
             <Plane className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-display font-bold">Set New Password</h1>
-          <p className="text-muted-foreground">Enter your new password below.</p>
+          <h1 className="text-2xl font-display font-bold">{t("resetTitle")}</h1>
+          <p className="text-muted-foreground">{t("resetSubtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
+            <Label htmlFor="password">{t("resetNewPwLabel")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -138,7 +140,7 @@ export default function ResetPassword() {
             <PasswordChecklist password={password} className="pt-1" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t("resetConfirmPwLabel")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -160,7 +162,7 @@ export default function ResetPassword() {
             className="w-full"
             disabled={loading || !allCriteriaMet(password) || password !== confirmPassword}
           >
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Resetting...</> : "Reset Password"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("resetResetting")}</> : t("resetCta")}
           </Button>
         </form>
       </div>
