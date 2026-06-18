@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCountries, getCitiesByCountry } from "@/data/flightData";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { TranslationKey } from "@/i18n/translations";
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
@@ -70,6 +72,7 @@ export default function Onboarding() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // Personal info
   const [firstName, setFirstName] = useState("");
@@ -188,10 +191,10 @@ export default function Onboarding() {
       }
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({ title: "Personal info saved" });
+      toast({ title: t("onbPersonalSaved") });
       goNext();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -202,7 +205,7 @@ export default function Onboarding() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 10MB allowed.", variant: "destructive" });
+      toast({ title: t("onbFileTooLarge"), description: t("onbFileTooLargeDesc"), variant: "destructive" });
       return;
     }
     setIdFile(file);
@@ -233,8 +236,8 @@ export default function Onboarding() {
 
       if (!verification?.is_valid_id || !verification?.appears_genuine) {
         toast({
-          title: "Document not accepted",
-          description: verification?.reason || "Please upload a valid identity document.",
+          title: t("onbDocNotAccepted"),
+          description: verification?.reason || t("onbDocNotAcceptedFallback"),
           variant: "destructive",
         });
         return;
@@ -263,10 +266,10 @@ export default function Onboarding() {
       if (persistError) throw persistError;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({ title: "ID verified!", description: `${verification.document_type} accepted.` });
+      toast({ title: t("onbIdVerifiedTitle"), description: t("onbIdVerifiedDesc", { type: verification.document_type }) });
       goNext();
     } catch (err: any) {
-      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+      toast({ title: t("onbVerifyFailed"), description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -277,7 +280,7 @@ export default function Onboarding() {
     if (!user) return;
     if (postalCode && country && postalCodePatterns[country]) {
       if (!postalCodePatterns[country].regex.test(postalCode.trim())) {
-        setPostalError(`Invalid format. ${postalCodePatterns[country].hint}`);
+        setPostalError(t("onbInvalidPostal", { hint: postalCodePatterns[country].hint }));
         return;
       }
     }
@@ -290,10 +293,10 @@ export default function Onboarding() {
       }).eq("user_id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({ title: "Address saved" });
+      toast({ title: t("onbAddressSaved") });
       goNext();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -308,10 +311,10 @@ export default function Onboarding() {
       if (data?.url) {
         localStorage.setItem("flyswap_payment_added", "true");
         window.open(data.url, "_blank");
-        toast({ title: "Complete payment setup in the new tab", description: "Then click Next to continue." });
+        toast({ title: t("onbCompletePaymentTitle"), description: t("onbCompletePaymentDesc") });
       }
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setPaymentLoading(false);
     }
@@ -331,7 +334,7 @@ export default function Onboarding() {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       goNext();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -347,13 +350,13 @@ export default function Onboarding() {
   };
   const StepIcon = stepIcons[step];
 
-  const stepTitles: Record<Step, { title: string; desc: string }> = {
-    personal: { title: "Personal Information", desc: "Let's get to know you" },
-    verification: { title: "ID Verification", desc: "Upload a valid passport, national ID or driving license" },
-    address: { title: "Address", desc: "Your billing and residential address" },
-    payment: { title: "Payment Details", desc: "Add your card for buying and receiving payments" },
-    preferences: { title: "Personalization", desc: "Optional — help us tailor your experience" },
-    success: { title: "All Set!", desc: "Your account setup is complete" },
+  const stepTitleKeys: Record<Step, { title: TranslationKey; desc: TranslationKey }> = {
+    personal: { title: "onbStepPersonalTitle", desc: "onbStepPersonalDesc" },
+    verification: { title: "onbStepVerificationTitle", desc: "onbStepVerificationDesc" },
+    address: { title: "onbStepAddressTitle", desc: "onbStepAddressDesc" },
+    payment: { title: "onbStepPaymentTitle", desc: "onbStepPaymentDesc" },
+    preferences: { title: "onbStepPreferencesTitle", desc: "onbStepPreferencesDesc" },
+    success: { title: "onbStepSuccessTitle", desc: "onbStepSuccessDesc" },
   };
 
   return (
@@ -387,7 +390,7 @@ export default function Onboarding() {
                 />
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-right">{Math.round(progress)}% complete</p>
+            <p className="text-xs text-muted-foreground text-right">{t("onbPercentComplete", { n: Math.round(progress) })}</p>
           </>
         )}
       </div>
@@ -400,8 +403,8 @@ export default function Onboarding() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20">
               <StepIcon className="w-7 h-7 text-primary" />
             </div>
-            <h1 className="text-xl font-display font-bold">{stepTitles[step].title}</h1>
-            <p className="text-muted-foreground text-sm">{stepTitles[step].desc}</p>
+            <h1 className="text-xl font-display font-bold">{t(stepTitleKeys[step].title)}</h1>
+            <p className="text-muted-foreground text-sm">{t(stepTitleKeys[step].desc)}</p>
           </div>
 
           {/* Step content */}
@@ -410,20 +413,20 @@ export default function Onboarding() {
               <div className="glass rounded-2xl p-5 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>First Name</Label>
+                    <Label>{t("onbFirstName")}</Label>
                     <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="h-11 bg-secondary/50 border-border/50" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Last Name</Label>
+                    <Label>{t("onbLastName")}</Label>
                     <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="h-11 bg-secondary/50 border-border/50" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Email</Label>
+                  <Label>{t("onbEmail")}</Label>
                   <Input type="email" value={profileEmail} readOnly className="h-11 bg-secondary/30 border-border/50 text-muted-foreground" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Phone Number</Label>
+                  <Label>{t("onbPhone")}</Label>
                   <div className="flex gap-2">
                     <Select value={phonePrefix} onValueChange={setPhonePrefix}>
                       <SelectTrigger className="w-[100px] h-11 bg-secondary/50 border-border/50">
@@ -441,9 +444,9 @@ export default function Onboarding() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label>Password</Label>
+                    <Label>{t("onbPasswordLabel")}</Label>
                     <button type="button" onClick={() => setChangingPassword(!changingPassword)} className="text-xs text-primary">
-                      {changingPassword ? "Cancel" : "Change password"}
+                      {changingPassword ? t("onbCancel") : t("onbChangePw")}
                     </button>
                   </div>
                   {changingPassword ? (
@@ -452,7 +455,7 @@ export default function Onboarding() {
                       <Input
                         type={showPassword ? "text" : "password"} value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="New password" className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50" minLength={6}
+                        placeholder={t("onbNewPwPh")} className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50" minLength={6}
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -469,7 +472,7 @@ export default function Onboarding() {
             {step === "verification" && (
               <div className="glass rounded-2xl p-5 space-y-4">
                 <p className="text-sm text-muted-foreground text-center">
-                  Upload a clear photo of your passport, national ID card, or driving license.
+                  {t("onbVerifyHelp")}
                 </p>
                 {idPreview ? (
                   <div className="relative">
@@ -483,11 +486,11 @@ export default function Onboarding() {
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => cameraInputRef.current?.click()}
                       className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
-                      <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Take Photo</span>
+                      <Camera className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">{t("onbTakePhoto")}</span>
                     </button>
                     <button onClick={() => fileInputRef.current?.click()}
                       className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors">
-                      <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">Upload File</span>
+                      <Upload className="w-8 h-8 text-muted-foreground" /><span className="text-sm text-muted-foreground">{t("onbUploadFile")}</span>
                     </button>
                   </div>
                 )}
@@ -497,13 +500,13 @@ export default function Onboarding() {
                 {verifyResult && !verifyResult.is_valid_id && (
                   <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-sm">{verifyResult.reason || "This doesn't appear to be a valid ID document."}</p>
+                    <p className="text-sm">{verifyResult.reason || t("onbInvalidIdFallback")}</p>
                   </div>
                 )}
                 {verifyResult?.is_valid_id && verifyResult?.appears_genuine && (
                   <div className="rounded-xl bg-success/10 border border-success/30 p-3 flex items-start gap-2">
                     <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
-                    <p className="text-sm text-success">Document verified: {verifyResult.document_type}</p>
+                    <p className="text-sm text-success">{t("onbDocVerified", { type: verifyResult.document_type })}</p>
                   </div>
                 )}
               </div>
@@ -512,35 +515,35 @@ export default function Onboarding() {
             {step === "address" && (
               <div className="glass rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm">Billing address same as residential</Label>
+                  <Label className="text-sm">{t("onbBillingSame")}</Label>
                   <Switch checked={sameAsBilling} onCheckedChange={setSameAsBilling} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Country</Label>
+                  <Label>{t("onbCountry")}</Label>
                   <Select value={country} onValueChange={(v) => { setCountry(v); setPostalError(""); }}>
-                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
                     <SelectContent>
                       {addressCountries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Address Line 1</Label>
+                  <Label>{t("onbAddressLine1")}</Label>
                   <Input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="123 Main Street" className="h-11 bg-secondary/50 border-border/50" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Address Line 2 (optional)</Label>
+                  <Label>{t("onbAddressLine2Optional")}</Label>
                   <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Apt 4B" className="h-11 bg-secondary/50 border-border/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>City</Label>
+                    <Label>{t("onbCity")}</Label>
                     <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="London" className="h-11 bg-secondary/50 border-border/50" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Postal Code</Label>
+                    <Label>{t("onbPostal")}</Label>
                     <Input value={postalCode} onChange={(e) => { setPostalCode(e.target.value); setPostalError(""); }}
-                      placeholder={postalCodePatterns[country]?.hint || "Postal code"}
+                      placeholder={postalCodePatterns[country]?.hint || t("onbPostalDefaultPh")}
                       className={`h-11 bg-secondary/50 border-border/50 ${postalError ? "border-destructive" : ""}`} />
                     {postalError && <p className="text-xs text-destructive">{postalError}</p>}
                   </div>
@@ -553,25 +556,25 @@ export default function Onboarding() {
                 <div className="text-center space-y-2">
                   <CreditCard className="w-12 h-12 text-primary mx-auto" />
                   <p className="text-sm text-muted-foreground">
-                    Add your card details. This card will be used for both buying tickets and receiving payments when you sell.
+                    {t("onbPaymentDesc")}
                   </p>
                 </div>
                 <Button variant="gold" size="lg" className="w-full" onClick={setupPayment} disabled={paymentLoading}>
-                  {paymentLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : "Add Payment Method"}
+                  {paymentLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("onbRedirecting")}</> : t("onbAddPaymentMethod")}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  You'll be redirected to a secure page. No charges will be made.
+                  {t("onbSecureRedirect")}
                 </p>
               </div>
             )}
 
             {step === "preferences" && (
               <div className="glass rounded-2xl p-5 space-y-4">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Optional</Badge>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">{t("onbOptionalBadge")}</Badge>
                 <div className="space-y-1.5">
-                  <Label>Favorite Departure Country</Label>
+                  <Label>{t("onbFavCountry")}</Label>
                   <Select value={favCountry} onValueChange={(v) => { setFavCountry(v); setFavCity(""); }}>
-                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
                     <SelectContent>
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
@@ -579,9 +582,9 @@ export default function Onboarding() {
                 </div>
                 {favCountry && (
                   <div className="space-y-1.5">
-                    <Label>Favorite Departure City</Label>
+                    <Label>{t("onbFavCity")}</Label>
                     <Select value={favCity} onValueChange={setFavCity}>
-                      <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder="Select city" /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCity")} /></SelectTrigger>
                       <SelectContent>
                         {favCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
@@ -589,11 +592,11 @@ export default function Onboarding() {
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label>Default Number of Passengers</Label>
+                  <Label>{t("onbDefaultPax")}</Label>
                   <Select value={defaultPax} onValueChange={setDefaultPax}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "passenger" : "passengers"}</SelectItem>)}
+                      {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? t("onbPaxOne") : t("onbPaxMany")}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -606,21 +609,21 @@ export default function Onboarding() {
                   <CheckCircle className="w-10 h-10 text-primary-foreground" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">🎉 Congratulations!</h2>
-                  <p className="text-muted-foreground">Your account is all set up. What would you like to do next?</p>
+                  <h2 className="text-2xl font-display font-bold mb-2">{t("onbCongrats")}</h2>
+                  <p className="text-muted-foreground">{t("onbCongratsDesc")}</p>
                 </div>
                 {skippedSteps.size > 0 && (
                   <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 text-sm text-left">
-                    <p className="font-medium text-warning mb-1">Some sections were skipped</p>
-                    <p className="text-muted-foreground">Complete them in your Account settings to unlock buying and selling.</p>
+                    <p className="font-medium text-warning mb-1">{t("onbSkippedTitle")}</p>
+                    <p className="text-muted-foreground">{t("onbSkippedDesc")}</p>
                   </div>
                 )}
                 <div className="space-y-3">
                   <Button variant="gold" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/sell"); }}>
-                    <Plane className="w-4 h-4 mr-2" /> Start Selling
+                    <Plane className="w-4 h-4 mr-2" /> {t("onbStartSelling")}
                   </Button>
                   <Button variant="outline" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/browse"); }}>
-                    <Search className="w-4 h-4 mr-2" /> Explore Destinations
+                    <Search className="w-4 h-4 mr-2" /> {t("onbExplore")}
                   </Button>
                 </div>
               </div>
@@ -631,36 +634,36 @@ export default function Onboarding() {
           {step !== "success" && (
             <div className="flex gap-3 mt-6">
               <Button variant="ghost" className="flex-1" onClick={handleSkip}>
-                Skip
+                {t("onbSkip")}
               </Button>
               {step === "personal" && (
                 <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving}>
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
               {step === "verification" && idFile && (
                 <Button variant="gold" className="flex-1" onClick={uploadAndVerifyId} disabled={uploading}>
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify & Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbVerifyAndNext")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
               {step === "verification" && !idFile && (
                 <Button variant="gold" className="flex-1" onClick={goNext} disabled>
-                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                  {t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
               {step === "address" && (
                 <Button variant="gold" className="flex-1" onClick={saveAddress} disabled={saving}>
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ChevronRight className="w-4 h-4 ml-1" /></>}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
               {step === "payment" && (
                 <Button variant="gold" className="flex-1" onClick={goNext}>
-                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                  {t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
               {step === "preferences" && (
                 <Button variant="gold" className="flex-1" onClick={savePreferences} disabled={saving}>
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Finish <ChevronRight className="w-4 h-4 ml-1" /></>}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbFinish")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
             </div>
