@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     return j({ ok: true, status: "pending_transfer", reconciled: true });
   } catch (e) {
     console.error("reconcile-purchase error", e);
-    return j({ error: (e as Error).message || "Unexpected error" }, 500);
+    return j({ error: "An unexpected error occurred" }, 500);
   }
 });
 
