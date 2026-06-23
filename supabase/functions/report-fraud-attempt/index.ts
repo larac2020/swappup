@@ -163,6 +163,6 @@ Deno.serve(async (req) => {
     return j({ ok: true, case_id: caseId, status: "under_review" });
   } catch (e) {
     console.error("report-fraud-attempt error", e);
-    return j({ error: (e as Error).message || "Unexpected error" }, 500);
+    return j({ error: "An unexpected error occurred" }, 500);
   }
 });
