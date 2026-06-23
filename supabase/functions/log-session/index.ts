@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     });
   } catch (error: any) {
     console.error("log-session error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
