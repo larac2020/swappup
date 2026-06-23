@@ -132,7 +132,7 @@ Query: "romantic weekend in Rome under 300" → {"destinationCity": "Rome", "des
   } catch (error) {
     console.error("AI search error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

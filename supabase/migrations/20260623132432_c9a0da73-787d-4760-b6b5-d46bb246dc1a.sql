@@ -1,0 +1,1 @@
+REVOKE SELECT (booking_reference, booking_fingerprint) ON public.listings FROM anon;
