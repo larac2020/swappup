@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowRight, ShieldCheck, Wallet, Sparkles, BadgeCheck, Play, Pause, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,9 @@ import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { landingContent, marketingMeta } from "@/i18n/marketingContent";
 import { PhoneMock } from "@/components/marketing/PhoneMock";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import swappupLogo from "@/assets/swappup-logo.png";
 
 export default function Landing() {
@@ -16,6 +18,28 @@ export default function Landing() {
   const icons = [Sparkles, ShieldCheck, BadgeCheck, Wallet];
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const navigate = useNavigate();
+  const { isAuthenticated, loading, user } = useAuth();
+
+  // If a signed-in user lands on "/" (e.g. after a mobile Google OAuth full-page
+  // redirect back to window.location.origin), route them to the right app page.
+  useEffect(() => {
+    if (loading || !isAuthenticated || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, address_line1")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const onboardingDone = localStorage.getItem("flyswap_onboarding_complete");
+      const profileLooksSetUp = !!(profile?.full_name && profile?.address_line1);
+      navigate(onboardingDone && profileLooksSetUp ? "/home" : "/onboarding", { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, loading, user, navigate]);
+
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
