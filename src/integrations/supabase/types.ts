@@ -939,6 +939,7 @@ export type Database = {
           verification_status:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          welcome_email_sent_at: string | null
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["seller_account_status_t"]
@@ -982,6 +983,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          welcome_email_sent_at?: string | null
         }
         Update: {
           account_status?: Database["public"]["Enums"]["seller_account_status_t"]
@@ -1025,6 +1027,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          welcome_email_sent_at?: string | null
         }
         Relationships: []
       }
