@@ -1,34 +1,66 @@
-## How translations are stored
+# Plan: post-signup redirect + welcome email
 
-Translations are **not stored in the database**. They live entirely in the frontend as TypeScript dictionaries:
+## 1. Fix the post-signup redirect
 
-- `src/i18n/translations.ts` — main `translations` object keyed by locale (`en`, `it`), ~2,000 lines. Used everywhere via `t("key")`.
-- `src/i18n/marketingContent.ts` — structured content (headers, footer, About, FAQ, meta tags) keyed by locale, used by the marketing site.
-- `src/content/legal/{terms,privacy}.{en,it}.md` — raw markdown files imported via `?raw` for the legal pages.
-- `remotion/src/copy.ts` — separate copy for the promo video.
+**Problem.** On mobile, `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` does a full-page redirect back to `/`. `Landing` is a public route with no auth-aware logic, so authenticated users just stay there instead of going to `/home` or `/onboarding`.
 
-Runtime mechanics (`src/i18n/LanguageContext.tsx`):
-- The active locale is held in React state and persisted in `localStorage` under the key `flyswap_language`.
-- The toggle (`LanguageToggle`, `MarketingHeader`) only flips that key — no network call, no DB row.
-- The only locale-related data that touches the database is the user's notification language preference (used by edge functions when sending emails); it does not drive UI text.
+**Fix.** Make `Landing` route authenticated users the same way `Auth.tsx` does:
 
-## Pages with missing / partial Italian
+- In `src/pages/Landing.tsx`, read `useAuth()`.
+- While `loading`, render the existing landing (no flash) or a small spinner — match the pattern in `Auth.tsx`.
+- Once `isAuthenticated && user` is true, fetch the profile (`full_name`, `address_line1`) and:
+  - If `localStorage.flyswap_onboarding_complete` is set AND profile looks set up → `navigate("/home", { replace: true })`.
+  - Otherwise → `navigate("/onboarding", { replace: true })`.
+- Do this in a `useEffect`, with a `cancelled` guard, mirroring `Auth.tsx` exactly so behavior stays consistent.
 
-Pages that **never call `useLanguage`** and ship English-only strings:
+No change to `AuthForm.tsx`, `useAuth.ts`, or the OAuth call itself. This also fixes the case of an authenticated user manually navigating to `/`.
 
-1. **`src/pages/Auth.tsx`** (`/login`, `/sign-up`) — the page shell is empty, but the underlying **`src/components/auth/AuthForm.tsx`** has many hardcoded English strings (toasts like "Enter your email", "Welcome back!", "Account created!", subtitles "Welcome back. Sign in to continue.", "Create an account to start trading tickets.", button labels "Sending…", "Signing in…", "Creating account…", "Resend verification email", etc.). This is the page you noticed.
-2. **`src/pages/Onboarding.tsx`** — the entire 6-step mandatory account setup is hardcoded in English (labels, helper text, errors, step titles).
-3. **`src/pages/ResetPassword.tsx`** — password reset screen, all copy + toasts in English.
-4. **`src/pages/Support.tsx`** — support page hero, search box, FAQ accordion, contact cards.
-5. **`src/pages/Unsubscribe.tsx`** — email unsubscribe confirmation states ("loading", "valid", "already", "done", error messages).
+## 2. Welcome email on first profile creation
 
-Pages that **partially** use translations but still contain hardcoded English:
+Sent once per user, for both email and Google sign-ups. Triggered server-side from the existing `handle_new_user` flow so it can't be skipped by the client closing the tab.
 
-6. **`src/components/auth/PasswordChecklist.tsx`** — used by sign-up and reset-password; criteria labels are English-only.
-7. Various toast `description` strings sprinkled across otherwise-translated pages (`SellTicket`, `Account`, `MyListings`, `ListingDetail`, `Cart`, `Watchlist`) — not a full page, but worth a sweep.
+### 2a. New template
 
-Pages that are **fine** (fully translated): `Landing`, `About`, `Faq`, `Home`, `Browse`, `Cart`, `Watchlist`, `MyListings`, `Account`, `ListingDetail`, `SellTicket` (shell), `NotFound`, plus `Terms`/`Privacy` (via `LegalPage` which picks the IT markdown file).
+Create `supabase/functions/_shared/transactional-email-templates/welcome.tsx`:
 
-## Suggested next step
+- React Email component matching the brand (dark accent, gold CTA — same style tokens as the existing transactional templates).
+- Props: `{ recipient: string; firstName?: string; siteUrl: string }`.
+- Subject: "Welcome to Swappup".
+- One CTA button → `${siteUrl}/onboarding` ("Complete your account").
+- Short copy: welcome, what Swappup is, next step (finish 6-step onboarding to unlock buying/selling).
+- Register in `_shared/transactional-email-templates/registry.ts` under template name `welcome`.
 
-If you want, I can switch to build mode and add Italian translations for the highest-impact gap first — **AuthForm + Auth page** (sign-up/login/forgot-password), since that is the first authenticated touchpoint and the one you hit. After that we can tackle `Onboarding`, then `ResetPassword`, `Support`, `Unsubscribe`, and the `PasswordChecklist` component. Let me know which scope you want and I'll produce a build plan.
+### 2b. Trigger from new profile
+
+Add a `welcome_email_sent_at timestamptz` column on `public.profiles` (idempotency guard).
+
+Update the existing `public.handle_new_user()` trigger function so that after the `INSERT INTO profiles`, it enqueues a call to the `send-transactional-email` Edge Function via `pg_net.http_post`, passing:
+
+```json
+{
+  "templateName": "welcome",
+  "recipientEmail": "<NEW.email>",
+  "idempotencyKey": "welcome-<NEW.id>",
+  "templateData": { "siteUrl": "https://swappup.com" }
+}
+```
+
+Headers: service-role key from Vault (already used by other infra), `Content-Type: application/json`. The `idempotencyKey` plus the new `welcome_email_sent_at` check guarantees one send even on retries.
+
+After a successful enqueue, set `welcome_email_sent_at = now()` on the new profile row.
+
+### 2c. Deploy
+
+Deploy `send-transactional-email` (no code change needed but redeploy picks up the new registry entry).
+
+## Out of scope
+
+- No email-verification email for Google sign-ups (Google already verified the address).
+- No change to `auth-email-hook` or default Supabase auth emails.
+- No change to OAuth `redirect_uri`.
+
+## Technical notes
+
+- Files touched: `src/pages/Landing.tsx`, `supabase/functions/_shared/transactional-email-templates/welcome.tsx` (new), `supabase/functions/_shared/transactional-email-templates/registry.ts`, one SQL migration (add column + update `handle_new_user`), redeploy `send-transactional-email`.
+- The DB trigger uses `pg_net` (already enabled — used elsewhere for cron). Service-role key is read from the existing `email_queue_service_role_key` vault secret.
+- `Landing` auth check uses the same `profiles` query shape as `Auth.tsx` to avoid divergent routing logic.
