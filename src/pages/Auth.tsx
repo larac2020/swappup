@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
 
 interface AuthProps {
   initialMode?: "login" | "signup";
@@ -19,14 +19,8 @@ export default function Auth({ initialMode = "login" }: AuthProps = {}) {
     let cancelled = false;
     setRouting(true);
     (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, address_line1")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { onboarded } = await fetchOnboardingStatus(user.id);
       if (cancelled) return;
-      const onboardingDone = localStorage.getItem("flyswap_onboarding_complete");
-      const profileLooksSetUp = !!(profile?.full_name && profile?.address_line1);
       // Honor ?next= (or router state.from) so post-Stripe returns land back on
       // the purchase confirmation page instead of /home.
       const params = new URLSearchParams(location.search);
@@ -39,7 +33,7 @@ export default function Auth({ initialMode = "login" }: AuthProps = {}) {
       const safeNext =
         candidate && candidate.startsWith("/") && !candidate.startsWith("//") ? candidate : null;
 
-      if (onboardingDone && profileLooksSetUp) {
+      if (onboarded) {
         navigate(safeNext || "/home", { replace: true });
       } else {
         navigate("/onboarding", { replace: true });
