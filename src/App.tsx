@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
@@ -38,10 +40,17 @@ function ScrollToTop() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  const { data: onboardingStatus, isLoading: onboardingLoading } = useQuery({
+    queryKey: ["onboarding-status", user?.id],
+    queryFn: () => fetchOnboardingStatus(user!.id),
+    enabled: !!user?.id && isAuthenticated,
+    staleTime: 60_000,
+  });
+
+  if (loading || (isAuthenticated && onboardingLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -55,6 +64,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={to} replace state={{ from: location }} />;
   }
 
+  const onboarded = onboardingStatus?.onboarded ?? false;
+  const onOnboardingRoute = location.pathname === "/onboarding";
+  if (!onboarded && !onOnboardingRoute) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  if (onboarded && onOnboardingRoute) {
+    return <Navigate to="/home" replace />;
+  }
+
   return (
     <>
       <ReacceptDialog />
@@ -64,10 +82,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  const { data: onboardingStatus, isLoading: onboardingLoading } = useQuery({
+    queryKey: ["onboarding-status", user?.id],
+    queryFn: () => fetchOnboardingStatus(user!.id),
+    enabled: !!user?.id && isAuthenticated,
+    staleTime: 60_000,
+  });
+
+  if (loading || (isAuthenticated && onboardingLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -76,6 +101,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
+    if (!onboardingStatus?.onboarded) {
+      return <Navigate to="/onboarding" replace />;
+    }
     const params = new URLSearchParams(location.search);
     const rawNext = params.get("next");
     const safeNext = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/home";
