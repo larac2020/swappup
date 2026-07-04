@@ -1,66 +1,57 @@
-# Plan: post-signup redirect + welcome email
+## Diagnosis
 
-## 1. Fix the post-signup redirect
+Three real bypasses / bugs today:
 
-**Problem.** On mobile, `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` does a full-page redirect back to `/`. `Landing` is a public route with no auth-aware logic, so authenticated users just stay there instead of going to `/home` or `/onboarding`.
+1. **`ProtectedRoute` doesn't enforce onboarding.** It only checks authentication. A signed-in Google user who lands on `/home` (deep link, welcome-email link, browser autocomplete, or any redirect target) gets in without ever touching `/onboarding`.
+2. **`PublicRoute` on `/login` and `/sign-up`** sends any authenticated user to `/home` (or `?next=`) unconditionally — same bypass.
+3. **Redirects rely on the localStorage flag as source of truth.** `Auth.tsx` and `Landing.tsx` both require `localStorage.flyswap_onboarding_complete === "true"` **AND** `profile.full_name && address_line1`. So a returning Google user on a fresh device / cleared storage — LS empty but DB profile complete — gets bounced back to `/onboarding`. The DB should be the source of truth; LS is only a fast-path cache.
 
-**Fix.** Make `Landing` route authenticated users the same way `Auth.tsx` does:
+The reason your Google signup ended on Landing was #1 + the missing Landing redirect (already fixed). The remaining holes let future Google users still skip onboarding.
 
-- In `src/pages/Landing.tsx`, read `useAuth()`.
-- While `loading`, render the existing landing (no flash) or a small spinner — match the pattern in `Auth.tsx`.
-- Once `isAuthenticated && user` is true, fetch the profile (`full_name`, `address_line1`) and:
-  - If `localStorage.flyswap_onboarding_complete` is set AND profile looks set up → `navigate("/home", { replace: true })`.
-  - Otherwise → `navigate("/onboarding", { replace: true })`.
-- Do this in a `useEffect`, with a `cancelled` guard, mirroring `Auth.tsx` exactly so behavior stays consistent.
+## Fix
 
-No change to `AuthForm.tsx`, `useAuth.ts`, or the OAuth call itself. This also fixes the case of an authenticated user manually navigating to `/`.
+### 1. New shared helper — `src/lib/onboardingStatus.ts`
+Single source of truth. Exports:
+- `isProfileOnboarded(profile)` → `!!(profile?.full_name && profile?.address_line1)` (matches the current criterion used everywhere).
+- `fetchOnboardingStatus(userId)` → queries `profiles` once and returns `{ onboarded: boolean }`. Also mirrors the result into `localStorage.flyswap_onboarding_complete` so downstream code (e.g. `ProductTour`) stays consistent.
 
-## 2. Welcome email on first profile creation
+### 2. Extend `ProtectedRoute` in `src/App.tsx` to enforce onboarding
+- After the auth check, use react-query (`["onboarding-status", user.id]`) to call `fetchOnboardingStatus`.
+- While the query is loading, keep the existing spinner.
+- If `onboarded === false` **and** current path is not `/onboarding` → `<Navigate to="/onboarding" replace />`.
+- If `onboarded === true` **and** current path **is** `/onboarding` → `<Navigate to="/home" replace />` (prevents completed users from re-entering the wizard).
+- No changes to the ReacceptDialog behaviour.
 
-Sent once per user, for both email and Google sign-ups. Triggered server-side from the existing `handle_new_user` flow so it can't be skipped by the client closing the tab.
+This closes bypass #1 for every protected route in one place (`/home`, `/browse`, `/account`, `/sell`, `/listing/:id`, etc.).
 
-### 2a. New template
+### 3. Fix `PublicRoute` (bypass #2)
+Same helper: when an authenticated user hits `/login` or `/sign-up`, resolve onboarding status before redirecting. Route to `/onboarding` if not onboarded, otherwise honor `?next=` or fall back to `/home`.
 
-Create `supabase/functions/_shared/transactional-email-templates/welcome.tsx`:
+### 4. Simplify `Landing.tsx` and `Auth.tsx` (bug #3)
+Replace the inline profile queries with `fetchOnboardingStatus(user.id)`. Drop the "AND localStorage flag" requirement — the DB decides. Keep the `?next=` / `state.from` handling in `Auth.tsx`; only apply it when onboarded.
 
-- React Email component matching the brand (dark accent, gold CTA — same style tokens as the existing transactional templates).
-- Props: `{ recipient: string; firstName?: string; siteUrl: string }`.
-- Subject: "Welcome to Swappup".
-- One CTA button → `${siteUrl}/onboarding` ("Complete your account").
-- Short copy: welcome, what Swappup is, next step (finish 6-step onboarding to unlock buying/selling).
-- Register in `_shared/transactional-email-templates/registry.ts` under template name `welcome`.
+### 5. Keep the LS flag as a cache, not a gate
+- `Onboarding.tsx` continues to set `flyswap_onboarding_complete = "true"` on success (unchanged).
+- `AuthForm.tsx` continues to clear it on signup (unchanged).
+- `ProductTour.tsx` guard stays as-is; the helper writing the flag on successful profile checks means returning users on a fresh device still get the tour armed correctly.
 
-### 2b. Trigger from new profile
+## Verification (after build)
 
-Add a `welcome_email_sent_at timestamptz` column on `public.profiles` (idempotency guard).
+Drive Playwright with the injected Supabase session to confirm:
+- Direct navigation to `/home` with an unfinished profile → redirects to `/onboarding`.
+- Direct navigation to `/onboarding` with a completed profile → redirects to `/home`.
+- `/login` while signed in and unfinished → `/onboarding`.
+- Landing `/` while signed in and unfinished → `/onboarding` (regression check for last turn's fix).
 
-Update the existing `public.handle_new_user()` trigger function so that after the `INSERT INTO profiles`, it enqueues a call to the `send-transactional-email` Edge Function via `pg_net.http_post`, passing:
+## Files touched
 
-```json
-{
-  "templateName": "welcome",
-  "recipientEmail": "<NEW.email>",
-  "idempotencyKey": "welcome-<NEW.id>",
-  "templateData": { "siteUrl": "https://swappup.com" }
-}
-```
-
-Headers: service-role key from Vault (already used by other infra), `Content-Type: application/json`. The `idempotencyKey` plus the new `welcome_email_sent_at` check guarantees one send even on retries.
-
-After a successful enqueue, set `welcome_email_sent_at = now()` on the new profile row.
-
-### 2c. Deploy
-
-Deploy `send-transactional-email` (no code change needed but redeploy picks up the new registry entry).
+- `src/lib/onboardingStatus.ts` (new)
+- `src/App.tsx` (ProtectedRoute + PublicRoute)
+- `src/pages/Landing.tsx` (use helper)
+- `src/pages/Auth.tsx` (use helper)
 
 ## Out of scope
 
-- No email-verification email for Google sign-ups (Google already verified the address).
-- No change to `auth-email-hook` or default Supabase auth emails.
-- No change to OAuth `redirect_uri`.
-
-## Technical notes
-
-- Files touched: `src/pages/Landing.tsx`, `supabase/functions/_shared/transactional-email-templates/welcome.tsx` (new), `supabase/functions/_shared/transactional-email-templates/registry.ts`, one SQL migration (add column + update `handle_new_user`), redeploy `send-transactional-email`.
-- The DB trigger uses `pg_net` (already enabled — used elsewhere for cron). Service-role key is read from the existing `email_queue_service_role_key` vault secret.
-- `Landing` auth check uses the same `profiles` query shape as `Auth.tsx` to avoid divergent routing logic.
+- Adding a `has_completed_onboarding` boolean column (current field-based check already works and keeps the migration surface small).
+- Changing `/onboarding` steps, the welcome email, or the ProductTour trigger.
+- Changing OAuth `redirect_uri` (already `window.location.origin`).
