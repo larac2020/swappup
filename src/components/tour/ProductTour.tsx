@@ -215,6 +215,83 @@ export function ProductTour() {
     setShowPermissions(false);
   }, [user, queryClient]);
 
+  const TourTooltip = useCallback(
+    ({
+      index,
+      step,
+      backProps,
+      primaryProps,
+      closeProps,
+      tooltipProps,
+      isLastStep,
+      size,
+    }: TooltipRenderProps) => {
+      const handlePrimary = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        // Request push permission from within the user gesture
+        if (index === BELL_STEP_INDEX) {
+          await requestPushPermission();
+        }
+        primaryProps.onClick(e as any);
+      };
+      return (
+        <div
+          {...tooltipProps}
+          className="relative w-[320px] max-w-[92vw] rounded-2xl bg-[hsl(220_18%_10%)] text-[hsl(40_20%_95%)] shadow-2xl border border-white/5 overflow-hidden"
+        >
+          {/* Segmented progress bar */}
+          <div className="flex gap-1 px-5 pt-5">
+            {Array.from({ length: size }).map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-1 flex-1 rounded-full transition-colors",
+                  i <= index ? "bg-[hsl(38_92%_55%)]" : "bg-white/10",
+                )}
+              />
+            ))}
+          </div>
+
+          {/* Close (X) */}
+          <button
+            {...closeProps}
+            aria-label={t("close")}
+            className="absolute top-3 right-3 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/5 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="px-5 pt-4 pb-5">
+            {step.title && (
+              <h3 className="text-base font-bold mb-2 pr-6">{step.title}</h3>
+            )}
+            <div className="text-sm leading-relaxed text-white/80">{step.content}</div>
+
+            <div className="flex justify-between items-center gap-2 mt-5">
+              {index > 0 ? (
+                <button
+                  {...backProps}
+                  className="px-3 py-2 text-sm font-medium text-white/70 hover:text-white transition"
+                >
+                  {t("back")}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button
+                {...primaryProps}
+                onClick={handlePrimary}
+                className="px-4 py-2 rounded-lg bg-[hsl(38_92%_55%)] text-[hsl(220_18%_10%)] text-sm font-semibold hover:bg-[hsl(38_92%_60%)] transition"
+              >
+                {isLastStep ? t("tourFinish") : t("next")}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    },
+    [t, requestPushPermission],
+  );
+
   return (
     <>
       <Joyride
@@ -222,10 +299,9 @@ export function ProductTour() {
         run={run}
         stepIndex={stepIndex}
         continuous
-        showProgress
-        showSkipButton
         disableScrolling={false}
         callback={handleCallback}
+        tooltipComponent={TourTooltip}
         locale={{
           back: t("back"),
           close: t("close"),
@@ -242,12 +318,6 @@ export function ProductTour() {
             overlayColor: "rgba(8, 10, 16, 0.78)",
             zIndex: 10000,
           },
-          tooltip: { borderRadius: 16, padding: 20 },
-          tooltipTitle: { fontSize: 16, fontWeight: 700 },
-          tooltipContent: { fontSize: 14, lineHeight: 1.5 },
-          buttonNext: { borderRadius: 10, fontWeight: 600 },
-          buttonBack: { color: "hsl(40 15% 85%)" },
-          buttonSkip: { color: "hsl(220 10% 55%)" },
         }}
       />
 
