@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS, Step } from "react-joyride";
+import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS, Step, TooltipRenderProps } from "react-joyride";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const LS_KEY = "swappup_tour_complete";
 const BELL_STEP_INDEX = 2;
@@ -151,10 +152,6 @@ export function ProductTour() {
       // Track step navigation
       if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
         const nextIndex = index + (action === ACTIONS.PREV ? -1 : 1);
-        // When leaving the bell step forward, prompt for push permission
-        if (action === ACTIONS.NEXT && index === BELL_STEP_INDEX) {
-          requestPushPermission();
-        }
         setStepIndex(nextIndex);
       }
 
@@ -198,7 +195,7 @@ export function ProductTour() {
       queryClient.invalidateQueries({ queryKey: ["profile-tour"] });
       toast({ title: t("tourDoneTitle"), description: t("tourDoneBody") });
       setShowPermissions(false);
-      navigate("/browse");
+      navigate("/account");
     } catch (err: any) {
       toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
