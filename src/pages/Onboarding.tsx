@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
+import swappupLogo from "@/assets/swappup-logo.png";
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
@@ -364,14 +365,7 @@ export default function Onboarding() {
       {/* Header */}
       <div className="px-6 pt-6 pb-4 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-gold flex items-center justify-center">
-              <Plane className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-lg">
-              <span className="gradient-text">Fly</span>Swap
-            </span>
-          </div>
+          <img src={swappupLogo} alt="Swappup" className="h-8 w-auto" />
           <button onClick={handleClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
             <X className="w-4 h-4" />
           </button>
