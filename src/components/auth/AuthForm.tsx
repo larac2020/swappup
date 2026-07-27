@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
-import { lovable } from "@/integrations/lovable/index";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
@@ -419,8 +418,15 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           size="lg"
           className="w-full h-12"
           onClick={async () => {
-            const { error } = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: `${window.location.origin}/`,
+                queryParams: {
+                  access_type: "offline",
+                  prompt: "select_account",
+                },
+              },
             });
             if (error) {
               toast({ title: t("error"), description: error.message, variant: "destructive" });
