@@ -1,24 +1,30 @@
-## Goal
-Stop signed-in Google users from landing on the public marketing page after OAuth returns.
+## Confirmed diagnosis
 
-## Approach
-Go with option (a): change the Google `signInWithOAuth` `redirectTo` in `src/components/auth/AuthForm.tsx` from `${window.location.origin}/` to `${window.location.origin}/home`.
+The earlier redirect-allowlist diagnosis is **not the current issue**.
 
-Why (a) over (b):
-- `Landing.tsx` already has the authenticated-redirect effect (added earlier), so option (b) is technically already in place — but it still causes a brief flash of the marketing page while `useAuth` + `fetchOnboardingStatus` resolve.
-- Sending OAuth straight to `/home` skips the marketing render entirely. `/home` is wrapped in `ProtectedRoute`, which already:
-  - waits for the session,
-  - calls `fetchOnboardingStatus`,
-  - redirects to `/onboarding` if the profile isn't complete, or renders `/home` if it is.
-- No new logic, no duplication, no orphan route.
+The auth logs show that:
 
-## Change
-- `src/components/auth/AuthForm.tsx` line ~424: `redirectTo: \`${window.location.origin}/home\``.
+1. Swappup successfully sent the browser to Google.
+2. Google successfully returned an authorization code to the native auth callback.
+3. The backend failed while exchanging that code for Google tokens with:
+   `invalid_client — The provided client secret is invalid.`
 
-## Out of scope
-- Landing's existing authenticated-redirect effect stays (still useful as a safety net for any other path that lands a signed-in user on `/`).
-- No changes to Supabase Auth redirect URL allow-list are needed as long as `https://swappup.com/home`, `https://swappup.vercel.app/home`, and the Lovable preview equivalents are covered by the existing wildcard entries (`.../**`) already configured. If any allow-list entry is exact-match only, add the `/home` variant there.
+The `4/0A` value is the beginning of Google's one-time authorization code, not the underlying error. The duplicate error in both the query string and URL fragment is only the auth failure being forwarded to the app twice; it is not the cause.
+
+The current Site URL is `https://swappup.com`, and both `https://swappup.com/**` and `https://swappup.vercel.app/**` are already allowed redirect destinations. Redirecting Vercel to the custom domain therefore does not fix this credential-exchange failure.
+
+## How to fix it
+
+1. In **Google Cloud Console → APIs & Services → Credentials**, open the exact OAuth 2.0 **Web application** client created for Swappup.
+2. Confirm that the Client ID and Client Secret belong to that same client.
+3. If Google no longer displays the secret, or the current secret may have been deleted/reset, create a **new client secret on that same OAuth client**.
+4. In **Lovable Cloud → Users → Authentication Settings → Sign In Methods → Google**, select/use your custom Google credentials and paste:
+   - the complete **Client ID**;
+   - the actual **Client Secret value**—normally beginning with `GOCSPX-`—not the secret name, secret ID, or masked value.
+5. Save the provider configuration. Do not put these values in Cloud → Secrets.
+6. In Google Cloud Console, keep the native backend auth callback shown/required by this provider as an **Authorized redirect URI**. The fact that Google returned a code confirms the callback used in this attempt was already accepted; do not replace it with `https://swappup.com/home` or the Vercel URL.
+7. Start a fresh test directly at `https://swappup.com/login` in a private window. Old OAuth attempts cannot be reused after changing the secret.
 
 ## Verification
-- Sign in with Google on the live site → browser returns to `/home` (or is bounced to `/onboarding` by `ProtectedRoute` for incomplete profiles), never rendering the marketing landing page.
-- Email/password login unaffected (that path already routes through `Auth.tsx` post-login logic).
+
+After the credential pair is corrected, verify that the callback no longer logs `invalid_client`, a session is created, and the user remains on `/home` or is routed to `/onboarding` by the existing protected-route guard. No frontend code change is indicated by this error.
