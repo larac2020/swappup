@@ -1,23 +1,43 @@
-## Cleanup: remove redundant Redirect URL allow-list entries
+## Goal
 
-Two entries in **Cloud → Users → Authentication Settings → Redirect URLs** are already fully covered by their `/**` siblings and can be safely removed:
+Eliminate the flash between Google sign-in and landing on `/home` or `/onboarding` by reading onboarding status from the session, and replace the blank spinner with a branded loader.
 
-1. `https://swappup.com/*` — subsumed by `https://swappup.com/**`
-2. `https://swappup.vercel.app` — subsumed by `https://swappup.vercel.app/**`
+## Security note (confirmed)
 
-## What I will do
+`user_metadata.onboarded` is a **routing hint only**. All real gates remain server-side:
+- Listing creation, purchases, and ID verification read `profiles` directly.
+- `prevent_protected_profile_updates` trigger locks `has_payment_method` / `verification_status` to the service role.
+- If a user tampers with their metadata flag, they just skip the onboarding wizard and hit the same server-side blocks the moment they act.
 
-- Update the project's auth configuration to remove those two entries only.
-- Leave all 8 other entries untouched (including `https://swappup.com/**`, `https://swappup.vercel.app/**`, Lovable-hosted, and preview URLs).
-- Leave Site URL (`https://swappup.com`) unchanged.
+## Root cause
 
-## What I will NOT do
+`ProtectedRoute` / `PublicRoute` in `src/App.tsx` render a spinner until `fetchOnboardingStatus` finishes a `profiles` query. On OAuth return the session hydrates first, then the query runs — producing the flash.
 
-- No code changes (no `AuthForm.tsx`, no `Landing.tsx` edits).
-- No changes to Google provider credentials or callback URLs.
-- No DB migration, no edge function deploy.
+## Changes
 
-## Verification
+### 1. Onboarding status in auth metadata
 
-- Re-list the redirect URLs after the change and confirm the count dropped from 10 to 8 and neither removed entry is present.
-- No user-facing behavior change expected — the remaining `/**` entries already permit every URL the removed entries permitted.
+Update `src/lib/onboardingStatus.ts`:
+- `readOnboardedFromUser(user)` — synchronous `user.user_metadata?.onboarded === true`.
+- `markOnboardedInMetadata()` — `supabase.auth.updateUser({ data: { onboarded: true } })`.
+- Keep `fetchOnboardingStatus` as the legacy DB fallback; when it detects a completed profile, also call `markOnboardedInMetadata()` so the round-trip happens at most once per legacy user.
+
+In `src/pages/Onboarding.tsx`, when the flow reaches the "success" step (profile + address saved), call `markOnboardedInMetadata()` and invalidate `["onboarding-status", user.id]`.
+
+### 2. Prefer metadata in route guards
+
+In `src/App.tsx` (`ProtectedRoute`, `PublicRoute`) and `src/pages/Auth.tsx`:
+- Compute `metadataOnboarded = readOnboardedFromUser(user)` synchronously.
+- Only run `useQuery(fetchOnboardingStatus)` when `isAuthenticated && !metadataOnboarded`.
+- Decision uses `metadataOnboarded || onboardingStatus?.onboarded`.
+
+New Google sign-ups (no flag yet) briefly show the branded loader while the one-time DB check runs, then redirect and write the flag. Returning users route synchronously with no DB call.
+
+### 3. Branded loader
+
+Add `src/components/layout/BrandedLoader.tsx`: full-screen dark background, centered Swappup logo (`@/assets/swappup-logo.png`) with a subtle pulse and the existing gold spinner underneath. Replace the three ad-hoc spinner blocks in `src/App.tsx` and `src/pages/Auth.tsx` with `<BrandedLoader />`.
+
+## Out of scope
+
+- No auth-provider, RLS, or `profiles` schema changes.
+- `useProfileCompletion` is unchanged (it drives the account UI, not the onboarding gate).

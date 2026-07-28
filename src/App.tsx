@@ -6,8 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
+import { fetchOnboardingStatus, readOnboardedFromUser } from "@/lib/onboardingStatus";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { BrandedLoader } from "@/components/layout/BrandedLoader";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Browse from "./pages/Browse";
@@ -43,19 +44,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
+  const metadataOnboarded = readOnboardedFromUser(user);
+
   const { data: onboardingStatus, isLoading: onboardingLoading } = useQuery({
     queryKey: ["onboarding-status", user?.id],
     queryFn: () => fetchOnboardingStatus(user!.id),
-    enabled: !!user?.id && isAuthenticated,
+    enabled: !!user?.id && isAuthenticated && !metadataOnboarded,
     staleTime: 60_000,
   });
 
-  if (loading || (isAuthenticated && onboardingLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  if (loading || (isAuthenticated && !metadataOnboarded && onboardingLoading)) {
+    return <BrandedLoader />;
   }
 
   if (!isAuthenticated) {
@@ -64,7 +63,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={to} replace state={{ from: location }} />;
   }
 
-  const onboarded = onboardingStatus?.onboarded ?? false;
+  const onboarded = metadataOnboarded || (onboardingStatus?.onboarded ?? false);
   const onOnboardingRoute = location.pathname === "/onboarding";
   if (!onboarded && !onOnboardingRoute) {
     return <Navigate to="/onboarding" replace />;
@@ -85,23 +84,22 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
+  const metadataOnboarded = readOnboardedFromUser(user);
+
   const { data: onboardingStatus, isLoading: onboardingLoading } = useQuery({
     queryKey: ["onboarding-status", user?.id],
     queryFn: () => fetchOnboardingStatus(user!.id),
-    enabled: !!user?.id && isAuthenticated,
+    enabled: !!user?.id && isAuthenticated && !metadataOnboarded,
     staleTime: 60_000,
   });
 
-  if (loading || (isAuthenticated && onboardingLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  if (loading || (isAuthenticated && !metadataOnboarded && onboardingLoading)) {
+    return <BrandedLoader />;
   }
 
   if (isAuthenticated) {
-    if (!onboardingStatus?.onboarded) {
+    const onboarded = metadataOnboarded || (onboardingStatus?.onboarded ?? false);
+    if (!onboarded) {
       return <Navigate to="/onboarding" replace />;
     }
     const params = new URLSearchParams(location.search);

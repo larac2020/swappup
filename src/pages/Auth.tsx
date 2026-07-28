@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/hooks/useAuth";
-import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
+import { fetchOnboardingStatus, readOnboardedFromUser } from "@/lib/onboardingStatus";
+import { BrandedLoader } from "@/components/layout/BrandedLoader";
 
 interface AuthProps {
   initialMode?: "login" | "signup";
@@ -19,7 +20,10 @@ export default function Auth({ initialMode = "login" }: AuthProps = {}) {
     let cancelled = false;
     setRouting(true);
     (async () => {
-      const { onboarded } = await fetchOnboardingStatus(user.id);
+      const metadataOnboarded = readOnboardedFromUser(user);
+      const onboarded = metadataOnboarded
+        ? true
+        : (await fetchOnboardingStatus(user.id)).onboarded;
       if (cancelled) return;
       // Honor ?next= (or router state.from) so post-Stripe returns land back on
       // the purchase confirmation page instead of /home.
@@ -43,11 +47,7 @@ export default function Auth({ initialMode = "login" }: AuthProps = {}) {
   }, [isAuthenticated, loading, user, navigate, location]);
 
   if (loading || routing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <BrandedLoader />;
   }
 
   return <AuthForm initialMode={initialMode} />;
