@@ -82,7 +82,8 @@ export default function Onboarding() {
   const [profileEmail, setProfileEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [phonePrefix, setPhonePrefix] = useState("+44");
   const [phoneNumber, setPhoneNumber] = useState("");
 
@@ -178,6 +179,13 @@ export default function Onboarding() {
   // Save personal info
   const savePersonal = async () => {
     if (!user) return;
+    setPasswordError("");
+    if (newPassword || confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setPasswordError(t("onbPwMismatch"));
+        return;
+      }
+    }
     setSaving(true);
     try {
       const fullName = `${firstName} ${lastName}`.trim();
@@ -190,6 +198,8 @@ export default function Onboarding() {
       if (newPassword) {
         const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword });
         if (pwErr) throw pwErr;
+        setNewPassword("");
+        setConfirmPassword("");
       }
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -440,28 +450,41 @@ export default function Onboarding() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label>{t("onbPasswordLabel")}</Label>
-                    <button type="button" onClick={() => setChangingPassword(!changingPassword)} className="text-xs text-primary">
-                      {changingPassword ? t("onbCancel") : t("onbChangePw")}
+                  <Label>{t("onbPasswordLabel")}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => { setNewPassword(e.target.value); setPasswordError(""); }}
+                      placeholder={t("onbNewPwPh")}
+                      className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50"
+                      minLength={6}
+                      autoComplete="new-password"
+                      name="new-password"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  {changingPassword ? (
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"} value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder={t("onbNewPwPh")} className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50" minLength={6}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  ) : (
-                    <Input type="password" value="••••••••" readOnly className="h-11 bg-secondary/30 border-border/50 text-muted-foreground" />
-                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("onbConfirmPwLabel")}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); }}
+                      placeholder={t("onbConfirmPwPh")}
+                      className={`pl-10 h-11 bg-secondary/50 border-border/50 ${passwordError ? "border-destructive" : ""}`}
+                      minLength={6}
+                      autoComplete="new-password"
+                      name="confirm-password"
+                    />
+                  </div>
+                  {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
                 </div>
               </div>
             )}
