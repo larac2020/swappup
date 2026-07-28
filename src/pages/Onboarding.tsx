@@ -22,6 +22,7 @@ import { getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 import swappupLogo from "@/assets/swappup-logo.png";
+import { markOnboardedInMetadata } from "@/lib/onboardingStatus";
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
@@ -343,6 +344,8 @@ export default function Onboarding() {
 
   const finishSetup = () => {
     localStorage.setItem("flyswap_onboarding_complete", "true");
+    void markOnboardedInMetadata();
+    queryClient.invalidateQueries({ queryKey: ["onboarding-status", user?.id] });
   };
 
   const stepIcons: Record<Step, typeof User> = {
