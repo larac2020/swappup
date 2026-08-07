@@ -227,13 +227,13 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
 function SellScreen({ locale }: { locale: "en" | "it" }) {
   const c = sellCopy[locale];
   return (
-    <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
-      <div className="flex items-center justify-between pb-2">
+    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
+      <div className="flex shrink-0 items-center justify-between pb-2">
         <span className="text-sm font-semibold">{c.title}</span>
       </div>
 
       {/* Stepper — step 2 active */}
-      <div className="flex items-center gap-1 pb-2.5">
+      <div className="flex shrink-0 items-center gap-1 pb-2.5">
         {c.steps.map((label, i) => {
           const done = i < 1;
           const active = i === 1;
@@ -257,7 +257,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         })}
       </div>
 
-      <div className="space-y-2.5 overflow-hidden">
+      <div className="min-h-0 flex-1 space-y-2.5 overflow-hidden">
         {/* Flight route — mirrors the glass card on the real Sell page */}
         <SectionHeader icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader} />
         <div className="rounded-xl border border-border/60 bg-secondary/30 p-2 space-y-1.5">
@@ -313,7 +313,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         </div>
       </div>
 
-      <div className="mt-auto pt-3">
+      <div className="mt-auto shrink-0 pt-3">
         <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
           {c.publish}
           <ArrowRight className="h-3.5 w-3.5" />
