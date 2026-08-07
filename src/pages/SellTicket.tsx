@@ -216,7 +216,11 @@ export default function SellTicket() {
         .eq("id", editId!)
         .single();
       if (error) throw error;
-      return data;
+      // PNR is not readable through the Data API — sellers fetch their own via RPC.
+      const { data: pnr } = await supabase.rpc("get_my_listing_booking_reference", {
+        _listing_id: editId!,
+      });
+      return { ...(data as any), booking_reference: pnr ?? null };
     },
     enabled: !!editId,
   });
