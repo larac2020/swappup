@@ -5,12 +5,10 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import App from "./App.tsx";
 import "./index.css";
 
-// Android WebView (Blink) ghosts content painted under GPU-promoted layers.
-// The primary opt-out runs as an inline script in index.html *before first
-// paint*; this is only a fallback for Capacitor-reported Android where the
-// user-agent check may not have matched.
+// Android WebView (Blink) ghosts content painted under `backdrop-filter`
+// layers; opt those out there. See `.no-backdrop-blur` in index.css.
 if (Capacitor.getPlatform() === "android") {
-  document.documentElement.classList.add("no-backdrop-blur", "no-gpu-layers");
+  document.documentElement.classList.add("no-backdrop-blur");
 }
 
 // iOS: the web view renders under the status bar, so the web layer owns the
