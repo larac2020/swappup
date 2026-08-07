@@ -106,6 +106,12 @@
     @apply antialiased;
   }
 
+  html,
+  body,
+  #root {
+    @apply bg-background;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
