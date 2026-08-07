@@ -20,19 +20,27 @@ export function SafeAreaDebug() {
       const inset = probe.getBoundingClientRect().height;
       probe.remove();
 
-      const header = document.querySelector("header.safe-top") as HTMLElement | null;
+      const header = document.querySelector(
+        '[data-safe-area-header="marketing"]',
+      ) as HTMLElement | null;
       const headerPad = header ? getComputedStyle(header).paddingTop : "no header.safe-top";
       const headerTop = header ? Math.round(header.getBoundingClientRect().top) : NaN;
-      const logo = header?.querySelector("img") as HTMLElement | null;
+      const headerPosition = header ? getComputedStyle(header).position : "missing";
+      const logo = header?.querySelector('[data-safe-area-logo="sticky"]') as HTMLElement | null;
       const logoTop = logo ? Math.round(logo.getBoundingClientRect().top) : NaN;
+      const safeToken = getComputedStyle(root).getPropertyValue("--safe-top").trim() || "unset";
 
       setInfo({
-        "ios-native": "yes",
-        inset: `${inset}px`,
-        "header pad": headerPad,
-        "header top": `${headerTop}px`,
-        "logo top": `${logoTop}px`,
-        vv: `${Math.round(window.visualViewport?.height ?? window.innerHeight)}px`,
+        target: header ? "sticky marketing header" : "NOT FOUND",
+        root: root.className || "(none)",
+        "env inset": `${inset}px`,
+        "--safe-top": safeToken,
+        "header position": headerPosition,
+        "header padding": headerPad,
+        "header y": `${headerTop}px`,
+        "sticky logo y": `${logoTop}px`,
+        "visual viewport y": `${Math.round(window.visualViewport?.offsetTop ?? 0)}px`,
+        dpr: String(window.devicePixelRatio),
       });
     };
 
