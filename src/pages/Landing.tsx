@@ -120,7 +120,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{c.demoTitle}</h2>
             <p className="text-muted-foreground whitespace-pre-line">{c.demoSubtitle}</p>
           </div>
-          <div className="relative mt-10 overflow-hidden rounded-3xl border border-border/50 bg-background shadow-2xl shadow-primary/10">
+          <div className="relative mt-10 overflow-hidden rounded-3xl border border-border/50 bg-background shadow-lg shadow-primary/10">
             <video
               ref={videoRef}
               key={locale}

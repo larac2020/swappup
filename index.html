@@ -32,6 +32,18 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Android WebView (Blink) ghosts/duplicates GPU-promoted layers
+      // (backdrop-filter, big blurs, isolate + overflow + radius).
+      // This must run BEFORE first paint — a post-mount classList.add is too
+      // late: the compositor has already captured the stale tile.
+      (function () {
+        var ua = navigator.userAgent || "";
+        if (/Android/i.test(ua)) {
+          document.documentElement.classList.add("no-backdrop-blur", "no-gpu-layers");
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

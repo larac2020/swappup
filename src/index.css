@@ -147,6 +147,29 @@
     -webkit-backdrop-filter: none !important;
   }
 
+  /*
+    Broader Android mitigation: Blink promotes layers for `isolation`,
+    `filter`, large `box-shadow` and `will-change`, then repaints stale tiles
+    while scrolling — producing duplicated/ghosted sections. Neutralise the
+    promotion triggers on Android and make the affected surfaces opaque.
+  */
+  .no-gpu-layers * {
+    will-change: auto !important;
+  }
+
+  .no-gpu-layers [class*="isolate"] {
+    isolation: auto !important;
+  }
+
+  .no-gpu-layers [class*="blur-"]:not([class*="backdrop-blur"]) {
+    filter: none !important;
+  }
+
+  .no-gpu-layers .glass,
+  .no-gpu-layers .glass-strong {
+    background-color: hsl(var(--card)) !important;
+  }
+
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
