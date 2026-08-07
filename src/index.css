@@ -12,6 +12,9 @@
     --background: 220 20% 7%;
     --foreground: 40 20% 95%;
 
+    /* iOS/Android status-bar safe area (0 in normal browsers) */
+    --safe-top: env(safe-area-inset-top, 0px);
+
     --card: 220 18% 10%;
     --card-foreground: 40 20% 95%;
 
