@@ -17,10 +17,11 @@ export function MarketingHeader() {
   return (
     <header
       className="safe-top sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-md"
+      data-safe-area-header="marketing"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2" aria-label="Swappup home">
-          <img src={swappupLogo} alt="Swappup" className="h-9 w-auto" />
+          <img src={swappupLogo} alt="Swappup" className="h-9 w-auto" data-safe-area-logo="sticky" />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-hidden="true" />
