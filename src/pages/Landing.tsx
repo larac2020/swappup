@@ -64,10 +64,20 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
-        </div>
+        {/*
+          Decorative glow. Implemented with radial gradients rather than large
+          `blur-3xl` filtered layers: on Android WebView (Blink) huge filtered
+          layers get promoted to their own composited tiles and can ghost /
+          repaint stale content over neighbouring sections.
+        */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            backgroundImage:
+              "radial-gradient(60% 45% at 50% 30%, hsl(var(--primary) / 0.12), transparent 70%), radial-gradient(40% 35% at 100% 100%, hsl(var(--primary) / 0.07), transparent 70%)",
+          }}
+        />
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
           <div className="mx-auto max-w-3xl text-center space-y-6">
             <div className="flex justify-center">
