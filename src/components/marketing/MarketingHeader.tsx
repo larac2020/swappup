@@ -16,8 +16,7 @@ export function MarketingHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-md"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      className="safe-top sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-md"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2" aria-label="Swappup home">

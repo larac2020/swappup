@@ -12,6 +12,9 @@
     --background: 220 20% 7%;
     --foreground: 40 20% 95%;
 
+    /* iOS/Android status-bar safe area (0 in normal browsers) */
+    --safe-top: env(safe-area-inset-top, 0px);
+
     --card: 220 18% 10%;
     --card-foreground: 40 20% 95%;
 
@@ -119,6 +122,18 @@
 }
 
 @layer utilities {
+  /*
+    Native iOS overlays the status bar on top of the web view. Guarantee a
+    minimum offset even if env(safe-area-inset-top) resolves to 0 there.
+  */
+  .safe-top {
+    padding-top: var(--safe-top);
+  }
+
+  .ios-native .safe-top {
+    padding-top: max(var(--safe-top), 44px);
+  }
+
   /*
     Android WebView (Blink) mis-composites `backdrop-filter` layers that sit on
     top of scrolling content — producing ghosted/duplicated repaints of cards
