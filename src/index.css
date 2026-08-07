@@ -123,6 +123,18 @@
 
 @layer utilities {
   /*
+    Native iOS overlays the status bar on top of the web view. Guarantee a
+    minimum offset even if env(safe-area-inset-top) resolves to 0 there.
+  */
+  .safe-top {
+    padding-top: var(--safe-top);
+  }
+
+  .ios-native .safe-top {
+    padding-top: max(var(--safe-top), 44px);
+  }
+
+  /*
     Android WebView (Blink) mis-composites `backdrop-filter` layers that sit on
     top of scrolling content — producing ghosted/duplicated repaints of cards
     beneath them. iOS/WebKit is unaffected. `main.tsx` adds `.no-backdrop-blur`
