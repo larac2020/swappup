@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +73,7 @@ export default function TransactionHistory() {
       if (listingIds.length > 0) {
         const { data: listingRows } = await supabase
           .from("listings")
-          .select("*")
+          .select(LISTING_COLUMNS)
           .in("id", listingIds);
         listingsById = new Map((listingRows ?? []).map((l: any) => [l.id, l]));
       }

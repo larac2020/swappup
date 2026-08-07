@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -211,11 +212,15 @@ export default function SellTicket() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("id", editId!)
         .single();
       if (error) throw error;
-      return data;
+      // PNR is not readable through the Data API — sellers fetch their own via RPC.
+      const { data: pnr } = await supabase.rpc("get_my_listing_booking_reference", {
+        _listing_id: editId!,
+      });
+      return { ...(data as any), booking_reference: pnr ?? null };
     },
     enabled: !!editId,
   });

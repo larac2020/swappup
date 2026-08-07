@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MiniListingCard } from "@/components/listings/MiniListingCard";
@@ -35,7 +36,7 @@ export default function Home() {
     queryFn: async () => {
       const { count, error } = await supabase
         .from("listings")
-        .select("*", { count: "exact", head: true })
+        .select(LISTING_COLUMNS, { count: "exact", head: true })
         .eq("seller_id", profile!.id)
         .eq("is_active", true);
       if (error) throw error;
@@ -100,7 +101,7 @@ export default function Home() {
       const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .gte("bumped_until", now)
         .order("bumped_until", { ascending: false })
@@ -116,7 +117,7 @@ export default function Home() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .lte("price", 100)
         .order("price", { ascending: true })
@@ -135,7 +136,7 @@ export default function Home() {
       nextWeek.setDate(today.getDate() + 7);
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .gte("departure_date", today.toISOString().split("T")[0])
         .lte("departure_date", nextWeek.toISOString().split("T")[0])
@@ -169,7 +170,7 @@ export default function Home() {
 
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .in("id", topIds)
         .eq("is_active", true);
       if (error) throw error;
@@ -183,7 +184,7 @@ export default function Home() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .eq("origin_city", profile!.favorite_departure_city!)
         .order("created_at", { ascending: false })
@@ -200,7 +201,7 @@ export default function Home() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(10);

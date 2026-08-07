@@ -107,7 +107,10 @@ function PhoneFrame({ children, className }: { children: React.ReactNode; classN
       )}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground/90" />
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]">
+      <div
+        className="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]"
+        style={{ clipPath: "inset(0 round 2rem)", contain: "paint" }}
+      >
         {children}
       </div>
     </div>
@@ -128,9 +131,9 @@ export function PhoneMock({ kind, locale, caption, className }: PhoneMockProps) 
 function BrowseScreen({ locale }: { locale: "en" | "it" }) {
   const c = browseCopy[locale];
   return (
-    <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
+    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
       {/* Page title — matches real Browse */}
-      <div className="pb-2">
+      <div className="shrink-0 pb-2">
         <h3 className="text-sm font-bold leading-tight">{c.title}</h3>
         <p className="text-[10px] text-muted-foreground leading-tight">{c.subtitle}</p>
       </div>
@@ -164,7 +167,7 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
       </div>
 
       {/* Listing cards — mirror real ListingCard layout */}
-      <div className="mt-2.5 space-y-2 overflow-hidden">
+      <div className="mt-2.5 min-h-0 flex-1 space-y-2 overflow-hidden">
         {c.cards.map((card, i) => (
           <div
             key={i}
@@ -224,13 +227,13 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
 function SellScreen({ locale }: { locale: "en" | "it" }) {
   const c = sellCopy[locale];
   return (
-    <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
-      <div className="flex items-center justify-between pb-2">
+    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
+      <div className="flex shrink-0 items-center justify-between pb-2">
         <span className="text-sm font-semibold">{c.title}</span>
       </div>
 
       {/* Stepper — step 2 active */}
-      <div className="flex items-center gap-1 pb-2.5">
+      <div className="flex shrink-0 items-center gap-1 pb-2.5">
         {c.steps.map((label, i) => {
           const done = i < 1;
           const active = i === 1;
@@ -254,15 +257,15 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         })}
       </div>
 
-      <div className="space-y-2.5 overflow-hidden">
+      <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
         {/* Flight route — mirrors the glass card on the real Sell page */}
         <SectionHeader icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2 space-y-1.5">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5 space-y-1">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.countryLabel} value={c.fromCountry} />
             <Field label={c.cityLabel} value={c.fromCity} />
           </div>
-          <div className="flex justify-center py-0.5">
+          <div className="flex justify-center">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20">
               <Plane className="h-2.5 w-2.5 -rotate-45 text-primary" />
             </div>
@@ -275,7 +278,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Date + Time (one-way) */}
         <SectionHeader icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.dateLabel} value={c.date} />
             <Field label={c.timeLabel} value={c.time} />
@@ -284,7 +287,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Airline & flight */}
         <SectionHeader title={c.airlineHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.airlineLabel} value={c.airline} />
             <Field label={c.flightLabel} value={c.flightNo} />
@@ -302,7 +305,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Pricing */}
         <SectionHeader title={c.priceHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.originalLabel} value={c.originalPrice} muted />
             <Field label={c.listingLabel} value={c.listingPrice} accent />
@@ -310,8 +313,8 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         </div>
       </div>
 
-      <div className="mt-auto pt-3">
-        <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
+      <div className="mt-auto shrink-0 pt-2">
+        <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
           {c.publish}
           <ArrowRight className="h-3.5 w-3.5" />
         </button>

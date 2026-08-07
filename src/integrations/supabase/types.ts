@@ -1578,6 +1578,10 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_my_listing_booking_reference: {
+        Args: { _listing_id: string }
+        Returns: string
+      }
       get_public_profiles: {
         Args: { _profile_ids: string[] }
         Returns: {
