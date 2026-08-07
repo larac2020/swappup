@@ -208,9 +208,16 @@ export default function Landing() {
                 {locale === "it" ? "Scarica l'app Swappup" : "Get the Swappup app"}
               </h2>
               <p className="text-muted-foreground">
-                {locale === "it"
-                  ? "Cerca, vendi e acquista biglietti aerei direttamente dal tuo telefono. Inquadra il QR code per installare l'app."
-                  : "Search, sell and buy flight tickets right from your phone. Scan the QR code to install the app."}
+                <span className="hidden md:inline">
+                  {locale === "it"
+                    ? "Cerca, vendi e acquista biglietti aerei direttamente dal tuo telefono. Inquadra il QR code per installare l'app."
+                    : "Search, sell and buy flight tickets right from your phone. Scan the QR code to install the app."}
+                </span>
+                <span className="md:hidden">
+                  {locale === "it"
+                    ? "Cerca, vendi e acquista biglietti aerei direttamente dal tuo telefono."
+                    : "Search, sell and buy flight tickets right from your phone."}
+                </span>
               </p>
               <div className="flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start sm:justify-center">
                 <StoreBadge
@@ -233,8 +240,8 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* QR code — desktop emphasis */}
-            <div className="flex justify-center">
+            {/* QR code — desktop only (useless on a phone screen) */}
+            <div className="hidden md:flex justify-center">
               <div className="glass rounded-3xl border border-border/50 p-6 text-center space-y-4 shadow-2xl shadow-primary/10">
                 <div className="rounded-2xl bg-white p-4">
                   <img
