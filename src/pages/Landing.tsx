@@ -100,7 +100,7 @@ export default function Landing() {
       </section>
 
       {/* Demo video */}
-      <section className="relative isolate bg-background border-t border-border/50 bg-secondary/10">
+      <section className="relative isolate border-t border-border/50 bg-secondary/10">
         <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
           <div className="mx-auto max-w-2xl text-center space-y-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">{c.demoEyebrow}</p>
@@ -136,7 +136,7 @@ export default function Landing() {
       </section>
 
       {/* Value */}
-      <section className="relative isolate bg-background border-t border-border/50 bg-secondary/20">
+      <section className="relative isolate border-t border-border/50 bg-secondary/20">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <div className="grid items-start gap-12 md:grid-cols-2">
             <div className="space-y-5">
@@ -254,7 +254,7 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative isolate bg-background border-t border-border/50 bg-gradient-to-b from-secondary/10 to-background">
+      <section className="relative isolate border-t border-border/50 bg-gradient-to-b from-secondary/10 to-background">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{c.finalTitle}</h2>
           <p className="mt-3 text-muted-foreground">{c.finalSubtitle}</p>
