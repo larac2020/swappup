@@ -10,6 +10,9 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
 import swappupLogo from "@/assets/swappup-logo.png";
+import { Capacitor } from "@capacitor/core";
+
+const isNativeApp = Capacitor.isNativePlatform();
 
 export default function Landing() {
   const { locale } = useLanguage();
@@ -191,7 +194,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Get the app */}
+      {/* Get the app — hidden inside the native app */}
+      {!isNativeApp && (
       <section className="relative isolate bg-background border-t border-border/50">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <div className="grid items-center gap-10 md:grid-cols-2">
@@ -252,6 +256,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Final CTA */}
       <section className="relative isolate border-t border-border/50 bg-gradient-to-b from-secondary/10 to-background">
