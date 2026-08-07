@@ -107,13 +107,7 @@ function PhoneFrame({ children, className }: { children: React.ReactNode; classN
       )}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground/90" />
-      {/*
-        No `isolate` and no arbitrary `[aspect-ratio]` here: on Android WebView
-        the isolate + overflow-hidden + rounded + aspect-ratio combination gets
-        promoted to its own composited tile and ghosts. `aspect-[9/19]` maps to
-        the same aspect-ratio but keeps the stacking context flat.
-      */}
-      <div className="relative flex w-full overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]">
+      <div className="relative isolate flex overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background [aspect-ratio:9/19]">
         {children}
       </div>
     </div>

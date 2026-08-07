@@ -15,13 +15,10 @@ export function MarketingHeader() {
   const c = headerContent[locale];
 
   return (
-    <header
-      className="safe-top sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-md"
-      data-safe-area-header="marketing"
-    >
+    <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2" aria-label="Swappup home">
-          <img src={swappupLogo} alt="Swappup" className="h-9 w-auto" data-safe-area-logo="sticky" />
+          <img src={swappupLogo} alt="Swappup" className="h-9 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-hidden="true" />

@@ -12,9 +12,6 @@
     --background: 220 20% 7%;
     --foreground: 40 20% 95%;
 
-    /* iOS/Android status-bar safe area (0 in normal browsers) */
-    --safe-top: env(safe-area-inset-top, 0px);
-
     --card: 220 18% 10%;
     --card-foreground: 40 20% 95%;
 
@@ -122,61 +119,6 @@
 }
 
 @layer utilities {
-  /*
-    Native iOS overlays the status bar on top of the web view. Guarantee a
-    minimum offset even if env(safe-area-inset-top) resolves to 0 there.
-  */
-  .safe-top {
-    padding-top: var(--safe-top);
-  }
-
-  .ios-native .safe-top {
-    padding-top: max(var(--safe-top), 44px);
-  }
-
-  /*
-    Android WebView (Blink) mis-composites `backdrop-filter` layers that sit on
-    top of scrolling content — producing ghosted/duplicated repaints of cards
-    beneath them. iOS/WebKit is unaffected. `main.tsx` adds `.no-backdrop-blur`
-    to <html> on Android so we fall back to opaque surfaces there.
-  */
-  .no-backdrop-blur [class*="backdrop-blur"],
-  .no-backdrop-blur .glass,
-  .no-backdrop-blur .glass-strong {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  /*
-    Broader Android WebView mitigation. Ghosting/duplicated tiles on Blink are
-    triggered by more than `backdrop-filter`: `isolation: isolate`, big blurred
-    box-shadows, `filter: blur()` layers and clipped rounded containers all get
-    promoted to their own composited tiles that can repaint stale content.
-    `.android-flat` is applied synchronously from an inline script in
-    index.html (before first paint) so the compositor never promotes them.
-  */
-  .android-flat .isolate,
-  .android-flat [class*="isolate"] {
-    isolation: auto !important;
-  }
-
-  .android-flat [class*="blur-"]:not([class*="backdrop-blur"]) {
-    filter: none !important;
-  }
-
-  .android-flat [class*="shadow-2xl"],
-  .android-flat [class*="shadow-xl"],
-  .android-flat .shadow-glow,
-  .android-flat .shadow-glow-sm {
-    box-shadow: none !important;
-  }
-
-  /* Opaque surfaces so removing the blur still reads as a card. */
-  .android-flat .glass,
-  .android-flat .glass-strong {
-    background-color: hsl(var(--card)) !important;
-  }
-
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }

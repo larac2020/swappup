@@ -2,31 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Swappup | Buy &amp; resell unused flight tickets</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="description" content="Swappup is the marketplace where travellers buy and resell unused flight tickets. Secure payments, ID-verified users.">
     <meta name="author" content="SwappUp" />
-    <script>
-      /*
-        Android WebView (Blink) ghosting mitigation. This MUST run before the
-        first paint/composite: promoting-and-then-un-promoting a layer after
-        the compositor has already captured a tile does not undo the ghost.
-        Hence an inline head script rather than a React/module side effect.
-      */
-      (function () {
-        try {
-          var ua = navigator.userAgent || "";
-          var cap = window.Capacitor;
-          var isAndroid =
-            (cap && typeof cap.getPlatform === "function" && cap.getPlatform() === "android") ||
-            /Android/i.test(ua);
-          if (isAndroid) {
-            document.documentElement.classList.add("no-backdrop-blur", "android-flat");
-          }
-        } catch (e) {}
-      })();
-    </script>
 
     
     
