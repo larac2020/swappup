@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, showNav = true }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+    <div className="safe-top min-h-screen bg-background">
       <main className={showNav ? "pb-28" : ""}>
         {children}
       </main>
