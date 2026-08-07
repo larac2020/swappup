@@ -107,7 +107,10 @@ function PhoneFrame({ children, className }: { children: React.ReactNode; classN
       )}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground/90" />
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]">
+      <div
+        className="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]"
+        style={{ clipPath: "inset(0 round 2rem)", contain: "paint" }}
+      >
         {children}
       </div>
     </div>
