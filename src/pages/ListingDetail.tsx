@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ export default function ListingDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("id", id!)
         .single();
       if (error) throw error;

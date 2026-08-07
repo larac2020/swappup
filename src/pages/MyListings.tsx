@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -88,7 +89,7 @@ export default function MyListings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("seller_id", profile!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -147,7 +148,7 @@ export default function MyListings() {
       const ids = Array.from(new Set(rows.map((r) => r.listing_id).filter(Boolean)));
       const { data: listingRows } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .in("id", ids);
       const byId = new Map((listingRows ?? []).map((l: any) => [l.id, l]));
       return rows.map((r) => ({ ...r, listings: byId.get(r.listing_id) ?? null }));

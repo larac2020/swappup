@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -86,7 +87,7 @@ export default function Browse() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { LISTING_COLUMNS } from "@/lib/listingColumns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -211,7 +212,7 @@ export default function SellTicket() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(LISTING_COLUMNS)
         .eq("id", editId!)
         .single();
       if (error) throw error;
