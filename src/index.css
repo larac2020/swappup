@@ -119,6 +119,19 @@
 }
 
 @layer utilities {
+  /*
+    Android WebView (Blink) mis-composites `backdrop-filter` layers that sit on
+    top of scrolling content — producing ghosted/duplicated repaints of cards
+    beneath them. iOS/WebKit is unaffected. `main.tsx` adds `.no-backdrop-blur`
+    to <html> on Android so we fall back to opaque surfaces there.
+  */
+  .no-backdrop-blur [class*="backdrop-blur"],
+  .no-backdrop-blur .glass,
+  .no-backdrop-blur .glass-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
