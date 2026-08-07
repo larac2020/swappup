@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 
 /**
- * Temporary on-device diagnostic for the iOS status-bar overlap.
- * Renders ONLY inside the native iOS shell (where <html> carries `ios-native`),
- * so browser and Android users never see it. Remove once the cause is known.
+ * TEMPORARY on-device diagnostic for the iOS status-bar overlap.
+ * Renders unconditionally (bright red) so we can also see the case where the
+ * `ios-native` class is NOT present. Remove once the root cause is confirmed.
  */
 export function SafeAreaDebug() {
   const [info, setInfo] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (!root.classList.contains("ios-native")) return;
 
     const read = () => {
       const probe = document.createElement("div");
@@ -31,6 +30,7 @@ export function SafeAreaDebug() {
       const safeToken = getComputedStyle(root).getPropertyValue("--safe-top").trim() || "unset";
 
       setInfo({
+        "ios-native": root.classList.contains("ios-native") ? "YES" : "NO",
         target: header ? "sticky marketing header" : "NOT FOUND",
         root: root.className || "(none)",
         "env inset": `${inset}px`,
@@ -57,7 +57,7 @@ export function SafeAreaDebug() {
 
   return (
     <div
-      className="fixed bottom-2 left-2 z-[9999] rounded-md bg-foreground/85 px-2 py-1 font-mono text-[10px] leading-tight text-background"
+      className="fixed bottom-2 left-2 right-2 z-[99999] rounded-md border-2 border-yellow-300 bg-red-600 px-2 py-1 font-mono text-[11px] font-bold leading-tight text-white shadow-lg"
       role="status"
     >
       {Object.entries(info).map(([k, v]) => (
