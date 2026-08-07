@@ -257,15 +257,15 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         })}
       </div>
 
-      <div className="min-h-0 flex-1 space-y-2.5 overflow-hidden">
+      <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
         {/* Flight route — mirrors the glass card on the real Sell page */}
         <SectionHeader icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2 space-y-1.5">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5 space-y-1">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.countryLabel} value={c.fromCountry} />
             <Field label={c.cityLabel} value={c.fromCity} />
           </div>
-          <div className="flex justify-center py-0.5">
+          <div className="flex justify-center">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20">
               <Plane className="h-2.5 w-2.5 -rotate-45 text-primary" />
             </div>
@@ -278,7 +278,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Date + Time (one-way) */}
         <SectionHeader icon={<CalendarIcon className="h-3 w-3 text-primary" />} title={c.dateHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.dateLabel} value={c.date} />
             <Field label={c.timeLabel} value={c.time} />
@@ -287,7 +287,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Airline & flight */}
         <SectionHeader title={c.airlineHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.airlineLabel} value={c.airline} />
             <Field label={c.flightLabel} value={c.flightNo} />
@@ -305,7 +305,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
 
         {/* Pricing */}
         <SectionHeader title={c.priceHeader} />
-        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2">
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5">
           <div className="grid grid-cols-2 gap-1.5">
             <Field label={c.originalLabel} value={c.originalPrice} muted />
             <Field label={c.listingLabel} value={c.listingPrice} accent />
@@ -313,8 +313,8 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         </div>
       </div>
 
-      <div className="mt-auto shrink-0 pt-3">
-        <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
+      <div className="mt-auto shrink-0 pt-2">
+        <button className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
           {c.publish}
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
