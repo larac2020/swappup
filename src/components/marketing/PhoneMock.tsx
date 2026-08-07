@@ -107,10 +107,7 @@ function PhoneFrame({ children, className }: { children: React.ReactNode; classN
       )}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground/90" />
-      <div
-        className="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]"
-        style={{ clipPath: "inset(0 round 2rem)", contain: "paint" }}
-      >
+      <div className="relative isolate flex overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background [aspect-ratio:9/19]">
         {children}
       </div>
     </div>
@@ -131,7 +128,7 @@ export function PhoneMock({ kind, locale, caption, className }: PhoneMockProps) 
 function BrowseScreen({ locale }: { locale: "en" | "it" }) {
   const c = browseCopy[locale];
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
+    <div className="flex w-full flex-col px-3 pt-8 pb-3 text-foreground">
       {/* Page title — matches real Browse */}
       <div className="shrink-0 pb-2">
         <h3 className="text-sm font-bold leading-tight">{c.title}</h3>
@@ -139,7 +136,7 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
       </div>
 
       {/* AI Search card — mirrors real "glass" AI Search block */}
-      <div className="rounded-xl border border-border/60 bg-secondary/40 p-2 space-y-1.5 backdrop-blur">
+      <div className="rounded-xl border border-border/60 bg-secondary/40 p-2 space-y-1.5">
         <div className="flex items-center gap-1">
           <Sparkles className="h-3 w-3 text-primary" />
           <span className="text-[10px] font-semibold">{c.aiHeader}</span>
@@ -167,21 +164,21 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
       </div>
 
       {/* Listing cards — mirror real ListingCard layout */}
-      <div className="mt-2.5 min-h-0 flex-1 space-y-2 overflow-hidden">
+      <div className="mt-2.5 flex-1 space-y-2 overflow-hidden">
         {c.cards.map((card, i) => (
           <div
             key={i}
-            className="overflow-hidden rounded-xl border border-border/60 bg-secondary/30 backdrop-blur"
+            className="overflow-hidden rounded-xl border border-border/60 bg-secondary/30"
           >
             <div className="relative h-14 w-full overflow-hidden">
               <img src={card.image} alt={card.toCity} className="h-full w-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent" />
               {/* Price badge top-right */}
-              <div className="absolute right-1.5 top-1.5 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold text-primary backdrop-blur">
+              <div className="absolute right-1.5 top-1.5 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold text-primary">
                 {card.price}
               </div>
               {/* Favorite bottom-right */}
-              <div className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-md bg-background/85 backdrop-blur">
+              <div className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-md bg-background/85">
                 <Heart className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
             </div>
@@ -227,7 +224,7 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
 function SellScreen({ locale }: { locale: "en" | "it" }) {
   const c = sellCopy[locale];
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
+    <div className="flex w-full flex-col px-3 pt-8 pb-3 text-foreground">
       <div className="flex shrink-0 items-center justify-between pb-2">
         <span className="text-sm font-semibold">{c.title}</span>
       </div>
@@ -257,7 +254,7 @@ function SellScreen({ locale }: { locale: "en" | "it" }) {
         })}
       </div>
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
+      <div className="flex-1 space-y-2 overflow-hidden">
         {/* Flight route — mirrors the glass card on the real Sell page */}
         <SectionHeader icon={<Plane className="h-3 w-3 text-primary" />} title={c.routeHeader} />
         <div className="rounded-xl border border-border/60 bg-secondary/30 p-1.5 space-y-1">
