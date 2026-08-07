@@ -29,6 +29,7 @@ import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
+import { SafeAreaDebug } from "./components/debug/SafeAreaDebug";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <SafeAreaDebug />
           <Routes>
             {/* Public marketing site */}
             <Route path="/" element={<Landing />} />
