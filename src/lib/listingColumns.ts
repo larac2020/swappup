@@ -1,18 +1,6 @@
-// Columns of `listings` that are readable by the Data API.
-// `booking_reference` / `booking_fingerprint` are intentionally excluded:
-// airline PNR codes are never exposed through public queries. The seller can
-// fetch their own PNR via the `get_my_listing_booking_reference` RPC.
-export const LISTING_COLUMNS = [
-  "id","seller_id","title","destination_city","destination_country","origin_city","origin_country",
-  "departure_date","return_date","airline","flight_number","price","original_price","name_change_fee",
-  "ticket_count","destination_image_url","luggage_included","carry_on_included","meal_included",
-  "speedy_boarding","stopovers","additional_notes","tags","is_active","created_at","updated_at",
-  "bumped_until","per_ticket_inclusions","listing_type","credit_type","credit_value","credit_expiry_date",
-  "credit_currency","voucher_verified","voucher_confidence_score","voucher_reference_code",
-  "voucher_verification_flags","voucher_restrictions","operator","train_number","train_class",
-  "origin_station","destination_station","departure_time","arrival_time","return_departure_time",
-  "return_arrival_time","return_flight_number","currency","origin_airport","destination_airport",
-  "name_change_risk_acknowledged_at","train_type","travel_class","train_inclusions","return_stopovers",
-  "return_travel_class","return_luggage_included","return_carry_on_included","return_meal_included",
-  "return_speedy_boarding","return_per_ticket_inclusions","is_sold","sold_at",
-].join(", ");
+// Columns of `listings` readable through the Data API.
+// `booking_reference` / `booking_fingerprint` are intentionally excluded: airline
+// PNR codes are never exposed to public queries. A seller reads their own PNR via
+// the `get_my_listing_booking_reference` RPC.
+export const LISTING_COLUMNS =
+  "id, seller_id, title, destination_city, destination_country, origin_city, origin_country, departure_date, return_date, airline, flight_number, price, original_price, name_change_fee, ticket_count, destination_image_url, luggage_included, carry_on_included, meal_included, speedy_boarding, stopovers, additional_notes, tags, is_active, created_at, updated_at, bumped_until, per_ticket_inclusions, listing_type, credit_type, credit_value, credit_expiry_date, credit_currency, voucher_verified, voucher_confidence_score, voucher_reference_code, voucher_verification_flags, voucher_restrictions, operator, train_number, train_class, origin_station, destination_station, departure_time, arrival_time, return_departure_time, return_arrival_time, return_flight_number, currency, origin_airport, destination_airport, name_change_risk_acknowledged_at, train_type, travel_class, train_inclusions, return_stopovers, return_travel_class, return_luggage_included, return_carry_on_included, return_meal_included, return_speedy_boarding, return_per_ticket_inclusions, is_sold, sold_at" as const;
