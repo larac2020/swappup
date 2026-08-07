@@ -147,6 +147,36 @@
     -webkit-backdrop-filter: none !important;
   }
 
+  /*
+    Broader Android WebView mitigation. Ghosting/duplicated tiles on Blink are
+    triggered by more than `backdrop-filter`: `isolation: isolate`, big blurred
+    box-shadows, `filter: blur()` layers and clipped rounded containers all get
+    promoted to their own composited tiles that can repaint stale content.
+    `.android-flat` is applied synchronously from an inline script in
+    index.html (before first paint) so the compositor never promotes them.
+  */
+  .android-flat .isolate,
+  .android-flat [class*="isolate"] {
+    isolation: auto !important;
+  }
+
+  .android-flat [class*="blur-"]:not([class*="backdrop-blur"]) {
+    filter: none !important;
+  }
+
+  .android-flat [class*="shadow-2xl"],
+  .android-flat [class*="shadow-xl"],
+  .android-flat .shadow-glow,
+  .android-flat .shadow-glow-sm {
+    box-shadow: none !important;
+  }
+
+  /* Opaque surfaces so removing the blur still reads as a card. */
+  .android-flat .glass,
+  .android-flat .glass-strong {
+    background-color: hsl(var(--card)) !important;
+  }
+
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
