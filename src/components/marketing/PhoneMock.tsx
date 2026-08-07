@@ -131,9 +131,9 @@ export function PhoneMock({ kind, locale, caption, className }: PhoneMockProps) 
 function BrowseScreen({ locale }: { locale: "en" | "it" }) {
   const c = browseCopy[locale];
   return (
-    <div className="flex h-full flex-col px-3 pt-8 pb-3 text-foreground">
+    <div className="absolute inset-0 flex flex-col overflow-hidden px-3 pt-8 pb-3 text-foreground">
       {/* Page title — matches real Browse */}
-      <div className="pb-2">
+      <div className="shrink-0 pb-2">
         <h3 className="text-sm font-bold leading-tight">{c.title}</h3>
         <p className="text-[10px] text-muted-foreground leading-tight">{c.subtitle}</p>
       </div>
@@ -167,7 +167,7 @@ function BrowseScreen({ locale }: { locale: "en" | "it" }) {
       </div>
 
       {/* Listing cards — mirror real ListingCard layout */}
-      <div className="mt-2.5 space-y-2 overflow-hidden">
+      <div className="mt-2.5 min-h-0 flex-1 space-y-2 overflow-hidden">
         {c.cards.map((card, i) => (
           <div
             key={i}
