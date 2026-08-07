@@ -102,12 +102,12 @@ function PhoneFrame({ children, className }: { children: React.ReactNode; classN
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-[300px] rounded-[2.5rem] border border-border/60 bg-background p-2 shadow-2xl shadow-primary/10",
+        "relative mx-auto w-full max-w-[300px] rounded-[2.5rem] border border-border/60 bg-background p-2 shadow-lg shadow-primary/10",
         className,
       )}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground/90" />
-      <div className="relative isolate flex overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background [aspect-ratio:9/19]">
+      <div className="relative flex overflow-hidden rounded-[2rem] bg-gradient-to-b from-secondary/40 to-background aspect-[9/19]">
         {children}
       </div>
     </div>
