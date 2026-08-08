@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import {
   User, CreditCard, Shield, MapPin, Sparkles, CheckCircle,
-  Loader2, Camera, Upload, X, Eye, EyeOff, Lock, ChevronRight,
+  Loader2, Camera, Upload, X, ChevronRight,
   Search, Plane, AlertCircle
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
