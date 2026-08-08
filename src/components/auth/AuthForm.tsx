@@ -102,6 +102,13 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
           throw error;
         }
 
+        // Supabase silently no-ops when the email already belongs to an account:
+        // it returns a success response with an obfuscated user and no identities.
+        if (data?.user && (data.user.identities?.length ?? 0) === 0) {
+          setEmailExists(true);
+          return;
+        }
+
         // Ensure a fresh signup always goes through the onboarding flow
         localStorage.removeItem("flyswap_onboarding_complete");
 
