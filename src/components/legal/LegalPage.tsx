@@ -37,6 +37,9 @@ export default function LegalPage({ doc }: LegalPageProps) {
         <article className="prose prose-invert mt-10 max-w-none prose-headings:font-semibold prose-h2:text-xl prose-h2:mt-10 prose-h3:text-lg prose-p:text-foreground/90 prose-p:leading-relaxed prose-li:text-foreground/90 prose-strong:text-foreground prose-a:text-primary">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </article>
+        <p className="mt-10 border-t border-border/50 pt-6 text-xs text-muted-foreground">
+          SWAPPUP LTD — Company No. 17169674 — 1 Yabsley Street, London, E14 9RG, UK
+        </p>
       </section>
     </MarketingLayout>
   );
