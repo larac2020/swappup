@@ -23,6 +23,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { markOnboardedInMetadata } from "@/lib/onboardingStatus";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
@@ -584,9 +585,15 @@ export default function Onboarding() {
                   </div>
                 )}
                 <div className="space-y-3">
-                  <Button variant="gold" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/sell"); }}>
-                    <Plane className="w-4 h-4 mr-2" /> {t("onbStartSelling")}
-                  </Button>
+                  {allRequiredComplete ? (
+                    <Button variant="gold" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/sell"); }}>
+                      <Plane className="w-4 h-4 mr-2" /> {t("onbStartSelling")}
+                    </Button>
+                  ) : (
+                    <Button variant="gold" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/account"); }}>
+                      <User className="w-4 h-4 mr-2" /> {t("onbCompleteProfile")}
+                    </Button>
+                  )}
                   <Button variant="outline" size="lg" className="w-full" onClick={() => { finishSetup(); navigate("/browse"); }}>
                     <Search className="w-4 h-4 mr-2" /> {t("onbExplore")}
                   </Button>
