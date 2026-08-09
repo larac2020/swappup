@@ -4,7 +4,7 @@ _Questa Informativa sulla Privacy è un modello di lavoro adattato a SwappUp. De
 
 ## 1. Chi siamo
 
-SwappUp è il titolare del trattamento dei dati personali trattati nell'ambito del marketplace SwappUp (il "**Servizio**"). Per domande sulla protezione dei dati, contattaci a **privacy@swappup.com**.
+**SWAPPUP LTD**, società registrata in Inghilterra e Galles con numero di registrazione **17169674**, con sede legale in **1 Yabsley Street, Londra, E14 9RG, Regno Unito** (operante con il marchio "SwappUp"), è il titolare del trattamento dei dati personali trattati nell'ambito del marketplace SwappUp (il "**Servizio**"). Per domande sulla protezione dei dati, contattaci a **privacy@swappup.com**.
 
 ## 2. Quali dati raccogliamo
 

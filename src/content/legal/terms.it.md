@@ -6,6 +6,8 @@ _Questi Termini sono un modello di lavoro adattato a SwappUp. Devono essere revi
 
 SwappUp ("**SwappUp**", "noi") gestisce un marketplace peer-to-peer che consente agli utenti di rivendere biglietti aerei, biglietti ferroviari e crediti di viaggio ad altri utenti. Creando un account o utilizzando la piattaforma SwappUp (il "**Servizio**") accetti i presenti Termini di Servizio (i "**Termini**").
 
+SwappUp è un marchio commerciale di **SWAPPUP LTD**, società registrata in Inghilterra e Galles con numero di registrazione **17169674**, con sede legale in **1 Yabsley Street, Londra, E14 9RG, Regno Unito**.
+
 Se non accetti questi Termini, non puoi utilizzare il Servizio.
 
 ## 2. Requisiti
@@ -104,3 +106,5 @@ Questi Termini sono regolati dal diritto inglese e gallese. Le controversie sara
 ## 14. Contatti
 
 Domande sui Termini: **support@swappup.com**.
+
+SWAPPUP LTD — Numero di registrazione 17169674 — Sede legale: 1 Yabsley Street, Londra, E14 9RG, Regno Unito.
