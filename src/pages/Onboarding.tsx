@@ -110,6 +110,7 @@ export default function Onboarding() {
   const [defaultPax, setDefaultPax] = useState("1");
 
   const [saving, setSaving] = useState(false);
+  const { allRequiredComplete } = useProfileCompletion();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
