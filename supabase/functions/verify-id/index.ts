@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { requireUser } from "../_shared/require-user.ts";
+import {
+  GENERIC_VERIFICATION_FAILURE_MESSAGE,
+  isSanctionedIssuingCountry,
+} from "../_shared/verification-constants.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -184,19 +188,54 @@ You must respond ONLY with a JSON object using this exact tool call format.`
 
     const verification = { ...result, is_expired, document_number_last4 };
 
+    // Sanctioned issuing country -> treated exactly like any other failure.
+    const sanctioned = isSanctionedIssuingCountry(verification.issuing_country);
+
+    // Internal-only logging of the true reason. Never returned to the client.
+    const internalReasons: string[] = [];
+    if (!verification.is_valid_id) internalReasons.push("not_valid_id");
+    if (!verification.appears_genuine) internalReasons.push("not_genuine");
+    if (verification.is_expired) internalReasons.push("expired");
+    if (sanctioned) internalReasons.push(`sanctioned_issuing_country:${verification.issuing_country}`);
+    if (verification.name_matches_profile === false) internalReasons.push("name_mismatch");
+    if (internalReasons.length > 0) {
+      console.log(
+        "verify-id failure",
+        JSON.stringify({
+          user_id: auth.user.id,
+          reasons: internalReasons,
+          ai_reason: verification.reason,
+          document_type: verification.document_type,
+          issuing_country: verification.issuing_country,
+          confidence: verification.confidence,
+        }),
+      );
+    }
+
+    if (sanctioned) {
+      // Make it structurally identical to a generic document failure.
+      verification.is_valid_id = false;
+      verification.appears_genuine = false;
+    }
+
+    // Never leak the specific AI-produced reason to the client.
+    if (!verification.is_valid_id || !verification.appears_genuine || verification.is_expired) {
+      verification.reason = GENERIC_VERIFICATION_FAILURE_MESSAGE;
+    }
+
     // Persist the verified fields server-side (service role bypasses the
     // protected-columns trigger on `profiles`). Clients are forbidden from
     // writing verification_status / id_document_* directly.
     if (persist === true) {
       if (!verification.is_valid_id || !verification.appears_genuine || verification.is_expired) {
         return new Response(
-          JSON.stringify({ error: "Document failed verification", verification }),
+          JSON.stringify({ error: GENERIC_VERIFICATION_FAILURE_MESSAGE, verification }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       if (verification.name_matches_profile === false && acknowledge_name_mismatch !== true) {
         return new Response(
-          JSON.stringify({ error: "Name mismatch not acknowledged", verification }),
+          JSON.stringify({ error: GENERIC_VERIFICATION_FAILURE_MESSAGE, verification }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
@@ -227,7 +266,7 @@ You must respond ONLY with a JSON object using this exact tool call format.`
       if (updateError) {
         console.error("verify-id persist error:", updateError);
         return new Response(
-          JSON.stringify({ error: "Failed to persist verification" }),
+          JSON.stringify({ error: GENERIC_VERIFICATION_FAILURE_MESSAGE }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
