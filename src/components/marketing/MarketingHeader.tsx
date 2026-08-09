@@ -8,11 +8,14 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { Capacitor } from "@capacitor/core";
 
 export function MarketingHeader() {
   const { isAuthenticated } = useAuth();
   const { locale, setLocale } = useLanguage();
   const c = headerContent[locale];
+  const isNative = Capacitor.isNativePlatform();
+  const appCtaLabel = isNative && isAuthenticated ? "Home" : c.openApp;
 
   return (
     <header
@@ -59,7 +62,7 @@ export function MarketingHeader() {
           </div>
           {isAuthenticated ? (
             <Button asChild variant="gold" size="sm">
-              <Link to="/home">{c.openApp}</Link>
+              <Link to="/home">{appCtaLabel}</Link>
             </Button>
           ) : (
             <>
@@ -106,7 +109,7 @@ export function MarketingHeader() {
                 {isAuthenticated ? (
                   <SheetClose asChild>
                     <Button asChild variant="gold" className="w-full">
-                      <Link to="/home">{c.openApp}</Link>
+                      <Link to="/home">{appCtaLabel}</Link>
                     </Button>
                   </SheetClose>
                 ) : (
