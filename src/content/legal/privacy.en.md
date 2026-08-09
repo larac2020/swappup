@@ -4,7 +4,7 @@ _This Privacy Policy is a working template tailored to SwappUp. It must be revie
 
 ## 1. Who we are
 
-SwappUp is the data controller for the personal data processed in connection with the SwappUp marketplace ("**Service**"). For data-protection questions, contact us at **privacy@swappup.com**.
+**SWAPPUP LTD**, a company registered in England and Wales under company number **17169674**, with registered office at **1 Yabsley Street, London, E14 9RG, United Kingdom** (trading as "SwappUp"), is the data controller for the personal data processed in connection with the SwappUp marketplace ("**Service**"). For data-protection questions, contact us at **privacy@swappup.com**.
 
 ## 2. What data we collect
 

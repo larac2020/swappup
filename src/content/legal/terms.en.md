@@ -6,6 +6,8 @@ _These Terms are a working template tailored to SwappUp. They must be reviewed b
 
 SwappUp ("**SwappUp**", "we", "us") operates a peer-to-peer marketplace that allows users to resell flight tickets, train tickets and travel credits to other users. By creating an account or using the SwappUp platform (the "**Service**") you agree to these Terms of Service (the "**Terms**").
 
+SwappUp is a trading name of **SWAPPUP LTD**, a company registered in England and Wales under company number **17169674**, with registered office at **1 Yabsley Street, London, E14 9RG, United Kingdom**.
+
 If you do not agree to these Terms, you must not use the Service.
 
 ## 2. Eligibility
@@ -104,3 +106,5 @@ These Terms are governed by the laws of England and Wales. Disputes will be brou
 ## 14. Contact
 
 Questions about these Terms: **support@swappup.com**.
+
+SWAPPUP LTD — Company number 17169674 — Registered office: 1 Yabsley Street, London, E14 9RG, United Kingdom.
