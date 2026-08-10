@@ -619,6 +619,8 @@ export default function SellTicket() {
           returnDepartureTime: inboundDepTime,
           returnArrivalTime: inboundArrTime,
           bookingReference: typeof p.bookingReference === "string" ? p.bookingReference.trim() : "",
+          stopovers: String(outStops),
+          returnStopovers: String(inStops),
         }));
 
         // Sync per-ticket array
