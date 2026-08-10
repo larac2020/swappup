@@ -25,6 +25,7 @@ Important rules:
 - For dates, use ISO format: YYYY-MM-DD.
 - For times use HH:MM (24h).
 - For FLIGHTS: extract airline, flightNumber, origin/destination cities + countries, dates, times, price, ticketCount, and travelClass (cabin class).
+- For FLIGHTS also extract, per journey direction, the list of airlines operating each leg (outboundLegAirlines / inboundLegAirlines) and the number of stopovers (outboundStopovers / inboundStopovers). Only populate the leg-airline arrays when the carrier of every leg is clearly printed; if any leg's carrier is unclear, omit the array entirely rather than guessing.
 - For TRAINS: extract operator (NOT airline), trainNumber, origin/destination station names AND cities + countries, departure + arrival times for every leg, trainType, travelClass, fareClass, price and number of passengers. Do NOT populate the "airline" field for trains.
 
 TRAIN OPERATOR VOCABULARY (use these exact operator names):
