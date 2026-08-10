@@ -53,11 +53,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           .eq("user_id", data.user.id)
           .maybeSingle();
         if (cancelled || !profile) return;
-        if (profile.preferred_language !== local) {
+        // Only upgrade the default: never overwrite a stored non-'en' choice
+        if (profile.preferred_language === "en" && local !== "en") {
           await supabase
             .from("profiles")
             .update({ preferred_language: local })
             .eq("user_id", data.user.id);
+        } else if (profile.preferred_language && profile.preferred_language !== local) {
+          // DB is authoritative otherwise
+          setLocaleState(profile.preferred_language as Locale);
+          localStorage.setItem("flyswap_language", profile.preferred_language);
         }
       } catch {
         // ignore
