@@ -115,6 +115,18 @@ PRICE EXTRACTION (CRITICAL — used to cap the seller's resale price):
                   destinationCity: { type: "string", description: "Arrival city name" },
                   destinationCountry: { type: "string", description: "Arrival country full name" },
                   airline: { type: "string", description: "Airline name" },
+                  outboundLegAirlines: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Marketing/operating airline name for EACH leg of the OUTBOUND journey, in order (one entry per flight segment). A direct flight has exactly one entry. Only include airlines actually printed on the ticket; omit the field entirely if leg-level carriers are not clearly readable.",
+                  },
+                  inboundLegAirlines: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Same as outboundLegAirlines but for the INBOUND/return journey. Omit if there is no return leg or the carriers are not clearly readable.",
+                  },
+                  outboundStopovers: { type: "number", description: "Number of stopovers/connections on the outbound journey (0 for a direct flight)." },
+                  inboundStopovers: { type: "number", description: "Number of stopovers/connections on the inbound/return journey (0 for a direct flight)." },
                   flightNumber: { type: "string", description: "Flight number e.g. FR1234" },
                   departureDate: { type: "string", description: "OUTBOUND travel date (when passenger physically departs origin) in YYYY-MM-DD. Never the booking/purchase/issue date." },
                   returnDate: { type: "string", description: "INBOUND travel date (when passenger physically departs destination on the return leg) in YYYY-MM-DD. Omit if no return leg." },
