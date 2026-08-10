@@ -394,6 +394,7 @@ export default function SellTicket() {
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
     setTicketUploaded(false);
+    setSingleCarrierConfirmed(false);
   };
 
   const verifyFlightSchedule = async (params: {
