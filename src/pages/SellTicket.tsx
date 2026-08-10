@@ -868,6 +868,20 @@ export default function SellTicket() {
     }
     // Departure must be at least 72 hours in the future
     const minTs = Date.now() + 72 * 60 * 60 * 1000;
+    // Connections are only allowed when the uploaded ticket proved a single
+    // operating carrier across every leg (no per-leg carrier data in schema).
+    if (!isEditMode && formData.listingType === "flight_ticket") {
+      const stops = parseInt(formData.stopovers) || 0;
+      const retStops = isReturn ? (parseInt(formData.returnStopovers) || 0) : 0;
+      if ((stops > 0 || retStops > 0) && !singleCarrierConfirmed) {
+        toast({
+          title: t("sellToastMultiCarrierTitle"),
+          description: t("sellToastConnectionUnverifiedDesc"),
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     if (formData.departureDate && formData.departureDate.getTime() < minTs) {
       toast({
         title: t("sellToastDepartureTooSoonTitle"),
