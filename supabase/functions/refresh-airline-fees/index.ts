@@ -41,6 +41,25 @@ const AIRLINE_SOURCES: Record<string, string> = {
   united: "https://www.united.com/ual/en/us/fly/help/changes.html",
   american_airlines: "https://www.aa.com/i18n/travel-info/changing-your-trip.jsp",
   swiss: "https://www.swiss.com/us/en/prepare/rebooking-refund",
+  // --- EU/EEA + UK market expansion ---
+  turkish_airlines: "https://www.turkishairlines.com/en-int/any-questions/changing-my-reservation/",
+  tui_airways: "https://www.tui.co.uk/destinations/info/flight-changes",
+  transavia: "https://www.transavia.com/en-eu/service/change-a-booking/",
+  aegean_airlines: "https://en.aegeanair.com/travel-information/before-the-flight/change-or-cancel-your-booking/",
+  lot_polish_airlines: "https://www.lot.com/us/en/customer-service/changes-and-refunds",
+  air_baltic: "https://www.airbaltic.com/en/change-booking",
+  brussels_airlines: "https://www.brusselsairlines.com/en-be/customer-support/rebooking-and-refund",
+  austrian_airlines: "https://www.austrian.com/us/en/rebooking-and-refund",
+  qatar_airways: "https://www.qatarairways.com/en/help/manage-booking.html",
+  etihad_airways: "https://www.etihad.com/en/help/manage-your-booking",
+  air_malta: "https://www.kmmalta.com/en/help/manage-my-booking",
+  croatia_airlines: "https://www.croatiaairlines.com/Travel-info/Booking-and-payment/Changes-and-refunds",
+  bulgaria_air: "https://www.air.bg/en/information/before-flight/changes-and-refunds",
+  air_serbia: "https://www.airserbia.com/en/information/booking/changes-and-refunds",
+  loganair: "https://www.loganair.co.uk/help-and-advice/booking-information/changes-to-your-booking/",
+  condor: "https://www.condor.com/eu/flight-preparation/booking-service/rebooking.jsp",
+  corendon_airlines: "https://www.corendonairlines.com/en/faq",
+  cyprus_airways: "https://www.cyprusairways.com/en/plan/faq",
 };
 
 // Sanity bounds (in EUR-equivalent). Anything outside this is rejected.
