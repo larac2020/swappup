@@ -532,6 +532,48 @@ export default function SellTicket() {
         }
 
         const hasReturn = !!parsedReturn;
+
+        // --- Single-carrier itinerary gate -------------------------------
+        // The listing schema holds one `airline` for the whole trip, so a
+        // connecting itinerary flown by different airlines cannot be
+        // represented (or transferability-checked) correctly.
+        const normCarrier = (s: unknown) =>
+          typeof s === "string" ? s.trim().toLowerCase().replace(/\s+/g, " ") : "";
+        const legAirlines = [
+          ...(Array.isArray(p.outboundLegAirlines) ? p.outboundLegAirlines : []),
+          ...(Array.isArray(p.inboundLegAirlines) ? p.inboundLegAirlines : []),
+        ].map(normCarrier).filter(Boolean);
+        const distinctCarriers = new Set(legAirlines);
+        const outStops = Number.isFinite(p.outboundStopovers) ? Math.max(0, Math.trunc(p.outboundStopovers)) : 0;
+        const inStops = Number.isFinite(p.inboundStopovers) ? Math.max(0, Math.trunc(p.inboundStopovers)) : 0;
+        const hasConnections = outStops > 0 || inStops > 0 || legAirlines.length > 1;
+
+        if (distinctCarriers.size > 1) {
+          setTicketUploaded(false);
+          setSingleCarrierConfirmed(false);
+          toast({
+            title: t("sellToastMultiCarrierTitle"),
+            description: t("sellToastMultiCarrierDesc"),
+            variant: "destructive",
+          });
+          return;
+        }
+        // A connection is only acceptable when the parser listed every leg's
+        // carrier and they all matched.
+        const expectedLegs = outStops + inStops + (hasReturn ? 2 : 1);
+        const carriersProven = legAirlines.length >= expectedLegs && distinctCarriers.size === 1;
+        if (hasConnections && !carriersProven) {
+          setTicketUploaded(false);
+          setSingleCarrierConfirmed(false);
+          toast({
+            title: t("sellToastMultiCarrierTitle"),
+            description: t("sellToastConnectionUnverifiedDesc"),
+            variant: "destructive",
+          });
+          return;
+        }
+        setSingleCarrierConfirmed(true);
+
         setIsReturn(hasReturn);
         // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
         setTicketUploaded(true);
