@@ -163,6 +163,10 @@ export default function SellTicket() {
 
   // Ticket upload is mandatory (except in edit mode where the listing already exists)
   const [ticketUploaded, setTicketUploaded] = useState(false);
+  // True only when the parser proved every leg of the itinerary is flown by the
+  // same airline. Connections we cannot prove are single-carrier are blocked,
+  // because the schema stores a single `airline` and cannot express per-leg carriers.
+  const [singleCarrierConfirmed, setSingleCarrierConfirmed] = useState(false);
 
   // Transferability blocking flags from the in-form check cards
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
