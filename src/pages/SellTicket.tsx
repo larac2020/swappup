@@ -163,6 +163,10 @@ export default function SellTicket() {
 
   // Ticket upload is mandatory (except in edit mode where the listing already exists)
   const [ticketUploaded, setTicketUploaded] = useState(false);
+  // True only when the parser proved every leg of the itinerary is flown by the
+  // same airline. Connections we cannot prove are single-carrier are blocked,
+  // because the schema stores a single `airline` and cannot express per-leg carriers.
+  const [singleCarrierConfirmed, setSingleCarrierConfirmed] = useState(false);
 
   // Transferability blocking flags from the in-form check cards
   const [flightTransferBlocked, setFlightTransferBlocked] = useState(false);
@@ -390,6 +394,7 @@ export default function SellTicket() {
     setFlightTransferBlocked(false);
     setFlightTransferFee(null);
     setTicketUploaded(false);
+    setSingleCarrierConfirmed(false);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -527,6 +532,48 @@ export default function SellTicket() {
         }
 
         const hasReturn = !!parsedReturn;
+
+        // --- Single-carrier itinerary gate -------------------------------
+        // The listing schema holds one `airline` for the whole trip, so a
+        // connecting itinerary flown by different airlines cannot be
+        // represented (or transferability-checked) correctly.
+        const normCarrier = (s: unknown) =>
+          typeof s === "string" ? s.trim().toLowerCase().replace(/\s+/g, " ") : "";
+        const legAirlines = [
+          ...(Array.isArray(p.outboundLegAirlines) ? p.outboundLegAirlines : []),
+          ...(Array.isArray(p.inboundLegAirlines) ? p.inboundLegAirlines : []),
+        ].map(normCarrier).filter(Boolean);
+        const distinctCarriers = new Set(legAirlines);
+        const outStops = Number.isFinite(p.outboundStopovers) ? Math.max(0, Math.trunc(p.outboundStopovers)) : 0;
+        const inStops = Number.isFinite(p.inboundStopovers) ? Math.max(0, Math.trunc(p.inboundStopovers)) : 0;
+        const hasConnections = outStops > 0 || inStops > 0 || legAirlines.length > 1;
+
+        if (distinctCarriers.size > 1) {
+          setTicketUploaded(false);
+          setSingleCarrierConfirmed(false);
+          toast({
+            title: t("sellToastMultiCarrierTitle"),
+            description: t("sellToastMultiCarrierDesc"),
+            variant: "destructive",
+          });
+          return;
+        }
+        // A connection is only acceptable when the parser listed every leg's
+        // carrier and they all matched.
+        const expectedLegs = outStops + inStops + (hasReturn ? 2 : 1);
+        const carriersProven = legAirlines.length >= expectedLegs && distinctCarriers.size === 1;
+        if (hasConnections && !carriersProven) {
+          setTicketUploaded(false);
+          setSingleCarrierConfirmed(false);
+          toast({
+            title: t("sellToastMultiCarrierTitle"),
+            description: t("sellToastConnectionUnverifiedDesc"),
+            variant: "destructive",
+          });
+          return;
+        }
+        setSingleCarrierConfirmed(true);
+
         setIsReturn(hasReturn);
         // Mark upload as satisfied — even if parsing returns partial data, the file was uploaded
         setTicketUploaded(true);
@@ -572,6 +619,8 @@ export default function SellTicket() {
           returnDepartureTime: inboundDepTime,
           returnArrivalTime: inboundArrTime,
           bookingReference: typeof p.bookingReference === "string" ? p.bookingReference.trim() : "",
+          stopovers: String(outStops),
+          returnStopovers: String(inStops),
         }));
 
         // Sync per-ticket array
@@ -819,6 +868,20 @@ export default function SellTicket() {
     }
     // Departure must be at least 72 hours in the future
     const minTs = Date.now() + 72 * 60 * 60 * 1000;
+    // Connections are only allowed when the uploaded ticket proved a single
+    // operating carrier across every leg (no per-leg carrier data in schema).
+    if (!isEditMode && formData.listingType === "flight_ticket") {
+      const stops = parseInt(formData.stopovers) || 0;
+      const retStops = isReturn ? (parseInt(formData.returnStopovers) || 0) : 0;
+      if ((stops > 0 || retStops > 0) && !singleCarrierConfirmed) {
+        toast({
+          title: t("sellToastMultiCarrierTitle"),
+          description: t("sellToastConnectionUnverifiedDesc"),
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     if (formData.departureDate && formData.departureDate.getTime() < minTs) {
       toast({
         title: t("sellToastDepartureTooSoonTitle"),
