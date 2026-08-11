@@ -16,6 +16,7 @@ We collect:
 - **Listing data** — flight or train details, prices, uploaded ticket files (used both to pre-fill listings and as proof of ownership).
 - **Transaction data** — purchase history, payment status, payment-hold status. Card details are handled directly by Stripe; we never see or store your full card number.
 - **Usage data** — pages viewed, search queries, device and browser information, IP address.
+- **Session logs** — when you use the Service we record session metadata. Your IP address and device fingerprint are stored only as irreversible hashes, but the **country** and the full **browser user-agent string** are stored in plain text.
 - **Cookies and similar technologies** — strictly necessary cookies for login and session management.
 
 ## 3. How we use your data
@@ -26,7 +27,7 @@ We process personal data to:
 - Verify your identity and prevent fraud.
 - Process payments through Stripe.
 - Send transactional emails (verification, purchase receipts, payment-hold updates).
-- Improve the platform and personalise content (e.g. surfacing relevant deals).
+- Improve the platform and personalise content (e.g. surfacing relevant deals). We do not currently operate any third-party analytics or advertising tool. The optional "analytics" and "marketing" toggles in **Account → Privacy & Data** record your consent preference in advance, so that no such processing can begin without it.
 - Comply with legal obligations.
 
 The legal bases under UK and EU GDPR are: performance of a contract, our legitimate interests (fraud prevention, product improvement), your consent (marketing emails, optional analytics), and legal obligation.
@@ -36,7 +37,7 @@ The legal bases under UK and EU GDPR are: performance of a contract, our legitim
 We share data only as needed to run the Service:
 
 - **With other users** — when you complete a purchase, the buyer's full name and email are shared with the seller so the carrier can issue the new ticket. The seller's name and contact info are shared with the buyer when needed for the transfer.
-- **With service providers** — Stripe (payments), Supabase (managed database and auth), Lovable AI Gateway (ticket and ID parsing), Aviationstack (flight verification), email delivery providers.
+- **With service providers** — Stripe (payments), Supabase (managed database and auth), Lovable AI Gateway (ticket and ID parsing), Aviationstack (flight verification), and our platform provider's email delivery infrastructure (currently Mailgun), which our platform provider contracts on our behalf rather than us contracting with the email provider directly.
 - **For legal reasons** — to comply with the law or respond to lawful requests.
 
 We do **not** sell your personal data.
