@@ -204,8 +204,8 @@ export default function Faq() {
               </h2>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {locale === "it"
-                  ? "Su Swappup puoi pubblicare biglietti solo delle compagnie elencate qui sotto, perché sono le uniche che consentono il trasferimento del nominativo. La tariffa di cambio nome è verificata sul sito ufficiale della compagnia ed è inclusa in trasparenza al momento dell'acquisto."
-                  : "On Swappup you can list tickets only from the airlines below — they are the ones that allow name transfers. The name-change fee is verified against the airline's official policy page and shown transparently at checkout."}
+                  ? "Su Swappup puoi pubblicare biglietti solo delle compagnie contrassegnate come trasferibili qui sotto. La tariffa di cambio nome è verificata sul sito ufficiale della compagnia ed è inclusa in trasparenza al momento dell'acquisto."
+                  : "On Swappup you can only list tickets from the airlines marked as transferable below. The name-change fee is verified against the airline's official policy page and shown transparently at checkout."}
               </p>
             </div>
           </div>
