@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck, XCircle, ExternalLink, Info } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
@@ -39,20 +39,29 @@ export default function Faq() {
   const { data: supportedAirlines } = useQuery({
     queryKey: ["supported-airlines-fees"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("airline_change_fees")
-        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, updated_at")
+      const { data, error } = await (supabase as any)
+        .from("public_airline_fees")
+        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, source_url")
         .eq("route_type", "international")
         .order("airline_name", { ascending: true });
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        airline_name: string;
+        fee_amount: number | null;
+        fee_max: number | null;
+        currency: string | null;
+        is_transferable: boolean;
+        route_type: string;
+        last_verified_at: string | null;
+        source_url: string | null;
+      }>;
     },
   });
 
   const transferable = (supportedAirlines ?? []).filter((a) => a.is_transferable);
 
-  const formatVerified = (a: { last_verified_at?: string | null; updated_at?: string | null }) => {
-    const verified = a.last_verified_at ?? a.updated_at;
+  const formatVerified = (a: { last_verified_at?: string | null }) => {
+    const verified = a.last_verified_at;
     return verified
       ? new Date(verified).toLocaleDateString(locale === "it" ? "it-IT" : "en-GB", {
           day: "2-digit",
