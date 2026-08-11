@@ -58,8 +58,6 @@ export default function Faq() {
     },
   });
 
-  const transferable = (supportedAirlines ?? []).filter((a) => a.is_transferable);
-
   const formatVerified = (a: { last_verified_at?: string | null }) => {
     const verified = a.last_verified_at;
     return verified
@@ -297,8 +295,8 @@ export default function Faq() {
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
-              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Verifichiamo automaticamente le pagine ufficiali ogni poche ore. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
-              : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify each airline's official page every few hours. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
+              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Riverifichiamo automaticamente ogni compagnia dell'elenco almeno una volta a settimana. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
+              : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify every airline in this list at least once a week. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
           </p>
         </section>
       </section>
