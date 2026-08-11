@@ -901,6 +901,7 @@ export type Database = {
           account_status: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1: string | null
           address_line2: string | null
+          anonymized_at: string | null
           avatar_url: string | null
           city: string | null
           country: string | null
@@ -935,7 +936,7 @@ export type Database = {
           transactions_bought: number | null
           transactions_sold: number | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           verification_status:
             | Database["public"]["Enums"]["verification_status"]
             | null
@@ -945,6 +946,7 @@ export type Database = {
           account_status?: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1?: string | null
           address_line2?: string | null
+          anonymized_at?: string | null
           avatar_url?: string | null
           city?: string | null
           country?: string | null
@@ -979,7 +981,7 @@ export type Database = {
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
@@ -989,6 +991,7 @@ export type Database = {
           account_status?: Database["public"]["Enums"]["seller_account_status_t"]
           address_line1?: string | null
           address_line2?: string | null
+          anonymized_at?: string | null
           avatar_url?: string | null
           city?: string | null
           country?: string | null
@@ -1023,7 +1026,7 @@ export type Database = {
           transactions_bought?: number | null
           transactions_sold?: number | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
