@@ -61,10 +61,17 @@ export default function PrivacyData() {
   const requestDeletion = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.functions.invoke("delete-account", { body: { userId: user!.id } });
-      if (error) throw error;
+      if (error) {
+        let message = "";
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx) message = (JSON.parse(await ctx.text())?.error as string) ?? "";
+        } catch { /* fall through to generic message */ }
+        throw new Error(message || t("privacyDeleteFailed"));
+      }
     },
     onSuccess: async () => { toast.success(t("privacyDeleteSuccess")); await signOut(); navigate("/login"); },
-    onError: () => toast.error(t("privacyDeleteFailed")),
+    onError: (e: Error) => toast.error(e.message || t("privacyDeleteFailed")),
   });
 
   const exportData = useMutation({
