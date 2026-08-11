@@ -212,11 +212,14 @@ export default function Faq() {
             </div>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
-            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mt-8 overflow-x-auto rounded-2xl border border-border/50">
+            <div className="min-w-[640px]">
+            <div className="grid grid-cols-[1.4fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
+              <span className="text-right">{locale === "it" ? "Cambio nome" : "Transferable"}</span>
               <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
-              <span className="text-right">{locale === "it" ? "Verificata il" : "Verified on"}</span>
+              <span className="text-right">{locale === "it" ? "Fonte" : "Source"}</span>
+              <span className="text-right">{locale === "it" ? "Verificata il" : "Last verified"}</span>
             </div>
             <ul className="divide-y divide-border/50">
               {!supportedAirlines && (
@@ -224,23 +227,48 @@ export default function Faq() {
                   {locale === "it" ? "Caricamento…" : "Loading…"}
                 </li>
               )}
-              {transferable.map((a) => {
+              {(supportedAirlines ?? []).map((a) => {
                 const fee = Number(a.fee_max ?? a.fee_amount ?? 0);
                 const nativeCurrency = (a.currency || "EUR").toUpperCase();
                 const display = formatPrice(fee, nativeCurrency, displayCurrency, { decimals: 0 });
                 const showNative = nativeCurrency !== displayCurrency && fee > 0;
                 return (
-                  <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                      {a.airline_name}
+                  <li key={a.airline_name} className="grid grid-cols-[1.4fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3">
+                    <span className="text-sm font-medium">{a.airline_name}</span>
+                    <span className="flex items-center justify-end gap-1.5 text-xs">
+                      {a.is_transferable ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                          {locale === "it" ? "Sì" : "Yes"}
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+                          {locale === "it" ? "No" : "No"}
+                        </>
+                      )}
                     </span>
                     <span className="text-right text-sm font-semibold tabular-nums leading-tight">
-                      <span className="block">{display}</span>
+                      <span className="block">{a.is_transferable ? display : "—"}</span>
                       {showNative && (
                         <span className="block text-[11px] font-normal text-muted-foreground">
                           {formatPrice(fee, nativeCurrency, nativeCurrency, { decimals: 0 })}
                         </span>
+                      )}
+                    </span>
+                    <span className="text-right text-xs">
+                      {a.source_url ? (
+                        <a
+                          href={a.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          {locale === "it" ? "Policy" : "Policy"}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </span>
                     <span className="text-right text-xs text-muted-foreground tabular-nums">
@@ -249,14 +277,23 @@ export default function Faq() {
                   </li>
                 );
               })}
-              {supportedAirlines && transferable.length === 0 && (
+              {supportedAirlines && supportedAirlines.length === 0 && (
                 <li className="px-4 py-6 text-sm text-muted-foreground">
                   {locale === "it" ? "Elenco in aggiornamento." : "List is being updated."}
                 </li>
               )}
             </ul>
+            </div>
           </div>
 
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3">
+            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {locale === "it"
+                ? "Importante: queste tariffe sono estratte automaticamente (tramite AI) dalle pagine di policy ufficiali delle compagnie aeree. Sono puramente indicative, possono cambiare senza preavviso e non costituiscono un prezzo garantito. Verifica sempre la fonte ufficiale collegata prima di procedere."
+                : "Important: these fees are AI-extracted from the airlines' official policy pages. They are indicative only, can change without notice, and are not a guaranteed price. Always check the linked official source before proceeding."}
+            </p>
+          </div>
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
