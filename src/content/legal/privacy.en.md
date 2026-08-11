@@ -4,7 +4,7 @@ _This Privacy Policy is a working template tailored to SwappUp. It must be revie
 
 ## 1. Who we are
 
-**SWAPPUP LTD**, a company registered in England and Wales under company number **17169674**, with registered office at **1 Yabsley Street, London, E14 9RG, United Kingdom** (trading as "SwappUp"), is the data controller for the personal data processed in connection with the SwappUp marketplace ("**Service**"). For data-protection questions, contact us at **privacy@swappup.com**.
+**SWAPPUP LTD**, a company registered in England and Wales under company number **17169674**, with registered office at **1 Yabsley Street, London, E14 9RG, United Kingdom** (trading as "SwappUp"), is the data controller for the personal data processed in connection with the SwappUp marketplace ("**Service**"). For data-protection questions, contact us at **info@swappup.com**.
 
 ## 2. What data we collect
 
@@ -12,7 +12,7 @@ We collect:
 
 - **Account data** — name, email, password hash, language and notification preferences.
 - **Profile data** — phone number, billing address, country, profile photo (optional).
-- **Identity-verification data** — a photo of a passport or national ID, processed by an AI provider to extract your name and check authenticity. We store the document in private storage and the extracted name in your profile.
+- **Identity-verification data** — a photo of a passport or national ID, processed by an AI provider to check authenticity and extract your **first and last name, date of birth, document type, document expiry date, and issuing country**. We store the document in private storage and the extracted details in your profile. The document's issuing country is screened against applicable UK, EU and US sanctions lists as part of this process.
 - **Listing data** — flight or train details, prices, uploaded ticket files (used both to pre-fill listings and as proof of ownership).
 - **Transaction data** — purchase history, payment status, payment-hold status. Card details are handled directly by Stripe; we never see or store your full card number.
 - **Usage data** — pages viewed, search queries, device and browser information, IP address.
@@ -25,12 +25,13 @@ We process personal data to:
 
 - Provide the Service (creating and managing your account, listings, purchases and the secure payment hold).
 - Verify your identity and prevent fraud.
+- Screen for sanctions and financial-crime compliance purposes, as required by law.
 - Process payments through Stripe.
 - Send transactional emails (verification, purchase receipts, payment-hold updates).
 - Improve the platform and personalise content (e.g. surfacing relevant deals). We do not currently operate any third-party analytics or advertising tool. The optional "analytics" and "marketing" toggles in **Account → Privacy & Data** record your consent preference in advance, so that no such processing can begin without it.
 - Comply with legal obligations.
 
-The legal bases under UK and EU GDPR are: performance of a contract, our legitimate interests (fraud prevention, product improvement), your consent (marketing emails, optional analytics), and legal obligation.
+The legal bases under UK and EU GDPR are: performance of a contract, our legitimate interests (fraud prevention, product improvement), your consent (marketing emails, optional analytics), and legal obligation. Sanctions screening is carried out on the basis of our legal obligation to comply with applicable sanctions regimes and our legitimate interest in preventing financial crime.
 
 ## 4. Sharing personal data
 
@@ -39,6 +40,8 @@ We share data only as needed to run the Service:
 - **With other users** — when you complete a purchase, the buyer's full name and email are shared with the seller so the carrier can issue the new ticket. The seller's name and contact info are shared with the buyer when needed for the transfer.
 - **With service providers** — Stripe (payments), Supabase (managed database and auth), Lovable AI Gateway (ticket and ID parsing), Aviationstack (flight verification), and our platform provider's email delivery infrastructure (currently Mailgun), which our platform provider contracts on our behalf rather than us contracting with the email provider directly.
 - **For legal reasons** — to comply with the law or respond to lawful requests.
+
+Stripe processes payment data under its own privacy policy, which governs that data directly, as Stripe acts as an independent controller for payment-processing purposes.
 
 We do **not** sell your personal data.
 
@@ -66,7 +69,7 @@ You have the right to:
 
 ## 8. Security
 
-We use industry-standard security: TLS in transit, encryption at rest, row-level access controls, hashed passwords, and a private bucket for identity documents. No system is 100% secure — please use a strong unique password and enable 2FA where available.
+We use industry-standard security: TLS in transit, encryption at rest, row-level access controls, hashed passwords, and a private bucket for identity documents. No system is 100% secure — please use a strong, unique password.
 
 ## 9. Children
 
@@ -78,4 +81,4 @@ When the version date changes we will ask you to review and re-accept this Polic
 
 ## 11. Contact
 
-Privacy enquiries: **privacy@swappup.com**.
+Privacy enquiries: **info@swappup.com**.
