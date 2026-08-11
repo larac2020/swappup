@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck, XCircle, ExternalLink, Info } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
@@ -39,20 +39,27 @@ export default function Faq() {
   const { data: supportedAirlines } = useQuery({
     queryKey: ["supported-airlines-fees"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("airline_change_fees")
-        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, updated_at")
+      const { data, error } = await (supabase as any)
+        .from("public_airline_fees")
+        .select("airline_name, fee_amount, fee_max, currency, is_transferable, route_type, last_verified_at, source_url")
         .eq("route_type", "international")
         .order("airline_name", { ascending: true });
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        airline_name: string;
+        fee_amount: number | null;
+        fee_max: number | null;
+        currency: string | null;
+        is_transferable: boolean;
+        route_type: string;
+        last_verified_at: string | null;
+        source_url: string | null;
+      }>;
     },
   });
 
-  const transferable = (supportedAirlines ?? []).filter((a) => a.is_transferable);
-
-  const formatVerified = (a: { last_verified_at?: string | null; updated_at?: string | null }) => {
-    const verified = a.last_verified_at ?? a.updated_at;
+  const formatVerified = (a: { last_verified_at?: string | null }) => {
+    const verified = a.last_verified_at;
     return verified
       ? new Date(verified).toLocaleDateString(locale === "it" ? "it-IT" : "en-GB", {
           day: "2-digit",
@@ -197,17 +204,20 @@ export default function Faq() {
               </h2>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {locale === "it"
-                  ? "Su Swappup puoi pubblicare biglietti solo delle compagnie elencate qui sotto, perché sono le uniche che consentono il trasferimento del nominativo. La tariffa di cambio nome è verificata sul sito ufficiale della compagnia ed è inclusa in trasparenza al momento dell'acquisto."
-                  : "On Swappup you can list tickets only from the airlines below — they are the ones that allow name transfers. The name-change fee is verified against the airline's official policy page and shown transparently at checkout."}
+                  ? "Su Swappup puoi pubblicare biglietti solo delle compagnie contrassegnate come trasferibili qui sotto. La tariffa di cambio nome è verificata sul sito ufficiale della compagnia ed è inclusa in trasparenza al momento dell'acquisto."
+                  : "On Swappup you can only list tickets from the airlines marked as transferable below. The name-change fee is verified against the airline's official policy page and shown transparently at checkout."}
               </p>
             </div>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
-            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mt-8 overflow-x-auto rounded-2xl border border-border/50">
+            <div className="min-w-[640px]">
+            <div className="grid grid-cols-[1.4fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 bg-secondary/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>{locale === "it" ? "Compagnia" : "Airline"}</span>
+              <span className="text-right">{locale === "it" ? "Cambio nome" : "Transferable"}</span>
               <span className="text-right">{locale === "it" ? "Tariffa cambio nome" : "Name-change fee"}</span>
-              <span className="text-right">{locale === "it" ? "Verificata il" : "Verified on"}</span>
+              <span className="text-right">{locale === "it" ? "Fonte" : "Source"}</span>
+              <span className="text-right">{locale === "it" ? "Verificata il" : "Last verified"}</span>
             </div>
             <ul className="divide-y divide-border/50">
               {!supportedAirlines && (
@@ -215,23 +225,48 @@ export default function Faq() {
                   {locale === "it" ? "Caricamento…" : "Loading…"}
                 </li>
               )}
-              {transferable.map((a) => {
+              {(supportedAirlines ?? []).map((a) => {
                 const fee = Number(a.fee_max ?? a.fee_amount ?? 0);
                 const nativeCurrency = (a.currency || "EUR").toUpperCase();
                 const display = formatPrice(fee, nativeCurrency, displayCurrency, { decimals: 0 });
                 const showNative = nativeCurrency !== displayCurrency && fee > 0;
                 return (
-                  <li key={a.airline_name} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                      {a.airline_name}
+                  <li key={a.airline_name} className="grid grid-cols-[1.4fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3">
+                    <span className="text-sm font-medium">{a.airline_name}</span>
+                    <span className="flex items-center justify-end gap-1.5 text-xs">
+                      {a.is_transferable ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                          {locale === "it" ? "Sì" : "Yes"}
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+                          {locale === "it" ? "No" : "No"}
+                        </>
+                      )}
                     </span>
                     <span className="text-right text-sm font-semibold tabular-nums leading-tight">
-                      <span className="block">{display}</span>
+                      <span className="block">{a.is_transferable ? display : "—"}</span>
                       {showNative && (
                         <span className="block text-[11px] font-normal text-muted-foreground">
                           {formatPrice(fee, nativeCurrency, nativeCurrency, { decimals: 0 })}
                         </span>
+                      )}
+                    </span>
+                    <span className="text-right text-xs">
+                      {a.source_url ? (
+                        <a
+                          href={a.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          {locale === "it" ? "Policy" : "Policy"}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </span>
                     <span className="text-right text-xs text-muted-foreground tabular-nums">
@@ -240,19 +275,28 @@ export default function Faq() {
                   </li>
                 );
               })}
-              {supportedAirlines && transferable.length === 0 && (
+              {supportedAirlines && supportedAirlines.length === 0 && (
                 <li className="px-4 py-6 text-sm text-muted-foreground">
                   {locale === "it" ? "Elenco in aggiornamento." : "List is being updated."}
                 </li>
               )}
             </ul>
+            </div>
           </div>
 
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3">
+            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {locale === "it"
+                ? "Importante: queste tariffe sono estratte automaticamente (tramite AI) dalle pagine di policy ufficiali delle compagnie aeree. Sono puramente indicative, possono cambiare senza preavviso e non costituiscono un prezzo garantito. Verifica sempre la fonte ufficiale collegata prima di procedere."
+                : "Important: these fees are AI-extracted from the airlines' official policy pages. They are indicative only, can change without notice, and are not a guaranteed price. Always check the linked official source before proceeding."}
+            </p>
+          </div>
 
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
             {locale === "it"
-              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Verifichiamo automaticamente le pagine ufficiali ogni poche ore. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
-              : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify each airline's official page every few hours. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
+              ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Riverifichiamo automaticamente ogni compagnia dell'elenco almeno una volta a settimana. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
+              : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify every airline in this list at least once a week. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
           </p>
         </section>
       </section>

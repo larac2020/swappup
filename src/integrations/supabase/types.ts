@@ -1422,6 +1422,39 @@ export type Database = {
       }
     }
     Views: {
+      public_airline_fees: {
+        Row: {
+          airline_name: string | null
+          currency: string | null
+          fee_amount: number | null
+          fee_max: number | null
+          is_transferable: boolean | null
+          last_verified_at: string | null
+          route_type: string | null
+          source_url: string | null
+        }
+        Insert: {
+          airline_name?: string | null
+          currency?: string | null
+          fee_amount?: number | null
+          fee_max?: number | null
+          is_transferable?: boolean | null
+          last_verified_at?: string | null
+          route_type?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          airline_name?: string | null
+          currency?: string | null
+          fee_amount?: number | null
+          fee_max?: number | null
+          is_transferable?: boolean | null
+          last_verified_at?: string | null
+          route_type?: string | null
+          source_url?: string | null
+        }
+        Relationships: []
+      }
       purchases_seller_view: {
         Row: {
           buyer_confirmed: boolean | null

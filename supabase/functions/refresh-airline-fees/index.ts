@@ -6,7 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const STALE_DAYS = 14;
+// ~52 tracked airlines. One cron run every 6h × BATCH_SIZE = 20 refreshes/day,
+// so the whole list re-verifies comfortably within a week.
+const STALE_DAYS = 7;
 const BATCH_SIZE = 5;
 const FIRECRAWL_SEARCH = "https://api.firecrawl.dev/v2/search";
 const FIRECRAWL_SCRAPE = "https://api.firecrawl.dev/v2/scrape";
