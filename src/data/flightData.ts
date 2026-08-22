@@ -114,6 +114,8 @@ export const airlines: AirlineData[] = [
   { name: "Icelandair", nameChangeFee: 50, nameChangeFeeNote: "Name change from €50 per person" },
   { name: "Eurowings", nameChangeFee: 50, nameChangeFeeNote: "Name correction from €50 per person" },
   { name: "Transavia", nameChangeFee: 40, nameChangeFeeNote: "Name change from €40 per person per booking" },
+  { name: "Condor", nameChangeFee: 50, nameChangeFeeNote: "Substitute passenger from €50 per person/flight — Flex, Green and VFR fares only" },
+  { name: "Finnair", nameChangeFee: null, nameChangeFeeNote: "Passenger change on Business, Business Saver, PRO and Value fares only; fee is fare-dependent" },
 ];
 
 export function getAirlineData(name: string): AirlineData | undefined {
