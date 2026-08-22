@@ -1116,38 +1116,24 @@ export default function SellTicket() {
           </p>
         </div>
 
-        {gate.kind === "select" ? (
-          <div className="space-y-2">
-            <Label>{locale === "it" ? "Tipo di tariffa" : "Fare type"}</Label>
-            <Select value={declaredFareBrand} onValueChange={setDeclaredFareBrand}>
-              <SelectTrigger className="bg-secondary/50">
-                <SelectValue placeholder={locale === "it" ? "Seleziona la tua tariffa" : "Select your fare type"} />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {gate.options!.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <label className="flex items-start gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              className="mt-0.5 w-4 h-4 accent-primary cursor-pointer shrink-0"
-              checked={fareGateAttested}
-              onChange={(e) => setFareGateAttested(e.target.checked)}
-            />
-            <span className="text-xs text-muted-foreground leading-relaxed">
-              {locale === "it" ? gate.attestationIt : gate.attestation}
-            </span>
-          </label>
-        )}
+        <div className="space-y-2">
+          <Label>{locale === "it" ? "Tipo di tariffa" : "Fare type"}</Label>
+          <Select value={declaredFareBrand} onValueChange={setDeclaredFareBrand}>
+            <SelectTrigger className="bg-secondary/50">
+              <SelectValue placeholder={locale === "it" ? "Seleziona la tua tariffa" : "Select your fare type"} />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              {gate.options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {fareGateBlocked && (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
             <p className="text-xs font-medium text-destructive leading-relaxed">
-              {locale === "it" ? gate.blockMessageIt : gate.blockMessage}
+              {fareGateBlockMessage(gate, locale)}
             </p>
           </div>
         )}
