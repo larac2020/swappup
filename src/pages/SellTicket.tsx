@@ -464,6 +464,8 @@ export default function SellTicket() {
     setFlightTransferFee(null);
     setTicketUploaded(false);
     setSingleCarrierConfirmed(false);
+    setDeclaredFareBrand("");
+    setFareGateAttested(false);
   };
 
   const verifyFlightSchedule = async (params: {
