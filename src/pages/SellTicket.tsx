@@ -1044,7 +1044,11 @@ export default function SellTicket() {
       if (fareGateEntry && fareGateUnsatisfied) {
         toast({
           title: t("sellToastListingBlocked"),
-          description: locale === "it" ? fareGateEntry.gate.blockMessageIt : fareGateEntry.gate.blockMessage,
+          description: fareGateBlocked
+            ? fareGateBlockMessage(fareGateEntry.gate, locale)
+            : locale === "it"
+              ? "Seleziona il tipo di tariffa del tuo biglietto per continuare."
+              : "Select your ticket's fare type to continue.",
           variant: "destructive",
         });
         return;
