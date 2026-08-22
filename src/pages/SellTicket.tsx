@@ -279,6 +279,18 @@ export default function SellTicket() {
 
   const [formData, setFormData] = useState(getDefaultFormData());
 
+  // Fare gate derived state for the selected airline
+  const fareGateEntry = getFareGate(formData.airline);
+  const fareGateOption = fareGateEntry?.gate.options?.find((o) => o.value === declaredFareBrand);
+  // Ineligible fare selected → hard block
+  const fareGateBlocked = !!fareGateEntry && fareGateEntry.gate.kind === "select" && !!fareGateOption && !fareGateOption.eligible;
+  // Declaration not yet made → cannot continue (no error message shown)
+  const fareGateIncomplete = !!fareGateEntry && (
+    fareGateEntry.gate.kind === "select" ? !declaredFareBrand : !fareGateAttested
+  );
+  const fareGateUnsatisfied = fareGateBlocked || fareGateIncomplete;
+
+
   const ticketCount = parseInt(formData.ticketCount) || 1;
 
   // Load existing listing for edit mode
