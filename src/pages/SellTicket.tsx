@@ -821,8 +821,7 @@ export default function SellTicket() {
 
       // Fare-gate declaration (Condor / Finnair / Eurowings) — stored for audit.
       if (fareGateEntry) {
-        listingData.declared_fare_type =
-          fareGateEntry.gate.kind === "select" ? declaredFareBrand : "Eurowings — customer-service attestation";
+        listingData.declared_fare_type = declaredFareBrand;
         listingData.fare_gate_attested_at = new Date().toISOString();
         listingData.fare_gate_attested_by = user!.id;
       } else {
