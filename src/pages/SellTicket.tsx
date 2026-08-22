@@ -279,13 +279,11 @@ export default function SellTicket() {
 
   // Fare gate derived state for the selected airline
   const fareGateEntry = getFareGate(formData.airline);
-  const fareGateOption = fareGateEntry?.gate.options?.find((o) => o.value === declaredFareBrand);
-  // Ineligible fare selected → hard block
-  const fareGateBlocked = !!fareGateEntry && fareGateEntry.gate.kind === "select" && !!fareGateOption && !fareGateOption.eligible;
-  // Declaration not yet made → cannot continue (no error message shown)
-  const fareGateIncomplete = !!fareGateEntry && (
-    fareGateEntry.gate.kind === "select" ? !declaredFareBrand : !fareGateAttested
-  );
+  const fareGateOption = fareGateEntry?.gate.options.find((o) => o.value === declaredFareBrand);
+  // Ineligible fare declared → hard block with a message
+  const fareGateBlocked = !!fareGateEntry && !!fareGateOption && !fareGateOption.eligible;
+  // No declaration yet → cannot continue (no error message shown)
+  const fareGateIncomplete = !!fareGateEntry && !declaredFareBrand;
   const fareGateUnsatisfied = fareGateBlocked || fareGateIncomplete;
 
 
