@@ -1860,6 +1860,7 @@ export default function SellTicket() {
                   !formData.departureDate ||
                   !formData.price ||
                   !!priceError ||
+                  fareGateUnsatisfied ||
                   (flightVerification != null && (flightVerification.status === "mismatch" || flightVerification.status === "not_found"))
                 }
                 onClick={() => setStep(3)}
