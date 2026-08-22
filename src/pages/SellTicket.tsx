@@ -1113,8 +1113,13 @@ export default function SellTicket() {
             </Select>
           </div>
         ) : (
-          <label className="flex items-start gap-3 cursor-pointer">
-            <Checkbox checked={fareGateAttested} onCheckedChange={(c) => setFareGateAttested(c === true)} className="mt-0.5" />
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="mt-0.5 w-4 h-4 accent-primary cursor-pointer shrink-0"
+              checked={fareGateAttested}
+              onChange={(e) => setFareGateAttested(e.target.checked)}
+            />
             <span className="text-xs text-muted-foreground leading-relaxed">
               {locale === "it" ? gate.attestationIt : gate.attestation}
             </span>
