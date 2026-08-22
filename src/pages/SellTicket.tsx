@@ -41,22 +41,18 @@ const SELLER_DECLARATION_TEXT_IT =
   "Confermo che questa prenotazione non è stata venduta, trasferita o pubblicata altrove e di avere il diritto legale di trasferirla a un acquirente.";
 
 // ---------------------------------------------------------------------------
-// Fare-gated airlines: name changes are only permitted on specific fare brands
-// (or, for Eurowings, only after the seller confirms with customer service).
-// The seller's declaration is stored on the listing for later audit.
+// Fare-gated airlines: name changes are only permitted on specific fare brands.
+// The seller must declare their fare type before listing; the declaration is
+// self-reported (not independently verified) and stored on the listing record.
 // ---------------------------------------------------------------------------
 type FareGate = {
-  kind: "select" | "attestation";
-  options?: { value: string; eligible: boolean }[];
-  blockMessage: string;
-  blockMessageIt: string;
-  attestation?: string;
-  attestationIt?: string;
+  label: string;
+  options: { value: string; eligible: boolean }[];
 };
 
 const FARE_GATED_AIRLINES: Record<string, FareGate> = {
   condor: {
-    kind: "select",
+    label: "Condor",
     options: [
       { value: "Flex", eligible: true },
       { value: "Green", eligible: true },
@@ -65,13 +61,9 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Zero", eligible: false },
       { value: "Classic", eligible: false },
     ],
-    blockMessage:
-      "Condor only permits name changes on Flex, Green, or VFR fares. Your fare type isn't eligible for resale on Swappup.",
-    blockMessageIt:
-      "Condor consente il cambio nome solo sulle tariffe Flex, Green o VFR. La tua tariffa non è idonea alla rivendita su Swappup.",
   },
   finnair: {
-    kind: "select",
+    label: "Finnair",
     options: [
       { value: "Business", eligible: true },
       { value: "Business Saver", eligible: true },
@@ -79,23 +71,18 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Value", eligible: true },
       { value: "Economy", eligible: false },
       { value: "Economy Light", eligible: false },
+      { value: "Economy Basic", eligible: false },
       { value: "Other", eligible: false },
     ],
-    blockMessage:
-      "Finnair only permits name changes on Business, Business Saver, PRO, or Value fares. Your fare type isn't eligible for resale on Swappup.",
-    blockMessageIt:
-      "Finnair consente il cambio nome solo sulle tariffe Business, Business Saver, PRO o Value. La tua tariffa non è idonea alla rivendita su Swappup.",
   },
   eurowings: {
-    kind: "attestation",
-    blockMessage:
-      "You must confirm with Eurowings that your fare permits a name change before listing this ticket.",
-    blockMessageIt:
-      "Devi confermare con Eurowings che la tua tariffa permette il cambio nome prima di pubblicare questo biglietto.",
-    attestation:
-      "I confirm I have contacted Eurowings customer service and verified that my specific fare permits a name change to a different passenger",
-    attestationIt:
-      "Confermo di aver contattato il servizio clienti Eurowings e di aver verificato che la mia tariffa specifica permette il cambio nome a un altro passeggero",
+    label: "Eurowings",
+    options: [
+      { value: "Flex", eligible: true },
+      { value: "Basic", eligible: false },
+      { value: "Smart", eligible: false },
+      { value: "Other", eligible: false },
+    ],
   },
 };
 
@@ -103,6 +90,17 @@ function getFareGate(airline: string | undefined | null): { key: string; gate: F
   const key = (airline || "").trim().toLowerCase();
   const gate = FARE_GATED_AIRLINES[key];
   return gate ? { key, gate } : null;
+}
+
+// Human-readable list of the fare types that DO permit a passenger name change.
+function eligibleFareList(gate: FareGate): string {
+  return gate.options.filter((o) => o.eligible).map((o) => o.value).join(", ");
+}
+
+function fareGateBlockMessage(gate: FareGate, locale: string): string {
+  return locale === "it"
+    ? `Questa tariffa non consente il cambio nome su ${gate.label}. Solo i biglietti ${eligibleFareList(gate)} possono essere trasferiti.`
+    : `This fare type doesn't support name changes on ${gate.label}. Only ${eligibleFareList(gate)} tickets can be transferred.`;
 }
 
 
@@ -242,7 +240,6 @@ export default function SellTicket() {
   const [sellerDeclarationAck, setSellerDeclarationAck] = useState(false);
   // Fare-type gate (Condor / Finnair dropdown, Eurowings attestation)
   const [declaredFareBrand, setDeclaredFareBrand] = useState("");
-  const [fareGateAttested, setFareGateAttested] = useState(false);
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
 
@@ -281,13 +278,11 @@ export default function SellTicket() {
 
   // Fare gate derived state for the selected airline
   const fareGateEntry = getFareGate(formData.airline);
-  const fareGateOption = fareGateEntry?.gate.options?.find((o) => o.value === declaredFareBrand);
-  // Ineligible fare selected → hard block
-  const fareGateBlocked = !!fareGateEntry && fareGateEntry.gate.kind === "select" && !!fareGateOption && !fareGateOption.eligible;
-  // Declaration not yet made → cannot continue (no error message shown)
-  const fareGateIncomplete = !!fareGateEntry && (
-    fareGateEntry.gate.kind === "select" ? !declaredFareBrand : !fareGateAttested
-  );
+  const fareGateOption = fareGateEntry?.gate.options.find((o) => o.value === declaredFareBrand);
+  // Ineligible fare declared → hard block with a message
+  const fareGateBlocked = !!fareGateEntry && !!fareGateOption && !fareGateOption.eligible;
+  // No declaration yet → cannot continue (no error message shown)
+  const fareGateIncomplete = !!fareGateEntry && !declaredFareBrand;
   const fareGateUnsatisfied = fareGateBlocked || fareGateIncomplete;
 
 
@@ -360,7 +355,6 @@ export default function SellTicket() {
 
       // Fare-gate declaration made at creation time (Condor / Finnair / Eurowings)
       setDeclaredFareBrand((editListing as any).declared_fare_type || "");
-      setFareGateAttested(!!(editListing as any).fare_gate_attested_at);
 
 
       const shared: TicketInclusions = {
@@ -484,7 +478,6 @@ export default function SellTicket() {
     setTicketUploaded(false);
     setSingleCarrierConfirmed(false);
     setDeclaredFareBrand("");
-    setFareGateAttested(false);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -825,8 +818,7 @@ export default function SellTicket() {
 
       // Fare-gate declaration (Condor / Finnair / Eurowings) — stored for audit.
       if (fareGateEntry) {
-        listingData.declared_fare_type =
-          fareGateEntry.gate.kind === "select" ? declaredFareBrand : "Eurowings — customer-service attestation";
+        listingData.declared_fare_type = declaredFareBrand;
         listingData.fare_gate_attested_at = new Date().toISOString();
         listingData.fare_gate_attested_by = user!.id;
       } else {
@@ -1049,7 +1041,11 @@ export default function SellTicket() {
       if (fareGateEntry && fareGateUnsatisfied) {
         toast({
           title: t("sellToastListingBlocked"),
-          description: locale === "it" ? fareGateEntry.gate.blockMessageIt : fareGateEntry.gate.blockMessage,
+          description: fareGateBlocked
+            ? fareGateBlockMessage(fareGateEntry.gate, locale)
+            : locale === "it"
+              ? "Seleziona il tipo di tariffa del tuo biglietto per continuare."
+              : "Select your ticket's fare type to continue.",
           variant: "destructive",
         });
         return;
@@ -1120,38 +1116,24 @@ export default function SellTicket() {
           </p>
         </div>
 
-        {gate.kind === "select" ? (
-          <div className="space-y-2">
-            <Label>{locale === "it" ? "Tipo di tariffa" : "Fare type"}</Label>
-            <Select value={declaredFareBrand} onValueChange={setDeclaredFareBrand}>
-              <SelectTrigger className="bg-secondary/50">
-                <SelectValue placeholder={locale === "it" ? "Seleziona la tua tariffa" : "Select your fare type"} />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {gate.options!.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <label className="flex items-start gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              className="mt-0.5 w-4 h-4 accent-primary cursor-pointer shrink-0"
-              checked={fareGateAttested}
-              onChange={(e) => setFareGateAttested(e.target.checked)}
-            />
-            <span className="text-xs text-muted-foreground leading-relaxed">
-              {locale === "it" ? gate.attestationIt : gate.attestation}
-            </span>
-          </label>
-        )}
+        <div className="space-y-2">
+          <Label>{locale === "it" ? "Tipo di tariffa" : "Fare type"}</Label>
+          <Select value={declaredFareBrand} onValueChange={setDeclaredFareBrand}>
+            <SelectTrigger className="bg-secondary/50">
+              <SelectValue placeholder={locale === "it" ? "Seleziona la tua tariffa" : "Select your fare type"} />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              {gate.options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {fareGateBlocked && (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
             <p className="text-xs font-medium text-destructive leading-relaxed">
-              {locale === "it" ? gate.blockMessageIt : gate.blockMessage}
+              {fareGateBlockMessage(gate, locale)}
             </p>
           </div>
         )}
@@ -1565,7 +1547,6 @@ export default function SellTicket() {
                       setFormData({ ...formData, airline: v, fareType: "" });
                       // Reset the fare-gate declaration whenever the airline changes.
                       setDeclaredFareBrand("");
-                      setFareGateAttested(false);
                     }}
                   >
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirline")} /></SelectTrigger>
