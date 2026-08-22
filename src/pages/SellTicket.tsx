@@ -75,15 +75,8 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Other", eligible: false },
     ],
   },
-  eurowings: {
-    label: "Eurowings",
-    options: [
-      { value: "Flex", eligible: true },
-      { value: "Basic", eligible: false },
-      { value: "Smart", eligible: false },
-      { value: "Other", eligible: false },
-    ],
-  },
+  // Eurowings intentionally NOT fare-gated: it is blocked entirely
+  // (is_transferable = false) pending confirmation of its fare-eligibility rules.
 };
 
 function getFareGate(airline: string | undefined | null): { key: string; gate: FareGate } | null {
