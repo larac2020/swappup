@@ -40,6 +40,72 @@ const SELLER_DECLARATION_TEXT_EN =
 const SELLER_DECLARATION_TEXT_IT =
   "Confermo che questa prenotazione non è stata venduta, trasferita o pubblicata altrove e di avere il diritto legale di trasferirla a un acquirente.";
 
+// ---------------------------------------------------------------------------
+// Fare-gated airlines: name changes are only permitted on specific fare brands
+// (or, for Eurowings, only after the seller confirms with customer service).
+// The seller's declaration is stored on the listing for later audit.
+// ---------------------------------------------------------------------------
+type FareGate = {
+  kind: "select" | "attestation";
+  options?: { value: string; eligible: boolean }[];
+  blockMessage: string;
+  blockMessageIt: string;
+  attestation?: string;
+  attestationIt?: string;
+};
+
+const FARE_GATED_AIRLINES: Record<string, FareGate> = {
+  condor: {
+    kind: "select",
+    options: [
+      { value: "Flex", eligible: true },
+      { value: "Green", eligible: true },
+      { value: "VFR", eligible: true },
+      { value: "Light", eligible: false },
+      { value: "Zero", eligible: false },
+      { value: "Classic", eligible: false },
+    ],
+    blockMessage:
+      "Condor only permits name changes on Flex, Green, or VFR fares. Your fare type isn't eligible for resale on Swappup.",
+    blockMessageIt:
+      "Condor consente il cambio nome solo sulle tariffe Flex, Green o VFR. La tua tariffa non è idonea alla rivendita su Swappup.",
+  },
+  finnair: {
+    kind: "select",
+    options: [
+      { value: "Business", eligible: true },
+      { value: "Business Saver", eligible: true },
+      { value: "PRO", eligible: true },
+      { value: "Value", eligible: true },
+      { value: "Economy", eligible: false },
+      { value: "Economy Light", eligible: false },
+      { value: "Other", eligible: false },
+    ],
+    blockMessage:
+      "Finnair only permits name changes on Business, Business Saver, PRO, or Value fares. Your fare type isn't eligible for resale on Swappup.",
+    blockMessageIt:
+      "Finnair consente il cambio nome solo sulle tariffe Business, Business Saver, PRO o Value. La tua tariffa non è idonea alla rivendita su Swappup.",
+  },
+  eurowings: {
+    kind: "attestation",
+    blockMessage:
+      "You must confirm with Eurowings that your fare permits a name change before listing this ticket.",
+    blockMessageIt:
+      "Devi confermare con Eurowings che la tua tariffa permette il cambio nome prima di pubblicare questo biglietto.",
+    attestation:
+      "I confirm I have contacted Eurowings customer service and verified that my specific fare permits a name change to a different passenger",
+    attestationIt:
+      "Confermo di aver contattato il servizio clienti Eurowings e di aver verificato che la mia tariffa specifica permette il cambio nome a un altro passeggero",
+  },
+};
+
+function getFareGate(airline: string | undefined | null): { key: string; gate: FareGate } | null {
+  const key = (airline || "").trim().toLowerCase();
+  const gate = FARE_GATED_AIRLINES[key];
+  return gate ? { key, gate } : null;
+}
+
+
 interface TicketInclusions {
   luggageIncluded: boolean;
   carryOnIncluded: boolean;
