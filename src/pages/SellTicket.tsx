@@ -240,6 +240,9 @@ export default function SellTicket() {
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
   const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
   const [sellerDeclarationAck, setSellerDeclarationAck] = useState(false);
+  // Fare-type gate (Condor / Finnair dropdown, Eurowings attestation)
+  const [declaredFareBrand, setDeclaredFareBrand] = useState("");
+  const [fareGateAttested, setFareGateAttested] = useState(false);
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
   // Flight schedule verification (Aviationstack via edge function)
