@@ -245,6 +245,18 @@ export default function SellTicket() {
   const [fareGateAttested, setFareGateAttested] = useState(false);
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
+  // Fare gate derived state for the selected airline
+  const fareGateEntry = getFareGate(formData.airline);
+  const fareGateOption = fareGateEntry?.gate.options?.find((o) => o.value === declaredFareBrand);
+  // Ineligible fare selected → hard block
+  const fareGateBlocked = !!fareGateEntry && fareGateEntry.gate.kind === "select" && !!fareGateOption && !fareGateOption.eligible;
+  // Declaration not yet made → cannot continue (but no error message)
+  const fareGateIncomplete = !!fareGateEntry && (
+    fareGateEntry.gate.kind === "select" ? !declaredFareBrand : !fareGateAttested
+  );
+  const fareGateUnsatisfied = fareGateBlocked || fareGateIncomplete;
+
+
   // Flight schedule verification (Aviationstack via edge function)
   const [isVerifyingFlight, setIsVerifyingFlight] = useState(false);
   const [flightVerification, setFlightVerification] = useState<{
