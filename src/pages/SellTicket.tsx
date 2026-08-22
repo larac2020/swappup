@@ -231,7 +231,7 @@ export default function SellTicket() {
   const [flightFeeAcknowledged, setFlightFeeAcknowledged] = useState(true);
   const [nameChangeRiskAck, setNameChangeRiskAck] = useState(false);
   const [sellerDeclarationAck, setSellerDeclarationAck] = useState(false);
-  // Fare-type gate (Condor / Finnair dropdown, Eurowings attestation)
+  // Fare-type gate (Condor / Finnair dropdown)
   const [declaredFareBrand, setDeclaredFareBrand] = useState("");
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
@@ -346,7 +346,7 @@ export default function SellTicket() {
         bookingReference: (editListing as any).booking_reference || "",
       });
 
-      // Fare-gate declaration made at creation time (Condor / Finnair / Eurowings)
+      // Fare-gate declaration made at creation time (Condor / Finnair)
       setDeclaredFareBrand((editListing as any).declared_fare_type || "");
 
 
@@ -809,7 +809,7 @@ export default function SellTicket() {
       // Booking reference / PNR — used to prevent the same booking being listed twice.
       listingData.booking_reference = formData.bookingReference?.trim() || null;
 
-      // Fare-gate declaration (Condor / Finnair / Eurowings) — stored for audit.
+      // Fare-gate declaration (Condor / Finnair) — stored for audit.
       if (fareGateEntry) {
         listingData.declared_fare_type = declaredFareBrand;
         listingData.fare_gate_attested_at = new Date().toISOString();
@@ -1314,7 +1314,7 @@ export default function SellTicket() {
                 />
               )}
 
-              {/* Fare-type gate (Condor / Finnair / Eurowings) */}
+              {/* Fare-type gate (Condor / Finnair) */}
               {!flightTransferBlocked && renderFareGate()}
 
 
@@ -1559,7 +1559,7 @@ export default function SellTicket() {
                 </div>
               </div>
 
-              {/* Fare-type gate (Condor / Finnair / Eurowings) */}
+              {/* Fare-type gate (Condor / Finnair) */}
               {renderFareGate()}
 
 
