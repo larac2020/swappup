@@ -358,6 +358,11 @@ export default function SellTicket() {
         bookingReference: (editListing as any).booking_reference || "",
       });
 
+      // Fare-gate declaration made at creation time (Condor / Finnair / Eurowings)
+      setDeclaredFareBrand((editListing as any).declared_fare_type || "");
+      setFareGateAttested(!!(editListing as any).fare_gate_attested_at);
+
+
       const shared: TicketInclusions = {
         luggageIncluded: editListing.luggage_included ?? false,
         carryOnIncluded: editListing.carry_on_included ?? true,
