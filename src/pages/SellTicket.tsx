@@ -1317,6 +1317,10 @@ export default function SellTicket() {
                 />
               )}
 
+              {/* Fare-type gate (Condor / Finnair / Eurowings) */}
+              {!flightTransferBlocked && renderFareGate()}
+
+
               {/* Blocked airline: deep-link to FAQ list of supported airlines */}
               {flightTransferBlocked && (
                 <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-4 space-y-2">
