@@ -1033,7 +1033,17 @@ export default function SellTicket() {
         });
         return;
       }
+      // Fare-gated airlines: the seller must declare an eligible fare / attest.
+      if (fareGateEntry && fareGateUnsatisfied) {
+        toast({
+          title: t("sellToastListingBlocked"),
+          description: locale === "it" ? fareGateEntry.gate.blockMessageIt : fareGateEntry.gate.blockMessage,
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
     if (priceError) {
       toast({ title: t("sellToastPriceCap"), description: t("sellPriceTooHighDesc"), variant: "destructive" });
       return;
