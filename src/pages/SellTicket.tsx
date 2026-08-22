@@ -823,6 +823,18 @@ export default function SellTicket() {
       // Booking reference / PNR — used to prevent the same booking being listed twice.
       listingData.booking_reference = formData.bookingReference?.trim() || null;
 
+      // Fare-gate declaration (Condor / Finnair / Eurowings) — stored for audit.
+      if (fareGateEntry) {
+        listingData.declared_fare_type =
+          fareGateEntry.gate.kind === "select" ? declaredFareBrand : "Eurowings — customer-service attestation";
+        listingData.fare_gate_attested_at = new Date().toISOString();
+        listingData.fare_gate_attested_by = user!.id;
+      } else {
+        listingData.declared_fare_type = null;
+        listingData.fare_gate_attested_at = null;
+        listingData.fare_gate_attested_by = null;
+      }
+
       if (editId) {
         const { error } = await supabase
           .from("listings")
