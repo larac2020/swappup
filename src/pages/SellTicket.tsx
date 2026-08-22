@@ -1356,10 +1356,11 @@ export default function SellTicket() {
                   size="lg"
                   className="w-full"
                   disabled={
-                    !ticketUploaded ||
-                    flightTransferBlocked ||
-                    (flightTransferFee !== null && !flightFeeAcknowledged)
-                  }
+                     !ticketUploaded ||
+                     flightTransferBlocked ||
+                     fareGateUnsatisfied ||
+                     (flightTransferFee !== null && !flightFeeAcknowledged)
+                   }
                   onClick={() => setStep(2)}
                 >
                   {locale === "it" ? "Continua" : "Continue"}
