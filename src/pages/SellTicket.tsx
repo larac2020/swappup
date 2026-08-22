@@ -240,7 +240,6 @@ export default function SellTicket() {
   const [sellerDeclarationAck, setSellerDeclarationAck] = useState(false);
   // Fare-type gate (Condor / Finnair dropdown, Eurowings attestation)
   const [declaredFareBrand, setDeclaredFareBrand] = useState("");
-  const [fareGateAttested, setFareGateAttested] = useState(false);
   const trainTransferResult: { status?: string; fee?: number | null; blocking?: boolean; acknowledged?: boolean } | null = null;
 
 
@@ -356,7 +355,6 @@ export default function SellTicket() {
 
       // Fare-gate declaration made at creation time (Condor / Finnair / Eurowings)
       setDeclaredFareBrand((editListing as any).declared_fare_type || "");
-      setFareGateAttested(!!(editListing as any).fare_gate_attested_at);
 
 
       const shared: TicketInclusions = {
@@ -480,7 +478,6 @@ export default function SellTicket() {
     setTicketUploaded(false);
     setSingleCarrierConfirmed(false);
     setDeclaredFareBrand("");
-    setFareGateAttested(false);
   };
 
   const verifyFlightSchedule = async (params: {
@@ -1550,7 +1547,6 @@ export default function SellTicket() {
                       setFormData({ ...formData, airline: v, fareType: "" });
                       // Reset the fare-gate declaration whenever the airline changes.
                       setDeclaredFareBrand("");
-                      setFareGateAttested(false);
                     }}
                   >
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirline")} /></SelectTrigger>
