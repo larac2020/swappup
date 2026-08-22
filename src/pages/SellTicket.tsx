@@ -41,22 +41,18 @@ const SELLER_DECLARATION_TEXT_IT =
   "Confermo che questa prenotazione non è stata venduta, trasferita o pubblicata altrove e di avere il diritto legale di trasferirla a un acquirente.";
 
 // ---------------------------------------------------------------------------
-// Fare-gated airlines: name changes are only permitted on specific fare brands
-// (or, for Eurowings, only after the seller confirms with customer service).
-// The seller's declaration is stored on the listing for later audit.
+// Fare-gated airlines: name changes are only permitted on specific fare brands.
+// The seller must declare their fare type before listing; the declaration is
+// self-reported (not independently verified) and stored on the listing record.
 // ---------------------------------------------------------------------------
 type FareGate = {
-  kind: "select" | "attestation";
-  options?: { value: string; eligible: boolean }[];
-  blockMessage: string;
-  blockMessageIt: string;
-  attestation?: string;
-  attestationIt?: string;
+  label: string;
+  options: { value: string; eligible: boolean }[];
 };
 
 const FARE_GATED_AIRLINES: Record<string, FareGate> = {
   condor: {
-    kind: "select",
+    label: "Condor",
     options: [
       { value: "Flex", eligible: true },
       { value: "Green", eligible: true },
@@ -65,13 +61,9 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Zero", eligible: false },
       { value: "Classic", eligible: false },
     ],
-    blockMessage:
-      "Condor only permits name changes on Flex, Green, or VFR fares. Your fare type isn't eligible for resale on Swappup.",
-    blockMessageIt:
-      "Condor consente il cambio nome solo sulle tariffe Flex, Green o VFR. La tua tariffa non è idonea alla rivendita su Swappup.",
   },
   finnair: {
-    kind: "select",
+    label: "Finnair",
     options: [
       { value: "Business", eligible: true },
       { value: "Business Saver", eligible: true },
@@ -79,23 +71,18 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Value", eligible: true },
       { value: "Economy", eligible: false },
       { value: "Economy Light", eligible: false },
+      { value: "Economy Basic", eligible: false },
       { value: "Other", eligible: false },
     ],
-    blockMessage:
-      "Finnair only permits name changes on Business, Business Saver, PRO, or Value fares. Your fare type isn't eligible for resale on Swappup.",
-    blockMessageIt:
-      "Finnair consente il cambio nome solo sulle tariffe Business, Business Saver, PRO o Value. La tua tariffa non è idonea alla rivendita su Swappup.",
   },
   eurowings: {
-    kind: "attestation",
-    blockMessage:
-      "You must confirm with Eurowings that your fare permits a name change before listing this ticket.",
-    blockMessageIt:
-      "Devi confermare con Eurowings che la tua tariffa permette il cambio nome prima di pubblicare questo biglietto.",
-    attestation:
-      "I confirm I have contacted Eurowings customer service and verified that my specific fare permits a name change to a different passenger",
-    attestationIt:
-      "Confermo di aver contattato il servizio clienti Eurowings e di aver verificato che la mia tariffa specifica permette il cambio nome a un altro passeggero",
+    label: "Eurowings",
+    options: [
+      { value: "Flex", eligible: true },
+      { value: "Basic", eligible: false },
+      { value: "Smart", eligible: false },
+      { value: "Other", eligible: false },
+    ],
   },
 };
 
@@ -103,6 +90,17 @@ function getFareGate(airline: string | undefined | null): { key: string; gate: F
   const key = (airline || "").trim().toLowerCase();
   const gate = FARE_GATED_AIRLINES[key];
   return gate ? { key, gate } : null;
+}
+
+// Human-readable list of the fare types that DO permit a passenger name change.
+function eligibleFareList(gate: FareGate): string {
+  return gate.options.filter((o) => o.eligible).map((o) => o.value).join(", ");
+}
+
+function fareGateBlockMessage(gate: FareGate, locale: string): string {
+  return locale === "it"
+    ? `Questa tariffa non consente il cambio nome su ${gate.label}. Solo i biglietti ${eligibleFareList(gate)} possono essere trasferiti.`
+    : `This fare type doesn't support name changes on ${gate.label}. Only ${eligibleFareList(gate)} tickets can be transferred.`;
 }
 
 
