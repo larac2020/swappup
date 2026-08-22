@@ -1083,6 +1083,56 @@ export default function SellTicket() {
   }, []);
   const today = minDepartureDate; // backward-compat for existing references below
 
+  // Fare-type gate for airlines that only allow name changes on certain fares.
+  const renderFareGate = () => {
+    if (!fareGateEntry) return null;
+    const { gate } = fareGateEntry;
+    return (
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+        <div className="flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {locale === "it"
+              ? `${formData.airline} consente il cambio nome solo su alcune tariffe. Dichiara la tua tariffa: la dichiarazione viene registrata con l'annuncio.`
+              : `${formData.airline} only permits name changes on certain fares. Declare your fare below — your declaration is recorded with the listing.`}
+          </p>
+        </div>
+
+        {gate.kind === "select" ? (
+          <div className="space-y-2">
+            <Label>{locale === "it" ? "Tipo di tariffa" : "Fare type"}</Label>
+            <Select value={declaredFareBrand} onValueChange={setDeclaredFareBrand}>
+              <SelectTrigger className="bg-secondary/50">
+                <SelectValue placeholder={locale === "it" ? "Seleziona la tua tariffa" : "Select your fare type"} />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                {gate.options!.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox checked={fareGateAttested} onCheckedChange={(c) => setFareGateAttested(c === true)} className="mt-0.5" />
+            <span className="text-xs text-muted-foreground leading-relaxed">
+              {locale === "it" ? gate.attestationIt : gate.attestation}
+            </span>
+          </label>
+        )}
+
+        {fareGateBlocked && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+            <p className="text-xs font-medium text-destructive leading-relaxed">
+              {locale === "it" ? gate.blockMessageIt : gate.blockMessage}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
   const renderInclusionToggles = (inclusions: TicketInclusions, onChange: (field: keyof TicketInclusions, value: boolean) => void, label?: string) => (
     <div className="space-y-3">
       {label && <p className="text-sm font-medium text-muted-foreground">{label}</p>}
