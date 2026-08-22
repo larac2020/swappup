@@ -574,6 +574,7 @@ export type Database = {
           credit_type: string | null
           credit_value: number | null
           currency: string
+          declared_fare_type: string | null
           departure_date: string
           departure_time: string | null
           destination_airport: string | null
@@ -581,6 +582,8 @@ export type Database = {
           destination_country: string
           destination_image_url: string | null
           destination_station: string | null
+          fare_gate_attested_at: string | null
+          fare_gate_attested_by: string | null
           flight_number: string | null
           id: string
           is_active: boolean | null
@@ -642,6 +645,7 @@ export type Database = {
           credit_type?: string | null
           credit_value?: number | null
           currency?: string
+          declared_fare_type?: string | null
           departure_date: string
           departure_time?: string | null
           destination_airport?: string | null
@@ -649,6 +653,8 @@ export type Database = {
           destination_country: string
           destination_image_url?: string | null
           destination_station?: string | null
+          fare_gate_attested_at?: string | null
+          fare_gate_attested_by?: string | null
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
@@ -710,6 +716,7 @@ export type Database = {
           credit_type?: string | null
           credit_value?: number | null
           currency?: string
+          declared_fare_type?: string | null
           departure_date?: string
           departure_time?: string | null
           destination_airport?: string | null
@@ -717,6 +724,8 @@ export type Database = {
           destination_country?: string
           destination_image_url?: string | null
           destination_station?: string | null
+          fare_gate_attested_at?: string | null
+          fare_gate_attested_by?: string | null
           flight_number?: string | null
           id?: string
           is_active?: boolean | null
