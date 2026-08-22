@@ -1537,7 +1537,15 @@ export default function SellTicket() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("sellAirline")}</Label>
-                  <Select value={formData.airline} onValueChange={(v) => setFormData({ ...formData, airline: v, fareType: "" })}>
+                  <Select
+                    value={formData.airline}
+                    onValueChange={(v) => {
+                      setFormData({ ...formData, airline: v, fareType: "" });
+                      // Reset the fare-gate declaration whenever the airline changes.
+                      setDeclaredFareBrand("");
+                      setFareGateAttested(false);
+                    }}
+                  >
                     <SelectTrigger className="bg-secondary/50"><SelectValue placeholder={t("sellSelectAirline")} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50 max-h-60">
                       {airlines.map((a) => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
