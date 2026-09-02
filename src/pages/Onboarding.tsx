@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,6 +24,9 @@ import type { TranslationKey } from "@/i18n/translations";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { markOnboardedInMetadata } from "@/lib/onboardingStatus";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
+
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
@@ -122,50 +125,76 @@ export default function Onboarding() {
     enabled: !!user?.id,
   });
 
+  // Hydrate the form from whatever was already saved — ONCE per mount.
+  // (Re-running on every profile refetch would clobber in-progress typing.)
+  const hydratedRef = useRef(false);
   useEffect(() => {
-    if (user?.email) setProfileEmail(user.email);
-    if (profile) {
-      if (profile.full_name) {
-        const parts = profile.full_name.trim().split(/\s+/);
-        setFirstName(parts[0] || "");
-        setLastName(parts.slice(1).join(" ") || "");
-      } else {
-        // Prefill from OAuth provider metadata (e.g. Google) when the profile has no name yet
-        const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
-        const metaFirst = typeof meta.given_name === "string" ? meta.given_name : "";
-        const metaLast = typeof meta.family_name === "string" ? meta.family_name : "";
-        const metaFull = [meta.full_name, meta.name, meta.display_name].find((v) => typeof v === "string" && v.trim()) as string | undefined;
-        if (metaFirst || metaLast) {
-          setFirstName((prev) => prev || metaFirst);
-          setLastName((prev) => prev || metaLast);
-        } else if (metaFull) {
-          const parts = metaFull.trim().split(/\s+/);
-          setFirstName((prev) => prev || parts[0] || "");
-          setLastName((prev) => prev || parts.slice(1).join(" "));
-        }
-      }
+    if (user?.email) setProfileEmail((prev) => prev || user.email!);
+    if (!profile || hydratedRef.current) return;
+    hydratedRef.current = true;
 
-      if (profile.phone) {
-        for (const p of phonePrefixes.sort((a, b) => b.code.length - a.code.length)) {
-          if (profile.phone.startsWith(p.code)) {
-            setPhonePrefix(p.code);
-            setPhoneNumber(profile.phone.slice(p.code.length));
-            break;
-          }
+    const p = profile as any;
+
+    if (p.full_name) {
+      const parts = String(p.full_name).trim().split(/\s+/);
+      setFirstName(parts[0] || "");
+      setLastName(parts.slice(1).join(" ") || "");
+    } else {
+      // Prefill from OAuth provider metadata (e.g. Google) when the profile has no name yet
+      const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+      const metaFirst = typeof meta.given_name === "string" ? meta.given_name : "";
+      const metaLast = typeof meta.family_name === "string" ? meta.family_name : "";
+      const metaFull = [meta.full_name, meta.name, meta.display_name].find((v) => typeof v === "string" && v.trim()) as string | undefined;
+      if (metaFirst || metaLast) {
+        setFirstName(metaFirst);
+        setLastName(metaLast);
+      } else if (metaFull) {
+        const parts = metaFull.trim().split(/\s+/);
+        setFirstName(parts[0] || "");
+        setLastName(parts.slice(1).join(" "));
+      }
+    }
+
+    if (p.phone) {
+      for (const pre of [...phonePrefixes].sort((a, b) => b.code.length - a.code.length)) {
+        if (String(p.phone).startsWith(pre.code)) {
+          setPhonePrefix(pre.code);
+          setPhoneNumber(String(p.phone).slice(pre.code.length));
+          break;
         }
       }
-      if (profile.address_line1) setAddressLine1(profile.address_line1);
-      if (profile.address_line2) setAddressLine2(profile.address_line2);
-      if (profile.city) setCity(profile.city);
-      if (profile.postal_code) setPostalCode(profile.postal_code);
-      if (profile.country) setCountry(profile.country);
     }
+
+    if (p.address_line1) setAddressLine1(p.address_line1);
+    if (p.address_line2) setAddressLine2(p.address_line2);
+    if (p.city) setCity(p.city);
+    if (p.postal_code) setPostalCode(p.postal_code);
+    if (p.country) setCountry(p.country);
+
+    // Preferences (previously never prefilled)
+    if (p.default_pax) setDefaultPax(String(p.default_pax));
+    if (p.favorite_departure_city) {
+      setFavCity(p.favorite_departure_city);
+      const owner = getCountries().find((c) => getCitiesByCountry(c).includes(p.favorite_departure_city));
+      if (owner) setFavCountry(owner);
+    }
+
+    // Resume at the first step that is not yet complete
+    const paymentDone = typeof window !== "undefined" && localStorage.getItem("flyswap_payment_added") === "true";
+    const done: Record<Exclude<Step, "success">, boolean> = {
+      personal: !!(p.full_name && p.phone),
+      verification: p.verification_status === "verified",
+      address: !!(p.address_line1 && p.city && p.country),
+      payment: paymentDone,
+      preferences: !!p.favorite_departure_city,
+    };
+    const firstIncomplete = STEPS.slice(0, 5).findIndex((s) => !done[s as Exclude<Step, "success">]);
+    setCurrentStep(firstIncomplete === -1 ? STEPS.length - 1 : firstIncomplete);
   }, [user, profile]);
 
   const step = STEPS[currentStep];
-  const baseProgress = currentStep === 0 ? 10 : stepProgress[STEPS[currentStep - 1]] || 10;
-  const targetProgress = stepProgress[step];
-  const progress = step === "success" ? 100 : baseProgress;
+  const progress = step === "success" ? 100 : stepProgress[step];
+
 
   const countries = useMemo(() => getCountries(), []);
   const favCities = useMemo(() => favCountry ? getCitiesByCountry(favCountry) : [], [favCountry]);
@@ -323,17 +352,27 @@ export default function Onboarding() {
     try {
       const { data, error } = await supabase.functions.invoke("create-setup-intent");
       if (error) throw error;
+
       if (data?.url) {
-        localStorage.setItem("flyswap_payment_added", "true");
-        window.open(data.url, "_blank");
+        // Hosted Stripe page — open in an in-app browser on native, new tab on web
+        if (Capacitor.isNativePlatform()) {
+          await Browser.open({ url: data.url });
+        } else {
+          window.open(data.url, "_blank");
+        }
         toast({ title: t("onbCompletePaymentTitle"), description: t("onbCompletePaymentDesc") });
+        return;
       }
+
+      // No hosted URL: use the in-app Stripe Elements card form
+      navigate("/account/payment");
     } catch (err: any) {
       toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setPaymentLoading(false);
     }
   };
+
 
   // Save preferences
   const savePreferences = async () => {
@@ -389,7 +428,7 @@ export default function Onboarding() {
 
         {step !== "success" && (
           <>
-            <Progress value={progress} className="h-1.5" />
+            
             <div className="flex items-center gap-1">
               {STEPS.slice(0, 5).map((s, i) => (
                 <div
@@ -442,7 +481,7 @@ export default function Onboarding() {
                       <SelectTrigger className="w-[100px] h-11 bg-secondary/50 border-border/50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                         {phonePrefixes.map((p) => (
                           <SelectItem key={p.code} value={p.code}>{p.code} {p.country}</SelectItem>
                         ))}
@@ -508,7 +547,7 @@ export default function Onboarding() {
                   <Label>{t("onbCountry")}</Label>
                   <Select value={country} onValueChange={(v) => { setCountry(v); setPostalError(""); }}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {addressCountries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -561,7 +600,7 @@ export default function Onboarding() {
                   <Label>{t("onbFavCountry")}</Label>
                   <Select value={favCountry} onValueChange={(v) => { setFavCountry(v); setFavCity(""); }}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -571,7 +610,7 @@ export default function Onboarding() {
                     <Label>{t("onbFavCity")}</Label>
                     <Select value={favCity} onValueChange={setFavCity}>
                       <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCity")} /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                         {favCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -581,7 +620,7 @@ export default function Onboarding() {
                   <Label>{t("onbDefaultPax")}</Label>
                   <Select value={defaultPax} onValueChange={setDefaultPax}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? t("onbPaxOne") : t("onbPaxMany")}</SelectItem>)}
                     </SelectContent>
                   </Select>
