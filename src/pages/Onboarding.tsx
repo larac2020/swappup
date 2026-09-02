@@ -126,10 +126,25 @@ export default function Onboarding() {
     if (user?.email) setProfileEmail(user.email);
     if (profile) {
       if (profile.full_name) {
-        const parts = profile.full_name.split(" ");
+        const parts = profile.full_name.trim().split(/\s+/);
         setFirstName(parts[0] || "");
         setLastName(parts.slice(1).join(" ") || "");
+      } else {
+        // Prefill from OAuth provider metadata (e.g. Google) when the profile has no name yet
+        const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+        const metaFirst = typeof meta.given_name === "string" ? meta.given_name : "";
+        const metaLast = typeof meta.family_name === "string" ? meta.family_name : "";
+        const metaFull = [meta.full_name, meta.name, meta.display_name].find((v) => typeof v === "string" && v.trim()) as string | undefined;
+        if (metaFirst || metaLast) {
+          setFirstName((prev) => prev || metaFirst);
+          setLastName((prev) => prev || metaLast);
+        } else if (metaFull) {
+          const parts = metaFull.trim().split(/\s+/);
+          setFirstName((prev) => prev || parts[0] || "");
+          setLastName((prev) => prev || parts.slice(1).join(" "));
+        }
       }
+
       if (profile.phone) {
         for (const p of phonePrefixes.sort((a, b) => b.code.length - a.code.length)) {
           if (profile.phone.startsWith(p.code)) {
@@ -174,16 +189,20 @@ export default function Onboarding() {
     }
   };
 
+  // Personal step validation
+  const personalValid = !!firstName.trim() && !!lastName.trim() && phoneNumber.trim().length >= 6;
+
   // Save personal info
   const savePersonal = async () => {
-    if (!user) return;
+    if (!user || !personalValid) return;
     setSaving(true);
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      const phone = phoneNumber ? `${phonePrefix}${phoneNumber}` : "";
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || null;
+      const phone = phoneNumber.trim() ? `${phonePrefix}${phoneNumber.trim()}` : null;
       const { error } = await supabase.from("profiles")
-        .update({ full_name: fullName, phone, email: profileEmail })
+        .update({ full_name: fullName, phone, email: profileEmail || null })
         .eq("user_id", user.id);
+
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -610,7 +629,7 @@ export default function Onboarding() {
                 {t("onbSkip")}
               </Button>
               {step === "personal" && (
-                <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving}>
+                <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving || !personalValid}>
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
