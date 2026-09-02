@@ -189,16 +189,20 @@ export default function Onboarding() {
     }
   };
 
+  // Personal step validation
+  const personalValid = !!firstName.trim() && !!lastName.trim() && phoneNumber.trim().length >= 6;
+
   // Save personal info
   const savePersonal = async () => {
-    if (!user) return;
+    if (!user || !personalValid) return;
     setSaving(true);
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      const phone = phoneNumber ? `${phonePrefix}${phoneNumber}` : "";
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || null;
+      const phone = phoneNumber.trim() ? `${phonePrefix}${phoneNumber.trim()}` : null;
       const { error } = await supabase.from("profiles")
-        .update({ full_name: fullName, phone, email: profileEmail })
+        .update({ full_name: fullName, phone, email: profileEmail || null })
         .eq("user_id", user.id);
+
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
