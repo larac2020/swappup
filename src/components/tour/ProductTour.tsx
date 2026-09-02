@@ -109,6 +109,7 @@ export function ProductTour() {
         title: t("tourSearchTitle"),
         content: t("tourSearchBody"),
         placement: "top",
+        isFixed: true,
         disableBeacon: true,
       },
       {
@@ -116,6 +117,7 @@ export function ProductTour() {
         title: t("tourListingsTitle"),
         content: t("tourListingsBody"),
         placement: "top",
+        isFixed: true,
         disableBeacon: true,
       },
       {
@@ -123,6 +125,7 @@ export function ProductTour() {
         title: t("tourAccountTitle"),
         content: t("tourAccountBody"),
         placement: "top",
+        isFixed: true,
         disableBeacon: true,
       },
     ],
@@ -318,7 +321,14 @@ export function ProductTour() {
             overlayColor: "rgba(8, 10, 16, 0.78)",
             zIndex: 10000,
           },
+          spotlight: {
+            borderRadius: 12,
+            border: "2px solid hsl(38 92% 55%)",
+            boxShadow: "0 0 0 4px hsla(38, 92%, 55%, 0.25)",
+          },
         }}
+        spotlightPadding={6}
+        disableScrollParentFix
       />
 
       <Dialog open={showPermissions} onOpenChange={(o) => !o && dismissWithoutSaving()}>
