@@ -402,7 +402,7 @@ export default function Onboarding() {
 
         {step !== "success" && (
           <>
-            <Progress value={progress} className="h-1.5" />
+            
             <div className="flex items-center gap-1">
               {STEPS.slice(0, 5).map((s, i) => (
                 <div
