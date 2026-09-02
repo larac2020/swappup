@@ -126,10 +126,25 @@ export default function Onboarding() {
     if (user?.email) setProfileEmail(user.email);
     if (profile) {
       if (profile.full_name) {
-        const parts = profile.full_name.split(" ");
+        const parts = profile.full_name.trim().split(/\s+/);
         setFirstName(parts[0] || "");
         setLastName(parts.slice(1).join(" ") || "");
+      } else {
+        // Prefill from OAuth provider metadata (e.g. Google) when the profile has no name yet
+        const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+        const metaFirst = typeof meta.given_name === "string" ? meta.given_name : "";
+        const metaLast = typeof meta.family_name === "string" ? meta.family_name : "";
+        const metaFull = [meta.full_name, meta.name, meta.display_name].find((v) => typeof v === "string" && v.trim()) as string | undefined;
+        if (metaFirst || metaLast) {
+          setFirstName((prev) => prev || metaFirst);
+          setLastName((prev) => prev || metaLast);
+        } else if (metaFull) {
+          const parts = metaFull.trim().split(/\s+/);
+          setFirstName((prev) => prev || parts[0] || "");
+          setLastName((prev) => prev || parts.slice(1).join(" "));
+        }
       }
+
       if (profile.phone) {
         for (const p of phonePrefixes.sort((a, b) => b.code.length - a.code.length)) {
           if (profile.phone.startsWith(p.code)) {
