@@ -481,7 +481,7 @@ export default function Onboarding() {
                       <SelectTrigger className="w-[100px] h-11 bg-secondary/50 border-border/50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                         {phonePrefixes.map((p) => (
                           <SelectItem key={p.code} value={p.code}>{p.code} {p.country}</SelectItem>
                         ))}
@@ -547,7 +547,7 @@ export default function Onboarding() {
                   <Label>{t("onbCountry")}</Label>
                   <Select value={country} onValueChange={(v) => { setCountry(v); setPostalError(""); }}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {addressCountries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -600,7 +600,7 @@ export default function Onboarding() {
                   <Label>{t("onbFavCountry")}</Label>
                   <Select value={favCountry} onValueChange={(v) => { setFavCountry(v); setFavCity(""); }}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCountry")} /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -610,7 +610,7 @@ export default function Onboarding() {
                     <Label>{t("onbFavCity")}</Label>
                     <Select value={favCity} onValueChange={setFavCity}>
                       <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue placeholder={t("onbSelectCity")} /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                         {favCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -620,7 +620,7 @@ export default function Onboarding() {
                   <Label>{t("onbDefaultPax")}</Label>
                   <Select value={defaultPax} onValueChange={setDefaultPax}>
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/50"><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="max-h-[50vh] overflow-y-auto">
                       {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? t("onbPaxOne") : t("onbPaxMany")}</SelectItem>)}
                     </SelectContent>
                   </Select>
