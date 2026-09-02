@@ -323,17 +323,27 @@ export default function Onboarding() {
     try {
       const { data, error } = await supabase.functions.invoke("create-setup-intent");
       if (error) throw error;
+
       if (data?.url) {
-        localStorage.setItem("flyswap_payment_added", "true");
-        window.open(data.url, "_blank");
+        // Hosted Stripe page — open in an in-app browser on native, new tab on web
+        if (Capacitor.isNativePlatform()) {
+          await Browser.open({ url: data.url });
+        } else {
+          window.open(data.url, "_blank");
+        }
         toast({ title: t("onbCompletePaymentTitle"), description: t("onbCompletePaymentDesc") });
+        return;
       }
+
+      // No hosted URL: use the in-app Stripe Elements card form
+      navigate("/account/payment");
     } catch (err: any) {
       toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setPaymentLoading(false);
     }
   };
+
 
   // Save preferences
   const savePreferences = async () => {
