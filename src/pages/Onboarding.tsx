@@ -629,7 +629,7 @@ export default function Onboarding() {
                 {t("onbSkip")}
               </Button>
               {step === "personal" && (
-                <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving}>
+                <Button variant="gold" className="flex-1" onClick={savePersonal} disabled={saving || !personalValid}>
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t("onbNext")} <ChevronRight className="w-4 h-4 ml-1" /></>}
                 </Button>
               )}
