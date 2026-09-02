@@ -24,6 +24,9 @@ import type { TranslationKey } from "@/i18n/translations";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { markOnboardedInMetadata } from "@/lib/onboardingStatus";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
+
 
 type Step = "personal" | "verification" | "address" | "payment" | "preferences" | "success";
 
