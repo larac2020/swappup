@@ -90,28 +90,51 @@ export default function PersonalInfo() {
   });
 
   const handleChangePassword = async () => {
+    if (!currentPassword) {
+      toast({ title: t("error"), description: t("pwErrCurrentRequired"), variant: "destructive" });
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast({ title: t("authPasswordsDontMatch"), description: t("authPasswordsDontMatchDesc"), variant: "destructive" });
       return;
     }
-    if (newPassword.length < 6) {
-      toast({ title: t("authPasswordTooShort"), description: t("authPasswordTooShortDesc"), variant: "destructive" });
+    if (!allCriteriaMet(newPassword)) {
+      toast({ title: t("resetWeakTitle"), description: t("pwErrRequirements"), variant: "destructive" });
       return;
     }
     setPasswordLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+        // Signed-in password changes must re-verify the current password.
+        current_password: currentPassword,
+      } as any);
       if (error) throw error;
       toast({ title: t("personalPasswordUpdated") });
       setShowPasswordSection(false);
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast({ title: t("error"), description: err.message, variant: "destructive" });
+      const raw = (err?.message || "").toLowerCase();
+      let description = err?.message || t("pwErrRequirements");
+      if (raw.includes("known to be weak") || raw.includes("pwned") || raw.includes("data breach")) {
+        description = t("pwErrWeakLeaked");
+      } else if (raw.includes("current password required") || raw.includes("current_password")) {
+        description = t("pwErrCurrentRequired");
+      } else if (raw.includes("invalid login credentials") || raw.includes("incorrect")) {
+        description = t("pwErrCurrentWrong");
+      } else if (raw.includes("should be different") || raw.includes("same as the old")) {
+        description = t("pwErrSameAsOld");
+      } else if (raw.includes("at least") || raw.includes("characters") || raw.includes("password")) {
+        description = t("pwErrRequirements");
+      }
+      toast({ title: t("error"), description, variant: "destructive" });
     } finally {
       setPasswordLoading(false);
     }
   };
+
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
