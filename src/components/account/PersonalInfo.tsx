@@ -43,6 +43,8 @@ export default function PersonalInfo() {
   const [phonePrefix, setPhonePrefix] = useState("+44");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
