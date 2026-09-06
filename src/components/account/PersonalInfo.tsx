@@ -163,25 +163,35 @@ export default function PersonalInfo() {
         {showPasswordSection && (
           <div className="space-y-4 pt-2 border-t border-border/50">
             <div className="space-y-2">
-              <Label htmlFor="newPassword">{t("personalNewPassword")}</Label>
+              <Label htmlFor="currentPassword">{t("personalCurrentPassword")}</Label>
               <div className="relative">
-                <Input id="newPassword" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 bg-secondary/50 border-border/50 pr-12" />
-                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <Input id="currentPassword" type={showCurrentPassword ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-12 bg-secondary/50 border-border/50 pr-12" autoComplete="current-password" />
+                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="newPassword">{t("personalNewPassword")}</Label>
+              <div className="relative">
+                <Input id="newPassword" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 bg-secondary/50 border-border/50 pr-12" autoComplete="new-password" />
+                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <PasswordChecklist password={newPassword} className="pt-1" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="confirmPassword">{t("personalConfirmNewPassword")}</Label>
               <div className="relative">
-                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-12 bg-secondary/50 border-border/50 pr-12" />
+                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-12 bg-secondary/50 border-border/50 pr-12" autoComplete="new-password" />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {confirmPassword && newPassword !== confirmPassword && <p className="text-sm text-destructive">{t("authPasswordsDontMatch")}</p>}
             </div>
-            <Button variant="gold" size="lg" className="w-full" onClick={handleChangePassword} disabled={passwordLoading || !newPassword || newPassword !== confirmPassword}>
+            <Button variant="gold" size="lg" className="w-full" onClick={handleChangePassword} disabled={passwordLoading || !currentPassword || !allCriteriaMet(newPassword) || newPassword !== confirmPassword}>
               {passwordLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("resetUpdating")}</> : t("personalUpdatePassword")}
             </Button>
           </div>
