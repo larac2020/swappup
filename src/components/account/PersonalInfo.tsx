@@ -10,6 +10,7 @@ import { ChevronLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { PasswordChecklist, allCriteriaMet } from "@/components/auth/PasswordChecklist";
 
 const phonePrefixes = [
   { code: "+44", country: "UK" }, { code: "+39", country: "IT" }, { code: "+49", country: "DE" },
