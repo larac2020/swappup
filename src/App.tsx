@@ -29,6 +29,8 @@ import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
+import { RecoveryGate } from "./components/auth/RecoveryGate";
+
 
 const queryClient = new QueryClient();
 
