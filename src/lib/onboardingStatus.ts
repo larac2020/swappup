@@ -20,14 +20,23 @@ export function readOnboardedFromUser(user: User | null | undefined): boolean {
 /**
  * Persist the onboarding flag into auth metadata so future sessions can
  * route synchronously without a profiles round-trip.
+ *
+ * Guarded so it runs at most ONCE per page session: every updateUser() emits a
+ * USER_UPDATED event, which changes the user object and can re-trigger the
+ * callers' effects — previously a write loop that hit the auth rate limit.
  */
+let metadataWriteStarted = false;
+
 export async function markOnboardedInMetadata(): Promise<void> {
+  if (metadataWriteStarted) return;
+  metadataWriteStarted = true;
   try {
     await supabase.auth.updateUser({ data: { onboarded: true } });
   } catch {
     // best-effort — the DB fallback will still work on next load
   }
 }
+
 
 export async function fetchOnboardingStatus(userId: string): Promise<{ onboarded: boolean }> {
   const { data } = await supabase
@@ -45,8 +54,13 @@ export async function fetchOnboardingStatus(userId: string): Promise<{ onboarded
   }
   // One-shot backfill for legacy users: mirror the DB truth into auth metadata
   // so subsequent loads route without a query.
+  // One-shot backfill for legacy users: mirror the DB truth into auth metadata
+  // so subsequent loads route without a query. Only when it isn't already set.
   if (onboarded) {
-    void markOnboardedInMetadata();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!readOnboardedFromUser(userData?.user)) {
+      void markOnboardedInMetadata();
+    }
   }
   return { onboarded };
 }

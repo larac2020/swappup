@@ -8,6 +8,8 @@ import { landingContent, marketingMeta } from "@/i18n/marketingContent";
 import { PhoneMock } from "@/components/marketing/PhoneMock";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { isRecoveryActive } from "@/lib/recoveryFlow";
+
 import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { Capacitor } from "@capacitor/core";
