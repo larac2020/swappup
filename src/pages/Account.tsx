@@ -138,7 +138,7 @@ export default function Account() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login");
+    window.location.replace("/login");
   };
 
   const languageOptions: { value: Locale; label: string; flag: string }[] = [
