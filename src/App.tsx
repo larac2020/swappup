@@ -121,8 +121,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <RecoveryGate>
           <Routes>
             {/* Public marketing site */}
+
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<Faq />} />
