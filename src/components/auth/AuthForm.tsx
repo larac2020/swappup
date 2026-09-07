@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutEverywhereLocal } from "@/lib/signOut";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -155,7 +156,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
             (error as any).code === "email_not_confirmed"
           ) {
             // Defensive: ensure no partial session is kept
-            await supabase.auth.signOut();
+            await signOutEverywhereLocal();
             setNeedsVerification(true);
             return;
           }
@@ -164,7 +165,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps = {}) {
         // Belt-and-braces: if somehow a session exists without a confirmed email, block it.
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user && !userData.user.email_confirmed_at) {
-          await supabase.auth.signOut();
+          await signOutEverywhereLocal();
           setNeedsVerification(true);
           return;
         }

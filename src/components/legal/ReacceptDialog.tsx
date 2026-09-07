@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutEverywhereLocal } from "@/lib/signOut";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { TERMS_VERSION, PRIVACY_VERSION } from "@/content/legal/version";
@@ -62,7 +63,7 @@ export default function ReacceptDialog() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutEverywhereLocal();
     setNeedsReaccept(false);
   };
 

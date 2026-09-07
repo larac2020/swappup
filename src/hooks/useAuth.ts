@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { signOutEverywhereLocal } from "@/lib/signOut";
 
 function getDeviceFingerprint(): string {
   try {
@@ -59,7 +60,7 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutEverywhereLocal();
   };
 
   return {
