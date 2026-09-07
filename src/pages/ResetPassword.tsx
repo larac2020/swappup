@@ -21,10 +21,15 @@ export default function ResetPassword() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event first (must be before any async calls)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event on reset page:", event);
+    // A global guard (recoveryFlow) already detected the recovery link before
+    // the Supabase client consumed the URL, so trust it first.
+    if (isRecoveryActive()) {
+      setStatus("ready");
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
+        beginRecovery();
         setStatus("ready");
       }
     });
@@ -33,6 +38,7 @@ export default function ResetPassword() {
     const hash = window.location.hash.substring(1);
     const hashParams = new URLSearchParams(hash);
     if (hashParams.get("type") === "recovery" && hashParams.get("access_token")) {
+      beginRecovery();
       setStatus("ready");
       return () => subscription.unsubscribe();
     }
@@ -43,8 +49,10 @@ export default function ResetPassword() {
       supabase.auth.exchangeCodeForSession(queryParams.get("code")!).then(({ error }) => {
         if (error) {
           console.error("Code exchange error:", error);
+          endRecovery();
           setStatus("invalid");
         } else {
+          beginRecovery();
           setStatus("ready");
         }
       });
@@ -55,7 +63,11 @@ export default function ResetPassword() {
     // We intentionally do NOT accept a pre-existing session as proof of
     // recovery — that could let a logged-in user update the wrong account.
     const timeout = setTimeout(() => {
-      setStatus((prev) => (prev === "loading" ? "invalid" : prev));
+      setStatus((prev) => {
+        if (prev !== "loading") return prev;
+        endRecovery();
+        return "invalid";
+      });
     }, 5000);
 
     return () => {
@@ -63,6 +75,7 @@ export default function ResetPassword() {
       clearTimeout(timeout);
     };
   }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
