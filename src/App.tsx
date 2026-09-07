@@ -152,6 +152,8 @@ const App = () => (
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </RecoveryGate>
+
         </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>
