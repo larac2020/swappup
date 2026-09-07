@@ -29,6 +29,8 @@ import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import ReacceptDialog from "./components/legal/ReacceptDialog";
+import { RecoveryGate } from "./components/auth/RecoveryGate";
+
 
 const queryClient = new QueryClient();
 
@@ -119,8 +121,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <RecoveryGate>
           <Routes>
             {/* Public marketing site */}
+
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<Faq />} />
@@ -148,6 +152,8 @@ const App = () => (
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </RecoveryGate>
+
         </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>

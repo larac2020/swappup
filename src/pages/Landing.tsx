@@ -8,6 +8,8 @@ import { landingContent, marketingMeta } from "@/i18n/marketingContent";
 import { PhoneMock } from "@/components/marketing/PhoneMock";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { isRecoveryActive } from "@/lib/recoveryFlow";
+
 import { fetchOnboardingStatus } from "@/lib/onboardingStatus";
 import swappupLogo from "@/assets/swappup-logo.png";
 import { Capacitor } from "@capacitor/core";
@@ -27,7 +29,8 @@ export default function Landing() {
   // If a signed-in user lands on "/" (e.g. after a mobile Google OAuth full-page
   // redirect back to window.location.origin), route them to the right app page.
   useEffect(() => {
-    if (loading || !isAuthenticated || !user) return;
+    if (loading || !isAuthenticated || !user?.id) return;
+    if (isRecoveryActive()) return; // a recovery session is not a login
     let cancelled = false;
     (async () => {
       const { onboarded } = await fetchOnboardingStatus(user.id);
@@ -35,7 +38,10 @@ export default function Landing() {
       navigate(onboarded ? "/home" : "/onboarding", { replace: true });
     })();
     return () => { cancelled = true; };
-  }, [isAuthenticated, loading, user, navigate]);
+    // Depend on the user *id* only: the full user object changes on every
+    // USER_UPDATED event, which would re-run this effect in a loop.
+  }, [isAuthenticated, loading, user?.id, navigate]);
+
 
   const togglePlay = () => {
     const v = videoRef.current;

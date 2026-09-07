@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutEverywhereLocal } from "@/lib/signOut";
+import { isRecoveryActive, beginRecovery, endRecovery } from "@/lib/recoveryFlow";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,10 +23,15 @@ export default function ResetPassword() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event first (must be before any async calls)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event on reset page:", event);
+    // A global guard (recoveryFlow) already detected the recovery link before
+    // the Supabase client consumed the URL, so trust it first.
+    if (isRecoveryActive()) {
+      setStatus("ready");
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
+        beginRecovery();
         setStatus("ready");
       }
     });
@@ -33,6 +40,7 @@ export default function ResetPassword() {
     const hash = window.location.hash.substring(1);
     const hashParams = new URLSearchParams(hash);
     if (hashParams.get("type") === "recovery" && hashParams.get("access_token")) {
+      beginRecovery();
       setStatus("ready");
       return () => subscription.unsubscribe();
     }
@@ -43,8 +51,10 @@ export default function ResetPassword() {
       supabase.auth.exchangeCodeForSession(queryParams.get("code")!).then(({ error }) => {
         if (error) {
           console.error("Code exchange error:", error);
+          endRecovery();
           setStatus("invalid");
         } else {
+          beginRecovery();
           setStatus("ready");
         }
       });
@@ -55,7 +65,11 @@ export default function ResetPassword() {
     // We intentionally do NOT accept a pre-existing session as proof of
     // recovery — that could let a logged-in user update the wrong account.
     const timeout = setTimeout(() => {
-      setStatus((prev) => (prev === "loading" ? "invalid" : prev));
+      setStatus((prev) => {
+        if (prev !== "loading") return prev;
+        endRecovery();
+        return "invalid";
+      });
     }, 5000);
 
     return () => {
@@ -63,6 +77,7 @@ export default function ResetPassword() {
       clearTimeout(timeout);
     };
   }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +94,10 @@ export default function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: t("resetUpdatedTitle"), description: t("resetUpdatedDesc") });
+      endRecovery();
       // Sign out the recovery session so the user signs in with the new password.
       await signOutEverywhereLocal();
+
       navigate("/login");
     } catch (error: any) {
       toast({ title: t("error"), description: error.message, variant: "destructive" });
@@ -102,7 +119,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">{t("resetInvalidLink")}</p>
-          <Button variant="gold" onClick={() => navigate("/login")}>{t("resetBackToSignIn")}</Button>
+          <Button variant="gold" onClick={() => { endRecovery(); navigate("/login"); }}>{t("resetBackToSignIn")}</Button>
         </div>
       </div>
     );
