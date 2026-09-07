@@ -94,8 +94,10 @@ export default function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: t("resetUpdatedTitle"), description: t("resetUpdatedDesc") });
+      endRecovery();
       // Sign out the recovery session so the user signs in with the new password.
       await signOutEverywhereLocal();
+
       navigate("/login");
     } catch (error: any) {
       toast({ title: t("error"), description: error.message, variant: "destructive" });
@@ -117,7 +119,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">{t("resetInvalidLink")}</p>
-          <Button variant="gold" onClick={() => navigate("/login")}>{t("resetBackToSignIn")}</Button>
+          <Button variant="gold" onClick={() => { endRecovery(); navigate("/login"); }}>{t("resetBackToSignIn")}</Button>
         </div>
       </div>
     );
