@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { formatFee, isFeeConverted } from "@/lib/currency";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 interface TransferConfirmationProps {
   open: boolean;
@@ -22,6 +24,15 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
   const queryClient = useQueryClient();
 
   // Pre-populate with original booking ref and buyer's surname
+  const displayCurrency = useDisplayCurrency();
+  // Fee is shown in the airline's own currency — that is what the airline charges.
+  const feeCurrency: string =
+    purchase?.name_change_fee_currency || purchase?.listings?.name_change_fee_currency ||
+    purchase?.listing?.name_change_fee_currency || purchase?.listings?.currency || purchase?.currency || "EUR";
+  const feeNative = formatFee(Number(purchase?.name_change_fee || 0), feeCurrency, feeCurrency);
+  const feeApprox = isFeeConverted(feeCurrency, displayCurrency)
+    ? formatFee(Number(purchase?.name_change_fee || 0), feeCurrency, displayCurrency)
+    : null;
   const buyerSurname = purchase?.buyer_full_name?.split(" ").pop() || "";
   const [bookingRef, setBookingRef] = useState(purchase?.original_booking_ref || "");
   const [surname, setSurname] = useState(buyerSurname);
@@ -139,7 +150,10 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Name Change Fee</span>
-                <span className="font-medium text-sm text-primary">€{Number(purchase.name_change_fee).toFixed(2)}</span>
+                <span className="text-right">
+                  <span className="font-medium text-sm text-primary block">{feeNative}</span>
+                  {feeApprox && <span className="text-[10px] text-muted-foreground block">≈ {feeApprox}</span>}
+                </span>
               </div>
             </div>
           </div>
@@ -182,7 +196,7 @@ export default function TransferConfirmation({ open, onOpenChange, purchase }: T
             <div className="glass rounded-xl p-3 border border-border/60 space-y-2">
               <p className="text-xs text-muted-foreground">
                 Upload a screenshot or PDF receipt from the airline confirming you paid the name-change fee
-                (€{Number(purchase.name_change_fee).toFixed(2)}). This protects the buyer and is required before we release the payment to you.
+                ({feeNative}). This protects the buyer and is required before we release the payment to you.
               </p>
               <Input
                 id="payment-proof"
