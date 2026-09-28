@@ -97,7 +97,7 @@ async function scrapeCanonical(url: string): Promise<{ markdown: string; url: st
   }
 }
 
-async function liveLookup(airline: string, routeType: string, airlineCode: string): Promise<any | null> {
+async function liveLookup(airline: string, routeType: string, airlineCode: string, rowSourceUrl?: string | null): Promise<any | null> {
   const FIRECRAWL_KEY = Deno.env.get("FIRECRAWL_API_KEY");
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!FIRECRAWL_KEY || !LOVABLE_API_KEY) return null;
@@ -106,7 +106,11 @@ async function liveLookup(airline: string, routeType: string, airlineCode: strin
   let sourceUrl: string | null = null;
 
   // 1) Try the canonical official source first.
-  const canonical = AIRLINE_SOURCES[airlineCode];
+  // Prefer the row's own source_url (manual rows) when it is a usable URL.
+  const rowUrl = rowSourceUrl && !/\s/.test(rowSourceUrl.trim()) && /\./.test(rowSourceUrl)
+    ? (rowSourceUrl.startsWith("http") ? rowSourceUrl.trim() : `https://${rowSourceUrl.trim()}`)
+    : null;
+  const canonical = rowUrl ?? AIRLINE_SOURCES[airlineCode];
   if (canonical) {
     const scraped = await scrapeCanonical(canonical);
     if (scraped) {
@@ -193,7 +197,7 @@ Deno.serve(async (req) => {
 
   const { data: rows, error } = await supabase
     .from("airline_change_fees")
-    .select("airline_code, airline_name, route_type, last_verified_at")
+    .select("airline_code, airline_name, route_type, last_verified_at, source_url, verification_source")
     .or(`last_verified_at.lt.${cutoff},last_verified_at.is.null`)
     .order("last_verified_at", { ascending: true, nullsFirst: true })
     .limit(BATCH_SIZE);
@@ -208,7 +212,7 @@ Deno.serve(async (req) => {
   const results: any[] = [];
   for (const r of rows ?? []) {
     try {
-      const live = await liveLookup(r.airline_name, r.route_type, r.airline_code);
+      const live = await liveLookup(r.airline_name, r.route_type, r.airline_code, r.verification_source === "manual" ? r.source_url : null);
       if (!live) {
         results.push({ airline_code: r.airline_code, status: "skip" });
         continue;
