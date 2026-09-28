@@ -1,10 +1,13 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Wallet } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 export const SELLER_FEE_RATE = 0.20;
 
 interface Props {
   price: string;
+  /** ISO code of the listing currency (what the seller is paid in). */
   currency?: string;
 }
 
@@ -17,7 +20,7 @@ interface Props {
  * Buyer-side fees (e.g. operator name-change fees) are intentionally
  * not shown here — this component is seller-only.
  */
-export default function SellerFeeBreakdown({ price, currency = "€" }: Props) {
+export default function SellerFeeBreakdown({ price, currency = "EUR" }: Props) {
   const { t } = useLanguage();
   const value = parseFloat(price);
   const valid = !isNaN(value) && value > 0;
@@ -25,8 +28,9 @@ export default function SellerFeeBreakdown({ price, currency = "€" }: Props) {
   const fee = valid ? value * SELLER_FEE_RATE : 0;
   const payout = valid ? value - fee : 0;
 
-  const fmt = (n: number) =>
-    `${currency}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const displayCurrency = useDisplayCurrency();
+  const fmt = (n: number) => formatPrice(n, currency, currency);
+  const showApprox = valid && displayCurrency !== currency;
 
   return (
     <div className="rounded-xl border border-border/60 bg-secondary/30 p-3 space-y-2">
@@ -54,6 +58,11 @@ export default function SellerFeeBreakdown({ price, currency = "€" }: Props) {
             {valid ? fmt(payout) : "—"}
           </span>
         </div>
+        {showApprox && (
+          <p className="text-[11px] text-muted-foreground text-right">
+            {t("approxInCurrency", { amount: formatPrice(payout, currency, displayCurrency) })} ({displayCurrency})
+          </p>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground">
