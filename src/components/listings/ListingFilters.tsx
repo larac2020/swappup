@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { airlines, getUniqueCities, getCountries, getCitiesByCountry } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { formatPrice, convertAmount } from "@/lib/currency";
 
 type FlexOption = "exact" | "+-1" | "+-3" | "month" | "any";
 
@@ -26,7 +28,7 @@ interface ListingFiltersProps {
   resultCount: number;
   initialDestination?: string;
   availableDates?: string[];
-  allListings?: { departure_date: string; price: number; origin_city: string; origin_country: string; destination_city: string; destination_country: string }[];
+  allListings?: { departure_date: string; price: number; currency?: string | null; origin_city: string; origin_country: string; destination_city: string; destination_country: string }[];
   externalFilters?: FilterState | null;
 }
 
@@ -68,6 +70,9 @@ export const defaultFilters: FilterState = {
 
 export function ListingFilters({ onSearch, onFilterChange, resultCount, initialDestination, availableDates = [], allListings = [], externalFilters }: ListingFiltersProps) {
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
+  // Price filter values are in the buyer's display currency.
+  const money = (n: number) => formatPrice(n, displayCurrency, displayCurrency, { decimals: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
@@ -332,13 +337,13 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
       if (f.destinationCountry && f.destinationCountry !== "any" && !l.destination_country.toLowerCase().includes(f.destinationCountry.toLowerCase())) return;
       if (f.destination && f.destination !== "any" && !l.destination_city.toLowerCase().includes(f.destination.toLowerCase())) return;
       const monthKey = l.departure_date.substring(0, 7);
-      const price = Number(l.price);
+      const price = Math.round(convertAmount(Number(l.price), (l as any).currency || "EUR", displayCurrency));
       if (map[monthKey] === undefined || price < map[monthKey]) {
         map[monthKey] = price;
       }
     });
     return map;
-  }, [allListings, pendingFilters, filters]);
+  }, [allListings, pendingFilters, filters, displayCurrency]);
 
   // Calendar modifiers for available dates
   const availableDateObjects = useMemo(() => {
@@ -693,7 +698,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                           >
                             <div className="text-xs font-medium">{format(month, "MMM yyyy")}</div>
                             {price !== undefined ? (
-                              <div className="text-sm font-bold mt-0.5">€{price}</div>
+                              <div className="text-sm font-bold mt-0.5">{money(price)}</div>
                             ) : (
                               <div className="text-[10px] mt-0.5">{t("filterNoFlights")}</div>
                             )}
@@ -826,7 +831,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
               <div className="space-y-4">
                 <Label className="flex items-center justify-between">
                   <span>{t("filterPrice")}</span>
-                  <span className="text-primary font-semibold">€{priceRange[0]} – €{priceRange[1]}</span>
+                  <span className="text-primary font-semibold">{money(priceRange[0])} – {money(priceRange[1])}</span>
                 </Label>
                 <Slider
                   value={priceRange}
@@ -840,8 +845,8 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
                   className="py-4"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>€0</span>
-                  <span>€2,000</span>
+                  <span>{money(0)}</span>
+                  <span>{money(2000)}</span>
                 </div>
               </div>
 
@@ -964,7 +969,7 @@ export function ListingFilters({ onSearch, onFilterChange, resultCount, initialD
           ))}
           {(filters.minPrice > 0 || filters.maxPrice < 2000) && (
             <Badge variant="secondary" className="gap-1">
-              €{filters.minPrice} – €{filters.maxPrice}
+              {money(filters.minPrice)} – {money(filters.maxPrice)}
               <X className="w-3 h-3 cursor-pointer" onClick={() => { setPriceRange([0, 2000]); updateFilters({ minPrice: 0, maxPrice: 2000 }); }} />
             </Badge>
           )}
