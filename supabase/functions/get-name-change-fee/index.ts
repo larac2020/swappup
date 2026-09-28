@@ -152,6 +152,15 @@ Deno.serve(async (req) => {
       .eq("route_type", routeType)
       .maybeSingle();
 
+    // Manually verified rows are authoritative: never stale, never overwritten.
+    // Always return the stored value; refreshes/mismatches are staged by the
+    // weekly refresh job into airline_fee_review_queue.
+    if (cached && cached.verification_source === "manual") {
+      return new Response(JSON.stringify({ ...cached, cached: true, manual: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const stale =
       !cached ||
       !cached.last_verified_at ||
