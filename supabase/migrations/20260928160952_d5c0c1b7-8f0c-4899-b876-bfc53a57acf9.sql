@@ -1,0 +1,1 @@
+ALTER TABLE public.airline_change_fees ADD COLUMN IF NOT EXISTS verification_source text;

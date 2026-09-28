@@ -84,6 +84,7 @@ export type Database = {
           route_type: string
           source_url: string | null
           updated_at: string
+          verification_source: string | null
         }
         Insert: {
           airline_code: string
@@ -100,6 +101,7 @@ export type Database = {
           route_type?: string
           source_url?: string | null
           updated_at?: string
+          verification_source?: string | null
         }
         Update: {
           airline_code?: string
@@ -116,6 +118,7 @@ export type Database = {
           route_type?: string
           source_url?: string | null
           updated_at?: string
+          verification_source?: string | null
         }
         Relationships: []
       }
