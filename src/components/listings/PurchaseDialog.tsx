@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, convertAmount, convertFee, isFeeConverted } from "@/lib/currency";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface PurchaseDialogProps {
@@ -39,10 +39,19 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   // The live-fee fetch below is informational only (shows source/last-verified date and lets
   // the buyer recheck), but it must not change the amount we display or charge here.
   const effectiveFee = nameChangeFee;
-  const totalPrice = ticketPrice + effectiveFee;
+  const feeUnconfirmed = listing.name_change_fee == null;
   const listingCurrency = (listing as any).currency || "EUR";
+  // Fee is stored in the airline's own currency.
+  const feeCurrency: string = (listing as any).name_change_fee_currency || listingCurrency;
   const displayCurrency = useDisplayCurrency();
   const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
+  const fmtD = (amount: number) => formatPrice(amount, displayCurrency, displayCurrency);
+  const feeDisplay = convertFee(effectiveFee, feeCurrency, displayCurrency);
+  const displayTotal = convertAmount(ticketPrice, listingCurrency, displayCurrency) + feeDisplay;
+  const feeConverted = effectiveFee > 0 && isFeeConverted(feeCurrency, displayCurrency);
+  // Binding amount charged by Stripe — mirrors create-purchase-checkout exactly (listing currency).
+  const totalPrice = ticketPrice + effectiveFee;
+  const chargedText = formatPrice(totalPrice, listingCurrency, listingCurrency);
   const showConversionNote = displayCurrency !== listingCurrency;
 
   const fetchFee = async (force = false) => {
@@ -133,7 +142,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                     {t("pdNameChangeFee")} ({listing.airline})
                     {feeLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                   </span>
-                  <span className="font-medium">{fmt(effectiveFee)}</span>
+                  <span className="font-medium">{fmtD(feeDisplay)}</span>
                 </div>
                 {liveFee && (
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground/80">
@@ -166,14 +175,23 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                 )}
               </div>
             )}
+            {feeUnconfirmed && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{t("pdNameChangeFee")} ({listing.airline})</span>
+                <span className="text-sm text-muted-foreground">{t("feeUnconfirmed")}</span>
+              </div>
+            )}
             <div className="border-t border-border/50 pt-3 flex items-center justify-between">
               <span className="font-semibold">{t("pdTotalHeld")}</span>
-              <span className="text-xl font-bold text-primary">{fmt(totalPrice)}</span>
+              <span className="text-xl font-bold text-primary">{fmtD(displayTotal)}</span>
             </div>
             {showConversionNote && (
-              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
-                {t("pdConvNote", { display: displayCurrency, amount: formatPrice(totalPrice, listingCurrency, listingCurrency), listing: listingCurrency })}
+              <p className="text-xs font-medium text-foreground leading-relaxed rounded-md border border-primary/30 bg-primary/5 p-2">
+                {t("chargeCurrencyNote", { amount: chargedText, currency: listingCurrency, display: displayCurrency })}
               </p>
+            )}
+            {feeConverted && (
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{t("feeFxDisclaimer")}</p>
             )}
             <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-1">{t("pdFeeDisclaimer")}</p>
           </div>
@@ -257,7 +275,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
                   onCheckedChange={(c) => setEscrowAccepted(c === true)}
                 />
                 <label htmlFor="escrow-accept" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
-                  {t("pdEscrowAcceptPrefix")}<strong>{fmt(totalPrice)}</strong>{t("pdEscrowAcceptSuffix")}
+                  {t("pdEscrowAcceptPrefix")}<strong>{chargedText}</strong>{t("pdEscrowAcceptSuffix")}
                 </label>
               </div>
               <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-2">
@@ -282,7 +300,7 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
               ) : (
                 <CreditCard className="w-4 h-4" />
               )}
-              {t("pdPay", { amount: fmt(totalPrice) })}
+              {t("pdPay", { amount: chargedText })}
             </Button>
           </div>
         </div>
