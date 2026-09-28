@@ -526,6 +526,27 @@ export type Database = {
         }
         Relationships: []
       }
+      fx_rates: {
+        Row: {
+          currency_code: string
+          fetched_at: string
+          rate_per_eur: number
+          source: string
+        }
+        Insert: {
+          currency_code: string
+          fetched_at?: string
+          rate_per_eur: number
+          source: string
+        }
+        Update: {
+          currency_code?: string
+          fetched_at?: string
+          rate_per_eur?: number
+          source?: string
+        }
+        Relationships: []
+      }
       listing_views: {
         Row: {
           id: string
@@ -595,6 +616,7 @@ export type Database = {
           luggage_included: boolean | null
           meal_included: boolean | null
           name_change_fee: number | null
+          name_change_fee_currency: string | null
           name_change_risk_acknowledged_at: string | null
           operator: string | null
           origin_airport: string | null
@@ -666,6 +688,7 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          name_change_fee_currency?: string | null
           name_change_risk_acknowledged_at?: string | null
           operator?: string | null
           origin_airport?: string | null
@@ -737,6 +760,7 @@ export type Database = {
           luggage_included?: boolean | null
           meal_included?: boolean | null
           name_change_fee?: number | null
+          name_change_fee_currency?: string | null
           name_change_risk_acknowledged_at?: string | null
           operator?: string | null
           origin_airport?: string | null
