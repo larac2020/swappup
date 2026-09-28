@@ -21,7 +21,7 @@ import { ReportSellerDialog } from "@/components/listings/ReportSellerDialog";
 import { getAirlineData } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, convertAmount, convertFee, isFeeConverted } from "@/lib/currency";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -201,11 +201,18 @@ export default function ListingDetail() {
   // The backend (`create-purchase-checkout`) uses listing.name_change_fee only,
   // so never fall back to static airline data here — that would show a total
   // different from what Stripe actually charges.
-  const nameChangeFee = listing.name_change_fee != null ? Number(listing.name_change_fee) : 0;
+  const feeUnconfirmed = listing.name_change_fee == null;
+  const nameChangeFee = feeUnconfirmed ? 0 : Number(listing.name_change_fee);
   const ticketPrice = Number(listing.price);
-  const totalPrice = ticketPrice + nameChangeFee;
   const listingCurrency = (listing as any).currency || "EUR";
+  // The fee is stored in the airline's own currency, not the listing's.
+  const feeCurrency: string = (listing as any).name_change_fee_currency || listingCurrency;
   const fmt = (amount: number) => formatPrice(amount, listingCurrency, displayCurrency);
+  const feeDisplay = convertFee(nameChangeFee, feeCurrency, displayCurrency);
+  const displayTotal = convertAmount(ticketPrice, listingCurrency, displayCurrency) + feeDisplay;
+  const feeConverted = nameChangeFee > 0 && isFeeConverted(feeCurrency, displayCurrency);
+  // Binding charge: computed exactly as create-purchase-checkout does, in the listing currency.
+  const chargedAmount = ticketPrice + nameChangeFee;
 
   const formatVerified = (iso?: string | null) => {
     if (!iso) return null;
@@ -613,7 +620,13 @@ export default function ListingDetail() {
               {nameChangeFee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrierLabel})</span>
-                  <span>{fmt(nameChangeFee)}</span>
+                  <span>{formatPrice(feeDisplay, displayCurrency, displayCurrency)}</span>
+                </div>
+              )}
+              {feeUnconfirmed && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrierLabel})</span>
+                  <span className="text-muted-foreground">{t("feeUnconfirmed")}</span>
                 </div>
               )}
               {nameChangeFee > 0 && feeMeta?.last_verified_at && (
@@ -623,9 +636,17 @@ export default function ListingDetail() {
               )}
               <div className="flex justify-between pt-2 border-t border-border/50 text-base font-semibold">
                 <span>{t("priceTotalYouPay")}</span>
-                <span className="text-primary">{fmt(totalPrice)}</span>
+                <span className="text-primary">{formatPrice(displayTotal, displayCurrency, displayCurrency)}</span>
               </div>
+              {displayCurrency !== listingCurrency && (
+                <p className="text-[11px] text-muted-foreground">
+                  {t("chargeCurrencyNote", { amount: formatPrice(chargedAmount, listingCurrency, listingCurrency), currency: listingCurrency, display: displayCurrency })}
+                </p>
+              )}
             </div>
+            {feeConverted && (
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">{t("feeFxDisclaimer")}</p>
+            )}
             {nameChangeFee > 0 && (
               <>
                 <p className="text-xs text-muted-foreground leading-relaxed">
