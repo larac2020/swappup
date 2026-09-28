@@ -14,11 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { CheckCircle2, ShieldCheck, XCircle, ExternalLink, Info } from "lucide-react";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, formatFee } from "@/lib/currency";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 export default function Faq() {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   const c = faqContent[locale];
   const meta = marketingMeta.faq;
   const location = useLocation();
@@ -228,7 +228,9 @@ export default function Faq() {
               {(supportedAirlines ?? []).map((a) => {
                 const fee = Number(a.fee_max ?? a.fee_amount ?? 0);
                 const nativeCurrency = (a.currency || "EUR").toUpperCase();
-                const display = formatPrice(fee, nativeCurrency, displayCurrency, { decimals: 0 });
+                const display = nativeCurrency === displayCurrency
+                  ? formatPrice(fee, nativeCurrency, nativeCurrency, { decimals: 0 })
+                  : formatFee(fee, nativeCurrency, displayCurrency);
                 const showNative = nativeCurrency !== displayCurrency && fee > 0;
                 return (
                   <li key={a.airline_name} className="grid grid-cols-[1.4fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3">
@@ -298,6 +300,7 @@ export default function Faq() {
               ? `Tariffe per persona, per volo, secondo la policy ufficiale della compagnia. Riverifichiamo automaticamente ogni compagnia dell'elenco almeno una volta a settimana. Importi mostrati in ${displayCurrency} (preferenza impostata nel tuo account); la conversione è indicativa e potresti essere addebitato nella valuta originale della compagnia. Se noti una discrepanza, segnalala dalla pagina di pubblicazione.`
               : `Fees are per person, per flight, taken from the airline's official policy. We automatically re-verify every airline in this list at least once a week. Amounts shown in ${displayCurrency} (your account preference); the conversion is indicative and you may be charged in the airline's original currency. If you spot a discrepancy, flag it from the listing page.`}
           </p>
+          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{t("feeFxDisclaimer")}</p>
         </section>
       </section>
     </MarketingLayout>

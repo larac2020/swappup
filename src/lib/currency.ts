@@ -1,12 +1,12 @@
 // Currency utilities for displaying prices in the buyer's preferred currency.
 // Listings are stored and charged in the seller's chosen currency.
 // Live rates come from the fx_rates table (ECB reference rates, refreshed
-// weekdays by the refresh-fx-rates function).
+// daily by the refresh-fx-rates function).
 import { supabase } from "@/integrations/supabase/client";
 
 // Launch market: UK + EU/EEA, plus USD.
 export const SUPPORTED_CURRENCIES = [
-  "EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "ISK", "TRY", "CZK", "HUF", "RON", "BGN",
+  "EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "ISK", "TRY", "CZK", "HUF", "RON",
 ] as const;
 
 export type CurrencyCode = typeof SUPPORTED_CURRENCIES[number];
@@ -82,4 +82,31 @@ export function formatPrice(
   // Symbols like "kr", "Kč" read better after the number; €/$/£ before.
   const prefixSymbols = ["€", "$", "£", "₺"];
   return prefixSymbols.includes(symbol) ? `${symbol}${formatted}` : `${formatted} ${symbol}`;
+}
+
+// Currencies with no minor unit in practice for display rounding.
+const ZERO_DECIMAL = new Set(["ISK", "HUF"]);
+
+/**
+ * Convert a name-change fee for DISPLAY. Fees are stored in the airline's own
+ * currency (listings.name_change_fee_currency). Converted fees are rounded UP to
+ * the nearest minor unit so the seller is never left short. Display only —
+ * never used for any charged amount.
+ */
+export function convertFee(amount: number, from: string | null | undefined, to: string): number {
+  const src = from || to;
+  const n = Number(amount) || 0;
+  if (!n || src === to) return n;
+  const raw = convertAmount(n, src, to);
+  const f = ZERO_DECIMAL.has(to) ? 1 : 100;
+  return Math.ceil(raw * f - 1e-9) / f;
+}
+
+export function formatFee(amount: number, from: string | null | undefined, to: string, opts: { decimals?: number } = {}): string {
+  return formatPrice(convertFee(amount, from, to), to, to, opts);
+}
+
+/** True when a fee is being shown in a currency other than the airline's own. */
+export function isFeeConverted(from: string | null | undefined, to: string): boolean {
+  return !!from && from !== to;
 }

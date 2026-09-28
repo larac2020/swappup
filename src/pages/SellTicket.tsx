@@ -1809,7 +1809,7 @@ export default function SellTicket() {
                   {t("sellPriceLowerError")}
                 </p>
               )}
-              <SellerFeeBreakdown price={formData.price} currency={getCurrencySymbol(formData.currency)} />
+              <SellerFeeBreakdown price={formData.price} currency={formData.currency || "EUR"} />
             </div>
           </div>
 
