@@ -210,10 +210,13 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
     ? "Name change allowed"
     : status === "denied"
       ? "Name change not allowed"
-      : "Transferability unknown";
-  const description = platform.notes || (status === "denied"
-    ? `${airline} does not permit name transfers per the latest check on their site.`
-    : `Fee verified from ${airline}'s official policy page.`);
+      : "Name-change fee not confirmed";
+  const description = status === "unknown"
+    ? `We couldn't confirm ${airline}'s name-change fee from an official source. Check the fee with ${airline} before listing — the buyer will rely on it.`
+    : platform.notes || (status === "denied"
+      ? `${airline} does not permit name transfers per the latest check on their site.`
+      : `Fee verified from ${airline}'s official policy page.`);
+  const ackFee = status === "allowed" ? `${sym}${platformFee}` : "the airline's name-change fee (not yet confirmed)";
 
   return (
     <div className={cn("rounded-xl border-2 p-4 space-y-3 transition-all animate-in fade-in slide-in-from-top-2 duration-300", config.borderColor, config.bgColor)}>
@@ -229,7 +232,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
       </div>
 
       {/* Locked platform fee */}
-      {status !== "denied" && (
+      {status === "allowed" && (
         <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label className="text-xs font-medium flex items-center gap-1.5">
