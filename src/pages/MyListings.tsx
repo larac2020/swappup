@@ -28,6 +28,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/currency";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { getPrimaryAirportCode } from "@/data/flightData";
 import {
   Ticket, Plus, Loader2, Search, Eye, Heart, Rocket,
@@ -60,6 +62,7 @@ export default function MyListings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -280,7 +283,10 @@ export default function MyListings() {
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-lg font-bold text-primary">{(((l as any).currency || "EUR") === "EUR" ? "€" : ((l as any).currency || "EUR") + " ")}{Number(l.price)}</span>
+              <span className="text-lg font-bold text-primary">{formatPrice(Number(l.price), (l as any).currency || "EUR", (l as any).currency || "EUR")}</span>
+              {((l as any).currency || "EUR") !== displayCurrency && (
+                <p className="text-[10px] text-muted-foreground">≈ {formatPrice(Number(l.price), (l as any).currency || "EUR", displayCurrency)}</p>
+              )}
             </div>
           </div>
 
@@ -445,7 +451,10 @@ export default function MyListings() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{listing?.title || t("myListingsTicket")}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t("myListingsBuyer")}: {sale.buyer_full_name} • {((listing as any)?.currency || "EUR") === "EUR" ? "€" : ((listing as any)?.currency || "EUR") + " "}{Number(sale.total_price).toFixed(2)}
+                        {t("myListingsBuyer")}: {sale.buyer_full_name} • {formatPrice(Number(sale.total_price), (listing as any)?.currency || "EUR", (listing as any)?.currency || "EUR")}
+                        {((listing as any)?.currency || "EUR") !== displayCurrency && (
+                          <> (≈ {formatPrice(Number(sale.total_price), (listing as any)?.currency || "EUR", displayCurrency)})</>
+                        )}
                       </p>
                     </div>
                     <Badge variant="outline" className={cn("text-xs", 
