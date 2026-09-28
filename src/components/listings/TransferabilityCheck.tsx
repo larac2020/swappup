@@ -59,6 +59,7 @@ function timeAgo(iso: string | null) {
 
 export default function TransferabilityCheck({ airline, fareType, onResult }: TransferabilityCheckProps) {
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState<PlatformFee | null>(null);
