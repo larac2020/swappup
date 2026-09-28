@@ -62,21 +62,8 @@ const FARE_GATED_AIRLINES: Record<string, FareGate> = {
       { value: "Classic", eligible: false },
     ],
   },
-  finnair: {
-    label: "Finnair",
-    options: [
-      { value: "Business", eligible: true },
-      { value: "Business Saver", eligible: true },
-      { value: "PRO", eligible: true },
-      { value: "Value", eligible: true },
-      { value: "Economy", eligible: false },
-      { value: "Economy Light", eligible: false },
-      { value: "Economy Basic", eligible: false },
-      { value: "Other", eligible: false },
-    ],
-  },
-  // Eurowings intentionally NOT fare-gated: it is blocked entirely
-  // (is_transferable = false) pending confirmation of its fare-eligibility rules.
+  // Eurowings and Finnair intentionally NOT fare-gated: both are blocked entirely
+  // (is_transferable = false) pending confirmation directly with the airline.
 };
 
 function getFareGate(airline: string | undefined | null): { key: string; gate: FareGate } | null {
