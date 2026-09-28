@@ -18,7 +18,7 @@ import { formatPrice, formatFee } from "@/lib/currency";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 export default function Faq() {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   const c = faqContent[locale];
   const meta = marketingMeta.faq;
   const location = useLocation();
