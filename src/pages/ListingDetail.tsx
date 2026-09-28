@@ -18,7 +18,6 @@ import { useState } from "react";
 import { BuyerProtectionBadge } from "@/components/listings/BuyerProtectionBadge";
 import PurchaseDialog from "@/components/listings/PurchaseDialog";
 import { ReportSellerDialog } from "@/components/listings/ReportSellerDialog";
-import { getAirlineData } from "@/data/flightData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 import { formatPrice, convertAmount, convertFee, isFeeConverted } from "@/lib/currency";

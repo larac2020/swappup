@@ -80,42 +80,42 @@ export function getAirportNameByCode(code: string | null | undefined): string {
   return _airportByCode.get(code)?.airportName ?? "";
 }
 
-// Airlines with typical name change fees
+// Airline names only (used for pickers/filters). Name-change fees are NOT
+// stored here — the only source of truth is airline_change_fees / the listing's
+// saved fee. A listing without a verified fee is shown as unconfirmed.
 export interface AirlineData {
   name: string;
-  nameChangeFee: number | null; // null = not allowed
-  nameChangeFeeNote: string;
 }
 
 export const airlines: AirlineData[] = [
-  { name: "Ryanair", nameChangeFee: 115, nameChangeFeeNote: "Online name change up to €115 per flight per person" },
-  { name: "EasyJet", nameChangeFee: 25, nameChangeFeeNote: "Name change from £25 / €25 per person per flight" },
-  { name: "British Airways", nameChangeFee: 0, nameChangeFeeNote: "Free name correction for minor spelling errors. Full name change not permitted" },
-  { name: "Wizz Air", nameChangeFee: 55, nameChangeFeeNote: "Name change from €55 per person per flight segment" },
-  { name: "Vueling", nameChangeFee: 50, nameChangeFeeNote: "Name change from €50 per person per booking" },
-  { name: "KLM", nameChangeFee: 50, nameChangeFeeNote: "Name correction possible; fees vary by fare class" },
-  { name: "Air France", nameChangeFee: 60, nameChangeFeeNote: "Name correction possible; fees vary by fare class" },
-  { name: "Lufthansa", nameChangeFee: 50, nameChangeFeeNote: "Name correction possible for minor errors; fees apply" },
-  { name: "Aer Lingus", nameChangeFee: 30, nameChangeFeeNote: "Name change from €30 per person per booking" },
-  { name: "Jet2", nameChangeFee: 25, nameChangeFeeNote: "Name change from £25 per person per flight" },
-  { name: "TUI", nameChangeFee: 25, nameChangeFeeNote: "Name change from £25 per person" },
-  { name: "Volotea", nameChangeFee: 40, nameChangeFeeNote: "Name change from €40 per person per flight" },
-  { name: "Iberia", nameChangeFee: 0, nameChangeFeeNote: "Minor spelling corrections only; full name change not allowed" },
-  { name: "TAP Portugal", nameChangeFee: 50, nameChangeFeeNote: "Name correction possible; fees vary" },
-  { name: "SAS", nameChangeFee: 50, nameChangeFeeNote: "Name correction from €50 per person" },
-  { name: "Norwegian", nameChangeFee: 55, nameChangeFeeNote: "Name change from €55 per person per flight" },
-  { name: "Swiss", nameChangeFee: 50, nameChangeFeeNote: "Name correction possible; fees vary" },
-  { name: "Turkish Airlines", nameChangeFee: 50, nameChangeFeeNote: "Name correction from $50 per person" },
-  { name: "Emirates", nameChangeFee: 0, nameChangeFeeNote: "Minor spelling corrections only; full name change typically not allowed" },
-  { name: "Qatar Airways", nameChangeFee: 0, nameChangeFeeNote: "Minor corrections permitted free of charge" },
-  { name: "Etihad", nameChangeFee: 0, nameChangeFeeNote: "Minor spelling corrections only" },
-  { name: "Cathay Pacific", nameChangeFee: 0, nameChangeFeeNote: "Minor corrections only; full name change not permitted" },
-  { name: "Singapore Airlines", nameChangeFee: 0, nameChangeFeeNote: "Minor corrections only" },
-  { name: "Icelandair", nameChangeFee: 50, nameChangeFeeNote: "Name change from €50 per person" },
-  { name: "Eurowings", nameChangeFee: 50, nameChangeFeeNote: "Name correction from €50 per person" },
-  { name: "Transavia", nameChangeFee: 40, nameChangeFeeNote: "Name change from €40 per person per booking" },
-  { name: "Condor", nameChangeFee: 50, nameChangeFeeNote: "Substitute passenger from €50 per person/flight — Flex, Green and VFR fares only" },
-  { name: "Finnair", nameChangeFee: null, nameChangeFeeNote: "Passenger change on Business, Business Saver, PRO and Value fares only; fee is fare-dependent" },
+  { name: "Ryanair" },
+  { name: "EasyJet" },
+  { name: "British Airways" },
+  { name: "Wizz Air" },
+  { name: "Vueling" },
+  { name: "KLM" },
+  { name: "Air France" },
+  { name: "Lufthansa" },
+  { name: "Aer Lingus" },
+  { name: "Jet2" },
+  { name: "TUI" },
+  { name: "Volotea" },
+  { name: "Iberia" },
+  { name: "TAP Portugal" },
+  { name: "SAS" },
+  { name: "Norwegian" },
+  { name: "Swiss" },
+  { name: "Turkish Airlines" },
+  { name: "Emirates" },
+  { name: "Qatar Airways" },
+  { name: "Etihad" },
+  { name: "Cathay Pacific" },
+  { name: "Singapore Airlines" },
+  { name: "Icelandair" },
+  { name: "Eurowings" },
+  { name: "Transavia" },
+  { name: "Condor" },
+  { name: "Finnair" },
 ];
 
 export function getAirlineData(name: string): AirlineData | undefined {
