@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
       // Read existing live row to compare against the proposal.
       const { data: existing } = await supabase
         .from("airline_change_fees")
-        .select("fee_amount, currency, is_transferable")
+        .select("fee_amount, fee_max, currency, is_transferable, verification_source")
         .eq("airline_code", r.airline_code)
         .eq("route_type", r.route_type)
         .maybeSingle();
@@ -226,6 +226,47 @@ Deno.serve(async (req) => {
       const proposedCurrency = (live.currency || existing?.currency || "EUR").toUpperCase();
       const proposedXfer = live.is_transferable !== false;
       const confidence = live.confidence || "medium";
+      const nowIso = new Date().toISOString();
+
+      // Hand-verified rows: never overwrite. Matching result -> bump last_verified_at only;
+      // differing result -> stage in the review queue and leave the live row untouched.
+      if (existing?.verification_source === "manual") {
+        const liveFee = Number(live.fee_amount) || 0;
+        const liveMax = live.fee_max != null ? Number(live.fee_max) : null;
+        const curMax = existing.fee_max != null ? Number(existing.fee_max) : null;
+        const matches =
+          existing.is_transferable === proposedXfer &&
+          (existing.currency || "").toUpperCase() === proposedCurrency &&
+          Number(existing.fee_amount) === liveFee &&
+          (liveMax == null || curMax == null || liveMax === curMax);
+        if (matches) {
+          await supabase
+            .from("airline_change_fees")
+            .update({ last_verified_at: nowIso })
+            .eq("airline_code", r.airline_code)
+            .eq("route_type", r.route_type);
+          results.push({ airline_code: r.airline_code, status: "manual_verified" });
+        } else {
+          await supabase.from("airline_fee_review_queue").insert({
+            airline_code: r.airline_code,
+            airline_name: r.airline_name,
+            route_type: r.route_type,
+            current_fee: existing.fee_amount ?? null,
+            current_currency: existing.currency ?? null,
+            current_is_transferable: existing.is_transferable ?? null,
+            proposed_fee: proposedFee,
+            proposed_currency: proposedCurrency,
+            proposed_is_transferable: proposedXfer,
+            reason: "manual_row_mismatch",
+            source_url: live.source_url || null,
+            confidence,
+            notes: live.notes || null,
+          });
+          results.push({ airline_code: r.airline_code, status: "manual_staged" });
+        }
+        await new Promise((res) => setTimeout(res, 500));
+        continue;
+      }
 
       // Sanity bounds check (in EUR equivalent).
       const feeEur = toEur(proposedFee, proposedCurrency);
@@ -247,8 +288,6 @@ Deno.serve(async (req) => {
         : lowConfidence ? "low_confidence"
         : largeDelta ? "large_delta"
         : null;
-
-      const nowIso = new Date().toISOString();
 
       if (quarantineReason) {
         // Don't overwrite live row. Bump last_verified_at, log to history (rejected),
