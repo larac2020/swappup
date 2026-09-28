@@ -3,7 +3,10 @@
 // The upsert is all-or-nothing (single statement), so the table is never
 // nulled, zeroed or partially overwritten.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const FRANKFURTER_URL = "https://api.frankfurter.dev/v1/latest?base=EUR";
 
