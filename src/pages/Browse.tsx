@@ -13,11 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { convertAmount } from "@/lib/currency";
 
 type SortOption = "newest" | "price_low" | "price_high" | "date_soon";
 
 export default function Browse() {
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
+  const priceIn = (l: any) => convertAmount(Number(l.price), l.currency || "EUR", displayCurrency);
   const [searchParams] = useSearchParams();
   const initialDestination = searchParams.get("destination") || "";
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,7 +173,7 @@ export default function Browse() {
       }
 
       // === OPTIONAL FILTERS: only apply when explicitly set ===
-      const price = Number(listing.price);
+      const price = priceIn(listing);
       if (filters.minPrice > 0 && price < filters.minPrice) return false;
       if (filters.maxPrice < 2000 && price > filters.maxPrice) return false;
 
@@ -200,16 +204,16 @@ export default function Browse() {
 
       return true;
     });
-  }, [listings, searchQuery, filters]);
+  }, [listings, searchQuery, filters, displayCurrency]);
 
   const sortedListings = useMemo(() => {
     const sorted = [...filteredListings];
     const now = new Date().toISOString().split("T")[0];
     switch (sortBy) {
       case "price_low":
-        return sorted.sort((a, b) => Number(a.price) - Number(b.price));
+        return sorted.sort((a, b) => priceIn(a) - priceIn(b));
       case "price_high":
-        return sorted.sort((a, b) => Number(b.price) - Number(a.price));
+        return sorted.sort((a, b) => priceIn(b) - priceIn(a));
       case "date_soon":
         return sorted
           .filter(l => l.departure_date >= now)
@@ -218,7 +222,7 @@ export default function Browse() {
       default:
         return sorted;
     }
-  }, [filteredListings, sortBy]);
+  }, [filteredListings, sortBy, displayCurrency]);
 
   // Helper matchers for suggestions
   const matchOrigin = (l: typeof listings[0]) => {
@@ -298,7 +302,7 @@ export default function Browse() {
     // 4. Fallback: cheapest available
     if (suggestions.length === 0) {
       const cheapest = [...listings]
-        .sort((a, b) => Number(a.price) - Number(b.price))
+        .sort((a, b) => priceIn(a) - priceIn(b))
         .slice(0, 6);
       if (cheapest.length > 0) {
         suggestions.push({ title: "Cheapest available flights", icon: <Package className="w-4 h-4" />, items: cheapest });

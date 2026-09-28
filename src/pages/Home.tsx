@@ -14,6 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const displayCurrency = useDisplayCurrency();
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Traveler";
 
@@ -111,17 +112,16 @@ export default function Home() {
     },
   });
 
-  // Under €100
-  const { data: budgetDeals = [], isLoading: loadingBudget } = useQuery({
+  // Under 100 in the buyer's display currency (listings may be priced in any currency).
+  const { data: budgetDealsRaw = [], isLoading: loadingBudget } = useQuery({
     queryKey: ["budgetDeals"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
         .select(LISTING_COLUMNS)
         .eq("is_active", true)
-        .lte("price", 100)
         .order("price", { ascending: true })
-        .limit(10);
+        .limit(200);
       if (error) throw error;
       return data;
     },
