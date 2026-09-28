@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.set_name_change_fee_currency() FROM PUBLIC, anon, authenticated;
