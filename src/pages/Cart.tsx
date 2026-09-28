@@ -7,9 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, Trash2, Plane, Calendar, AlertCircle, CreditCard, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getAirlineData } from "@/data/flightData";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
-import { formatPrice, convertAmount } from "@/lib/currency";
+import { formatPrice, convertAmount, convertFee, isFeeConverted } from "@/lib/currency";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -50,12 +49,19 @@ export default function Cart() {
     },
   });
 
-  // Compute additive name-change fee per item.
-  const computeFee = (listing: any): number => {
-    if (!listing) return 0;
-    if (listing.name_change_fee != null) return Number(listing.name_change_fee);
-    return getAirlineData(listing.airline)?.nameChangeFee ?? 0;
+  // Name-change fee is stored in the airline's own currency (name_change_fee_currency).
+  // No verified fee → unconfirmed; never substitute a guess.
+  const feeUnconfirmed = (listing: any) => !listing || listing.name_change_fee == null;
+  const feeInDisplay = (listing: any, qty: number): number => {
+    if (feeUnconfirmed(listing)) return 0;
+    const from = listing.name_change_fee_currency || listing.currency || "EUR";
+    return convertFee(Number(listing.name_change_fee) * qty, from, displayCurrency);
   };
+  const anyConvertedFee = cartItems.some((item) => {
+    const l = item.listings as any;
+    return l && !feeUnconfirmed(l) && Number(l.name_change_fee) > 0 &&
+      isFeeConverted(l.name_change_fee_currency || l.currency || "EUR", displayCurrency);
+  });
 
   const subtotal = cartItems.reduce((sum, item) => {
     const listing = item.listings as any;
@@ -63,11 +69,7 @@ export default function Cart() {
     const cur = listing.currency || "EUR";
     return sum + convertAmount(Number(listing.price) * item.quantity, cur, displayCurrency);
   }, 0);
-  const feesTotal = cartItems.reduce((sum, item) => {
-    const listing = item.listings as any;
-    const cur = (listing as any)?.currency || "EUR";
-    return sum + convertAmount(computeFee(listing) * item.quantity, cur, displayCurrency);
-  }, 0);
+  const feesTotal = cartItems.reduce((sum, item) => sum + feeInDisplay(item.listings as any, item.quantity), 0);
   // Service fee is fixed in EUR — convert for display.
   const serviceFee = cartItems.length > 0 ? convertAmount(4.99, "EUR", displayCurrency) : 0;
   const total = subtotal + feesTotal + serviceFee;
@@ -113,7 +115,8 @@ export default function Cart() {
             if (!listing) return null;
             if (listing.listing_type === "train_ticket") return null;
             const carrier = listing.airline;
-            const fee = computeFee(listing);
+            const feeD = feeInDisplay(listing, item.quantity);
+            const unconfirmed = feeUnconfirmed(listing);
             return (
               <div key={item.id} className="glass rounded-2xl p-4 space-y-3">
                 <div className="flex gap-4">
@@ -148,15 +151,21 @@ export default function Cart() {
                     <span className="text-muted-foreground">{t("priceTicketPrice")}</span>
                     <span>{formatPrice(Number(listing.price) * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
                   </div>
-                  {fee > 0 && (
+                  {feeD > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrier})</span>
-                      <span>{formatPrice(fee * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
+                      <span>{formatPrice(feeD, displayCurrency, displayCurrency)}</span>
+                    </div>
+                  )}
+                  {unconfirmed && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">+ {t("priceNameChangeFee")} ({carrier})</span>
+                      <span className="text-muted-foreground">{t("feeUnconfirmed")}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between pt-1.5 border-t border-border/30">
                     <span className="text-xs text-muted-foreground">{t("cartQty")}: {item.quantity}</span>
-                    <span className="text-base font-bold text-primary">{formatPrice((Number(listing.price) + fee) * item.quantity, listing.currency || "EUR", displayCurrency)}</span>
+                    <span className="text-base font-bold text-primary">{formatPrice(convertAmount(Number(listing.price) * item.quantity, listing.currency || "EUR", displayCurrency) + feeD, displayCurrency, displayCurrency)}</span>
                   </div>
                 </div>
               </div>
@@ -170,6 +179,7 @@ export default function Cart() {
           <div className="text-sm">
             <p className="font-medium mb-1">{t("cartNameChangeFees")}</p>
             <p className="text-muted-foreground">{t("cartNameChangeDesc")}</p>
+            {anyConvertedFee && <p className="text-muted-foreground text-xs mt-2">{t("feeFxDisclaimer")}</p>}
           </div>
         </div>
 
