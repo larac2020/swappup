@@ -33,6 +33,7 @@ type PlatformFee = {
   last_verified_at: string | null;
   confidence: string | null;
   notes?: string | null;
+  estimated?: boolean;
 };
 
 function currencySymbol(c: string | undefined) {
@@ -88,6 +89,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
           last_verified_at: data.last_verified_at || null,
           confidence: data.confidence || null,
           notes: data.notes || null,
+          estimated: data.estimated === true,
         });
       })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -95,12 +97,17 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
   }, [airline]);
 
   const platformFee = platform ? Number(platform.fee_max ?? platform.fee_amount ?? 0) : null;
+  // A zero or estimated fee is never presented as verified.
+  const feeUnconfirmed = !!platform && platform.is_transferable !== false &&
+    (platform.estimated === true || !(platformFee && platformFee > 0));
   const status: "allowed" | "denied" | "unknown" = !platform
     ? "unknown"
     : platform.is_transferable === false
       ? "denied"
-      : "allowed";
-  const requiresAck = platformFee !== null && platformFee > 0 && status === "allowed";
+      : feeUnconfirmed
+        ? "unknown"
+        : "allowed";
+  const requiresAck = !!platform && status !== "denied";
 
   // Propagate to parent
   useEffect(() => {
