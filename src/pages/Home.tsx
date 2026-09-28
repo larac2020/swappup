@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plane, Plus, ArrowRight, Ticket, ShoppingBag, Heart, Loader2, History, Flame, Star, Zap, Sparkles, AlertCircle, Tag } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
+import { convertAmount, formatPrice } from "@/lib/currency";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -126,6 +128,11 @@ export default function Home() {
       return data;
     },
   });
+
+  const budgetDeals = (budgetDealsRaw as any[])
+    .filter((l) => convertAmount(Number(l.price), l.currency || "EUR", displayCurrency) <= 100)
+    .sort((a, b) => convertAmount(Number(a.price), a.currency || "EUR", displayCurrency) - convertAmount(Number(b.price), b.currency || "EUR", displayCurrency))
+    .slice(0, 10);
 
   // Last minute deals (next 7 days)
   const { data: lastMinuteDeals = [], isLoading: loadingLastMinute } = useQuery({
@@ -418,9 +425,9 @@ export default function Home() {
           `/browse?origin=${encodeURIComponent(profile.favorite_departure_city)}`
         )}
 
-        {/* Under €100 */}
+        {/* Under 100 (display currency) */}
         {renderSection(
-          t("homeUnder100"),
+          t("homeUnder100", { amount: formatPrice(100, displayCurrency, displayCurrency, { decimals: 0 }) }),
           <Zap className="w-4 h-4 text-primary" />,
           budgetDeals,
           loadingBudget,
