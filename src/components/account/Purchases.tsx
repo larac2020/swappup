@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { it as itLocale, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, formatFee, isFeeConverted } from "@/lib/currency";
 import { useState, useEffect, useRef } from "react";
 import { CopyButton, downloadTicketPdf, downloadReceiptPdf, shareTicket, canShare } from "./purchaseHelpers";
 import { Input } from "@/components/ui/input";
@@ -400,8 +400,11 @@ export default function Purchases() {
                     <div className="text-xs text-muted-foreground flex items-center gap-2 flex-1 min-w-0">
                       <span>{t("purTicketAmount")} {formatPrice(Number(p.total_price) - Number(p.name_change_fee), cur, displayCurrency)}</span>
                       <span>•</span>
-                      <span>{t("purNameChangeFeeLabel")} {formatPrice(Number(p.name_change_fee), cur, displayCurrency)}</span>
+                      <span>{t("purNameChangeFeeLabel")} {formatFee(Number(p.name_change_fee), listing?.name_change_fee_currency || cur, displayCurrency)}</span>
                     </div>
+                  )}
+                  {p.name_change_fee > 0 && isFeeConverted(listing?.name_change_fee_currency || cur, displayCurrency) && (
+                    <p className="basis-full text-[10px] text-muted-foreground/80">{t("feeFxDisclaimer")}</p>
                   )}
                   <Button
                     size="sm"

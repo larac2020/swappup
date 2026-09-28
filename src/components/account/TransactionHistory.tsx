@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, formatFee, isFeeConverted } from "@/lib/currency";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CopyButton } from "./purchaseHelpers";
 
@@ -343,8 +343,11 @@ function SaleDetailsDialog({
             {Number(tx.name_change_fee) > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">{t("purNameChangeFeeLabel")}</span>
-                <span>{formatPrice(Number(tx.name_change_fee), cur, displayCurrency)}</span>
+                <span>{formatFee(Number(tx.name_change_fee), (listing as any)?.name_change_fee_currency || cur, displayCurrency)}</span>
               </div>
+            )}
+            {Number(tx.name_change_fee) > 0 && isFeeConverted((listing as any)?.name_change_fee_currency || cur, displayCurrency) && (
+              <p className="text-[10px] text-muted-foreground/80">{t("feeFxDisclaimer")}</p>
             )}
             <div className="flex items-center justify-between font-semibold pt-1 border-t border-border/40">
               <span>Total</span>
