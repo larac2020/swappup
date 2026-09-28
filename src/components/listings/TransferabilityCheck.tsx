@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { formatFee, getCurrencySymbol, isFeeConverted } from "@/lib/currency";
+import { useDisplayCurrency } from "@/hooks/useDisplayCurrency";
 
 interface TransferabilityCheckProps {
   airline: string;
@@ -37,11 +39,12 @@ type PlatformFee = {
 };
 
 function currencySymbol(c: string | undefined) {
-  switch ((c || "EUR").toUpperCase()) {
-    case "GBP": return "£";
-    case "USD": return "$";
-    default: return "€";
-  }
+  return getCurrencySymbol((c || "EUR").toUpperCase());
+}
+
+function feeText(amount: number | null | undefined, c: string | undefined) {
+  const cur = (c || "EUR").toUpperCase();
+  return formatFee(Number(amount) || 0, cur, cur);
 }
 
 function timeAgo(iso: string | null) {
@@ -144,9 +147,9 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
       const newFee = data?.newFee != null ? Number(data.newFee) : null;
       if (data?.updated && newFee !== null && platform) {
         setPlatform({ ...platform, fee_amount: newFee, fee_max: newFee, source_url: data.source_url ?? platform.source_url, last_verified_at: data.last_verified_at ?? new Date().toISOString() });
-        toast({ title: "Fee updated", description: `We re-checked the airline site and updated the fee to ${currencySymbol(platform.currency)}${newFee}.` });
+        toast({ title: "Fee updated", description: `We re-checked the airline site and updated the fee to ${feeText(newFee, platform.currency)}.` });
       } else {
-        toast({ title: "Report logged", description: `We re-verified the airline site and confirmed ${currencySymbol(platform?.currency)}${platformFee}. Your report is queued for review.` });
+        toast({ title: "Report logged", description: `We re-verified the airline site and confirmed ${feeText(platformFee, platform?.currency)}. Your report is queued for review.` });
       }
       setReportOpen(false); setProposedFee(""); setEvidenceUrl(""); setReportNote("");
     } catch (e) {
@@ -206,6 +209,9 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
   const config = statusConfig[status];
   const Icon = config.icon;
   const sym = currencySymbol(platform.currency);
+  const feeCur = (platform.currency || "EUR").toUpperCase();
+  const feeNative = feeText(platformFee, feeCur);
+  const feeApprox = isFeeConverted(feeCur, displayCurrency) ? formatFee(Number(platformFee) || 0, feeCur, displayCurrency) : null;
   const title = status === "allowed"
     ? "Name change allowed"
     : status === "denied"
@@ -216,7 +222,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
     : platform.notes || (status === "denied"
       ? `${airline} does not permit name transfers per the latest check on their site.`
       : `Fee verified from ${airline}'s official policy page.`);
-  const ackFee = status === "allowed" ? `${sym}${platformFee}` : "the airline's name-change fee (not yet confirmed)";
+  const ackFee = status === "allowed" ? feeNative : "the airline's name-change fee (not yet confirmed)";
 
   return (
     <div className={cn("rounded-xl border-2 p-4 space-y-3 transition-all animate-in fade-in slide-in-from-top-2 duration-300", config.borderColor, config.bgColor)}>
@@ -244,9 +250,14 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold">{sym}{platformFee}</span>
+            <span className="text-2xl font-bold">{feeNative}</span>
             <span className="text-xs text-muted-foreground">per person, per flight</span>
           </div>
+          {feeApprox && (
+            <p className="text-[11px] text-muted-foreground">
+              {t("approxInCurrency", { amount: feeApprox })} ({displayCurrency}). {t("feeFxDisclaimer")}
+            </p>
+          )}
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Last verified {timeAgo(platform.last_verified_at)}</span>
             {platform.source_url && (
@@ -324,7 +335,7 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
           <div className="flex items-start gap-2">
             <AlertOctagon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
             <p className="text-xs text-foreground leading-relaxed">
-              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: `${sym}${platformFee}` })}
+              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: feeNative })}
             </p>
           </div>
           <Button
