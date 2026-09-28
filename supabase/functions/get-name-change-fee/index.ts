@@ -202,11 +202,12 @@ Deno.serve(async (req) => {
           currency: "EUR",
           is_transferable: true,
           confidence: "low",
-          last_verified_at: new Date().toISOString(),
+          last_verified_at: null,
           source_url: null,
-          notes: "Live lookup unavailable, showing platform estimate.",
+          notes: "Live lookup unavailable; fee is an unverified estimate.",
           cached: false,
           refresh_failed: true,
+          estimated: true,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -225,6 +226,41 @@ Deno.serve(async (req) => {
       notes: live.notes || null,
       last_verified_at: new Date().toISOString(),
     };
+
+    // Defense in depth: re-read right before writing. If the row became manual
+    // (or was manual all along), never overwrite it — stage a mismatch instead.
+    const { data: current } = await supabase
+      .from("airline_change_fees")
+      .select("*")
+      .eq("airline_code", code)
+      .eq("route_type", routeType)
+      .maybeSingle();
+    if (current?.verification_source === "manual") {
+      const matches =
+        current.is_transferable === row.is_transferable &&
+        (current.currency || "").toUpperCase() === row.currency.toUpperCase() &&
+        Number(current.fee_amount) === row.fee_amount;
+      if (!matches) {
+        await supabase.from("airline_fee_review_queue").insert({
+          airline_code: code,
+          airline_name: current.airline_name ?? display,
+          route_type: routeType,
+          current_fee: current.fee_amount ?? null,
+          current_currency: current.currency ?? null,
+          current_is_transferable: current.is_transferable ?? null,
+          proposed_fee: row.fee_amount,
+          proposed_currency: row.currency.toUpperCase(),
+          proposed_is_transferable: row.is_transferable,
+          reason: "manual_row_mismatch",
+          source_url: row.source_url,
+          confidence: row.confidence,
+          notes: row.notes,
+        });
+      }
+      return new Response(JSON.stringify({ ...current, cached: true, manual: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: upserted, error: upErr } = await supabase
       .from("airline_change_fees")
