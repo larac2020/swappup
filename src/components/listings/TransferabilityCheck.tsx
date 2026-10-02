@@ -218,11 +218,12 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
     : status === "denied"
       ? "Name change not allowed"
       : "Name-change fee not confirmed";
+  // Internal research notes (platform.notes) are never shown to users.
   const description = status === "unknown"
     ? `We couldn't confirm ${airline}'s name-change fee from an official source. Check the fee with ${airline} before listing — the buyer will rely on it.`
-    : platform.notes || (status === "denied"
+    : status === "denied"
       ? `${airline} does not permit name transfers per the latest check on their site.`
-      : `Fee verified from ${airline}'s official policy page.`);
+      : null;
   const ackFee = status === "allowed" ? feeNative : "the airline's name-change fee (not yet confirmed)";
 
   return (
@@ -234,26 +235,16 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
             {status === "allowed" ? "✅ " : status === "denied" ? "❌ " : "⚠️ "}
             {title}
           </p>
-          <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+          {description && <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>}
         </div>
       </div>
 
       {/* Locked platform fee */}
       {status === "allowed" && (
         <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label className="text-xs font-medium flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5" />
-              Platform-verified name-change fee
-            </Label>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {platform.confidence ? `${platform.confidence} confidence` : ""}
-            </span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold">{feeNative}</span>
-            <span className="text-xs text-muted-foreground">per person, per flight</span>
-          </div>
+          <p className="text-sm">
+            Name change fee: <span className="font-bold">{feeNative}</span> per person
+          </p>
           {feeApprox && (
             <p className="text-[11px] text-muted-foreground">
               {t("approxInCurrency", { amount: feeApprox })} ({displayCurrency}). {t("feeFxDisclaimer")}
