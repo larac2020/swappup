@@ -321,26 +321,17 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
         </div>
       )}
 
-      {/* Personal-liability warning + confirmation gate */}
+      {/* Required acknowledgement (gates submission) */}
       {requiresAck && (
-        <div className="rounded-lg border-2 border-destructive/40 bg-destructive/10 p-3 space-y-2">
-          <div className="flex items-start gap-2">
-            <AlertOctagon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
-            <p className="text-xs text-foreground leading-relaxed">
-              <strong>{t("sellerLiabilityTitle")}</strong> {t("sellerLiabilityDescFlight", { fee: feeNative })}
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant={acknowledged ? "secondary" : "destructive"}
-            className="w-full"
-            onClick={() => setAcknowledged((v) => !v)}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            {acknowledged ? t("sellerLiabilityConfirmed") : t("sellerLiabilityConfirmCta")}
-          </Button>
-        </div>
+        <label className="flex items-start gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+            checked={acknowledged}
+            onChange={(e) => setAcknowledged(e.target.checked)}
+          />
+          <span className="text-xs leading-relaxed">I understand the airline may change this fee.</span>
+        </label>
       )}
     </div>
   );
