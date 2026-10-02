@@ -49,8 +49,9 @@ export default function PurchaseDialog({ open, onOpenChange, listing, buyerProfi
   const feeDisplay = convertFee(effectiveFee, feeCurrency, displayCurrency);
   const displayTotal = convertAmount(ticketPrice, listingCurrency, displayCurrency) + feeDisplay;
   const feeConverted = effectiveFee > 0 && isFeeConverted(feeCurrency, displayCurrency);
-  // Binding amount charged by Stripe — mirrors create-purchase-checkout exactly (listing currency).
-  const totalPrice = ticketPrice + effectiveFee;
+  // Binding amount charged by Stripe — mirrors create-purchase-checkout (listing currency,
+  // fee converted from the airline's currency and rounded up). The server is authoritative.
+  const totalPrice = ticketPrice + convertFee(effectiveFee, feeCurrency, listingCurrency);
   const chargedText = formatPrice(totalPrice, listingCurrency, listingCurrency);
   const showConversionNote = displayCurrency !== listingCurrency;
 
