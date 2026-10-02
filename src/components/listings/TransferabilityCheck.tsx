@@ -243,23 +243,15 @@ export default function TransferabilityCheck({ airline, fareType, onResult }: Tr
       {status === "allowed" && (
         <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
           <p className="text-sm">
-            Name change fee: <span className="font-bold">{feeNative}</span> per person
+            Name change fee: <span className="font-bold">{feeNative}</span> per person, per flight
           </p>
           {feeApprox && (
             <p className="text-[11px] text-muted-foreground">
               {t("approxInCurrency", { amount: feeApprox })} ({displayCurrency}). {t("feeFxDisclaimer")}
             </p>
           )}
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Last verified {timeAgo(platform.last_verified_at)}</span>
-            {platform.source_url && (
-              <a href={platform.source_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:underline">
-                Source <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-          </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            This is the amount the buyer pays on top of the ticket price and that you'll use to perform the name change. You cannot edit it — but if you believe it's wrong, flag it below and we'll re-check the airline's site.
+            Set by the airline and converted at today's rate, so the amount may differ slightly. The buyer pays it on top of your price, and you use it to pay the airline. Report it below if it looks wrong.
           </p>
 
           {!reportOpen ? (

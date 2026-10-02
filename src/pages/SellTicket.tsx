@@ -1798,11 +1798,11 @@ export default function SellTicket() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t("sellOriginalPrice")}</Label>
+                  <Label>{t("sellOriginalPrice").replace("€", getCurrencySymbol(formData.currency || "EUR").trim())}</Label>
                   <Input type="number" min="0" step="0.01" placeholder="145.00" value={formData.originalPrice} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })} className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("sellYourPrice")}</Label>
+                  <Label>{t("sellYourPrice").replace("€", getCurrencySymbol(formData.currency || "EUR").trim())}</Label>
                   <Input type="number" min="1" step="0.01" placeholder="89.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("bg-secondary/50", priceError && "border-destructive")} required />
                 </div>
               </div>
