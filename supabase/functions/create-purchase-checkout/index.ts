@@ -42,10 +42,40 @@ Deno.serve(async (req) => {
     if ((listing.ticket_count ?? 0) < 1) return j({ error: "Out of stock" }, 400);
 
     const ticketPrice = Number(listing.price);
-    // Use the server-side listing fee — never trust client input
-    const fee = Math.max(0, Number((listing as any).name_change_fee ?? 0));
-    const total = ticketPrice + fee;
-    const currency = String((listing as any).currency || "EUR").toLowerCase();
+    const listingCur = String((listing as any).currency || "EUR").toUpperCase();
+    const currency = listingCur.toLowerCase();
+    // Server-side listing fee, in the AIRLINE's currency — never trust client input.
+    const feeOriginal = Math.max(0, Number((listing as any).name_change_fee ?? 0));
+    const feeCur = String((listing as any).name_change_fee_currency || listingCur).toUpperCase();
+
+    // Convert the fee into the listing currency using the live fx_rates row,
+    // rounded UP to the minor unit. No guessing, no hardcoded fallback.
+    let fee = feeOriginal;
+    let fxRate: number | null = feeOriginal > 0 ? 1 : null;
+    let fxFetchedAt: string | null = null;
+    if (feeOriginal > 0 && feeCur !== listingCur) {
+      const { data: rows, error: fxErr } = await admin
+        .from("fx_rates").select("currency_code, rate_per_eur, fetched_at")
+        .in("currency_code", [feeCur, listingCur]);
+      const from = rows?.find((r: any) => r.currency_code === feeCur);
+      const to = rows?.find((r: any) => r.currency_code === listingCur);
+      const rf = Number(from?.rate_per_eur), rt = Number(to?.rate_per_eur);
+      if (fxErr || !(rf > 0) || !(rt > 0) || !Number.isFinite(rf) || !Number.isFinite(rt)) {
+        console.error("create-purchase-checkout: no usable FX rate", {
+          listing_id, feeCur, listingCur, fxErr: fxErr?.message, from, to,
+        });
+        return j({
+          error: `We can't convert the airline's name-change fee from ${feeCur} to ${listingCur} right now, so checkout is paused. Please try again later.`,
+        }, 503);
+      }
+      fxRate = rt / rf; // listing-currency units per 1 fee-currency unit
+      const minor = ["ISK", "HUF", "JPY"].includes(listingCur) ? 1 : 100;
+      fee = Math.ceil(feeOriginal * fxRate * minor - 1e-9) / minor;
+      const ts = [from!.fetched_at, to!.fetched_at].sort()[0];
+      fxFetchedAt = ts ?? null;
+    }
+    const minorUnits = ["ISK", "HUF", "JPY"].includes(listingCur) ? 1 : 100;
+    const total = Math.round((ticketPrice + fee) * minorUnits) / minorUnits;
     const transferDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     // Pre-create purchase row (status: pending, escrow: pending)
@@ -56,6 +86,10 @@ Deno.serve(async (req) => {
       quantity: 1,
       total_price: total,
       name_change_fee: fee,
+      name_change_fee_original: feeOriginal,
+      name_change_fee_original_currency: feeOriginal > 0 ? feeCur : null,
+      fx_rate_used: fxRate,
+      fx_rate_fetched_at: fxFetchedAt,
       status: "pending",
       escrow_status: "pending",
       buyer_full_name: full_name.trim(),
