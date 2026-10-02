@@ -51,7 +51,7 @@ A ticket's resale price may not exceed the ticket's original value.
 
 **Currency.** Each listing is priced in the currency chosen by the seller, and that is the currency in which you are charged. Where you have selected a different display currency, converted amounts shown elsewhere in the Service are indicative only and are not the amount charged. Conversions use European Central Bank reference rates, refreshed daily. Your bank or card issuer may apply its own exchange rate and fees, which Swappup does not control and for which Swappup is not responsible.
 
-**Name-change fees.** The name-change fee is charged by the airline, not by Swappup. It is payable by the seller to the airline and is collected from the buyer as part of the purchase. The figure shown is the airline's published fee at the time of listing, converted into the listing currency where necessary, and may be changed by the airline at any time.
+**Name-change fees.** The name-change fee is charged by the airline, not by Swappup. It is payable by the seller to the airline and is collected from the buyer as part of the purchase. The figure shown is the airline's published fee as recorded when the listing was created, converted into the listing currency at the time of purchase where conversion is necessary, and may be changed by the airline at any time.
 
 ## 7. Misuse of the Ticket After Transfer — Limitation of Liability
 
