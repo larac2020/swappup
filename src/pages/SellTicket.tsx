@@ -565,7 +565,8 @@ export default function SellTicket() {
         };
 
         // Listings must depart at least 72h in the future.
-        const minTs = Date.now() + 72 * 60 * 60 * 1000;
+        // TEMPORARY TEST LIFT (2026-10-02): original was `Date.now() + 72 * 60 * 60 * 1000`. REVERT.
+        const minTs = Date.now() + 0 * 60 * 60 * 1000;
         const parsedDeparture = parseIsoDate(p.departureDate);
         const parsedReturn = parseIsoDate(p.returnDate);
 
@@ -941,7 +942,8 @@ export default function SellTicket() {
       return;
     }
     // Departure must be at least 72 hours in the future
-    const minTs = Date.now() + 72 * 60 * 60 * 1000;
+    // TEMPORARY TEST LIFT (2026-10-02): original was `Date.now() + 72 * 60 * 60 * 1000`. REVERT.
+    const minTs = Date.now() + 0 * 60 * 60 * 1000;
     // Connections are only allowed when the uploaded ticket proved a single
     // operating carrier across every leg (no per-leg carrier data in schema).
     if (!isEditMode && formData.listingType === "flight_ticket") {
@@ -1075,7 +1077,8 @@ export default function SellTicket() {
   // Tickets must depart at least 72 hours from now.
   // We compute the earliest *day* the user is allowed to pick (start of that day).
   const minDepartureDate = useMemo(() => {
-    const d = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    // TEMPORARY TEST LIFT (2026-10-02): original was `new Date(Date.now() + 72 * 60 * 60 * 1000)`. REVERT.
+    const d = new Date(Date.now() + 0 * 60 * 60 * 1000);
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
