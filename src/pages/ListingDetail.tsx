@@ -211,7 +211,7 @@ export default function ListingDetail() {
   const displayTotal = convertAmount(ticketPrice, listingCurrency, displayCurrency) + feeDisplay;
   const feeConverted = nameChangeFee > 0 && isFeeConverted(feeCurrency, displayCurrency);
   // Binding charge: computed exactly as create-purchase-checkout does, in the listing currency.
-  const chargedAmount = ticketPrice + nameChangeFee;
+  const chargedAmount = ticketPrice + convertFee(nameChangeFee, feeCurrency, listingCurrency);
 
   const formatVerified = (iso?: string | null) => {
     if (!iso) return null;

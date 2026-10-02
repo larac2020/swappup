@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.lock_purchase_fx_fields() FROM PUBLIC, anon, authenticated;

@@ -1080,9 +1080,13 @@ export type Database = {
           created_at: string
           escrow_deadline: string | null
           escrow_status: string
+          fx_rate_fetched_at: string | null
+          fx_rate_used: number | null
           id: string
           listing_id: string | null
           name_change_fee: number | null
+          name_change_fee_original: number | null
+          name_change_fee_original_currency: string | null
           name_change_proof_url: string | null
           original_booking_ref: string | null
           quantity: number
@@ -1111,9 +1115,13 @@ export type Database = {
           created_at?: string
           escrow_deadline?: string | null
           escrow_status?: string
+          fx_rate_fetched_at?: string | null
+          fx_rate_used?: number | null
           id?: string
           listing_id?: string | null
           name_change_fee?: number | null
+          name_change_fee_original?: number | null
+          name_change_fee_original_currency?: string | null
           name_change_proof_url?: string | null
           original_booking_ref?: string | null
           quantity: number
@@ -1142,9 +1150,13 @@ export type Database = {
           created_at?: string
           escrow_deadline?: string | null
           escrow_status?: string
+          fx_rate_fetched_at?: string | null
+          fx_rate_used?: number | null
           id?: string
           listing_id?: string | null
           name_change_fee?: number | null
+          name_change_fee_original?: number | null
+          name_change_fee_original_currency?: string | null
           name_change_proof_url?: string | null
           original_booking_ref?: string | null
           quantity?: number
