@@ -49,6 +49,10 @@ Swappup potrà applicare una commissione di servizio, sempre indicata prima del 
 
 Il prezzo di rivendita di un biglietto non potrà eccedere il valore originario del medesimo.
 
+**Valuta.** Ogni annuncio è espresso nella valuta scelta dal venditore, ed è in tale valuta che viene addebitato l'importo. Qualora l'Utente abbia selezionato una diversa valuta di visualizzazione, gli importi convertiti mostrati altrove nel Servizio hanno carattere meramente indicativo e non corrispondono all'importo addebitato. Le conversioni si basano sui tassi di riferimento della Banca Centrale Europea, aggiornati quotidianamente. La banca o l'emittente della carta dell'Utente può applicare un proprio tasso di cambio e proprie commissioni, che Swappup non controlla e di cui non risponde.
+
+**Commissioni di cambio nome.** La commissione di cambio nome è applicata dalla compagnia aerea e non da Swappup. Essa è dovuta dal venditore alla compagnia aerea ed è riscossa dall'acquirente nell'ambito dell'acquisto. L'importo indicato corrisponde alla commissione pubblicata dalla compagnia aerea al momento della pubblicazione dell'annuncio, convertita ove necessario nella valuta dell'annuncio, e può essere modificata dalla compagnia aerea in qualsiasi momento.
+
 ## 7. Uso Improprio del Biglietto Successivo al Trasferimento — Limitazione di Responsabilità
 
 Swappup è un marketplace peer-to-peer e non riveste la qualità di vettore, emittente o titolare di alcun biglietto pubblicato sulla piattaforma. Una volta che la compagnia aerea conferma il cambio nome in favore dell'acquirente e Swappup corrisponde il pagamento al venditore, la transazione si considera definitiva. Swappup non è responsabile, ed esclude espressamente ogni responsabilità derivante da qualsivoglia atto od omissione successivo posto in essere dal venditore, dall'acquirente o dal vettore, ivi inclusi, a titolo esemplificativo e non esaustivo:
